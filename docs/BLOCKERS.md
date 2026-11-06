@@ -45,6 +45,19 @@ Save. Then in **Authentication → URL Configuration** set **Site URL** to `http
 
 Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes work.
 
-### 5. Anthropic API key with a spend limit (needed from Phase 3)
+### 5. Cloudflare Pages for the dev site (Task 1.7)
+
+1. Go to https://dash.cloudflare.com and sign in (a free account is fine).
+2. **Workers & Pages → Create → Pages → Connect to Git** → authorise GitHub → choose **TCannonx/airhead** (grant access to that repo only).
+3. Project name: `airhead` (gives `https://airhead.pages.dev`). Production branch: `main`.
+4. Build settings: Framework preset **None** (or Vite); Build command `npm run build`; Build output directory `dist`.
+5. **Environment variables** (set for both *Production* and *Preview*), using the **dev** project's values:
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Supabase dev → Project Settings → API; the publishable/anon key)
+   - `NODE_VERSION` = `24` (the repo also has a `.node-version` file)
+6. **Save and Deploy.** Every PR then gets a preview link automatically.
+7. Add the new address to sign-in: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead.pages.dev`, Redirect URLs add `https://airhead.pages.dev/**` and `https://*.airhead.pages.dev/**` (PR previews). If Google login is set up, add `https://airhead.pages.dev` to the OAuth client's JavaScript origins.
+8. For the live release workflow (Task 1.8), also create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
+
+### 6. Anthropic API key with a spend limit (needed from Phase 3)
 
 Plan setup step 2. Create it in the Claude Console with a monthly spend limit. Don't paste it anywhere yet; it goes into Supabase secrets in Phase 3.

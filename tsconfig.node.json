@@ -25,6 +25,7 @@
     "vitest.config.ts",
     "playwright.config.ts",
     "pwa-assets.config.ts",
-    "tests/e2e/**/*.ts"
+    "tests/e2e/**/*.ts",
+    "tests/node/**/*.ts"
   ]
 }
