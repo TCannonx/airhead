@@ -1,0 +1,311 @@
+# Airhead — Implementation Plan for Claude Code
+
+6 November 2026
+
+## How to use this plan
+
+This plan takes Airhead to **v0.1 (phases 1–4)** in small, tested tasks; phases 5–9 are outlined and get their own detailed plan after v0.1 has been used for a few weeks.
+
+**Setup before the first session:**
+
+1. Save the design doc and this plan in the repo as `docs/DESIGN.md` and `docs/PLAN.md`, alongside `docs/SETUP-GOOGLE-LOGIN.md` and `docs/MANUAL-CHECKLIST.md`.
+2. Create two Supabase projects: `airhead-dev` and `airhead-live`. Create an Anthropic API key with a spend limit set in the Claude Console.
+3. Install Node.js (current LTS), Git, the GitHub CLI (`gh auth login`), the Supabase CLI and Docker (for the local Supabase stack).
+
+**Starter prompt for Claude Code:**
+
+```text
+Read CLAUDE.md, docs/DESIGN.md and docs/PLAN.md fully. We are building Airhead.
+Work through PLAN.md one task at a time, in order, starting at the first unticked task.
+For each task: write the failing tests first, implement until they pass,
+run the full test suite and lint, then follow CLAUDE.md for branching,
+pull requests and merging. Tick the task off in PLAN.md as part of its PR.
+```
+
+**Git and autonomy:** the repo's `CLAUDE.md` defines the GitHub workflow (branch per task, PR per task, automatic squash-merge when CI is green) and overrides the approval rules below. In particular, PRs are created and merged without asking; only the items in CLAUDE.md section 5 wait for the user, and those are recorded in `docs/BLOCKERS.md` rather than asked mid-flow. Wherever this plan says [ASK], treat it as "record in BLOCKERS.md and continue with other work".
+
+**Working rules for Claude Code:**
+
+- One task per PR; never start the next task with failing tests.
+- Install the **current stable** version of every library and check its official docs; do not pin versions from memory. Note the versions used in `docs/DECISIONS.md`.
+- Work against `airhead-dev` (or the local Supabase stack) only. Deploying to `airhead-live` happens only through a release tag (see CLAUDE.md).
+- Never put secrets in client code or commit them; use `.env.local` (git-ignored) and Supabase secrets.
+- Where this plan says **verify**, confirm the behaviour against current official docs before building on it, and record the finding in `docs/DECISIONS.md`.
+- When the design doc and this plan disagree about what to build, record it in `docs/BLOCKERS.md`.
+
+## Tech stack
+
+Every library below is free and open source; install current stable versions and record them in `docs/DECISIONS.md`.
+
+| Area | Choice | Notes |
+| --- | --- | --- |
+| App | React + TypeScript (strict) on Vite | Single-page PWA |
+| PWA | vite-plugin-pwa (Workbox) | Offline app shell, install prompt, custom service worker for push |
+| Routing | React Router | |
+| Styling | Tailwind CSS | Light and dark themes; responsive phone, iPad, desktop |
+| Local database | Dexie.js + dexie-react-hooks; MiniSearch (search); JSZip (export) | IndexedDB; the UI reads only from here |
+| Validation | Zod | Shared schemas for local data, sync payloads and AI outputs |
+| Dates | chrono-node, rrule, date-fns, date-fns-tz | Parsing, recurrence, time zones (Europe/Dublin default) |
+| Calendar UI | FullCalendar standard (MIT) plugins: daygrid, timegrid, list, interaction, rrule | No premium plugins |
+| Imports | ical.js, Papa Parse, SheetJS Community Edition, pdfjs-dist | SheetJS CE installs from its own CDN, not npm — verify current install route |
+| Ink (phase 6) | perfect-freehand | |
+| Backend | Supabase: Postgres, Auth, Storage, Edge Functions (Deno), Realtime, Cron (pg_cron + pg_net), Vault | Two projects: dev and live |
+| AI | Anthropic SDK in Edge Functions only | Model IDs in config, e.g. `claude-haiku-5-5` (small), `claude-sonnet-5-5` (larger) — verify current IDs and prices |
+| Link reading | @mozilla/readability + linkedom in Deno | Server-side extraction |
+| Push | Web Push with VAPID keys | Use the `web-push` npm package from Deno, or a Deno-native Web Push library if it fails — verify |
+| Tests | Vitest + Testing Library; Playwright for end-to-end; Deno test for functions | |
+| Hosting | Cloudflare Pages (free) for the static app | Netlify is an equal alternative |
+| CI and jobs | GitHub Actions | Tests on push; daily keep-alive ping; weekly database backup; dev deploy on merge; live deploy on tag |
+
+## Repository structure
+
+One repo holds the app, the Supabase project and the docs; pure logic lives in `src/lib` so it can be unit-tested without a browser.
+
+```text
+airhead/
+  CLAUDE.md
+  .claude/settings.json
+  docs/            DESIGN.md, PLAN.md, DECISIONS.md, BLOCKERS.md, CHANGELOG.md,
+                   SETUP-GOOGLE-LOGIN.md, MANUAL-CHECKLIST.md
+  public/          icons, manifest assets
+  src/
+    app/           routes, layouts (phone tabs / iPad sidebar / desktop 3-pane)
+    features/
+      capture/     Capture tab, chips, paste, quick ink pad (phase 6)
+      inbox/       Unsorted + To flesh out
+      today/       brief, Top 3, Also today, suggestion cards
+      library/     reading, ideas, notes, lists, search
+      calendar/    FullCalendar views, event editor, import review
+      work/        work location, leave, counter
+      insights/    recaps, AI usage, stats
+      settings/    all settings screens
+    lib/
+      db/          Dexie schema, repositories
+      sync/        outbox, push, pull, realtime nudge
+      rules/       link detection, date and recurrence parsing, confidence, learned rules
+      holidays/    ie.ts (Irish public holidays), easter.ts
+      leave/       working-day counting, leave year, balances
+      calendar/    gap finding, ICS helpers
+      schemas/     Zod schemas shared with functions
+    sw/            custom service worker (push, notification click)
+  supabase/
+    migrations/    SQL migrations (schema, RLS, triggers, cron)
+    functions/
+      _shared/     ai.ts (gateway), auth.ts, cors.ts, prices.ts, prompts/
+      ingest-capture/  read-link/  sort-batch/  scheduler-tick/
+      send-push/  calendar-feed/  fetch-linked-calendars/  import-extract/
+      health/
+    seed.sql
+  tests/e2e/       Playwright
+  tests/fixtures/  ai/ (saved AI responses), html/, imports/
+  .github/workflows/  ci.yml, deploy-dev.yml, release.yml, keepalive.yml, backup.yml
+```
+
+## Data model
+
+Every synced table has the same sync columns and the same per-user security rule; the same shape is mirrored in Dexie on each device.
+
+**Common columns on every synced table:** `id uuid` (generated on the device), `user_id uuid` (references `auth.users`), `created_at`, `updated_at` (device time, informational), `server_updated_at timestamptz` (set by a trigger to `now()` on every insert or update; the only value used for ordering), `deleted_at timestamptz null` (soft delete; a nightly job hard-deletes rows deleted more than 30 days ago).
+
+**Security rule:** row-level security on every table; select, insert, update and delete allowed only where `user_id = auth.uid()`. Functions that serve feeds or Shortcuts use the service role and look up the user by a hashed token.
+
+| Table | Purpose | Key columns |
+| --- | --- | --- |
+| `settings` | One row per user | `data jsonb`: time zone, brief and review times, quiet hours, nudge cap, batch thresholds, AI monthly cap, work settings, location checklists |
+| `devices` | Each installed device | `name`, `platform`, `push_subscription jsonb`, `receives_notifications bool`, `last_sync_at` |
+| `capture_tokens` | Shortcut and bookmarklet tokens | `token_hash`, `label`, `revoked_at` |
+| `captures` | Raw inputs, never altered by AI | `kind` (text, link, ink, image, import), `text`, `url`, `payload jsonb`, `source` (app, shortcut, bookmarklet), `status` (unsorted, sorted, needs_review, failed), `captured_at`, `sorted_at` |
+| `items` | Everything captures become | `capture_id`, `type` (task, event, reading, idea, meeting, note, list_entry), `title`, `body`, `data jsonb`, `status`, `due_at`, `start_at`, `end_at`, `all_day`, `rrule`, `calendar` (personal, us), `series_id`, `list_id`, `topic_ids uuid[]`, `confidence`, `top3_date`, `carry_count`, `completed_at` |
+| `lists` | Personal lists | `name`, `sort_order` |
+| `topics` | Tags for ideas and notes | `name` |
+| `corrections` | User re-sorts, reused as examples | `capture_id`, `from jsonb`, `to jsonb` |
+| `series` | Imported schedules | `name`, `color`, `source_path`, `feed_id` |
+| `nudges` | Scheduled notifications | `item_id`, `kind`, `send_at`, `title`, `body`, `status` (scheduled, sent, cancelled, failed), `sent_at`, `acted_at` |
+| `feeds` | Calendar links | `kind` (us_out, me_out, linked_in), `name`, `color`, `url` (linked_in only) or `token_hash` (us_out, me_out), `last_fetched_at`, `last_error` |
+| `external_events` | Events read from linked feeds | `feed_id`, `uid`, `title`, `start_at`, `end_at`, `all_day`, `location` |
+| `work_days` | Location overrides | `date`, `location` (wfh, office, client, travel, off) |
+| `leave_bookings` | Annual and other leave | `leave_type`, `start_date`, `end_date`, `start_half`, `end_half`, `status` (planned, requested, approved, taken, cancelled), `days numeric`, `share_to_us bool` |
+| `ai_usage` | One row per AI call (not synced to devices; read via a view) | `task`, `model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cost_eur`, `ok bool` |
+| `ai_prices` | Editable price table | `model`, `input_per_mtok`, `output_per_mtok`, `cache_read_per_mtok`, `eur_rate` |
+
+**Memory tables (phase 3):** `memory_facts` (`text`, `category` (everyday, person, personal), `status` (active, pending_approval, archived), `source_capture_id`, `last_used_at`) and `learned_rules` (`pattern`, `match_kind` (prefix, keyword), `result jsonb` (type, list, calendar), `hits`, `enabled`). Both are synced and covered by the same security rule.
+
+Public holidays are computed on the device and are not stored. Default work location comes from the weekly pattern in `settings`; `work_days` only stores exceptions.
+
+## Conventions
+
+These rules apply to every task; they keep AI costs visible, user data safe and the app working offline.
+
+**AI calls**
+
+- Only `supabase/functions/_shared/ai.ts` talks to the Anthropic API. Signature: `callAI({ task, tier: 'small' | 'large', system, messages, schema })`.
+- It maps tier to model from config, forces structured output by tool use with a JSON schema, validates the result with Zod, retries once on invalid output, and writes an `ai_usage` row (tokens and cost in euros from `ai_prices`) for every call, successful or not.
+- It checks the monthly cap first; when reached, background tasks return `cap_reached` and leave work queued. On-demand tasks show the user the cap message.
+- Long fixed system prompts use prompt caching. Prompts live in `_shared/prompts/` as versioned files.
+- No call ever sends the whole database: each task builds a compact digest with SQL.
+
+**Untrusted content**
+
+- Web pages, imported files, linked calendars and capture text are wrapped in clearly delimited content blocks with an instruction that they are data, not instructions.
+- Anything derived from untrusted content (actions in a link, events in an import) is created as a suggestion or a review row, never applied automatically.
+- `read-link` and `fetch-linked-calendars` fetch only `http`/`https` URLs, reject private and local IP ranges, follow at most 3 redirects, time out after 10 seconds and cap downloads at 2 MB.
+
+**Errors and offline**
+
+- Saving to Dexie never waits on the network. Every network failure leaves the work queued and retried with backoff; the sync status icon reflects it.
+- Functions return `{ ok, error_code, message }`; the UI shows plain-language messages, never stack traces.
+
+**No hidden commands**
+
+- Every feature is reachable from a visible button or menu. Keyboard shortcuts on desktop only speed up actions that already have a button; there are no slash commands or typed commands.
+
+**Testing**
+
+- Pure logic in `src/lib` gets unit tests first: rules, holidays, leave, sync merge, gap finding.
+- AI tasks are tested against saved fixture responses in `tests/fixtures/ai/`; tests never call the paid API.
+- Row-level security gets a test that a second test user cannot read or write the first user's rows.
+- Each phase ends by updating `docs/MANUAL-CHECKLIST.md` with device checks for iPhone, iPad and desktop Chrome.
+
+**Time**
+
+- Store timestamps in UTC; compute days, holidays and leave in the user's time zone (default `Europe/Dublin`). Date-only values (leave, holidays, work days) are stored as `date`, never as timestamps.
+
+## Phase 1: Foundations
+
+Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chrome, deployed from CI, with dev and live projects and the free-plan safeguards in place.
+
+- [ ] **1.1 Scaffold the repo.** Vite + React + TypeScript (strict), Tailwind, ESLint, Prettier, Vitest, Testing Library, Playwright; folders as in Repository structure; `docs/DECISIONS.md`, `docs/BLOCKERS.md` and `docs/CHANGELOG.md` created. Create the GitHub repo and configure it as described in CLAUDE.md section 2.
+    - Done when: `npm run dev` serves the app; `npm test`, `npm run lint` and `npm run typecheck` pass.
+- [ ] **1.2 PWA shell.** vite-plugin-pwa with the injectManifest strategy and a custom service worker in `src/sw/`; manifest (name Airhead, standalone display, theme colours, placeholder icons including Apple touch icon); offline app shell caching. Verify current iOS home-screen requirements.
+    - Test: Playwright loads the app, goes offline, reloads, and still sees the shell.
+    - Done when: installs to the home screen on iPhone and iPad and as an app window in desktop Chrome.
+- [ ] **1.3 Responsive layout skeleton.** Routes: Capture, Today, Inbox, Library, Insights, Settings. Phone (< 768 px): bottom tabs. iPad (768–1279 px): sidebar plus main pane. Desktop (≥ 1280 px): sidebar, main pane, right panel. Light and dark themes; iOS safe-area insets.
+    - Test: component tests render the right navigation at each width.
+- [ ] **1.4 Supabase setup and first migration.** `supabase init`, local stack, link `airhead-dev`. Migration `0001`: trigger function setting `server_updated_at = now()`, the `settings`, `devices` and `capture_tokens` tables, RLS policies as in Data model.
+    - Test: an RLS test creates two users and proves user B cannot read or write user A's rows.
+- [ ] **1.5 Sign-in.** Supabase Auth with Google as a login only (openid, email, profile scopes; no calendar scopes) plus email magic link as a fallback; persistent session; sign-out. The user follows `docs/SETUP-GOOGLE-LOGIN.md` to create the OAuth client [ASK]; build and test with magic link meanwhile.
+    - Done when: sign-in works on all three devices and a `devices` row is registered for each.
+- [ ] **1.6 App lock.** Optional, set in Settings: register a WebAuthn platform credential (Face ID or Touch ID); show a lock screen on open and after a chosen inactivity time-out. Document that it is a privacy screen, not encryption; signing out and back in is the recovery path.
+    - Test: unit tests for time-out and lock-state logic.
+- [ ] **1.7 Hosting.** Cloudflare Pages builds from the main branch with SPA fallback, per-PR previews and environment variables for the dev project. The user connects Pages to the repo [ASK]. Live deployment happens only from a release tag.
+- [ ] **1.8 CI and safeguards.** `ci.yml` runs lint, typecheck and unit tests on every push and PR. `deploy-dev.yml` runs `supabase db push` and `supabase functions deploy` against dev on merge to main. `release.yml` deploys a `v*` tag to live. A `health` function plus `keepalive.yml` calls both projects daily. `backup.yml` runs `supabase db dump` weekly for live and keeps it as a workflow artifact. Set branch protection on main as in CLAUDE.md once CI has run. The user adds the secrets [ASK].
+    - Done when: CI is green and a manual run of each workflow succeeds.
+
+## Phase 2: Capture core and sync
+
+Goal: capture anything offline, see links and clear dates handled instantly by free rules, and have iPhone, iPad and desktop stay in sync.
+
+- [ ] **2.1 Core tables.** Migration `0002`: `captures`, `items`, `lists`, `topics`, `corrections`, with sync columns, RLS, indexes on `(user_id, server_updated_at)`, Realtime enabled. A `pg_cron` job hard-deletes rows soft-deleted more than 30 days ago. Storage bucket `captures` with a policy limiting paths to `<user_id>/...`.
+    - Test: RLS test extended to the new tables.
+- [ ] **2.2 Local database.** Dexie schema mirroring the synced tables plus an `outbox` table and a `sync_state` table (per-table cursor). Zod schemas in `src/lib/schemas` shared with functions. Request persistent storage on first run.
+- [ ] **2.3 Sync engine.** Every local write goes to its table and the outbox in one Dexie transaction. Push: drain the outbox in batches of 100 via upserts. Pull: per table, rows with `server_updated_at > cursor`, pages of 500, applied in order (server order wins). Triggers: app open, `online` event, after each capture, every 60 s while visible, and a Supabase Realtime message on the user's channel.
+    - Tests: unit tests for outbox ordering, merge and soft-delete handling; an end-to-end test that captures offline, reconnects and sees the item on a second browser context.
+- [ ] **2.4 Capture tab.** Autofocused text box (Enter saves on desktop, a Save button on touch); a Paste button when the clipboard holds a URL (read only on tap); optional photo attach compressed on device (longest side 1600 px, WebP) and queued for upload. Each capture shows a status chip.
+- [ ] **2.5 Free rules.** In `src/lib/rules`: URL detection → capture kind `link` and a `reading` item; date parsing with chrono-node's British-English parser so "3/4" means 3 April; a confidence rule (explicit date, explicit time or all-day wording, in the future, no fuzzy words such as "ish", "sometime", "maybe"); a recurrence parser producing RRULEs for common phrases.
+    - Tests: a table of at least 30 phrases with expected results, including "dentist Tue 3pm", "brunch Saturday 11", "training Tues and Thurs 7pm", "John's birthday 14 March", "call Mark tomorrow", "sometime next week" (fuzzy), "3/4 meeting".
+- [ ] **2.6 Instant events and suggestions.** Confident dates create an `event` item on the Personal calendar with an 8-second undo toast; fuzzy ones create a suggestion card. Works fully offline.
+- [ ] **2.7 Inbox and Library (basic).** Inbox: Unsorted and To flesh out sections. Library: tabs by type with filters by topic, date and type; item detail and edit; manual re-sort that records a `corrections` row; Trash view with restore for 30 days.
+- [ ] **2.8 On-device search.** MiniSearch (MIT) index over item titles, bodies and capture text, rebuilt incrementally; a visible search box in Library (and `/` as a desktop shortcut to it).
+- [ ] **2.9 Export everything.** Settings → Export builds a zip (JSZip) with one Markdown file per item plus a full JSON dump of all tables.
+    - Test: export then parse the JSON back and compare row counts.
+- [ ] **2.10 Sync visibility.** Status icon (synced, "n waiting", offline) and last successful sync time in Settings.
+- Phase done when: the Phase 2 lines of the manual checklist pass on all three devices.
+
+## Phase 3: AI sorting, link reading, lists and AI usage
+
+Goal: unsorted captures are sorted, split and tagged in cheap rolling batches; links are read and summarised; memory makes calls tailored and cheaper; every AI cent is visible.
+
+- [ ] **3.1 AI gateway.** Migration `0003`: `ai_usage`, `ai_prices` (seed current prices — verify), and a user-scoped view for usage. `_shared/ai.ts` as described in Conventions (tier → model, tool-use JSON output, Zod validation, one retry, usage row, cap check, prompt caching).
+    - Tests: mocked API responses for success, invalid JSON then success, invalid twice, API error and cap reached; each writes the right usage row.
+- [ ] **3.2 Sort batch.** Function `sort-batch`: takes up to 20 unsorted captures for one user, oldest first. Context digest: current time and time zone, topic names, up to 30 active idea titles, list names, the last 5 corrections. Output per capture: an array of items, each with `type`, `title`, optional `body`, dates, `rrule`, `list_name`, `topics`, `confidence` (0–1), `suggest_workshop`, optional related idea. Apply in one transaction: insert items; events follow the same confidence rule as the free rules (confident → created, otherwise suggestion card); captures become `sorted`, or `needs_review` when any item's confidence is below 0.6.
+    - Tests: fixture-based, covering a brain dump that splits into a task, an event and a shopping list entry; an ambiguous capture going to review; a new topic being created.
+- [ ] **3.3 Batch triggers.** Client calls `sort-batch` on app open when unsorted captures exist and from a "Sort now" button. A `pg_cron` job every 5 minutes uses `pg_net` to call `sort-batch` for users with at least the threshold count (default 5) or an oldest unsorted capture older than the threshold age (default 60 minutes). The service key is stored in Vault. Thresholds come from `settings`.
+- [ ] **3.4 Review and corrections.** Low-confidence items appear in Inbox with one-tap choices ("Task or Idea?"); any re-sort records a correction that feeds the next batch's examples.
+- [ ] **3.5 Link reading.** Function `read-link`, called after a link capture syncs: safe fetch (Conventions), readability extraction, store title, description, word count and reading minutes, plus up to 3,000 words of article text in the capture payload. The next sort batch writes the summary, key points, topics and any suggested actions; the stored article text is then cleared. Unreadable pages fall back to title and description with a "couldn't read" flag.
+    - Tests: saved HTML fixtures for an article, a paywalled page and an event page; SSRF tests for private IPs and redirects.
+- [ ] **3.6 Lists.** Library → Lists: create, rename, reorder, tick off, clear completed; a default Shopping list. Sorting puts list entries on existing lists; an unknown list name goes to review as "Create list 'Packing'?".
+- [ ] **3.7 AI usage screen.** Insights → AI usage: month to date by task, a daily bar chart, projected month-end (month to date ÷ days elapsed × days in month), monthly cap setting, editable price table, and the note that the provider dashboard is the true record. A helper returns an estimate for on-demand buttons (average of the last 10 calls for that task, or a default).
+- [ ] **3.8 Success measures.** Insights shows captures per day, sorting correction rate (corrections ÷ items sorted, last 30 days) and AI cost per month.
+- [ ] **3.9 Memory and learned rules.** Migration adds `memory_facts` and `learned_rules`. `sort-batch` output gains optional `proposed_facts` (text plus category); everyday facts become active, person and personal facts become `pending_approval` and show as one-tap cards. Facts are only accepted from user-typed captures, never from link text, imports or linked calendars. The core profile (active facts, capped at about 400 words, most recently used first) is placed in the cached prompt prefix; `last_used_at` updates when sent. Settings → "What Airhead knows about me" lists, edits, deletes and adds facts. A nightly job archives facts unused for 180 days. Learned rules: after the same pattern has been sorted to the same result at least 4 times with no correction, create a rule; the on-device rules engine applies enabled rules before queuing for AI; Settings lists rules with on/off switches; a correction against a rule disables it.
+    - Tests: fact categorisation and approval routing from fixtures; injected "remember that…" text inside link content creates no fact; rule creation threshold and disabling on correction.
+- [ ] **3.10 Memory Check-up.** "Run check-up" button in Settings → Memory and in Insights. Code checks: core profile size and words per call, near-duplicate facts (normalised text similarity), facts unused for 90+ days, pending approvals, rules with low hits or repeated corrections, average input tokens per AI task over the last 30 days against the previous 30, storage, sync and cost trends. A "Check for contradictions" button runs one small-tier call. Each finding has a one-tap fix (merge, archive, delete, disable) and an estimated saving. A monthly code-only run posts its report to Insights.
+    - Tests: unit tests for each check with seeded data; the saving estimate uses the current price table.
+- Phase done when: a day of real captures is sorted with no manual trigger and the AI usage screen matches the Claude Console within rounding.
+
+## Phase 4: Calendar, sharing, work and leave, import, notifications
+
+Goal: a full calendar on every device, shared with my girlfriend by feed, Irish holidays and leave tracking, schedule imports, and reliable iPhone notifications.
+
+**Calendar**
+
+- [ ] **4.1 Calendar tables.** Migration `0004`: `series`, `nudges`, `feeds`, `external_events`, `work_days`, `leave_bookings`, plus `job_runs (user_id, job, local_date)` with a unique key so scheduled jobs never run twice.
+- [ ] **4.2 Calendar views.** FullCalendar with daygrid, timegrid, list, interaction and rrule plugins. Day, week, month and agenda views (agenda is the phone default). Sources: Personal and Us events, linked external events (read-only), public holidays, leave, and a work-location badge on each day; colour per source with show/hide toggles. Drag and resize to reschedule; drag a task from the task list onto the calendar to time-block it; click an empty slot to create; editor in a side panel on desktop and a sheet on phone.
+    - Tests: unit tests for the event-source mapping; Playwright for create, drag to reschedule and time-blocking.
+
+**Work and leave**
+
+- [ ] **4.3 Irish public holidays.** `src/lib/holidays/ie.ts` and `easter.ts` (Gregorian computus). Rules from the design doc; St Brigid's Day only from 2023. Good Friday, Christmas Eve and New Year's Eve are returned as optional "common days off", not holidays. Manual one-off holidays from settings are merged in.
+    - Tests: St Brigid's Day 2023-02-06, 2024-02-05, 2025-02-03, 2026-02-02, 2027-02-01, 2030-02-01 (a Friday); Easter Monday 2026-04-06 and 2027-03-29; October holiday 2026-10-26; no St Brigid's Day in 2022.
+- [ ] **4.4 Work settings.** Settings → Work: working days, hours per day, leave year start (default 1 December), entitlement, carry-over maximum and expiry, how a weekend public holiday is compensated (day off within a month, extra leave day, extra pay), whether closure days use leave, closure days, leave types (deducting or not), default weekly location pattern, a checklist per location.
+- [ ] **4.5 Leave engine.** `src/lib/leave`: leave-year boundaries, working-day counting with half days (skipping weekends, non-working days, public holidays and, if set, closure days), balances (entitlement + carry-over, taken, booked, planned, remaining), the extra day when a weekend holiday is compensated with leave, and a pace figure.
+    - Tests: bookings crossing the December year boundary and Christmas, half days, a booking spanning a public holiday, carry-over expiry, at least 25 cases.
+- [ ] **4.6 Leave UI.** Select a range on the calendar → "Book leave" sheet (type, half days, status, share to Us). Capture rule for phrases like "AL 14–18 July" proposes a booking. Leave days set location to Off and silence work nudges. A nightly job marks past bookings Taken. Leave counter on Today and in the Work screen.
+- [ ] **4.7 Work location.** Today chip with one-tap change, desktop control, calendar badge; Insights shows days per location by week and month.
+
+**Sharing**
+
+- [ ] **4.8 Outgoing feeds.** `feeds` rows of kind `us_out` (Us calendar) and `me_out` (everything, for my own iPhone). Tokens are 32 random bytes; only a SHA-256 hash is stored, the URL is shown on creation and on regenerate. Function `calendar-feed?t=<token>` returns a valid iCalendar file with stable UIDs, recurrence rules, Us events, shared leave as all-day "Off", and work location per the sharing setting ("WFH"/"Office" or just "Working"). Offer `webcal://` and copy-link buttons.
+    - Tests: round-trip the output through ical.js; a revoked token returns 404.
+- [ ] **4.9 Linked calendars.** Settings → Linked calendars: paste a secret iCal URL, validate by fetching and parsing, name and colour it. A `pg_cron` job every 30 minutes calls `fetch-linked-calendars`: safe fetch, parse, expand recurrences 12 months ahead, upsert by UID, remove events no longer present, record errors on the feed.
+
+**Import schedule**
+
+- [ ] **4.10 Import flow.** Calendar → Import: file, paste or link, plus an instruction box. On device: .ics via ical.js; CSV and Excel via Papa Parse and SheetJS with a column-mapping step; PDF text via pdfjs-dist. Messy text, scanned PDFs and images go to `import-extract` (one AI call, vision for images) with the instruction. Review table of proposed events (ticked, editable), choose Personal or Us, name the series, save. Unconfirmed times become all-day "time TBC" with a check-nearer-the-date nudge; clashes are flagged; events on working days offer a leave booking; an .ics URL can be added as a linked calendar instead. The original file is stored with the series.
+    - Tests: fixtures for .ics, CSV, a text PDF and a screenshot (AI fixture), including an "only home games" instruction.
+
+**Notifications**
+
+- [ ] **4.11 Push setup.** VAPID keys as secrets. Settings → Notifications: an enable button (permission is requested only on tap); on iPhone, detect when the app is not installed to the home screen and explain how. Store the subscription on the device row; the first device enabled is marked `receives_notifications`, iPhone by default. `send-push` sends via Web Push and clears subscriptions that return 404 or 410. The service worker shows notifications and opens the linked screen on tap. A "Send test notification" button.
+- [ ] **4.12 Reminder generation.** A database trigger on `items` creates, updates or cancels nudges: event reminder (30 minutes before by default, per-event override), task due reminder, and cancellation on delete or completion. Because it runs in the database, reminders are scheduled once the item has synced.
+    - Tests: SQL tests for create, move and complete.
+- [ ] **4.13 Scheduler tick.** `pg_cron` every minute calls `scheduler-tick`, which: sends due nudges, deferring those in quiet hours (event reminders can be allowed through) and bundling anything over the daily cap into one summary notification; runs per-user local-time jobs guarded by `job_runs`: evening review, location checklist the evening before, leave run-out checks (about 90, 42 and 14 days before the leave year ends, when remaining days exceed carry-over), the slip nudge for tasks carried over 3 or more times, and marking leave Taken.
+    - Tests: Deno tests with a fixed clock for quiet hours, cap bundling, time zones and duplicate-run protection.
+- [ ] **4.14 Evening review.** The notification opens a screen to tick off, carry over or drop today's open tasks; carrying over increments `carry_count`.
+- [ ] **4.15 Notification settings.** Per-type toggles, quiet hours, daily cap, reminder default, per-device toggle.
+- Phase done when: the Phase 4 manual checklist passes, including a real notification on the iPhone and my girlfriend seeing the Us calendar in her app.
+
+## v0.1 acceptance checklist
+
+v0.1 is done when every box below is ticked on real devices; then release to `airhead-live` with a `v0.1.0` tag and use it daily for a few weeks before planning phases 5–9.
+
+- [ ] Installs and opens offline on iPhone, iPad and desktop Chrome; app lock works.
+- [ ] A capture made in airplane mode appears on the other two devices within a minute of reconnecting.
+- [ ] A link is read and summarised; a paywalled link is marked "couldn't read".
+- [ ] "Dentist Tue 3pm" creates an event instantly offline with undo; "sometime next week" becomes a suggestion.
+- [ ] A five-item brain dump is split correctly, including a shopping list entry.
+- [ ] Correcting a sort once changes how a similar capture is sorted next time.
+- [ ] Week view on desktop: drag a task onto Thursday 2pm and drag an event to Friday.
+- [ ] Irish public holidays for the current and next year match Citizens Information.
+- [ ] Booking 5 days of leave over a public holiday deducts 4; the counter and run-out reminder are correct for a December–November leave year.
+- [ ] My girlfriend sees Us events and my shared leave in her calendar app; her linked calendar's events show in Airhead.
+- [ ] A fixtures PDF with "attending all home games" imports as a reviewed series.
+- [ ] An event reminder, a location checklist and the evening review arrive on the iPhone only, respecting quiet hours.
+- [ ] AI usage screen totals match the Claude Console; a test cap pauses background sorting.
+- [ ] Export produces a readable zip; RLS tests pass; the weekly backup artifact exists.
+- [ ] An everyday fact is added to memory automatically; a fact about a person waits for one-tap approval; a "remember this" line inside a web page creates nothing.
+- [ ] After four uncorrected "buy …" captures, a learned rule sorts the fifth instantly offline.
+- [ ] Run check-up finds a planted duplicate fact and a stale fact, and fixes both in one tap each.
+
+## Phases 5–9 (outline)
+
+These phases get their own detailed task plan after v0.1 has been used for a few weeks; the order may change based on real use. Do not start them from this outline.
+
+| Phase | Scope | Key pieces |
+| --- | --- | --- |
+| 5. Today and morning brief | Daily AI brief and Top 3 | SQL digest; `morning-brief` (large tier); Top 3 with suggested free-time slots from calendar gaps; prep nudges written into `nudges`; code-built fallback list; round-up notification |
+| 6. Notes | Typed notes and notebook stage 1 | Typed note editor; fixed-width ink page with perfect-freehand, pen-only drawing, finger scroll; text boxes; autosave and whole-document sync with conflict copies; Summarise via vision; action items confirmed into tasks |
+| 7. Thinking tools | Shortcuts, bookmarklet, Workshop, Ask Airhead | `ingest-capture` with capture tokens; iOS Shortcut and Chrome bookmarklet setup guides; Workshop auto flesh-out and collaborative sessions with versions; embeddings (Supabase built-in model — verify) with pgvector and hybrid search for cited answers; memory facts chosen by relevance |
+| 8. Reflection | Weekly review and insights | Weekly review (large tier) with themes, wins, slips, suggestions and AI spend; patterns; Tidy-up with auto-approved low-risk cases and soft deletes; holiday suggestions from bridge-day finder; weekly memory digests; Scout weekly and from a "Scout now" button: own-data findings prepared in code plus a capped number of web searches (Anthropic web search tool — verify price), queries from interests and city only with a run log, at most 5 suggestion cards, accept/dismiss feeding memory |
+| 9. Notebook polish | Lasso and shapes | Lasso select, copy, paste and move; hold-to-snap shape recognition for circle, rectangle, line and arrow |
+
+Anything not listed here or in the design doc goes to the later list unless it fixes a real problem found in use.

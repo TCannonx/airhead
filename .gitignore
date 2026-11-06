@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+*.local
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+blob-report/
+supabase/.temp/
+supabase/.branches/
+.DS_Store
+Thumbs.db
+*.log
