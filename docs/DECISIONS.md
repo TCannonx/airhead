@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.5 Free rules
+- Libraries: **chrono-node 2.10.3** (`chrono.en.GB` with `forwardDate: true` and `{ instant, timezone: 'Europe/Dublin' }` as the reference, so "3/4" is 3 April and times convert through BST/GMT correctly), **rrule 2.8.1** (RRULE validation now, expansion later), **date-fns 4.4.0** + **@date-fns/tz 1.5.0** (`TZDate` for local days in the user's zone).
+- **Confidence rule** (exactly when an event may be created without asking): explicit date (a day, weekday, "today/tonight/tomorrow", or a recurrence) **and** (explicit time **or** all-day wording: birthday, anniversary, holiday, day off, all day) **and** in the future **and** no fuzzy words. Fuzzy: sometime, maybe, possibly, probably, perhaps, around, roughly, approx, at some point, soon, TBC/TBD, "or so", "-ish" (e.g. "8ish"), and a bare "next/this week/month" without a weekday. Time-only phrases ("lunch at 1pm") are not confident.
+- **"8ish" times are hidden from the parser** (blanked to the same length, so positions still line up): "coffee Tue 3ish" is a date-only suggestion, "dinner at 8ish" has no date.
+- **Recurrence parser** (own code, `src/lib/rules/recurrence.ts`): daily / every day, every N days/weeks/months, fortnightly / every other week, every weekday, weekday lists ("Tues and Thurs", "Mon, Wed & Fri") and plurals ("Mondays"), every <weekday>, weekly, monthly (+ "on the 1st" → BYMONTHDAY), yearly / annually; birthdays and anniversaries become `FREQ=YEARLY`. A weekday list counts as recurring ("training Tues and Thurs 7pm" → `FREQ=WEEKLY;BYDAY=TU,TH`). RRULEs carry no DTSTART: the item's `start_at` is the first occurrence (computed in the user's zone, after now).
+- Recurrence words are hidden from chrono (so "every 2 weeks" isn't "in 2 weeks"); when chrono returns the date and time as separate results ("4/3 dentist at 9am"), the time is merged in.
+- **All-day items**: `start_at` is local midnight of the first day; ranges store `end_at` as local midnight of the **last** day (inclusive). Conversion to iCalendar's exclusive DTEND happens in the feed (Task 4.8).
+- **Titles** drop the date, recurrence, "-ish" and link parts and dangling connectors (at/on/every/...), then capitalise the first letter; the capture's original text is never changed.
+- **Links**: any http(s) URL in the text makes the capture `kind: 'link'` and creates a `reading` item (`data.url`, title from the remaining words or the URL). 36 phrases in the table test plus British-order and immutability checks.
+
 ## 2026-11-06 — Task 2.4 Capture tab
 - **Paste link is always visible and reads the clipboard only on tap.** The plan's "a Paste button when the clipboard holds a URL (read only on tap)" can't be done literally: a page can't know what the clipboard holds without reading it (and reading unprompted triggers permission prompts on iOS). On tap: a URL becomes a `link` capture straight away; other text is added to the box.
 - **Enter saves only with a fine pointer** (`(pointer: coarse)` doesn't match): desktop Enter saves and Shift+Enter adds a line; on touch, Enter adds a line and the always-visible **Save** button saves. IME composition is respected.
