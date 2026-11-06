@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
@@ -7,7 +7,7 @@ import { useDb } from '../../lib/db/context';
 import { eventLabel } from '../../lib/db/events';
 import { softDelete, update } from '../../lib/db/repository';
 import { changeItemType, SORTABLE_TYPES, TYPE_LABELS } from '../../lib/db/sorting';
-import type { ItemType } from '../../lib/schemas/records';
+import type { Item, ItemType } from '../../lib/schemas/records';
 
 const field =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900';
@@ -15,23 +15,7 @@ const field =
 export default function ItemPage() {
   const { id = '' } = useParams();
   const db = useDb();
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const item = useLiveQuery(() => db.items.get(id), [db, id]);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [type, setType] = useState<ItemType>('note');
-  const [loadedId, setLoadedId] = useState<string | null>(null);
-
-  // Load the item into the form once (later live updates don't overwrite typing).
-  useEffect(() => {
-    if (item && loadedId !== item.id) {
-      setTitle(item.title);
-      setBody(item.body ?? '');
-      setType(item.type);
-      setLoadedId(item.id);
-    }
-  }, [item, loadedId]);
 
   if (item === undefined) return <Page title="Item" />;
   if (!item || item.deleted_at) {
@@ -44,10 +28,22 @@ export default function ItemPage() {
       </Page>
     );
   }
+  // Keyed by id: the form starts from the item once; later live updates don't overwrite typing.
+  return <ItemForm key={item.id} item={item} />;
+}
+
+function ItemForm({ item }: { item: Item }) {
+  const db = useDb();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [title, setTitle] = useState(item.title);
+  const [body, setBody] = useState(item.body ?? '');
+  const [type, setType] = useState<ItemType>(item.type);
+  const id = item.id;
 
   async function onSave() {
     await update(db, 'items', id, { title: title.trim(), body: body.trim() || null });
-    if (type !== item?.type) await changeItemType(db, user?.id ?? '', id, type);
+    if (type !== item.type) await changeItemType(db, user?.id ?? '', id, type);
   }
 
   async function onDelete() {
