@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import { DataProvider } from '../../lib/db/DataProvider';
+import { SyncProvider } from '../../lib/sync/SyncProvider';
 import { AppLockProvider } from '../applock/AppLockProvider';
 import SignInScreen from './SignInScreen';
 
@@ -16,7 +17,9 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   if (status === 'signed_out' || !user) return <SignInScreen />;
   return (
     <DataProvider userId={user.id}>
-      <AppLockProvider>{children}</AppLockProvider>
+      <SyncProvider>
+        <AppLockProvider>{children}</AppLockProvider>
+      </SyncProvider>
     </DataProvider>
   );
 }

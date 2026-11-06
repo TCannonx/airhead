@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
-import { supabaseAuth, supabaseDevices } from './auth/supabaseAuth';
+import { supabaseAuth } from './auth/supabaseAuth';
+import { supabaseRemote } from './sync/supabaseRemote';
 import type { Services } from './auth/types';
 
 /** Real services when the Supabase env vars are set, otherwise local-only mode. */
@@ -20,7 +21,7 @@ export function createServices(): Services {
   });
   return {
     auth: supabaseAuth(supabase),
-    devices: supabaseDevices(supabase),
     appLock: webAuthnAppLock,
+    remote: supabaseRemote(supabase),
   };
 }

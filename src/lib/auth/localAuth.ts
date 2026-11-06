@@ -1,6 +1,5 @@
 import { webAuthnAppLock } from '../applock/webauthn';
-import { currentDevice } from '../device';
-import type { AuthClient, DeviceRow, Services } from './types';
+import type { AuthClient, Services } from './types';
 
 /** Fixed id for local-only mode (a valid GUID, like a real user id). */
 export const LOCAL_USER_ID = '00000000-0000-4000-8000-000000000001';
@@ -20,18 +19,9 @@ export function localServices(): Services {
     verifyEmailCode: async () => {},
     signOut: async () => {},
   };
-  const devices: DeviceRow[] = [];
   return {
     auth,
     appLock: webAuthnAppLock,
-    devices: {
-      async register(d) {
-        if (!devices.some((r) => r.id === d.id)) devices.push({ ...d, last_sync_at: null });
-      },
-      async list() {
-        if (devices.length === 0) devices.push({ ...currentDevice(), last_sync_at: null });
-        return devices;
-      },
-    },
+    remote: null,
   };
 }

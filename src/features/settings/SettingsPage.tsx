@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useState } from 'react';
 import { Page } from '../../app/Page';
 import AppLockSettings from '../applock/AppLockSettings';
 import { useAuth } from '../../lib/auth/context';
-import type { DeviceRow } from '../../lib/auth/types';
+import { useDb } from '../../lib/db/context';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -15,20 +16,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function SettingsPage() {
   const { user, services, deviceId } = useAuth();
-  const [devices, setDevices] = useState<DeviceRow[] | null>(null);
-  const [devicesError, setDevicesError] = useState<string | null>(null);
+  const db = useDb();
+  const devices = useLiveQuery(
+    () => db.devices.filter((d) => !d.deleted_at).sortBy('created_at'),
+    [db],
+  );
   const [signOutError, setSignOutError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    services.devices.list().then(
-      (rows) => alive && setDevices(rows),
-      (e: unknown) => alive && setDevicesError(e instanceof Error ? e.message : String(e)),
-    );
-    return () => {
-      alive = false;
-    };
-  }, [services.devices]);
 
   const local = services.auth.mode === 'local';
 
@@ -72,8 +65,7 @@ export default function SettingsPage() {
       </Section>
 
       <Section title="Devices">
-        {devicesError && <p className="text-sm text-slate-500">{devicesError}</p>}
-        {!devices && !devicesError && <p className="text-sm text-slate-500">Loading…</p>}
+        {!devices && <p className="text-sm text-slate-500">Loading…</p>}
         {devices && (
           <ul aria-label="Devices" className="divide-y divide-slate-200 dark:divide-slate-800">
             {devices.map((d) => (

@@ -35,7 +35,7 @@ Phase 1 is merged. Once items 1–5 below are done, run the Phase 1 section of `
 
 ### 3. Email sign-in code (Task 1.5)
 
-In **each** Supabase project: **Authentication → Emails → Templates → Magic Link**. Replace the body with something that includes the code, e.g.:
+In **each** Supabase project: **Authentication → Emails → Templates**. Paste `supabase/templates/magic_link.html` into **Magic Link** and `supabase/templates/confirmation.html` into **Confirm signup** (first sign-in for a new email uses that one). Both include the code, e.g.:
 
 ```html
 <h2>Your Airhead sign-in code</h2>

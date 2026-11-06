@@ -1,4 +1,4 @@
-import type { Platform } from '../device';
+import type { Remote } from '../sync/types';
 
 export interface AuthUser {
   id: string;
@@ -22,19 +22,6 @@ export interface AuthClient {
   signOut(): Promise<void>;
 }
 
-export interface DeviceRow {
-  id: string;
-  name: string;
-  platform: Platform;
-  last_sync_at: string | null;
-}
-
-export interface DeviceStore {
-  /** Adds this device if it isn't registered yet (never renames an existing one). */
-  register(device: Omit<DeviceRow, 'last_sync_at'>): Promise<void>;
-  list(): Promise<DeviceRow[]>;
-}
-
 /** Face ID / Touch ID for the app lock (WebAuthn in the app, fakes in tests). */
 export interface AppLockAuthenticator {
   available(): Promise<boolean>;
@@ -46,6 +33,7 @@ export interface AppLockAuthenticator {
 
 export interface Services {
   auth: AuthClient;
-  devices: DeviceStore;
   appLock: AppLockAuthenticator;
+  /** The sync server; null in local mode (nothing leaves the device). */
+  remote: Remote | null;
 }

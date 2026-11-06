@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import type { AuthClient, AuthUser, DeviceRow, DeviceStore } from './types';
+import type { AuthClient, AuthUser } from './types';
 
 const toUser = (u: User | null | undefined): AuthUser | null =>
   u ? { id: u.id, email: u.email ?? null } : null;
@@ -53,26 +53,6 @@ export function supabaseAuth(supabase: SupabaseClient): AuthClient {
       // 'local' signs out this device only; other devices stay signed in.
       const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) throw plain(error, 'Sign-out failed. Try again.');
-    },
-  };
-}
-
-export function supabaseDevices(supabase: SupabaseClient): DeviceStore {
-  return {
-    async register(device) {
-      const { error } = await supabase
-        .from('devices')
-        .upsert(device, { onConflict: 'id', ignoreDuplicates: true });
-      if (error) throw new Error('This device could not be registered yet.');
-    },
-    async list() {
-      const { data, error } = await supabase
-        .from('devices')
-        .select('id, name, platform, last_sync_at')
-        .is('deleted_at', null)
-        .order('created_at');
-      if (error) throw new Error('Devices could not be loaded.');
-      return (data ?? []) as DeviceRow[];
     },
   };
 }
