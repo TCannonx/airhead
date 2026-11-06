@@ -1,0 +1,56 @@
+name: Weekly backup (live)
+
+# Dumps the live database (roles, schema, data) and keeps it as a private
+# workflow artifact for 90 days.
+on:
+  schedule:
+    - cron: '23 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    name: dump live
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_LIVE }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_LIVE }}
+    steps:
+      - name: Check secrets
+        id: secrets
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "::notice::Backup skipped: live Supabase secrets are not set yet (see docs/BLOCKERS.md)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@v7
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.secrets.outputs.ready == 'true'
+        run: npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - if: steps.secrets.outputs.ready == 'true'
+        name: Dump
+        run: |
+          mkdir -p backup
+          npx supabase db dump --remote --password "$SUPABASE_DB_PASSWORD" --role-only -f backup/roles.sql
+          npx supabase db dump --remote --password "$SUPABASE_DB_PASSWORD" -f backup/schema.sql
+          npx supabase db dump --remote --password "$SUPABASE_DB_PASSWORD" --data-only --use-copy -f backup/data.sql
+          ls -la backup
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: airhead-live-backup-${{ github.run_id }}
+          path: backup
+          retention-days: 90
+          if-no-files-found: error

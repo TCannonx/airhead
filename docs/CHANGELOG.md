@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 1.8: health function, function tests in CI, deploy-dev, release, keep-alive and weekly backup workflows
 - Task 1.7: Cloudflare Pages hosting files (SPA mode, `_headers`, Node version) and setup steps
 - Task 1.6: optional app lock with Face ID / Touch ID (WebAuthn), inactivity time-out, sign-out recovery
 - Task 1.5: sign-in (Google login only, emailed 6-digit code fallback), device registration, Settings account and devices, local mode without a server
