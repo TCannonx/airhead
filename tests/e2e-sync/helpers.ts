@@ -34,9 +34,19 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await page.goto('/');
   await page.getByLabel('Email').fill(email);
   const before = (await messagesFor(email)).messages.length;
-  await page.getByRole('button', { name: /email me a code/i }).click();
   const codeBox = page.getByLabel(/6-digit code/i);
-  await expect(codeBox).toBeVisible();
+  // Supabase Auth makes a second code request for the same email wait a few
+  // seconds; the app shows "Wait N seconds" and the user (or this test) retries.
+  for (let attempt = 0; ; attempt++) {
+    await page.getByRole('button', { name: /email me a code/i }).click();
+    const alert = page.getByRole('alert');
+    await expect(codeBox.or(alert)).toBeVisible({ timeout: 15_000 });
+    if (await codeBox.isVisible()) break;
+    const text = (await alert.textContent()) ?? '';
+    if (!/^Wait /.test(text) || attempt >= 5) throw new Error(`sign-in email failed: ${text}`);
+    const seconds = Number(text.match(/Wait (\d+) seconds/)?.[1] ?? 1);
+    await page.waitForTimeout(Math.max(seconds, 1) * 1000 + 500);
+  }
   await codeBox.fill(await readCode(email, before));
   await page.getByRole('button', { name: /^sign in$/i }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Capture' })).toBeVisible();

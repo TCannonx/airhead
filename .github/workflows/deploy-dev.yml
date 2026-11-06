@@ -46,7 +46,7 @@ jobs:
         run: npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
       - if: steps.secrets.outputs.ready == 'true'
         name: Apply migrations
-        run: npx supabase db push --remote --password "$SUPABASE_DB_PASSWORD"
+        run: npx supabase db push --remote --password "$SUPABASE_DB_PASSWORD" --yes
       - if: steps.secrets.outputs.ready == 'true'
         name: Deploy Edge Functions
-        run: npx supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api
+        run: npx supabase functions deploy --remote="$SUPABASE_PROJECT_REF" --use-api --yes

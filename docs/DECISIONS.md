@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Supabase projects connected
+- Projects: **airhead-dev** ref `tfxpbxmkvlwxybaysjxy` (eu-west-1, Ireland), **airhead-live** ref `lqoausxpvthmfxvbpyrk` (eu-north-1, Stockholm; it works fine from Ireland with a little extra latency, and the region can't change without recreating the project). This clone is linked to **dev** only.
+- GitHub Actions secrets set by the user: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF_DEV`, `SUPABASE_PROJECT_REF_LIVE`, `SUPABASE_DB_PASSWORD_DEV`, `SUPABASE_DB_PASSWORD_LIVE`.
+- The Supabase GitHub integration is connected (the "Supabase Preview" check), and it had already applied migrations to dev on merge ("Remote database is up to date" on the first workflow deploy). `deploy-dev.yml` stays as the explicit route (functions, and migrations if the integration lags); `db push` is idempotent.
+- **Sign-in code cool-down**: Supabase Auth refuses a second code request for the same email within a few seconds ("For security purposes, you can only request this after N seconds"). The app now says "Wait N seconds, then try again." (`src/lib/auth/errors.ts`) instead of a vague failure; the sync e2e helper waits and retries; the local stack's `email_sent` rate limit is raised to 60/hour.
+- **Supabase CLI 3.0 asks for confirmation on hosted changes** and refuses in a non-interactive run ("Re-run with --yes"). Only the `--yes` flag (or an exported `SUPABASE_YES`) is accepted, so the workflows pass `--yes` to `db push` and `functions deploy`. `functions deploy --project-ref` is deprecated in favour of `--remote=<ref>`.
+
 ## 2026-11-06 — Task 2.3 Sync engine
 - **Push**: drain the outbox ordered by `seq`, de-duplicate per row, send each row's *current* state with `upsert(..., { onConflict: 'id' })` in batches of 100, then delete only the outbox entries that were sent (entries queued during a push survive).
 - **Pull**: per table, keyset pages of 500 ordered by `(server_updated_at, id)` strictly after the last `(ts, id)`. **Each pull starts 60 s before the stored cursor** (`PULL_OVERLAP_MS`): `server_updated_at` is the transaction's start time, so a slow transaction can commit after a pull with a timestamp just before the cursor. Re-applying a row is harmless. Rows failing the Zod schema are skipped, never block sync.
