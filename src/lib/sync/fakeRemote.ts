@@ -11,6 +11,7 @@ export function createFakeRemote(startMs = Date.parse('2026-11-06T09:00:00Z')) {
   const listeners = new Set<() => void>();
   let clock = startMs;
   const state = { online: true, upsertCalls: [] as { table: SyncTable; ids: string[] }[] };
+  const files = new Map<string, Blob>();
   let beforeUpsert: (() => Promise<void>) | null = null;
 
   const tableOf = (t: SyncTable) => {
@@ -24,6 +25,7 @@ export function createFakeRemote(startMs = Date.parse('2026-11-06T09:00:00Z')) {
 
   const remote: Remote & {
     state: typeof state;
+    files: Map<string, Blob>;
     rows(table: SyncTable): RemoteRow[];
     /** Writes a row as if another device/transaction did, at an explicit server time. */
     serverWrite(table: SyncTable, row: RemoteRow, atMs?: number): void;
@@ -32,6 +34,11 @@ export function createFakeRemote(startMs = Date.parse('2026-11-06T09:00:00Z')) {
     tick(ms: number): void;
   } = {
     state,
+    files,
+    async uploadFile(path, blob) {
+      fail();
+      files.set(path, blob);
+    },
     async upsert(table, rows) {
       fail();
       if (beforeUpsert) await beforeUpsert();

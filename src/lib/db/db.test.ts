@@ -31,6 +31,7 @@ describe('local database', () => {
         'captures',
         'corrections',
         'devices',
+        'files',
         'items',
         'lists',
         'meta',

@@ -14,6 +14,8 @@ export interface Remote {
   upsert(table: SyncTable, rows: RemoteRow[]): Promise<void>;
   /** Rows ordered by (server_updated_at, id), strictly after `after`. */
   pullPage(table: SyncTable, after: PullKey | null, limit: number): Promise<RemoteRow[]>;
+  /** Uploads a file to private storage at `path` (overwrites). */
+  uploadFile?(path: string, blob: Blob): Promise<void>;
   /** Calls back when another device changed something (Realtime). */
   subscribe?(onChange: () => void): () => void;
 }

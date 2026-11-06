@@ -1,4 +1,5 @@
 import type { AirheadDb, OutboxEntry } from '../db/db';
+import { uploadPending } from '../files/upload';
 import { schemas, SYNC_TABLES, type SyncTable } from '../schemas/records';
 import type { PullKey, Remote, RemoteRow, SyncStatus } from './types';
 
@@ -175,6 +176,7 @@ export class SyncEngine {
     this.set({ state: 'syncing', pending: await countPending(this.db), message: null });
     try {
       await push(this.db, this.remote);
+      await uploadPending(this.db, this.remote);
       await pull(this.db, this.remote);
       const at = new Date().toISOString();
       await this.db.meta.put({ key: 'lastSyncedAt', value: at });
