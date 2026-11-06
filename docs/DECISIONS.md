@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.1 Core tables
+- **No foreign keys between synced tables** (`items.capture_id`, `list_id`, `series_id`, `corrections.capture_id`, ...). Devices push in batches per table in any order, and a row can legitimately arrive before the row it points at. Only `user_id → auth.users` is a real FK. The app treats links as soft.
+- **`corrections.from_value` / `to_value`** instead of the plan's `from` / `to` (reserved words in SQL).
+- **`items.status`** values: `open`, `suggested` (fuzzy events and AI proposals waiting for a tap, as suggestion cards), `done`, `dropped`. `items.confidence` is checked to 0–1.
+- **Realtime**: all synced tables (plus `settings`, `devices`) are added to the `supabase_realtime` publication; Realtime applies RLS, so a device only hears its own user's changes.
+- **Purge**: `public.purge_soft_deleted()` (security definer, not executable by app users) hard-deletes rows soft-deleted more than 30 days ago in every synced table; `pg_cron` job `purge-soft-deleted` runs it nightly at 03:17 UTC.
+- **Storage**: private bucket `captures` (10 MB, webp/jpeg/png/pdf) created in the migration (so it reaches dev and live through `db push`), with select/insert/update/delete policies limited to `<auth.uid()>/...` paths.
+
 ## 2026-11-06 — Task 1.8 CI and safeguards
 - **CI jobs** (`ci.yml`): `lint`, `typecheck`, `unit tests`, `e2e tests`, `function tests` (Deno via `denoland/setup-deno@v2`, `deno test --allow-env --allow-net=127.0.0.1 supabase/functions`), `database tests` (pgTAP). Edge Function tests import `jsr:@std/assert@1.0.19`; functions pin `npm:@supabase/supabase-js@2.119.0`.
 - **Supabase CLI 3.0 targets the local database by default**: `db push` / `db dump` need `--remote` to reach the linked project, and `link` no longer takes a password. Checked with `--help`; all workflows use `link --project-ref`, then `--remote --password`.

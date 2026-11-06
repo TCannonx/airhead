@@ -195,7 +195,7 @@ Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chr
 
 Goal: capture anything offline, see links and clear dates handled instantly by free rules, and have iPhone, iPad and desktop stay in sync.
 
-- [ ] **2.1 Core tables.** Migration `0002`: `captures`, `items`, `lists`, `topics`, `corrections`, with sync columns, RLS, indexes on `(user_id, server_updated_at)`, Realtime enabled. A `pg_cron` job hard-deletes rows soft-deleted more than 30 days ago. Storage bucket `captures` with a policy limiting paths to `<user_id>/...`.
+- [x] **2.1 Core tables.** Migration `0002`: `captures`, `items`, `lists`, `topics`, `corrections`, with sync columns, RLS, indexes on `(user_id, server_updated_at)`, Realtime enabled. A `pg_cron` job hard-deletes rows soft-deleted more than 30 days ago. Storage bucket `captures` with a policy limiting paths to `<user_id>/...`.
     - Test: RLS test extended to the new tables.
 - [ ] **2.2 Local database.** Dexie schema mirroring the synced tables plus an `outbox` table and a `sync_state` table (per-table cursor). Zod schemas in `src/lib/schemas` shared with functions. Request persistent storage on first run.
 - [ ] **2.3 Sync engine.** Every local write goes to its table and the outbox in one Dexie transaction. Push: drain the outbox in batches of 100 via upserts. Pull: per table, rows with `server_updated_at > cursor`, pages of 500, applied in order (server order wins). Triggers: app open, `online` event, after each capture, every 60 s while visible, and a Supabase Realtime message on the user's channel.
