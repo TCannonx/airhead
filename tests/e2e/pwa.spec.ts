@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('shell still loads offline after the service worker installs', async ({ page, context }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Airhead' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Capture', level: 1 })).toBeVisible();
 
   // Wait until the service worker is active, then reload so it controls the page.
   await page.evaluate(async () => {
@@ -13,11 +13,11 @@ test('shell still loads offline after the service worker installs', async ({ pag
 
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Airhead' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Capture', level: 1 })).toBeVisible();
 
   // A deep link must also fall back to the cached app shell (SPA navigation).
   await page.goto('/today');
-  await expect(page.getByRole('heading', { name: 'Airhead' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Today', level: 1 })).toBeVisible();
   await context.setOffline(false);
 });
 

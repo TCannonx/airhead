@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders the Airhead name', () => {
+  it('opens on the Capture screen with the Airhead name visible', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'Airhead' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Capture' })).toBeInTheDocument();
+    expect(screen.getAllByText('Airhead').length).toBeGreaterThan(0);
   });
 });

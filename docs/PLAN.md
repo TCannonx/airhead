@@ -179,7 +179,7 @@ Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chr
 - [x] **1.2 PWA shell.** vite-plugin-pwa with the injectManifest strategy and a custom service worker in `src/sw/`; manifest (name Airhead, standalone display, theme colours, placeholder icons including Apple touch icon); offline app shell caching. Verify current iOS home-screen requirements.
     - Test: Playwright loads the app, goes offline, reloads, and still sees the shell.
     - Done when: installs to the home screen on iPhone and iPad and as an app window in desktop Chrome.
-- [ ] **1.3 Responsive layout skeleton.** Routes: Capture, Today, Inbox, Library, Insights, Settings. Phone (< 768 px): bottom tabs. iPad (768–1279 px): sidebar plus main pane. Desktop (≥ 1280 px): sidebar, main pane, right panel. Light and dark themes; iOS safe-area insets.
+- [x] **1.3 Responsive layout skeleton.** Routes: Capture, Today, Inbox, Library, Insights, Settings. Phone (< 768 px): bottom tabs. iPad (768–1279 px): sidebar plus main pane. Desktop (≥ 1280 px): sidebar, main pane, right panel. Light and dark themes; iOS safe-area insets.
     - Test: component tests render the right navigation at each width.
 - [ ] **1.4 Supabase setup and first migration.** `supabase init`, local stack, link `airhead-dev`. Migration `0001`: trigger function setting `server_updated_at = now()`, the `settings`, `devices` and `capture_tokens` tables, RLS policies as in Data model.
     - Test: an RLS test creates two users and proves user B cannot read or write user A's rows.
