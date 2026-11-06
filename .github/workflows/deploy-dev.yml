@@ -49,4 +49,12 @@ jobs:
         run: npx supabase db push --remote --password "$SUPABASE_DB_PASSWORD" --yes
       - if: steps.secrets.outputs.ready == 'true'
         name: Deploy Edge Functions
-        run: npx supabase functions deploy --remote="$SUPABASE_PROJECT_REF" --use-api --yes
+        run: |
+          # The Supabase GitHub integration may deploy the same functions at the
+          # same moment (409 "deployed concurrently"); retry a few times.
+          for attempt in 1 2 3 4; do
+            npx supabase functions deploy --remote="$SUPABASE_PROJECT_REF" --use-api --yes && exit 0
+            echo "deploy attempt $attempt failed; retrying in 30 s"
+            sleep 30
+          done
+          exit 1
