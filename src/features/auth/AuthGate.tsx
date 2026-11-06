@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../lib/auth/context';
+import { DataProvider } from '../../lib/db/DataProvider';
 import { AppLockProvider } from '../applock/AppLockProvider';
 import SignInScreen from './SignInScreen';
 
 export default function AuthGate({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   if (status === 'loading') {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-white dark:bg-slate-950">
@@ -12,6 +13,10 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (status === 'signed_out') return <SignInScreen />;
-  return <AppLockProvider>{children}</AppLockProvider>;
+  if (status === 'signed_out' || !user) return <SignInScreen />;
+  return (
+    <DataProvider userId={user.id}>
+      <AppLockProvider>{children}</AppLockProvider>
+    </DataProvider>
+  );
 }

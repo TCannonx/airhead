@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Installable, signed-in app shell for iPhone, iPad and desktop Chrome: offline shell, responsive layouts, Google / email-code sign-in, device list, optional Face ID / Touch ID lock, Supabase schema with RLS, CI with database and function tests, dev deploy, live release, keep-alive and backup workflows. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 1.
 
+- Task 2.2: local Dexie database per user, outbox and sync state, shared Zod schemas, persistent storage request
 - Task 2.1: captures, items, lists, topics, corrections tables with RLS, Realtime, nightly purge, private captures bucket
 - Task 1.8: health function, function tests in CI, deploy-dev, release, keep-alive and weekly backup workflows
 - Task 1.7: Cloudflare Pages hosting files (SPA mode, `_headers`, Node version) and setup steps

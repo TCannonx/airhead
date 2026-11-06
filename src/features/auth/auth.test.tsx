@@ -34,7 +34,7 @@ function fakeAuth(initial: AuthUser | null = null) {
     sendEmailCode: vi.fn(async (_email: string) => {}),
     verifyEmailCode: vi.fn(async (email: string, code: string) => {
       if (code !== '123456') throw new Error('That code is wrong or has expired.');
-      set({ id: 'user-1', email });
+      set({ id: '11111111-1111-4111-8111-111111111111', email });
     }),
     signOut: vi.fn(async () => set(null)),
   } satisfies AuthClient;
@@ -51,7 +51,7 @@ function fakeDevices(rows: DeviceRow[] = []) {
   return store;
 }
 
-const ME: AuthUser = { id: 'user-1', email: 'me@example.test' };
+const ME: AuthUser = { id: '11111111-1111-4111-8111-111111111111', email: 'me@example.test' };
 
 beforeEach(() => {
   localStorage.clear();
