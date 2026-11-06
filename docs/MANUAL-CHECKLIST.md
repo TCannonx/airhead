@@ -1,0 +1,87 @@
+# Airhead — manual device checklist
+
+Things automated tests can't prove: real installs, real offline, real notifications, Pencil versus finger.
+Test on **iPhone (iP)**, **iPad (iPad)** and **desktop Chrome (DC)**. Tick each device column as you go.
+Claude Code adds new lines at the end of each phase. The user ticks them.
+
+Columns: iP · iPad · DC
+
+## Phase 1 — Foundations
+
+- [ ] [ ] [ ] Opens from its web address and shows the Airhead shell
+- [ ] [ ] [ ] Installs: iPhone/iPad via Share → Add to Home Screen; Chrome via the install icon in the address bar
+- [ ] [ ] [ ] Installed app opens full-screen, with no browser bars and safe areas respected (notch, home bar)
+- [ ] [ ] [ ] Airplane mode / network off → installed app still opens and shows the shell
+- [ ] [ ] [ ] Correct navigation for the screen size: bottom tabs (phone), sidebar (iPad), three panes (desktop)
+- [ ] [ ] [ ] Light and dark mode both look right
+- [ ] [ ] [ ] Sign in with Google works; signing out and back in works
+- [ ] [ ] [ ] Each device appears in Settings → Devices
+- [ ] [ ] [ ] App lock: Face ID / Touch ID unlocks; the lock returns after the chosen time-out
+- [ ] CI is green on GitHub; keep-alive and backup workflows ran successfully
+
+## Phase 2 — Capture core and sync
+
+- [ ] [ ] [ ] Capture box is focused on open; typing and saving feel instant
+- [ ] [ ] — iOS keyboard dictation works in the capture box
+- [ ] [ ] [ ] Paste button appears with a link on the clipboard and saves it as a reading item
+- [ ] [ ] [ ] Photo attach works and the image is compressed (check the size in Library)
+- [ ] [ ] [ ] "Dentist Tue 3pm" offline → event created instantly with undo
+- [ ] [ ] [ ] "Sometime next week" → suggestion card, not an event
+- [ ] [ ] [ ] "3/4 meeting" is read as 3 April
+- [ ] [ ] [ ] Capture in airplane mode on one device → appears on the other two within a minute of reconnecting
+- [ ] [ ] [ ] The sync icon shows "n waiting" offline and "synced" afterwards
+- [ ] [ ] [ ] Delete an item → it's in Trash → restore works
+- [ ] [ ] [ ] Search finds items by title and body
+- [ ] — [ ] Export downloads a zip that opens, with Markdown files and a JSON file
+
+## Phase 3 — AI sorting, link reading, lists, memory
+
+- [ ] [ ] [ ] Five or more captures get sorted within the threshold time without tapping anything
+- [ ] [ ] [ ] "Sort now" sorts immediately
+- [ ] [ ] [ ] A brain dump splits into separate items, including a shopping list entry
+- [ ] [ ] [ ] An ambiguous capture shows a one-tap "Task or Idea?" choice
+- [ ] [ ] [ ] A news article link gets a summary and key points
+- [ ] [ ] [ ] A paywalled link is marked "couldn't read"
+- [ ] [ ] [ ] Lists: create, tick off and clear completed
+- [ ] [ ] [ ] An everyday fact appears in "What Airhead knows about me"; a fact about a person waits for approval
+- [ ] [ ] [ ] After four "buy …" captures, the fifth is sorted instantly offline (learned rule)
+- [ ] [ ] [ ] Run check-up shows findings, and the one-tap fixes work
+- [ ] [ ] [ ] AI usage screen totals roughly match the Claude Console billing page
+- [ ] A low test monthly cap pauses background sorting; captures still save
+
+## Phase 4 — Calendar, sharing, work and leave, import, notifications
+
+Calendar
+- [ ] [ ] [ ] Day, week, month and agenda views all work; agenda is the phone default
+- [ ] — [ ] Drag an event to a new time; drag a task onto the calendar to time-block it
+- [ ] [ ] [ ] Click/tap an empty slot to create an event
+- [ ] [ ] [ ] Irish public holidays for this year and next match citizensinformation.ie
+
+Work and leave
+- [ ] [ ] [ ] Work location chip changes with one tap and shows on the calendar
+- [ ] [ ] [ ] Booking leave across a public holiday deducts the right number of days
+- [ ] [ ] [ ] Leave counter is correct for a December–November leave year
+- [ ] [ ] [ ] "AL 14–18 July" in Capture proposes a booking
+
+Sharing
+- [ ] Girlfriend subscribes to the Us link and sees Us events and shared leave in her calendar app
+- [ ] My own "me" feed shows Airhead events in Apple Calendar on my iPhone
+- [ ] Her linked calendar's events appear in Airhead within about 30 minutes
+
+Import
+- [ ] — [ ] A fixtures PDF with "attending all home games" imports as a reviewed series
+- [ ] — [ ] A .ics file and a CSV both import correctly
+- [ ] [ ] [ ] Deleting the series removes all its events
+
+Notifications (iPhone must be installed to the home screen)
+- [ ] — — Enable notifications → test notification arrives
+- [ ] — — Event reminder arrives about 30 minutes before
+- [ ] — — Location checklist arrives the evening before an office day
+- [ ] — — Evening review arrives and its screen works (tick off, carry over, drop)
+- [ ] — — Nothing arrives during quiet hours (except allowed event reminders)
+- [ ] — [ ] iPad and desktop stay silent by default
+
+## v0.1 release
+
+- [ ] Everything above is ticked
+- [ ] Ready to tag `v0.1.0` → live deploy
