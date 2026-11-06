@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 1.8 CI and safeguards
+- **CI jobs** (`ci.yml`): `lint`, `typecheck`, `unit tests`, `e2e tests`, `function tests` (Deno via `denoland/setup-deno@v2`, `deno test --allow-env --allow-net=127.0.0.1 supabase/functions`), `database tests` (pgTAP). Edge Function tests import `jsr:@std/assert@1.0.19`; functions pin `npm:@supabase/supabase-js@2.119.0`.
+- **Supabase CLI 3.0 targets the local database by default**: `db push` / `db dump` need `--remote` to reach the linked project, and `link` no longer takes a password. Checked with `--help`; all workflows use `link --project-ref`, then `--remote --password`.
+- **`health` function**: `GET`/`HEAD` → `{ ok, error_code, message, time }`; runs a head-only count on `settings` so the free project registers real database activity; `verify_jwt = false` in `config.toml` (it is called without a user). Internal errors are never echoed.
+- **`deploy-dev.yml`** (push to main): link dev → `db push --remote` → `functions deploy --use-api` (server-side bundling, no Docker). It **skips with a notice** while the secrets are missing so `main` doesn't go red before the user has created the projects. The static app is deployed by Cloudflare Pages' Git integration, not a workflow.
+- **`release.yml`** (tag `v*`): re-runs lint, typecheck and unit tests, then deploys migrations, functions and the app (`wrangler@4.158.0 pages deploy` to the separate `airhead-live` Pages project, built with the live `VITE_*` values). It **fails before touching anything** if any secret is missing. Uses the GitHub environment `live`.
+- **`keepalive.yml`**: daily 06:17 UTC, calls both projects' `health` (3 attempts). **`backup.yml`**: Sundays 03:23 UTC, `db dump --remote` roles, schema and data (`--use-copy`) for live, kept as a 90-day artifact. Both skip with a notice while secrets are missing. Note: GitHub disables scheduled workflows in repos with no activity for 60 days.
+- **Branch protection: not available.** The exact call tried (REST, equivalent of `gh api`):
+  `PUT /repos/TCannonx/airhead/branches/main/protection` with `required_status_checks.strict=true`, `checks=[lint, typecheck, unit tests, e2e tests, function tests, database tests]`, `enforce_admins=true`, `required_pull_request_reviews.required_approving_review_count=0`, `restrictions=null`, `allow_force_pushes=false`, `allow_deletions=false`, `required_linear_history=true`.
+  Result: `403 Upgrade to GitHub Pro or make this repository public`. The rulesets API (`POST /repos/TCannonx/airhead/rulesets`, same rules) returns the same 403. Recorded in BLOCKERS. **Stand-in until then**: the local hook blocks pushes to `main`, and the merge script refuses to merge unless all six required jobs ran and passed.
+
 ## 2026-11-06 — Task 1.7 Hosting
 - **Verify (Cloudflare Pages SPA and headers)**, from the official docs (`pages/configuration/serving-pages`, `pages/configuration/headers`): with no top-level `404.html`, Pages serves the root for any path that isn't a static asset (SPA mode), so no `_redirects` catch-all is needed; `_headers` rules that match the same path *add up*, duplicate values are comma-joined, `! Name` removes a header, max 100 rules; Cloudflare advises against custom caching in most cases.
 - `public/_headers`: security headers on `/*`; `Cache-Control: no-cache` only on `/sw.js` and `/manifest.webmanifest` so new versions reach devices. A node-environment test guards these and the absence of `404.html`.

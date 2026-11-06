@@ -175,7 +175,11 @@ npm test               # Vitest unit + component tests
 npm run test:e2e       # Playwright
 supabase start         # local Supabase stack (Docker)
 supabase db reset      # LOCAL only — rebuild local DB from migrations
-deno test supabase/functions
+npm run test:db        # pgTAP database tests (supabase test db; needs the local stack)
+deno test --allow-env --allow-net=127.0.0.1 supabase/functions
 ```
+
+Supabase CLI 3.x: `db push`, `db dump` and similar commands target the **local** database unless given `--remote`.
+On this machine (no Docker, Deno or `gh`), database and function tests run only in CI; see `docs/DECISIONS.md`.
 
 Keep this section accurate as scripts are added.

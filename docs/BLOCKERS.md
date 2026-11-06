@@ -58,6 +58,16 @@ Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes w
 7. Add the new address to sign-in: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead.pages.dev`, Redirect URLs add `https://airhead.pages.dev/**` and `https://*.airhead.pages.dev/**` (PR previews). If Google login is set up, add `https://airhead.pages.dev` to the OAuth client's JavaScript origins.
 8. For the live release workflow (Task 1.8), also create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
 
-### 6. Anthropic API key with a spend limit (needed from Phase 3)
+### 6. Branch protection needs GitHub Pro (Task 1.8)
+
+GitHub refuses branch protection and rulesets on a **private** repo on the free plan (`403 Upgrade to GitHub Pro or make this repository public`). Choose one:
+- **Upgrade to GitHub Pro** (github.com/settings/billing), then tell Claude Code "GitHub Pro is on". It applies the protection with the exact call recorded in `docs/DECISIONS.md`.
+- **Keep the free plan.** Until then, a local hook blocks pushes to `main`, and Claude Code's merge script merges only when all six CI jobs (lint, typecheck, unit tests, e2e tests, function tests, database tests) have run and passed.
+
+### 7. Secrets for the live release (before the first `v*` tag)
+
+Add to https://github.com/TCannonx/airhead/settings/secrets/actions: `VITE_SUPABASE_URL_LIVE`, `VITE_SUPABASE_ANON_KEY_LIVE` (live project → Project Settings → API), plus `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (item 5, step 8). In Cloudflare create a second Pages project named `airhead-live` using **Direct Upload** (not Git), since the release workflow uploads to it. The release workflow fails loudly, before touching anything, if any secret is missing.
+
+### 8. Anthropic API key with a spend limit (needed from Phase 3)
 
 Plan setup step 2. Create it in the Claude Console with a monthly spend limit. Don't paste it anywhere yet; it goes into Supabase secrets in Phase 3.

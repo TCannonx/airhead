@@ -1,0 +1,38 @@
+name: Keep-alive
+
+# The Supabase free plan pauses a project after 7 days without activity.
+# Call each project's health function (which queries the database) daily.
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: ping ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [dev, live]
+    env:
+      REF: ${{ matrix.project == 'dev' && secrets.SUPABASE_PROJECT_REF_DEV || secrets.SUPABASE_PROJECT_REF_LIVE }}
+    steps:
+      - name: Call health
+        run: |
+          if [ -z "$REF" ]; then
+            echo "::notice::Skipped ${{ matrix.project }}: project ref secret not set yet (see docs/BLOCKERS.md)."
+            exit 0
+          fi
+          for attempt in 1 2 3; do
+            body=$(curl -sS --max-time 30 -w '\n%{http_code}' "https://$REF.supabase.co/functions/v1/health") || true
+            code=$(echo "$body" | tail -n1)
+            echo "attempt $attempt: HTTP $code $(echo "$body" | head -n1)"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "::error::${{ matrix.project }} health check failed"
+          exit 1

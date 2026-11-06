@@ -1,0 +1,70 @@
+name: Release (live)
+
+# The only route to airhead-live: the user pushes a tag vX.Y.Z.
+# Deploys that exact commit's migrations, functions and app.
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-live
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  deploy:
+    name: deploy live
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: live
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF_LIVE }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD_LIVE }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL_LIVE }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY_LIVE }}
+    steps:
+      - name: Check secrets (a release must not half-deploy)
+        run: |
+          missing=""
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets for the live release:$missing (see docs/BLOCKERS.md)"
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Link live project
+        run: npx supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Apply migrations
+        run: npx supabase db push --remote --password "$SUPABASE_DB_PASSWORD"
+      - name: Deploy Edge Functions
+        run: npx supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api
+      - name: Build the app with live settings
+        run: npm run build
+      - name: Deploy the app to Cloudflare Pages (airhead-live)
+        run: npx --yes wrangler@4.158.0 pages deploy dist --project-name airhead-live --branch main --commit-dirty=true
