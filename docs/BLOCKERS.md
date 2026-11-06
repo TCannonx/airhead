@@ -2,6 +2,10 @@
 
 ## Waiting for the user
 
+### Update the live secrets (live project was recreated)
+
+The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
+
 ### Phase 1 ready for device testing and release
 
 Phase 1 is merged. Once items 1–5 below are done, run the Phase 1 section of `docs/MANUAL-CHECKLIST.md` on iPhone, iPad and desktop Chrome. Release to live by tagging (`v0.0.1`, say) once item 7 is done, or tell Claude Code to tag it. Releases are never made without you.
