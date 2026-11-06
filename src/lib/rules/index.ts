@@ -32,6 +32,8 @@ const ALL_DAY_WORDS =
   /\b(?:all[\s-]day|birthday|b'?day|anniversary|holidays?|day\s+off|bank\s+holiday)\b/i;
 const YEARLY_WORDS = /\b(?:birthday|b'?day|anniversary)\b/i;
 const ISH_TIME = /\b\d{1,2}(?::\d\d)?\s*(?:am|pm)?ish\b/gi;
+/** Hedge words are a signal for the confidence rule, not part of the title. */
+const HEDGES = /^(?:sometime|maybe|possibly|probably|perhaps)$/i;
 const CONNECTORS = /^(?:at|on|by|from|for|every|each|the|and|in)$/i;
 
 const blank = (text: string, spans: Span[]) => {
@@ -41,7 +43,10 @@ const blank = (text: string, spans: Span[]) => {
 };
 
 function tidyTitle(text: string, spans: Span[]): string {
-  const words = blank(text, spans).split(/\s+/).filter(Boolean);
+  const words = blank(text, spans)
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((w) => !HEDGES.test(w));
   while (words.length && CONNECTORS.test(words[0] ?? '')) words.shift();
   while (words.length && CONNECTORS.test(words[words.length - 1] ?? '')) words.pop();
   const title = words.join(' ').replace(/[\s,;:-]+$/, '');
@@ -190,8 +195,9 @@ export function analyseCapture(
   return {
     ...base,
     when: {
-      start: start.toISOString(),
-      end: end ? end.toISOString() : null,
+      // Always plain UTC (TZDate's own toISOString writes the zone offset).
+      start: new Date(start.getTime()).toISOString(),
+      end: end ? new Date(end.getTime()).toISOString() : null,
       allDay,
       rrule,
       confident,

@@ -1,6 +1,6 @@
 import { queueFile } from '../files/upload';
 import { analyseCapture } from '../rules';
-import type { Capture } from '../schemas/records';
+import type { Capture, Item } from '../schemas/records';
 import type { AirheadDb } from './db';
 import { newCapture, newItem, save } from './repository';
 
@@ -10,23 +10,40 @@ export interface CaptureInput {
   photo?: Blob | null;
 }
 
+export interface CaptureResult {
+  capture: Capture;
+  /** Event the free rules created: confident (status open) or a suggestion. */
+  event: Item | null;
+}
+
 /**
- * Saves a capture locally first (never waits on the network). A photo is kept
- * on the device and queued for upload; its Storage path is recorded on the capture.
+ * Saves a capture locally first (never waits on the network), then applies the
+ * free rules: a link becomes a reading item; a confident date becomes a
+ * Personal event straight away (undoable); a fuzzy date becomes a suggestion.
+ * Photos are kept on the device and queued for upload. The capture's own text
+ * is never altered.
  */
 export async function createCapture(
   db: AirheadDb,
   userId: string,
   input: CaptureInput,
-): Promise<Capture> {
+  options: { now?: Date } = {},
+): Promise<CaptureResult> {
   const text = input.text?.trim() || null;
-  // Free rules run instantly on the device; the capture itself is never altered.
-  const analysis = text ? analyseCapture(text) : null;
+  const analysis = text ? analyseCapture(text, { now: options.now }) : null;
   const url = input.url ?? analysis?.url ?? null;
+  const when = analysis?.when ?? null;
+  const at = new Date().toISOString();
+
   const capture = newCapture(userId, {
     text,
     url,
     kind: input.photo ? 'image' : url ? 'link' : 'text',
+    ...(when
+      ? when.confident
+        ? { status: 'sorted' as const, sorted_at: at }
+        : { status: 'needs_review' as const }
+      : {}),
   });
   if (input.photo) {
     const file = await queueFile(db, userId, capture.id, input.photo);
@@ -49,7 +66,26 @@ export async function createCapture(
       }),
     );
   }
-  return saved;
+
+  let event: Item | null = null;
+  if (when && analysis) {
+    event = await save(
+      db,
+      'items',
+      newItem(userId, {
+        type: 'event',
+        title: analysis.title || text || 'Event',
+        capture_id: saved.id,
+        status: when.confident ? 'open' : 'suggested',
+        calendar: 'personal',
+        start_at: when.start,
+        end_at: when.end,
+        all_day: when.allDay,
+        rrule: when.rrule,
+      }),
+    );
+  }
+  return { capture: saved, event };
 }
 
 /** The status chip shown under a capture. */

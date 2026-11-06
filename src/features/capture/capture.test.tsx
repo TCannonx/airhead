@@ -50,17 +50,17 @@ describe('Capture tab', () => {
   it('saves with Enter on desktop, clears the box and shows a chip', async () => {
     renderCapture();
     const box = await screen.findByLabelText('Capture');
-    await userEvent.type(box, 'dentist tue 3pm{Enter}');
+    await userEvent.type(box, 'ring the plumber{Enter}');
 
     await waitFor(() => expect(box).toHaveValue(''));
     const recent = await screen.findByRole('list', { name: 'Recent captures' });
-    expect(await within(recent).findByText('dentist tue 3pm')).toBeVisible();
+    expect(await within(recent).findByText('ring the plumber')).toBeVisible();
     expect(within(recent).getByText('Sorting soon')).toBeVisible();
     const saved = await db().captures.toArray();
     expect(saved).toHaveLength(1);
     expect(saved[0]).toMatchObject({
       kind: 'text',
-      text: 'dentist tue 3pm',
+      text: 'ring the plumber',
       source: 'app',
       status: 'unsorted',
     });

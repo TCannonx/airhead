@@ -4,10 +4,20 @@ import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { captureChip, createCapture, isUrl, type CaptureInput } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
+import { eventLabel, undoInstantEvent } from '../../lib/db/events';
+import type { Capture, Item } from '../../lib/schemas/records';
+import { TOAST_MS } from './toast';
 import { compressImage } from '../../lib/files/image';
 
 const isTouch = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+
+function chipFor(c: Capture, items: Item[]): string {
+  const event = items.find((i) => i.capture_id === c.id && i.type === 'event' && !i.deleted_at);
+  if (event?.status === 'open') return `Event added: ${eventLabel(event)}`;
+  if (event?.status === 'suggested') return `Suggestion: ${eventLabel(event)}`;
+  return captureChip(c);
+}
 
 const button =
   'rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
@@ -22,6 +32,7 @@ export default function CapturePage() {
   const [error, setError] = useState<string | null>(null);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [toast, setToast] = useState<{ itemId: string; label: string } | null>(null);
 
   const recent = useLiveQuery(
     () =>
@@ -33,17 +44,33 @@ export default function CapturePage() {
         .toArray(),
     [db],
   );
+  const recentIds = recent?.map((c) => c.id).join(',') ?? '';
+  const recentItems = useLiveQuery(
+    () => (recentIds ? db.items.where('capture_id').anyOf(recentIds.split(',')).toArray() : []),
+    [db, recentIds],
+  );
 
   useEffect(() => {
     boxRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const canSave = text.trim().length > 0 || photo !== null;
 
   async function saveCapture(input: CaptureInput) {
     setError(null);
     try {
-      await createCapture(db, userId, input);
+      const { event } = await createCapture(db, userId, input);
+      setToast(
+        event?.status === 'open'
+          ? { itemId: event.id, label: `Event added: ${eventLabel(event)}` }
+          : null,
+      );
     } catch {
       setError('That capture could not be saved. Try again.');
       return false;
@@ -171,12 +198,32 @@ export default function CapturePage() {
                   {c.text ?? c.url}
                 </span>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {captureChip(c)}
+                  {chipFor(c, recentItems ?? [])}
                 </span>
               </li>
             ))}
           </ul>
         </section>
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg md:bottom-8 dark:bg-slate-100 dark:text-slate-900"
+        >
+          <span>{toast.label}</span>
+          <button
+            type="button"
+            className="rounded-md px-2 py-1 font-semibold text-indigo-300 hover:bg-white/10 dark:text-indigo-700 dark:hover:bg-slate-900/10"
+            onClick={() => {
+              const { itemId } = toast;
+              setToast(null);
+              void undoInstantEvent(db, itemId);
+            }}
+          >
+            Undo
+          </button>
+        </div>
       )}
     </Page>
   );

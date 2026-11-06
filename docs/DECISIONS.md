@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.6 Instant events and suggestions
+- **Confident date** → an `event` item (status `open`, calendar `personal`, start/end/all-day/RRULE from the rules) is saved with the capture, and the capture is marked `sorted` (the free rules handled it). An **"Event added: Sat 11:00 · Undo"** toast (`role="status"`) shows for 8 s (`TOAST_MS`).
+- **Undo** soft-deletes the event (recoverable from Trash for 30 days) and sets the capture back to `unsorted`, so the next AI batch sorts it instead.
+- **Fuzzy date** → an `event` item with status `suggested`; the capture becomes `needs_review`. Suggestion cards sit at the top of **Today** ("Add to calendar" → `open` on Personal; "Dismiss" → `dropped`); either marks the capture `sorted`. (The Inbox's one-tap review choices for AI sorting arrive in Phase 3.)
+- **Chips**: `Event added: <when>` / `Suggestion: <when>`; `<when>` is "Sat 11:00" within the next 7 days, "Sun 20 Dec, 20:00" beyond, and no time for all-day items.
+- Hedge words (sometime, maybe, possibly, probably, perhaps) count for the confidence rule but are left out of titles ("sometime next week call the bank" → "Call the bank").
+- The rules always return plain UTC ISO strings (`TZDate.toISOString()` writes an offset, which would mix formats in the database).
+- Everything here is local (Dexie), so it works fully offline; sync carries the event to other devices.
+
 ## 2026-11-06 — Task 2.5 Free rules
 - Libraries: **chrono-node 2.10.3** (`chrono.en.GB` with `forwardDate: true` and `{ instant, timezone: 'Europe/Dublin' }` as the reference, so "3/4" is 3 April and times convert through BST/GMT correctly), **rrule 2.8.1** (RRULE validation now, expansion later), **date-fns 4.4.0** + **@date-fns/tz 1.5.0** (`TZDate` for local days in the user's zone).
 - **Confidence rule** (exactly when an event may be created without asking): explicit date (a day, weekday, "today/tonight/tomorrow", or a recurrence) **and** (explicit time **or** all-day wording: birthday, anniversary, holiday, day off, all day) **and** in the future **and** no fuzzy words. Fuzzy: sometime, maybe, possibly, probably, perhaps, around, roughly, approx, at some point, soon, TBC/TBD, "or so", "-ish" (e.g. "8ish"), and a bare "next/this week/month" without a weekday. Time-only phrases ("lunch at 1pm") are not confident.
