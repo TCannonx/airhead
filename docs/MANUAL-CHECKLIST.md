@@ -18,6 +18,12 @@ Columns: iP · iPad · DC
 - [ ] [ ] [ ] Each device appears in Settings → Devices
 - [ ] [ ] [ ] App lock: Face ID / Touch ID unlocks; the lock returns after the chosen time-out
 - [ ] CI is green on GitHub; keep-alive and backup workflows ran successfully
+- [ ] [ ] [ ] Email sign-in: "Email me a code" → the 6-digit code from the email signs in **inside the installed app** (on iPhone, tapping the link opens Safari instead; that's expected)
+- [ ] — — Google sign-in completes inside the installed iPhone app (if it gets stuck in Safari, note it; the email code is the fallback)
+- [ ] [ ] [ ] App lock: turning it on asks for Face ID / Touch ID; "Lock after: Immediately" locks every time you leave the app
+- [ ] [ ] [ ] App lock recovery: on the lock screen, "Sign out" → sign back in → app opens unlocked
+- [ ] [ ] [ ] A deep link (e.g. …/today) opened offline in the installed app still shows the app
+- [ ] Cloudflare Pages: a PR shows a preview link; `https://airhead.pages.dev` serves the latest main
 
 ## Phase 2 — Capture core and sync
 
