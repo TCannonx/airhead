@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it } from 'vitest';
 import { AppLockProvider } from '../features/applock/AppLockProvider';
 import { AuthProvider } from '../lib/auth/AuthProvider';
+import { DataProvider } from '../lib/db/DataProvider';
 import { localServices } from '../lib/auth/localAuth';
 import { routes } from './routes';
 
@@ -16,9 +17,11 @@ function renderAt(width: number, path = '/capture') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   return render(
     <AuthProvider services={localServices()}>
-      <AppLockProvider>
-        <RouterProvider router={router} />
-      </AppLockProvider>
+      <DataProvider userId="00000000-0000-4000-8000-000000000001">
+        <AppLockProvider>
+          <RouterProvider router={router} />
+        </AppLockProvider>
+      </DataProvider>
     </AuthProvider>,
   );
 }

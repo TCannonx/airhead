@@ -69,6 +69,37 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  e2e-sync:
+    name: e2e sync tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Auth, REST, Realtime and the local mail catcher are needed; the rest isn't.
+      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+      - name: Point the app at the local stack
+        run: |
+          npx supabase status -o env > /tmp/sb.env
+          echo "variables available: $(cut -d= -f1 /tmp/sb.env | tr '\n' ' ')"
+          set -a; . /tmp/sb.env; set +a
+          key="${ANON_KEY:-$PUBLISHABLE_KEY}"
+          echo "VITE_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_ANON_KEY=$key" >> "$GITHUB_ENV"
+      - run: npx playwright test --config playwright.sync.config.ts
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-sync-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
   functions:
     name: function tests
     runs-on: ubuntu-latest

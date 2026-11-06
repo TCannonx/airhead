@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.3 Sync engine
+- **Push**: drain the outbox ordered by `seq`, de-duplicate per row, send each row's *current* state with `upsert(..., { onConflict: 'id' })` in batches of 100, then delete only the outbox entries that were sent (entries queued during a push survive).
+- **Pull**: per table, keyset pages of 500 ordered by `(server_updated_at, id)` strictly after the last `(ts, id)`. **Each pull starts 60 s before the stored cursor** (`PULL_OVERLAP_MS`): `server_updated_at` is the transaction's start time, so a slow transaction can commit after a pull with a timestamp just before the cursor. Re-applying a row is harmless. Rows failing the Zod schema are skipped, never block sync.
+- **Merge**: a local row with pending outbox entries is not overwritten by a pull (the local edit is newer and the next push makes it the server's version); otherwise the server row wins. "Conflicted copy" for notes edited on two devices comes with notes in Phase 6.
+- **Triggers**: `start()` (app open), `online`, visible again, every 60 s while visible, 1 s after a local write (Dexie `outbox` creating hook), and Realtime. One run at a time; overlapping requests fold into a single follow-up run.
+- **Realtime**: one `postgres_changes` channel on schema `public` (Realtime enforces RLS, so only the user's own rows arrive) used as a "something changed, sync now" nudge, rather than a custom per-user broadcast channel; the change payload itself is ignored and the normal pull fetches it.
+- **Status**: `idle` / `syncing` / `offline` (browser offline) / `error` (online but failing: retries after 5 s, 15 s, 60 s, then every 5 min) with a pending count (distinct rows in the outbox) and `lastSyncedAt` (also stored in `meta`).
+- **Devices are now local-first**: the device row is saved to Dexie and pushed by sync (registration works offline); Settings → Devices reads Dexie. The earlier direct-to-server `DeviceStore` from Task 1.5 is gone. `Services.remote` is the sync server (`null` in local mode).
+- **Settings row id = user id** (for later tasks): `settings` has a unique `user_id`, so two devices creating it offline with random ids would conflict forever on push.
+- **Cross-device e2e** (`tests/e2e-sync`, `playwright.sync.config.ts`, CI job `e2e sync tests`): `supabase start` without studio/imgproxy/edge-runtime/logflare/vector/supavisor/postgres-meta; the app is built against the local stack (`supabase status -o env`), two browser contexts sign in through the real UI with codes read from the local Mailpit API, and each must see the other's device (A via Realtime, without reload).
+- **Email templates** with `{{ .Token }}` live in `supabase/templates/` (`magic_link.html`, `confirmation.html` for first sign-in) and are wired in `config.toml` for the local stack.
+
 ## 2026-11-06 — Task 2.2 Local database
 - **Dexie 4.4.7** (+ dexie-react-hooks 4.4.0), **Zod 4.6.7**, **fake-indexeddb 6.2.7** (tests; loaded globally in `src/test/setup.ts`).
 - **One IndexedDB database per user**: `airhead-<userId>`, opened by `DataProvider` after sign-in. Local mode uses the fixed id `00000000-0000-4000-8000-000000000001`.
