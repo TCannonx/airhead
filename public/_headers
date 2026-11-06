@@ -1,0 +1,17 @@
+# Cloudflare Pages response headers. Rules that match the same path add up.
+# No top-level 404.html exists on purpose: Pages then serves index.html for
+# every route (single-page app mode).
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), payment=()
+
+# The service worker and manifest must always be revalidated, or devices keep
+# running an old version of the app.
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Cache-Control: no-cache

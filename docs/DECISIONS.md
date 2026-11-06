@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 1.7 Hosting
+- **Verify (Cloudflare Pages SPA and headers)**, from the official docs (`pages/configuration/serving-pages`, `pages/configuration/headers`): with no top-level `404.html`, Pages serves the root for any path that isn't a static asset (SPA mode), so no `_redirects` catch-all is needed; `_headers` rules that match the same path *add up*, duplicate values are comma-joined, `! Name` removes a header, max 100 rules; Cloudflare advises against custom caching in most cases.
+- `public/_headers`: security headers on `/*`; `Cache-Control: no-cache` only on `/sw.js` and `/manifest.webmanifest` so new versions reach devices. A node-environment test guards these and the absence of `404.html`.
+- `.node-version` = 24 for the Pages build image (plus `NODE_VERSION` in Pages settings; the build-configuration page doesn't state the default Node version).
+- **Two Pages projects**: `airhead` builds from `main` (dev data, plus PR previews); live is a separate project `airhead-live`, deployed only by `release.yml` on a `v*` tag (Task 1.8), so the dev site can never serve live config.
+- Node-only tests live in `tests/node/` (covered by `tsconfig.node.json` and the Vitest include list).
+
 ## 2026-11-06 — Scope: all phases
 - The user instructed (2026-11-06, in session): "go through all phases and complete as many as possible without my input". `PLAN.md` says phases 5–9 should only be planned in detail after v0.1 has been used for a few weeks. The user's later, explicit instruction wins: after Phase 4, each of phases 5–9 first gets a detailed task list written into `PLAN.md` from `DESIGN.md` (one PR), then is built task by task as usual. Live releases still wait for the user.
 

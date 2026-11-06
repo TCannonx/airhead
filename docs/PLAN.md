@@ -187,7 +187,7 @@ Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chr
     - Done when: sign-in works on all three devices and a `devices` row is registered for each.
 - [x] **1.6 App lock.** Optional, set in Settings: register a WebAuthn platform credential (Face ID or Touch ID); show a lock screen on open and after a chosen inactivity time-out. Document that it is a privacy screen, not encryption; signing out and back in is the recovery path.
     - Test: unit tests for time-out and lock-state logic.
-- [ ] **1.7 Hosting.** Cloudflare Pages builds from the main branch with SPA fallback, per-PR previews and environment variables for the dev project. The user connects Pages to the repo [ASK]. Live deployment happens only from a release tag.
+- [x] **1.7 Hosting.** _(Repo side done; connecting Pages waits on the user: see BLOCKERS.)_ Cloudflare Pages builds from the main branch with SPA fallback, per-PR previews and environment variables for the dev project. The user connects Pages to the repo [ASK]. Live deployment happens only from a release tag.
 - [ ] **1.8 CI and safeguards.** `ci.yml` runs lint, typecheck and unit tests on every push and PR. `deploy-dev.yml` runs `supabase db push` and `supabase functions deploy` against dev on merge to main. `release.yml` deploys a `v*` tag to live. A `health` function plus `keepalive.yml` calls both projects daily. `backup.yml` runs `supabase db dump` weekly for live and keeps it as a workflow artifact. Set branch protection on main as in CLAUDE.md once CI has run. The user adds the secrets [ASK].
     - Done when: CI is green and a manual run of each workflow succeeds.
 
