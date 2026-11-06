@@ -1,19 +1,9 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { friendlyAuthError as plain } from './errors';
 import type { AuthClient, AuthUser } from './types';
 
 const toUser = (u: User | null | undefined): AuthUser | null =>
   u ? { id: u.id, email: u.email ?? null } : null;
-
-function plain(error: { message?: string } | null, fallback: string): Error {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    return new Error('You are offline. Try again when you have a connection.');
-  }
-  const message = error?.message ?? '';
-  if (/expired|invalid/i.test(message)) return new Error('That code is wrong or has expired.');
-  if (/rate limit/i.test(message))
-    return new Error('Too many attempts. Wait a minute and try again.');
-  return new Error(fallback);
-}
 
 export function supabaseAuth(supabase: SupabaseClient): AuthClient {
   return {
