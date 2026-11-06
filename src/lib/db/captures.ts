@@ -1,7 +1,8 @@
 import { queueFile } from '../files/upload';
+import { analyseCapture } from '../rules';
 import type { Capture } from '../schemas/records';
 import type { AirheadDb } from './db';
-import { newCapture, save } from './repository';
+import { newCapture, newItem, save } from './repository';
 
 export interface CaptureInput {
   text?: string | null;
@@ -18,10 +19,14 @@ export async function createCapture(
   userId: string,
   input: CaptureInput,
 ): Promise<Capture> {
+  const text = input.text?.trim() || null;
+  // Free rules run instantly on the device; the capture itself is never altered.
+  const analysis = text ? analyseCapture(text) : null;
+  const url = input.url ?? analysis?.url ?? null;
   const capture = newCapture(userId, {
-    text: input.text?.trim() || null,
-    url: input.url ?? null,
-    kind: input.photo ? 'image' : input.url ? 'link' : 'text',
+    text,
+    url,
+    kind: input.photo ? 'image' : url ? 'link' : 'text',
   });
   if (input.photo) {
     const file = await queueFile(db, userId, capture.id, input.photo);
@@ -30,7 +35,21 @@ export async function createCapture(
       files: [{ id: file.id, path: file.path, mime: file.mime, size: file.size }],
     };
   }
-  return save(db, 'captures', capture);
+  const saved = await save(db, 'captures', capture);
+
+  if (url) {
+    await save(
+      db,
+      'items',
+      newItem(userId, {
+        type: 'reading',
+        title: (analysis?.kind === 'link' && analysis.title) || url,
+        capture_id: saved.id,
+        data: { url },
+      }),
+    );
+  }
+  return saved;
 }
 
 /** The status chip shown under a capture. */
