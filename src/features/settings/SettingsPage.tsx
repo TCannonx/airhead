@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Page } from '../../app/Page';
+import AppLockSettings from '../applock/AppLockSettings';
 import { useAuth } from '../../lib/auth/context';
 import type { DeviceRow } from '../../lib/auth/types';
 
@@ -64,6 +65,10 @@ export default function SettingsPage() {
             {signOutError}
           </p>
         )}
+      </Section>
+
+      <Section title="Security">
+        <AppLockSettings />
       </Section>
 
       <Section title="Devices">

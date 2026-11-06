@@ -35,7 +35,17 @@ export interface DeviceStore {
   list(): Promise<DeviceRow[]>;
 }
 
+/** Face ID / Touch ID for the app lock (WebAuthn in the app, fakes in tests). */
+export interface AppLockAuthenticator {
+  available(): Promise<boolean>;
+  /** Registers a platform credential and returns its id (base64url). */
+  register(label: string): Promise<string>;
+  /** Resolves when the user passed Face ID / Touch ID; throws a plain Error otherwise. */
+  verify(credentialId: string): Promise<void>;
+}
+
 export interface Services {
   auth: AuthClient;
   devices: DeviceStore;
+  appLock: AppLockAuthenticator;
 }

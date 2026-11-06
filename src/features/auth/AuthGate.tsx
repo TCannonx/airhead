@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../lib/auth/context';
+import { AppLockProvider } from '../applock/AppLockProvider';
 import SignInScreen from './SignInScreen';
 
 export default function AuthGate({ children }: { children: ReactNode }) {
@@ -12,5 +13,5 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   if (status === 'signed_out') return <SignInScreen />;
-  return children;
+  return <AppLockProvider>{children}</AppLockProvider>;
 }
