@@ -2,6 +2,10 @@
 
 ## Waiting for the user
 
+### Phase 1 ready for device testing and release
+
+Phase 1 is merged. Once items 1–5 below are done, run the Phase 1 section of `docs/MANUAL-CHECKLIST.md` on iPhone, iPad and desktop Chrome. Release to live by tagging (`v0.0.1`, say) once item 7 is done, or tell Claude Code to tag it. Releases are never made without you.
+
 ### 1. Create the Supabase projects (needed from Task 1.4 on)
 
 1. Go to https://supabase.com/dashboard and sign in (GitHub sign-in is fine).

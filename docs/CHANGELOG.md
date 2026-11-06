@@ -2,6 +2,10 @@
 
 One line per merged PR, newest first.
 
+## Phase 1 — Foundations (ready for device testing, not yet released)
+
+Installable, signed-in app shell for iPhone, iPad and desktop Chrome: offline shell, responsive layouts, Google / email-code sign-in, device list, optional Face ID / Touch ID lock, Supabase schema with RLS, CI with database and function tests, dev deploy, live release, keep-alive and backup workflows. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 1.
+
 - Task 1.8: health function, function tests in CI, deploy-dev, release, keep-alive and weekly backup workflows
 - Task 1.7: Cloudflare Pages hosting files (SPA mode, `_headers`, Node version) and setup steps
 - Task 1.6: optional app lock with Face ID / Touch ID (WebAuthn), inactivity time-out, sign-out recovery
