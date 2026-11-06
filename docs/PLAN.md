@@ -183,7 +183,7 @@ Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chr
     - Test: component tests render the right navigation at each width.
 - [x] **1.4 Supabase setup and first migration.** _(Linking `airhead-dev` waits on the user: see BLOCKERS.)_ `supabase init`, local stack, link `airhead-dev`. Migration `0001`: trigger function setting `server_updated_at = now()`, the `settings`, `devices` and `capture_tokens` tables, RLS policies as in Data model.
     - Test: an RLS test creates two users and proves user B cannot read or write user A's rows.
-- [ ] **1.5 Sign-in.** Supabase Auth with Google as a login only (openid, email, profile scopes; no calendar scopes) plus email magic link as a fallback; persistent session; sign-out. The user follows `docs/SETUP-GOOGLE-LOGIN.md` to create the OAuth client [ASK]; build and test with magic link meanwhile.
+- [x] **1.5 Sign-in.** _(Built and tested with fakes; real sign-in on the three devices waits on the Supabase projects and Google client: see BLOCKERS.)_ Supabase Auth with Google as a login only (openid, email, profile scopes; no calendar scopes) plus email magic link as a fallback; persistent session; sign-out. The user follows `docs/SETUP-GOOGLE-LOGIN.md` to create the OAuth client [ASK]; build and test with magic link meanwhile.
     - Done when: sign-in works on all three devices and a `devices` row is registered for each.
 - [ ] **1.6 App lock.** Optional, set in Settings: register a WebAuthn platform credential (Face ID or Touch ID); show a lock screen on open and after a chosen inactivity time-out. Document that it is a privacy screen, not encryption; signing out and back in is the recovery path.
     - Test: unit tests for time-out and lock-state logic.

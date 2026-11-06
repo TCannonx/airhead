@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 1.5: sign-in (Google login only, emailed 6-digit code fallback), device registration, Settings account and devices, local mode without a server
 - Task 1.4: Supabase project files, migration 0001 (settings, devices, capture_tokens, RLS, sync trigger), pgTAP RLS tests, CI workflow
 - Task 1.3: responsive layout (phone tabs, iPad sidebar, desktop three panes), routes for all six screens, light/dark, safe areas
 - Task 1.2: installable PWA shell (manifest, iOS tags, placeholder icons, offline app-shell service worker)

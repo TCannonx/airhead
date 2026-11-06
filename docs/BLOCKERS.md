@@ -15,6 +15,36 @@
 7. Create `.env.local` in the repo root (git-ignored) using `.env.example`: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` come from the dev project's **Project Settings → API** (the publishable/anon key, not the service key); `SUPABASE_PROJECT_REF_DEV` is the dev ref.
 8. Tell Claude Code "Supabase projects are created". GitHub secrets for the deploy workflows are listed in Task 1.8.
 
-### 2. Anthropic API key with a spend limit (needed from Phase 3)
+**Database password:** keep it in your password manager. You type it at the `supabase link` prompt; Claude Code never needs it. Optionally put `SUPABASE_DB_PASSWORD=` in `.env.local` (git-ignored; Claude Code is blocked from reading `.env*` files) so local commands against dev don't prompt.
+
+### 2. GitHub Actions secrets (needed for Task 1.8 workflows; fine to add now)
+
+`gh` isn't installed, so add them in the browser: https://github.com/TCannonx/airhead/settings/secrets/actions → **New repository secret**, one each:
+
+| Name | Value |
+| --- | --- |
+| `SUPABASE_ACCESS_TOKEN` | the personal access token from step 1.5 |
+| `SUPABASE_PROJECT_REF_DEV` | dev project ref |
+| `SUPABASE_PROJECT_REF_LIVE` | live project ref |
+| `SUPABASE_DB_PASSWORD_DEV` | dev database password |
+| `SUPABASE_DB_PASSWORD_LIVE` | live database password |
+
+### 3. Email sign-in code (Task 1.5)
+
+In **each** Supabase project: **Authentication → Emails → Templates → Magic Link**. Replace the body with something that includes the code, e.g.:
+
+```html
+<h2>Your Airhead sign-in code</h2>
+<p>Type this code in the app: <strong>{{ .Token }}</strong></p>
+<p>Or, in a browser, <a href="{{ .ConfirmationURL }}">sign in with this link</a>.</p>
+```
+
+Save. Then in **Authentication → URL Configuration** set **Site URL** to `http://localhost:5173` for now and add `http://localhost:5173/**` to **Redirect URLs** (the Cloudflare address gets added in Task 1.7).
+
+### 4. Google login (Task 1.5)
+
+Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes work.
+
+### 5. Anthropic API key with a spend limit (needed from Phase 3)
 
 Plan setup step 2. Create it in the Claude Console with a monthly spend limit. Don't paste it anywhere yet; it goes into Supabase secrets in Phase 3.
