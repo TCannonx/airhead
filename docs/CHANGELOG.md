@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Installable, signed-in app shell for iPhone, iPad and desktop Chrome: offline shell, responsive layouts, Google / email-code sign-in, device list, optional Face ID / Touch ID lock, Supabase schema with RLS, CI with database and function tests, dev deploy, live release, keep-alive and backup workflows. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 1.
 
+- Task 2.6: confident dates become events instantly (8 s Undo toast), fuzzy ones become suggestion cards on Today; event chips
 - Task 2.5: free on-device rules (links → reading items, British date parsing, confidence rule, recurrence → RRULE) with a 36-phrase test table
 - Task 2.4: Capture tab (autofocused box, Enter/Save, Paste link, compressed photo attach with upload queue, recent captures with chips); offline-capture cross-device e2e
 - Task 2.3: sync engine (outbox push, overlapping keyset pull, merge, triggers, Realtime), local-first device registration, cross-device e2e against local Supabase

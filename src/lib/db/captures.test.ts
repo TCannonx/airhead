@@ -16,7 +16,9 @@ afterEach(async () => {
 
 describe('createCapture + free rules', () => {
   it('a link anywhere in the text makes a link capture and a reading item', async () => {
-    const c = await createCapture(db, USER, { text: 'read this https://example.com/x later' });
+    const { capture: c } = await createCapture(db, USER, {
+      text: 'read this https://example.com/x later',
+    });
     expect(c).toMatchObject({ kind: 'link', url: 'https://example.com/x' });
     // The original words are kept exactly as typed.
     expect(c.text).toBe('read this https://example.com/x later');
@@ -33,7 +35,7 @@ describe('createCapture + free rules', () => {
   });
 
   it('a bare link becomes a reading item titled with the link', async () => {
-    const c = await createCapture(db, USER, { url: 'https://example.com/article' });
+    const { capture: c } = await createCapture(db, USER, { url: 'https://example.com/article' });
     const [item] = await db.items.toArray();
     expect(item).toMatchObject({
       type: 'reading',
