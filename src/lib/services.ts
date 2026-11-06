@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
 import { supabaseAuth, supabaseDevices } from './auth/supabaseAuth';
 import type { Services } from './auth/types';
@@ -17,5 +18,9 @@ export function createServices(): Services {
       detectSessionInUrl: true,
     },
   });
-  return { auth: supabaseAuth(supabase), devices: supabaseDevices(supabase) };
+  return {
+    auth: supabaseAuth(supabase),
+    devices: supabaseDevices(supabase),
+    appLock: webAuthnAppLock,
+  };
 }

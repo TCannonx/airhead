@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Scope: all phases
+- The user instructed (2026-11-06, in session): "go through all phases and complete as many as possible without my input". `PLAN.md` says phases 5–9 should only be planned in detail after v0.1 has been used for a few weeks. The user's later, explicit instruction wins: after Phase 4, each of phases 5–9 first gets a detailed task list written into `PLAN.md` from `DESIGN.md` (one PR), then is built task by task as usual. Live releases still wait for the user.
+
+## 2026-11-06 — Task 1.6 App lock
+- **Per-device settings in `localStorage`** (`airhead.appLock`: enabled, credential id, time-out), not in the synced `settings` row, because a Face ID / Touch ID credential belongs to one device.
+- **WebAuthn platform credential** (`authenticatorAttachment: 'platform'`, `userVerification: 'required'`, `residentKey: 'discouraged'`, ES256/RS256, `attestation: 'none'`). Unlock = a successful `navigator.credentials.get` with user verification; there is **no server verification**, because the lock is a privacy screen, not a login or encryption (stated in Settings).
+- **Unlock needs a tap** on "Unlock with Face ID / Touch ID": iOS Safari only allows WebAuthn from a user gesture, so it isn't auto-prompted on open.
+- **Time-out**: Immediately / 1 / 5 / 15 / 60 minutes (default 5). Activity = pointer or key events; the lock is checked when the app becomes visible again and every 15 s while open. "Immediately" locks every time the app is left, never while in use.
+- **Recovery**: the lock screen's "Sign out" clears this device's lock and signs out; signing back in gives an unlocked app.
+- E2E test drives the real WebAuthn code with Chrome's CDP virtual authenticator (`WebAuthn.addVirtualAuthenticator`, internal transport, user verification on).
+- React compiler lint rules (`eslint-plugin-react-hooks` 7) forbid impure calls and ref writes during render; such work lives in effects.
+
 ## 2026-11-06 — Task 1.5 Sign-in
 - **@supabase/supabase-js 2.119.0**, `flowType: 'pkce'`, persistent session, auto refresh. `getSession()` reads the stored session, so the app opens signed in while offline.
 - **Google is login only**: `signInWithOAuth({ provider: 'google' })` with no extra `scopes`, so Supabase requests only the basic openid/email/profile scopes. No calendar, Drive or Gmail access.

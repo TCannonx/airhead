@@ -2,7 +2,19 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
-import type { AuthClient, AuthUser, DeviceRow, DeviceStore } from '../../lib/auth/types';
+import type {
+  AppLockAuthenticator,
+  AuthClient,
+  AuthUser,
+  DeviceRow,
+  DeviceStore,
+} from '../../lib/auth/types';
+
+const noLock: AppLockAuthenticator = {
+  available: async () => false,
+  register: async () => 'x',
+  verify: async () => {},
+};
 
 function fakeAuth(initial: AuthUser | null = null) {
   let user = initial;
@@ -50,14 +62,14 @@ beforeEach(() => {
 describe('sign-in', () => {
   it('shows the sign-in screen when signed out', async () => {
     const { client } = fakeAuth(null);
-    render(<App services={{ auth: client, devices: fakeDevices() }} />);
+    render(<App services={{ auth: client, devices: fakeDevices(), appLock: noLock }} />);
     expect(await screen.findByRole('button', { name: /continue with google/i })).toBeVisible();
     expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument();
   });
 
   it('starts Google sign-in from the button', async () => {
     const { client } = fakeAuth(null);
-    render(<App services={{ auth: client, devices: fakeDevices() }} />);
+    render(<App services={{ auth: client, devices: fakeDevices(), appLock: noLock }} />);
     await userEvent.click(await screen.findByRole('button', { name: /continue with google/i }));
     expect(client.signInWithGoogle).toHaveBeenCalledOnce();
   });
@@ -65,7 +77,7 @@ describe('sign-in', () => {
   it('signs in with an emailed code', async () => {
     const { client } = fakeAuth(null);
     const devices = fakeDevices();
-    render(<App services={{ auth: client, devices }} />);
+    render(<App services={{ auth: client, devices, appLock: noLock }} />);
 
     await userEvent.type(await screen.findByLabelText('Email'), 'me@example.test');
     await userEvent.click(screen.getByRole('button', { name: /email me a code/i }));
@@ -84,7 +96,7 @@ describe('sign-in', () => {
   it('shows a plain message when sending the code fails', async () => {
     const { client } = fakeAuth(null);
     client.sendEmailCode.mockRejectedValueOnce(new Error('You are offline.'));
-    render(<App services={{ auth: client, devices: fakeDevices() }} />);
+    render(<App services={{ auth: client, devices: fakeDevices(), appLock: noLock }} />);
     await userEvent.type(await screen.findByLabelText('Email'), 'me@example.test');
     await userEvent.click(screen.getByRole('button', { name: /email me a code/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent('You are offline.');
@@ -95,7 +107,7 @@ describe('signed in', () => {
   it('opens the app and registers this device once', async () => {
     const { client } = fakeAuth(ME);
     const devices = fakeDevices();
-    render(<App services={{ auth: client, devices }} />);
+    render(<App services={{ auth: client, devices, appLock: noLock }} />);
     expect(await screen.findByRole('heading', { level: 1, name: 'Capture' })).toBeVisible();
     await waitFor(() => expect(devices.register).toHaveBeenCalledOnce());
     const registered = devices.register.mock.calls[0]?.[0];
@@ -110,7 +122,7 @@ describe('signed in', () => {
       { id: 'other', name: 'iPad', platform: 'ipados', last_sync_at: null },
     ]);
     window.history.replaceState(null, '', '/settings');
-    render(<App services={{ auth: client, devices }} />);
+    render(<App services={{ auth: client, devices, appLock: noLock }} />);
 
     expect(await screen.findByText('me@example.test')).toBeVisible();
     const list = await screen.findByRole('list', { name: 'Devices' });

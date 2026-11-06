@@ -1,3 +1,4 @@
+import { webAuthnAppLock } from '../applock/webauthn';
 import { currentDevice } from '../device';
 import type { AuthClient, DeviceRow, Services } from './types';
 
@@ -19,6 +20,7 @@ export function localServices(): Services {
   const devices: DeviceRow[] = [];
   return {
     auth,
+    appLock: webAuthnAppLock,
     devices: {
       async register(d) {
         if (!devices.some((r) => r.id === d.id)) devices.push({ ...d, last_sync_at: null });

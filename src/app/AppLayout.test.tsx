@@ -2,6 +2,7 @@ import { act, render, screen, within } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it } from 'vitest';
+import { AppLockProvider } from '../features/applock/AppLockProvider';
 import { AuthProvider } from '../lib/auth/AuthProvider';
 import { localServices } from '../lib/auth/localAuth';
 import { routes } from './routes';
@@ -15,7 +16,9 @@ function renderAt(width: number, path = '/capture') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   return render(
     <AuthProvider services={localServices()}>
-      <RouterProvider router={router} />
+      <AppLockProvider>
+        <RouterProvider router={router} />
+      </AppLockProvider>
     </AuthProvider>,
   );
 }
