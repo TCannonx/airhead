@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.2 Local database
+- **Dexie 4.4.7** (+ dexie-react-hooks 4.4.0), **Zod 4.6.7**, **fake-indexeddb 6.2.7** (tests; loaded globally in `src/test/setup.ts`).
+- **One IndexedDB database per user**: `airhead-<userId>`, opened by `DataProvider` after sign-in. Local mode uses the fixed id `00000000-0000-4000-8000-000000000001`.
+- Tables mirror the synced Supabase tables (`settings`, `devices`, `captures`, `items`, `lists`, `topics`, `corrections`) plus `outbox` (`++seq`, table, row_id), `sync_state` (per-table cursor + ids seen at that cursor) and `meta`. `capture_tokens` stay server-only (managed in Phase 7).
+- **The outbox stores (table, row id) only**; push sends the row's current state, so repeated edits coalesce.
+- **`save()` is the only write path**: Zod-validates, stamps `updated_at`, and writes row + outbox entry in one Dexie transaction. Soft delete / restore are just saves of `deleted_at`.
+- **Zod schemas** in `src/lib/schemas/records.ts` (shared with functions later): ids use `z.guid()` (any 8-4-4-4-12 hex), not `z.uuid()`, which in Zod 4 enforces RFC version bits; timestamps use `z.iso.datetime({ offset: true })` to accept Postgres' `+00:00`; `top3_date` uses `z.iso.date()`.
+- **Persistent storage** is requested once (`navigator.storage.persist()`), and the answer is remembered in `meta`.
+- **StrictMode gotcha**: cleanup closes the DB with `close({ disableAutoOpen: false })`, so the same instance reopens when React re-runs the effect; a plain `close()` left it permanently closed (`DatabaseClosedError`).
+
 ## 2026-11-06 — Task 2.1 Core tables
 - **No foreign keys between synced tables** (`items.capture_id`, `list_id`, `series_id`, `corrections.capture_id`, ...). Devices push in batches per table in any order, and a row can legitimately arrive before the row it points at. Only `user_id → auth.users` is a real FK. The app treats links as soft.
 - **`corrections.from_value` / `to_value`** instead of the plan's `from` / `to` (reserved words in SQL).
