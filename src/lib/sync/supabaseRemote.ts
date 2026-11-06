@@ -29,6 +29,13 @@ export function supabaseRemote(supabase: SupabaseClient): Remote {
       return (data ?? []) as RemoteRow[];
     },
 
+    async uploadFile(path, blob) {
+      const { error } = await supabase.storage
+        .from('captures')
+        .upload(path, blob, { contentType: blob.type, upsert: true });
+      if (error) throw new Error(`upload ${path}: ${error.message}`);
+    },
+
     subscribe(onChange) {
       // Realtime applies RLS: only this user's changes arrive.
       const channel = supabase

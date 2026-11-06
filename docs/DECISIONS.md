@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.4 Capture tab
+- **Paste link is always visible and reads the clipboard only on tap.** The plan's "a Paste button when the clipboard holds a URL (read only on tap)" can't be done literally: a page can't know what the clipboard holds without reading it (and reading unprompted triggers permission prompts on iOS). On tap: a URL becomes a `link` capture straight away; other text is added to the box.
+- **Enter saves only with a fine pointer** (`(pointer: coarse)` doesn't match): desktop Enter saves and Shift+Enter adds a line; on touch, Enter adds a line and the always-visible **Save** button saves. IME composition is respected.
+- **Photos**: `createImageBitmap` (EXIF orientation applied) → canvas at longest side 1600 px → `toBlob('image/webp', 0.8)`. If the browser can't encode WebP (it returns PNG), JPEG 0.85 is used.
+- **Files are kept on the device in a non-synced Dexie table `files` (schema v2)** and stored as an `ArrayBuffer` + MIME type rather than a `Blob` (Blob storage in IndexedDB has been unreliable on older Safari). The capture records `payload.files[] = { id, path, mime, size }`. Storage path: `<user_id>/<capture_id>/<file_id>.<ext>` in the private `captures` bucket. The sync engine uploads pending files after each push (`Remote.uploadFile`); the bytes stay cached for offline viewing. Records are rewritten with `put` (Dexie's `update` copy mangled the stored bytes in tests).
+- Recent captures (last 10) appear under the box with their chip: `Reading list` (links), `Sorting soon` (unsorted), `Sorted`, `Needs a tap`, `Couldn't sort`. Instant events from free rules arrive in 2.5/2.6.
+- The plan's cross-device e2e for 2.3 ("captures offline, reconnects and sees the item on a second browser context") is `tests/e2e-sync/capture.spec.ts`, now that the Capture tab exists.
+
 ## 2026-11-06 — Supabase projects connected
 - Projects: **airhead-dev** ref `tfxpbxmkvlwxybaysjxy` (eu-west-1, Ireland), **airhead-live** ref `qqobvcelbzhrcehqukrs` (eu-central-1, Frankfurt; the user recreated it there, replacing a first live project in Stockholm, `lqoausxpvthmfxvbpyrk`, which no longer exists). This clone is linked to **dev** only.
 - GitHub Actions secrets set by the user: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF_DEV`, `SUPABASE_PROJECT_REF_LIVE`, `SUPABASE_DB_PASSWORD_DEV`, `SUPABASE_DB_PASSWORD_LIVE`.

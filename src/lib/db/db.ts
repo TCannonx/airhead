@@ -17,6 +17,21 @@ export interface SyncState {
   cursor_ids: string[];
 }
 
+/** A file kept on the device (and uploaded to Storage when online). Not a synced table. */
+export interface FileRecord {
+  id: string;
+  user_id: string;
+  capture_id: string;
+  /** Storage path: <user_id>/<capture_id>/<id>.<ext> */
+  path: string;
+  mime: string;
+  size: number;
+  /** Bytes, not a Blob: Blob storage in IndexedDB has been unreliable on older Safari. */
+  data: ArrayBuffer;
+  uploaded: boolean;
+  created_at: string;
+}
+
 export interface MetaEntry {
   key: string;
   value: unknown;
@@ -28,6 +43,7 @@ export type AirheadDb = Dexie & {
   outbox: EntityTable<OutboxEntry, 'seq'>;
   sync_state: EntityTable<SyncState, 'table'>;
   meta: EntityTable<MetaEntry, 'key'>;
+  files: EntityTable<FileRecord, 'id'>;
 };
 
 /**
@@ -49,5 +65,7 @@ export function openUserDb(userId: string): AirheadDb {
     sync_state: 'table',
     meta: 'key',
   });
+  // v2: files kept on the device and queued for upload (booleans can't be indexed).
+  db.version(2).stores({ files: 'id, capture_id' });
   return db;
 }
