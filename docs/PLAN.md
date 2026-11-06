@@ -181,7 +181,7 @@ Goal: an installable, signed-in, empty app shell on iPhone, iPad and desktop Chr
     - Done when: installs to the home screen on iPhone and iPad and as an app window in desktop Chrome.
 - [x] **1.3 Responsive layout skeleton.** Routes: Capture, Today, Inbox, Library, Insights, Settings. Phone (< 768 px): bottom tabs. iPad (768–1279 px): sidebar plus main pane. Desktop (≥ 1280 px): sidebar, main pane, right panel. Light and dark themes; iOS safe-area insets.
     - Test: component tests render the right navigation at each width.
-- [ ] **1.4 Supabase setup and first migration.** `supabase init`, local stack, link `airhead-dev`. Migration `0001`: trigger function setting `server_updated_at = now()`, the `settings`, `devices` and `capture_tokens` tables, RLS policies as in Data model.
+- [x] **1.4 Supabase setup and first migration.** _(Linking `airhead-dev` waits on the user: see BLOCKERS.)_ `supabase init`, local stack, link `airhead-dev`. Migration `0001`: trigger function setting `server_updated_at = now()`, the `settings`, `devices` and `capture_tokens` tables, RLS policies as in Data model.
     - Test: an RLS test creates two users and proves user B cannot read or write user A's rows.
 - [ ] **1.5 Sign-in.** Supabase Auth with Google as a login only (openid, email, profile scopes; no calendar scopes) plus email magic link as a fallback; persistent session; sign-out. The user follows `docs/SETUP-GOOGLE-LOGIN.md` to create the OAuth client [ASK]; build and test with magic link meanwhile.
     - Done when: sign-in works on all three devices and a `devices` row is registered for each.
