@@ -43,9 +43,9 @@ export async function signIn(page: Page, email: string): Promise<void> {
     await expect(codeBox.or(alert)).toBeVisible({ timeout: 15_000 });
     if (await codeBox.isVisible()) break;
     const text = (await alert.textContent()) ?? '';
-    const seconds = Number(text.match(/Wait (\d+) seconds/)?.[1] ?? 0);
-    if (!seconds || attempt >= 3) throw new Error(`sign-in email failed: ${text}`);
-    await page.waitForTimeout((seconds + 1) * 1000);
+    if (!/^Wait /.test(text) || attempt >= 5) throw new Error(`sign-in email failed: ${text}`);
+    const seconds = Number(text.match(/Wait (\d+) seconds/)?.[1] ?? 1);
+    await page.waitForTimeout(Math.max(seconds, 1) * 1000 + 500);
   }
   await codeBox.fill(await readCode(email, before));
   await page.getByRole('button', { name: /^sign in$/i }).click();

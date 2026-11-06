@@ -11,6 +11,12 @@ describe('friendlyAuthError', () => {
       online,
     );
     expect(e.message).toBe('Wait 42 seconds, then try again.');
+    const short = friendlyAuthError(
+      { message: 'For security purposes, you can only request this after 0 seconds.' },
+      'fallback',
+      online,
+    );
+    expect(short.message).toBe('Wait a moment, then try again.');
   });
 
   it('handles rate limits, bad codes and offline', () => {
