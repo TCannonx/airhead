@@ -1,9 +1,107 @@
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useState } from 'react';
+import { Link } from 'react-router';
 import { Page } from '../../app/Page';
+import { useDb } from '../../lib/db/context';
+import { filterLibrary, TYPE_LABELS } from '../../lib/db/sorting';
+import type { ItemType } from '../../lib/schemas/records';
+
+const TABS: { label: string; type: ItemType | null }[] = [
+  { label: 'All', type: null },
+  { label: 'Tasks', type: 'task' },
+  { label: 'Events', type: 'event' },
+  { label: 'Reading', type: 'reading' },
+  { label: 'Ideas', type: 'idea' },
+  { label: 'Meetings', type: 'meeting' },
+  { label: 'Notes', type: 'note' },
+];
+
+const input =
+  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
 
 export default function LibraryPage() {
+  const db = useDb();
+  const [type, setType] = useState<ItemType | null>(null);
+  const [topicId, setTopicId] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+
+  const items = useLiveQuery(() => db.items.toArray(), [db]);
+  const topics = useLiveQuery(() => db.topics.filter((t) => !t.deleted_at).sortBy('name'), [db]);
+  const shown = items ? filterLibrary(items, { type, topicId, from, to }) : undefined;
+  const topicName = new Map(topics?.map((t) => [t.id, t.name]));
+
   return (
     <Page title="Library">
-      <p className="text-slate-500">Reading, ideas, meetings, notes and lists.</p>
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t.label}
+            type="button"
+            aria-pressed={type === t.type}
+            onClick={() => setType(t.type)}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+              type === t.type
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-xs text-slate-500">
+          Topic
+          <select className={input} value={topicId} onChange={(e) => setTopicId(e.target.value)}>
+            <option value="">Any topic</option>
+            {topics?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-slate-500">
+          From
+          <input
+            type="date"
+            className={input}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-slate-500">
+          To
+          <input type="date" className={input} value={to} onChange={(e) => setTo(e.target.value)} />
+        </label>
+        <Link to="/library/trash" className="ml-auto text-sm text-slate-500 underline">
+          Trash
+        </Link>
+      </div>
+
+      {shown && shown.length === 0 && <p className="text-sm text-slate-500">Nothing here yet.</p>}
+      <ul aria-label="Items" className="divide-y divide-slate-200 dark:divide-slate-800">
+        {shown?.map((i) => (
+          <li key={i.id}>
+            <Link
+              to={`/library/item/${i.id}`}
+              className="flex items-center justify-between gap-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900"
+            >
+              <span className="min-w-0 flex-1 truncate">{i.title || '(untitled)'}</span>
+              <span className="shrink-0 text-xs text-slate-500">
+                {i.topic_ids
+                  .map((id) => topicName.get(id))
+                  .filter(Boolean)
+                  .join(', ')}
+                {i.topic_ids.length > 0 && ' · '}
+                {TYPE_LABELS[i.type]}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </Page>
   );
 }
