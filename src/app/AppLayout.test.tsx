@@ -2,6 +2,8 @@ import { act, render, screen, within } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it } from 'vitest';
+import { AuthProvider } from '../lib/auth/AuthProvider';
+import { localServices } from '../lib/auth/localAuth';
 import { routes } from './routes';
 
 function setWidth(width: number) {
@@ -11,7 +13,11 @@ function setWidth(width: number) {
 function renderAt(width: number, path = '/capture') {
   setWidth(width);
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  return render(<RouterProvider router={router} />);
+  return render(
+    <AuthProvider services={localServices()}>
+      <RouterProvider router={router} />
+    </AuthProvider>,
+  );
 }
 
 const TABS = ['Capture', 'Today', 'Inbox', 'Library', 'Insights'];
