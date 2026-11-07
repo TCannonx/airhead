@@ -2,6 +2,29 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.13 Scheduler tick
+- **Dispatch**: `pg_cron` runs `dispatch_scheduler_tick()` every minute (migration `20261107000014_scheduler.sql`). It makes one `pg_net` call to `scheduler-tick` with the service key, but only when someone has a notification device and the Vault secrets are set. The function rejects any other caller.
+- **Each tick, per person with a receiving device**, in their time zone (`settings.data.time_zone`, default Europe/Dublin):
+  1. **Recurring event reminders**: occurrences in the next 26 hours, expanded with `rrule` at local wall-clock time, so they're right across the clock change. Each is inserted once by key `event:<id>@<occurrence>`. This is the part 4.12 left to the scheduler.
+  2. **Local-time jobs**, each at most once per local day: claimed through `job_runs` by insert-if-absent; a second run gets nothing back.
+     - **Evening review** at 21:00: "N open tasks today: done, carry over or drop?". Covers tasks due today or earlier, or in today's Top 3; opens `/review` (4.14).
+     - **Location checklist** at 20:00 the evening before: tomorrow's location (pattern, overrides, leave, holidays) and its list, e.g. "Tomorrow: Office · Bring: Laptop, Charger, Pass". Not when off or the list is empty.
+     - **Slip nudge** at 08:00: tasks carried over 3 or more times.
+     - **Leave run-out** at 08:00: milestones at 90, 42 and 14 days before the leave year ends, each sent once per year (dedupe key), when remaining days are more than the carry-over allowance. Balances come from the same leave engine as the app.
+     - Job nudges are inserted as pending, then sent by the same rules as everything else.
+  3. **Sending**:
+     - **Cancelled, never sent late**: switched-off types; stale nudges (event reminders over 2 hours late, others over 12).
+     - **Quiet hours** (default 22:00–07:30, may span midnight) defer everything except event reminders, unless that is switched off. Deferred nudges stay pending and go out when quiet hours end.
+     - **Daily cap** (default 8 single notifications per local day): extras are bundled into one "N more reminders" summary listing their titles. At most one summary an hour; until then extras wait. Summaries are logged as `kind = 'summary'` and don't count toward the cap.
+     - Sent nudges are marked `sent` with `sent_at`, a log for the patterns view later. With no device to receive them they are marked `failed`. Gone subscriptions are cleared (4.11).
+- **Settings shape**: `settings.data.notifications`, with per-type switches, quiet hours, cap, job times and the reminder default. Every field falls back to its default; 4.15 adds the screen.
+- **Shared copies for the server**:
+  - The app's leave engine, as `_shared/leave/engine.ts` plus `work.ts` (the same work-setting defaults and per-field fallback, without Zod).
+  - The holiday rules (4.8).
+  - The scheduler tests check the same balances as the app's leave tests.
+- **Marking leave Taken** stays in its own nightly SQL job (4.6) rather than this tick.
+- **`rrule`** is imported in Deno as the npm default export, because it is CommonJS.
+
 ## 2026-11-07 — Task 4.12 Reminder generation
 - **Trigger** (migration `20261107000013_reminders.sql`): `item_reminders` runs after insert, or after updates to the columns that matter, on `items`. It runs in the database, so reminders exist once the item has synced, whichever device made it.
 - **Event reminder** (`event:<id>`): `start_at − N minutes`.

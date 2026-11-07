@@ -463,3 +463,7 @@ verify_jwt = false
 # send-push: GET serves the public key; POST checks the caller (owner or the scheduler's service key).
 [functions.send-push]
 verify_jwt = false
+
+# scheduler-tick: pg_cron with the service key; checks it itself.
+[functions.scheduler-tick]
+verify_jwt = false
