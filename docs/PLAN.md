@@ -401,7 +401,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: Deno (only the recent turns are sent), component tests (offline answer queued, then sent).
 - [x] **7.8 Next steps to tasks.** A draft's next steps become tasks in one tap: a checklist, all ticked by default (the user is already deciding in the Workshop), with "Add N tasks". Each task is linked to the idea (`data.idea_id`) and its due text is read by the free rules (reuses `actionsToTasks`).
     - Tests: component tests.
-- [ ] **7.9 Embeddings.** **Verify** Supabase's built-in model: `gte-small` via `Supabase.ai.Session('gte-small')` with `mean_pool` and `normalize`, English, input cut at 512 tokens. Its dimension is expected to be 384; confirm it against a real embedding and record it.
+- [x] **7.9 Embeddings.** **Verify** Supabase's built-in model: `gte-small` via `Supabase.ai.Session('gte-small')` with `mean_pool` and `normalize`, English, input cut at 512 tokens. Its dimension is expected to be 384; confirm it against a real embedding and record it.
     - Migration `chunks`: id, user_id, item_id, chunk_index, content, `content_hash`, `fts` (generated tsvector), `embedding vector(384)`. HNSW index with `vector_ip_ops`, GIN on `fts`, own-rows RLS for reading only.
     - Function `embed-items`, run by the scheduler through `claim_job`, chunks changed items into about 300-word chunks: title, body, typed note text, summary, transcription and Workshop drafts. It embeds only chunks whose hash changed and removes the chunks of deleted items.
     - Tests: Deno (chunking, hash skip, deletes; the embedder is injected), pgTAP (RLS).
