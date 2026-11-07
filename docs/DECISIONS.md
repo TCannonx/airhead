@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.7 AI usage screen
+- **Insights → AI usage** (online only: the usage log lives on the server; local mode explains this). Shows:
+  - month-to-date spend (calendar month in the user's time zone, failed attempts included) and the number of calls.
+  - **projected month-end = month-to-date ÷ days elapsed × days in month**.
+  - the monthly limit, a daily bar chart, a by-task table and an editable price table.
+  - the note that these are estimates and **the Claude Console is the true record**.
+- **Chart** (following the data-viz method): one series → one hue (indigo 600 / 400 in dark), no legend (the title names it). Thin bars with 4px rounded tops on the baseline, 2px+ gaps, a recessive axis showing only the first and last day, a hover tooltip with hit targets wider than the bars and the rest dimmed, and a **Show as table** view. Hand-built SVG; no chart library.
+- **Monthly limit** is saved locally to `settings.data.ai_monthly_cap_eur` (empty/0 = none) via `updateSettingsData` (settings row id = user id) and reaches the gateway through sync.
+- **Prices**: edits are upserted as the user's own `ai_prices` row (`onConflict: user_id,model`); the user's row is shown in place of the default and marked "(yours)".
+- `estimateCost(rows, task, fallback)`: average cost of the last 10 successful calls of that task, else the fallback, for the cost labels on on-demand buttons (Workshop, briefs) in later phases.
+- New `Services.usage` (Supabase: `ai_usage_mine` view + `ai_prices`).
+
 ## 2026-11-07 — Task 3.6 Lists
 - **Library → Lists** (`/library/lists`): list chooser, **Create**, **Rename**, **Move up / Move down** (visible buttons instead of drag, which also works on touch), add entries (Enter), tick off (`status: done`, `completed_at`), **Clear completed** (soft delete: recoverable from Trash). Entries show open first, then done.
 - **Default Shopping list** is created when Lists first opens. Its id is derived from the user id (`5b0f0000-` + the rest of the user id), so two devices creating it offline write the same row instead of two lists.

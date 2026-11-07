@@ -43,6 +43,13 @@ export interface SortingService {
   sortNow(): Promise<SortOutcome>;
 }
 
+/** The user's AI usage and prices (server-side; absent in local mode). */
+export interface UsageService {
+  monthRows(sinceIso: string): Promise<import('../ai/usage').UsageRow[]>;
+  prices(): Promise<import('../ai/usage').PriceRow[]>;
+  savePrice(price: Omit<import('../ai/usage').PriceRow, 'id' | 'user_id'>): Promise<void>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -50,4 +57,5 @@ export interface Services {
   remote: Remote | null;
   /** AI sorting on the server; absent in local mode. */
   sorting?: SortingService;
+  usage?: UsageService;
 }

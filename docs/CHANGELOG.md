@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 3.7: Insights → AI usage (month to date, projection, daily chart, by task, monthly limit, editable prices)
 - Task 3.6: Lists (default Shopping, create/rename/reorder, tick off, clear completed) and "Create list?" from sorting
 - Task 3.5: link reading (safe fetch, readable text, couldn't-read fallback) and summaries in the next sort batch
 - Task 3.4: Inbox "Needs a tap" one-tap choices for unsure AI sorting; re-sorts recorded as corrections
