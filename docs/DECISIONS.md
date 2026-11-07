@@ -45,7 +45,7 @@ Decisions and library versions, newest first.
 - Recurrence words are hidden from chrono (so "every 2 weeks" isn't "in 2 weeks"); when chrono returns the date and time as separate results ("4/3 dentist at 9am"), the time is merged in.
 - **All-day items**: `start_at` is local midnight of the first day; ranges store `end_at` as local midnight of the **last** day (inclusive). Conversion to iCalendar's exclusive DTEND happens in the feed (Task 4.8).
 - **Titles** drop the date, recurrence, "-ish" and link parts and dangling connectors (at/on/every/...), then capitalise the first letter; the capture's original text is never changed.
-- **Links**: any http(s) URL in the text makes the capture `kind: 'link'` and creates a `reading` item (`data.url`, title from the remaining words or the URL). 36 phrases in the table test plus British-order and immutability checks.
+- **Links**: any http(s) URL in the text makes the capture `kind: 'link'`, marks it `sorted` (fixed 2026-11-07: it had stayed in Inbox → Unsorted, inviting a duplicate) and creates a `reading` item (`data.url`, title from the remaining words or the URL). 36 phrases in the table test plus British-order and immutability checks.
 
 ## 2026-11-06 — Task 2.4 Capture tab
 - **Paste link is always visible and reads the clipboard only on tap.** The plan's "a Paste button when the clipboard holds a URL (read only on tap)" can't be done literally: a page can't know what the clipboard holds without reading it (and reading unprompted triggers permission prompts on iOS). On tap: a URL becomes a `link` capture straight away; other text is added to the box.

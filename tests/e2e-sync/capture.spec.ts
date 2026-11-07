@@ -12,7 +12,7 @@ test('a capture made offline on one browser appears on the other after reconnect
   await signIn(b, email);
 
   await ctxA.setOffline(true);
-  const box = a.getByLabel('Capture');
+  const box = a.getByLabel('Capture', { exact: true });
   await box.fill('Dentist Tue 3pm (captured offline)');
   await box.press('Enter');
   const recentA = a.getByRole('list', { name: 'Recent captures' });
