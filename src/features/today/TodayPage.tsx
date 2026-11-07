@@ -3,6 +3,7 @@ import { Page } from '../../app/Page';
 import LeaveCounter from '../leave/LeaveCounter';
 import LeaveProposals from '../leave/LeaveProposals';
 import LocationPicker from '../work/LocationPicker';
+import ScoutCards from './ScoutCards';
 import Suggestions from './Suggestions';
 import { CarryOverCards } from './Top3Controls';
 import { AlsoToday, BriefLines, Top3, TodayEvents } from './TodayParts';
@@ -25,6 +26,7 @@ export default function TodayPage() {
       <CarryOverCards />
       <LeaveProposals />
       <Suggestions />
+      <ScoutCards />
       <LeaveCounter />
       <p className="mt-6 text-sm">
         <Link to="/review" className="text-indigo-600 hover:underline dark:text-indigo-400">

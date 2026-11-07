@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.12 Suggestion cards
+- **Ideas on Today and Insights** (`ScoutCards`): the open cards (up to 5), each with Accept and Dismiss, a Source link for web ideas, and "Scout now" (online, one AI call at most, ≈ €0.04).
+- **Accept creates the proposal, and only then**:
+  - a task, with a due date at local midnight when one is given, and the source link in the body;
+  - or an all-day event (free weekend days).
+  - Both carry `data.from_suggestion`. The card becomes `accepted`.
+- **Memory**: only web ideas teach it. Accepting adds "Interested in: …" and dismissing adds "Not interested in: …", both as `everyday` facts (no approval needed, editable in Memory).
+  - Cards from the person's own data (follow-ups, prep, routines, stalled ideas, free time) add no facts, because "not interested in following up the budget meeting" would only add noise.
+
 ## 2026-11-07 — Task 8.11 Scout function
 - **Verified** in Claude's API reference: `web_search_20260209` (dynamic filtering on Sonnet 5.5) accepts `max_uses` and `user_location` (`{ type: 'approximate', city, timezone, … }`). Searches cost $10 per 1,000, reported in `usage.server_tool_use.web_search_requests`.
 - **Split for privacy**:

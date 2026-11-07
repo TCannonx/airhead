@@ -480,7 +480,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - Web results are untrusted content and never create anything themselves. Searches are counted in AI usage (the price table gains a per-search price).
     - One weekly notification: "Airhead has N ideas for you".
     - Tests: Deno (the query builder keeps names and health out; never more than 5 cards or 3 searches; an injection in a search result does nothing; the run log is written).
-- [ ] **8.12 Suggestion cards.** On Today and Insights. **Accept** creates the proposed task or event (only then), and **Dismiss** removes the card. Both feed memory: accepting adds an interest fact, and dismissing adds a "not interested in …" fact (a personal fact needs approval as usual).
+- [x] **8.12 Suggestion cards.** On Today and Insights. **Accept** creates the proposed task or event (only then), and **Dismiss** removes the card. Both feed memory: accepting adds an interest fact, and dismissing adds a "not interested in …" fact (a personal fact needs approval as usual).
     - Tests: component tests.
 - Phase done when: the Phase 8 manual checklist passes (a weekly review arrives with a Tidy-up card, a Condense works, patterns show, Suggest leave gives bridge days, and Scout gives at most 5 cards with its queries listed).
 

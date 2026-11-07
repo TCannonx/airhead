@@ -221,6 +221,11 @@ export interface LeaveService {
   >;
 }
 
+/** Scout on demand (Task 8.12); absent in local mode. */
+export interface ScoutService {
+  run(): Promise<{ ok: boolean; message: string }>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -240,4 +245,5 @@ export interface Services {
   ask?: AskService;
   reviews?: ReviewsService;
   leave?: LeaveService;
+  scout?: ScoutService;
 }
