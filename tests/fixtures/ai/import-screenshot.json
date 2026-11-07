@@ -1,0 +1,64 @@
+{
+  "note": "Model output for a screenshot of a GAA fixtures list, with the instruction 'only home games'. Used by import-extract tests; the paid API is never called.",
+  "instruction": "only home games",
+  "today": "2027-01-10",
+  "output": {
+    "events": [
+      {
+        "title": "Dublin v Kerry (League R1)",
+        "date": "2027-01-30",
+        "start_time": "19:00",
+        "end_time": null,
+        "end_date": null,
+        "venue": "Croke Park",
+        "notes": null
+      },
+      {
+        "title": "Dublin v Mayo (League R3)",
+        "date": "2027-02-13",
+        "start_time": null,
+        "end_time": null,
+        "end_date": null,
+        "venue": "Parnell Park",
+        "notes": "Throw-in TBC"
+      },
+      {
+        "title": "Dublin v Galway (League R5)",
+        "date": "2027-02-27",
+        "start_time": "17:45",
+        "end_time": "19:30",
+        "end_date": null,
+        "venue": "Croke Park",
+        "notes": null
+      },
+      {
+        "title": "",
+        "date": "2027-03-06",
+        "start_time": "14:00",
+        "end_time": null,
+        "end_date": null,
+        "venue": null,
+        "notes": null
+      },
+      {
+        "title": "Dublin v Roscommon",
+        "date": "27/03/2027",
+        "start_time": "14:00",
+        "end_time": null,
+        "end_date": null,
+        "venue": null,
+        "notes": null
+      },
+      {
+        "title": "Dublin v Derry",
+        "date": "2027-03-20",
+        "start_time": "7pm",
+        "end_time": "21:00",
+        "end_date": null,
+        "venue": null,
+        "notes": null
+      }
+    ],
+    "skipped_note": null
+  }
+}

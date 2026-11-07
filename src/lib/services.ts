@@ -4,6 +4,7 @@ import { localServices } from './auth/localAuth';
 import { supabaseAuth } from './auth/supabaseAuth';
 import { supabaseUsage } from './ai/supabaseUsage';
 import { supabaseCalendars } from './calendar/supabaseCalendars';
+import { supabaseImports } from './import/supabaseImports';
 import { supabaseMemory } from './memory/supabaseMemory';
 import { supabaseSorting } from './sort/supabaseSorting';
 import { supabaseRemote } from './sync/supabaseRemote';
@@ -31,5 +32,6 @@ export function createServices(): Services {
     usage: supabaseUsage(supabase),
     memory: supabaseMemory(supabase),
     calendars: supabaseCalendars(supabase),
+    imports: supabaseImports(supabase),
   };
 }

@@ -44,11 +44,11 @@ function instant(t: ICAL.Time): string {
 }
 
 export function isCalendarText(text: string): boolean {
-  return /^\s*BEGIN:VCALENDAR/i.test(text.replace(/^﻿/, ''));
+  return /^\s*BEGIN:VCALENDAR/i.test(text.replace(/^\uFEFF/, ''));
 }
 
 export function parseCalendar(text: string, now: Date): ParsedCalendar {
-  const root = new ICAL.Component(ICAL.parse(text.replace(/^﻿/, '')));
+  const root = new ICAL.Component(ICAL.parse(text.replace(/^\uFEFF/, '')));
   for (const tz of root.getAllSubcomponents('vtimezone')) {
     ICAL.TimezoneService.register(tz);
   }

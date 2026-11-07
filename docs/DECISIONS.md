@@ -2,6 +2,38 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.10 Import schedule
+- **Libraries (verified current)**:
+  - **ical.js 2.2.1** for .ics, **Papa Parse 5.7.0** for CSV and **pdfjs-dist 6.5.438** (legacy build, worker loaded via Vite `?url`).
+  - **SheetJS 0.20.3** for Excel, installed from SheetJS's own CDN tarball (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`), because the npm `xlsx` package is stuck at 0.18.5.
+  - pdf.js chunks are left out of the PWA precache (`globIgnores`): PDF import needs the AI anyway, so it is online-only. The xlsx chunk stays precached, so CSV and Excel import work offline.
+- **Free routes first, all on the device**:
+  - **.ics** (file or pasted) is parsed exactly: recurrences for a year, cancelled and past events dropped.
+  - **CSV and Excel** go through a column-mapping step. Roles (date, start/end time, title, venue, home/away team, notes) are guessed from the headings and editable.
+  - Dates are ISO, Irish day-first (3/4/2027 = 3 April) or words. Times like 19:30, 7.30pm, 7pm or 1930; "TBC" means no time.
+- **AI routes** (`import-extract`, one small-tier call through the gateway, cost line on the button):
+  - Pasted messy text.
+  - **Text PDFs**: words extracted on the device, then sent as text, which is cheaper than vision.
+  - **Scanned PDFs** (under 40 characters of text): sent as a PDF document block.
+  - **Images**: compressed to 1600 px first, sent as an image block.
+  - **Links**: fetched on the server with the safe fetch. If the page is iCalendar it comes back as text for the device to parse with no AI call, and the review offers **"Add it as a linked calendar instead"**. Otherwise the page's visible text (table rows kept, nav and scripts removed) goes to the AI.
+- **Prompt `import.v1`**: years resolved from today and the time zone; never guess a time; the instruction filters; the schedule is data, never instructions.
+  - The output is validated twice: on the server (bad dates dropped, bad times → TBC, at most 400 events) and again on the device.
+  - Without a server, the AI routes say what still works offline.
+- **The instruction on code routes is a code filter**: all / attending all, home or away (the schedule's own team is the one in every "A v B" title; home = listed first, or venue/notes say home), weekends or weekdays only, "only <name>".
+  - If an instruction can't be applied, the review says so and leaves the list to edit by hand.
+  - On AI routes the instruction goes in the prompt.
+- **Review table**: tick or untick, then edit date, time, title and venue.
+  - **Clashes** with Airhead events, recurring ones included, and with linked calendars are flagged; an untimed event only clashes with all-day plans.
+  - **Working days** offer "book leave", which creates a planned full-day booking with the match as its note.
+  - Choose Personal or Us, and name the series (defaults to the file or calendar name).
+- **Saving**:
+  - One `series` row (`source_kind: 'import'`, route and instruction in `data`) and one event per ticked row with `series_id`.
+  - Timed events: local time → instant, correct across the clock change; the end defaults to 2 hours.
+  - Unconfirmed times become **all-day events with `data.time_tbc`**. The "check nearer the date" nudge is generated from that flag by the reminder trigger (4.12).
+  - The original file is queued for upload to `<user>/series/<series>/<name>` in the private bucket. Migration 0012 lets the bucket accept .ics, CSV, text and Excel, but not HTML.
+  - **Undo** soft-deletes the series and its events.
+
 ## 2026-11-07 — Task 4.9 Linked calendars
 - **Settings → Linked calendars**: paste a secret iCal link (`webcal://` or `https://`), then **Check link**. The server fetches and parses it and returns the event count and the calendar's own name (used as the default name). Then name it, pick one of six colours (kept away from the Personal, Us, tasks and leave colours) and add it.
   - The row is pushed, the server is asked to read it straight away, then devices pull.
