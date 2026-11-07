@@ -424,7 +424,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - ideas that keep coming back;
     - notifications sent, and the week's AI spend by task.
     - Tests: pgTAP with seeded weeks.
-- [ ] **8.2 Tidy-up candidates.** SQL `tidy_candidates(user)`, all found in code:
+- [x] **8.2 Tidy-up candidates.** SQL `tidy_candidates(user)`, all found in code:
     - completed tasks and read reading items over 90 days old;
     - past events with no notes;
     - exact duplicates (same type and normalised title);

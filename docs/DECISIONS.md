@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.2 Tidy-up candidates
+- **`tidy_candidates(user)`** (migration 0026) is service-role only and finds everything in SQL. Each row gives its reason and a mode:
+  - `auto` (low risk, from DESIGN): tasks done over 90 days ago, reading items read over 90 days ago, past events over 30 days old with no notes or linked meeting note, and exact duplicates (same type and title, ignoring case and spaces; the oldest copy is kept and the rest point at it);
+  - `ask`: near-duplicates (first chunks at gte-small similarity ≥ 0.95, checked over the 300 most recently updated items through the HNSW index) and Unsorted captures over 30 days old.
+- **Meeting notes, notes and ideas are always `ask`**, even as exact duplicates.
+- **Left alone**: deleted and archived items (`data.archived`), and items the person chose to keep (`data.keep`, set when they keep a proposal in 8.4).
+- At most 200 rows; an item found for two reasons appears once (duplicate first).
+
 ## 2026-11-07 — Task 8.1 Weekly digest
 - **`weekly_digest(user, week_start)`** (migration 0025) works in the person's time zone, Monday to Sunday. It is service-role only and returns titles only, with capped lists:
   - tasks due, done, done on time (within a day of the due date), added and carried;
