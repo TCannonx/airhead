@@ -2,6 +2,28 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.11 Push setup
+- **Library**: `jsr:@negrel/webpush@0.5.0`, Deno-native Web Push on WebCrypto (RFC 8291 aes128gcm, RFC 8292 VAPID).
+  - Chosen over npm `web-push`, whose Node crypto calls are a poor fit for Edge Functions.
+  - Verified from the package source: `importVapidKeys` (JWK), `ApplicationServer.new`, `subscribe(sub).pushTextMessage`, and `PushMessageError`.
+- **VAPID secrets** in Supabase only: `VAPID_KEYS` (the JWK pair as JSON) and `VAPID_SUBJECT`.
+  - `scripts/generate-vapid-keys.ts` makes them on your machine (BLOCKERS item 10).
+  - The app fetches the public key from `GET send-push`, so no client env variable is needed.
+- **`send-push`** (`verify_jwt = false`, checks callers itself):
+  - `GET` → `{ public_key }`.
+  - `POST {mode:'test', device_id}` from the device's owner → a test notification to that device.
+  - `POST {user_id, payload}` with the service key → that user's notification devices (used by the scheduler in 4.13).
+  - Push service answers 404 and 410 clear the device's `push_subscription`. Messages use urgency high, a 6-hour TTL and an optional topic, so a newer message replaces an older one.
+- **Settings → Notifications**:
+  - Permission is requested only when "Turn on notifications" is tapped. On iPhone or iPad outside the Home Screen app, it explains Share → Add to Home Screen instead of trying.
+  - The subscription is stored on this device's row and synced.
+  - **Which device gets them**: the first device turned on, but an iPhone takes over from a non-iPhone device (iPhone by default). "Send them here instead" moves them. "Turn off on this device" unsubscribes the browser and clears the row.
+  - "Send test notification" pushes the device row first, so the server sees the subscription.
+- **Service worker**:
+  - `push` shows the title and body, with the app icon and badge, tagged so a newer one replaces an older one.
+  - `notificationclick` focuses an open Airhead window and navigates it, or opens one.
+  - The tapped path is parsed by a pure function (`src/sw/payload.ts`) that only accepts in-app paths, so a payload can never open another site.
+
 ## 2026-11-07 — Task 4.10 Import schedule
 - **Libraries (verified current)**:
   - **ical.js 2.2.1** for .ics, **Papa Parse 5.7.0** for CSV and **pdfjs-dist 6.5.438** (legacy build, worker loaded via Vite `?url`).

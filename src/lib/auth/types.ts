@@ -111,6 +111,13 @@ export interface ImportsService {
   extract(req: ImportRequest): Promise<ImportOutcome>;
 }
 
+export interface PushService {
+  /** The server's VAPID public key, or null when push isn't set up there. */
+  publicKey(): Promise<string | null>;
+  /** A test notification to one device (it must have synced). */
+  sendTest(deviceId: string): Promise<{ ok: boolean; message: string }>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -122,4 +129,5 @@ export interface Services {
   memory?: MemoryService;
   calendars?: CalendarsService;
   imports?: ImportsService;
+  push?: PushService;
 }

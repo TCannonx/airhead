@@ -7,6 +7,7 @@ import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
+import NotificationSettings from './NotificationSettings';
 import LinkedCalendars from './LinkedCalendars';
 import SharingSettings from './SharingSettings';
 import WorkSettings from './WorkSettings';
@@ -92,6 +93,10 @@ export default function SettingsPage() {
             ))}
           </ul>
         )}
+      </Section>
+
+      <Section title="Notifications">
+        <NotificationSettings />
       </Section>
 
       <Section title="Sync">
