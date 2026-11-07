@@ -15,6 +15,7 @@ insert into public.memory_facts (id, user_id, text, status) values
 create temporary table v as select
   ('[1' || repeat(',0', 383) || ']')::extensions.vector(384) as e1,
   ('[0,1' || repeat(',0', 382) || ']')::extensions.vector(384) as e2;
+grant select on v to service_role, authenticated;
 
 set local role service_role;
 select is((select count(*)::int from public.facts_to_embed(10)), 3, 'active facts without embeddings wait');
