@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.8 Action items to tasks
+- **Checklist under the summary**: every proposed action starts unticked, and "Add as task" (or "Add N as tasks") creates only the ticked ones. Nothing is created without that tap.
+- **Linked by `data.note_id`** on the task. The owner goes in `data.owner` and in the body ("Owner: Mark"), and the original due text goes in `data.due_text`.
+- **Due dates come from the free rules**: `analyseCapture(due_text)` (chrono `en.GB`, forward dates, the device's time zone). Text it can't read ("soon") gives no due date.
+- **Already-added check by title**: an action counts as added when the note already has a task with the same normalised title. This holds after "Summarise again" too, because positions can change but titles rarely do. Added actions show "Task added" and can't be ticked again.
+
 ## 2026-11-07 — Task 6.7 Summarise
 - **One function, `summarise-note`**: one large-tier call (Sonnet with server-side fallback) using prompt `summarise.v1`. It is signed-in only, and the usage row records the task `summarise_note`.
   - Typed notes go as plain text built from the HTML (list items as "- ", checkboxes as "[ ]"/"[x]") inside `<note>`.

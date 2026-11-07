@@ -9,6 +9,7 @@ import { readInk } from '../../lib/ink/strokes';
 import { readSummary, SUMMARISE_COST_TEXT } from '../../lib/notes/summary';
 import type { Item } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
+import ActionItems from './ActionItems';
 
 const button =
   'rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50';
@@ -98,24 +99,7 @@ export default function SummarisePanel({
               </ul>
             </div>
           )}
-          {stored.actions.length > 0 && (
-            <div>
-              <h3 className="font-semibold">Action items</h3>
-              <ul className="list-disc pl-5">
-                {stored.actions.map((a, i) => (
-                  <li key={i}>
-                    {a.title}
-                    {(a.owner || a.due_text) && (
-                      <span className="text-slate-500">
-                        {' '}
-                        ({[a.owner, a.due_text].filter(Boolean).join(', ')})
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {stored.actions.length > 0 && <ActionItems note={item} actions={stored.actions} />}
         </div>
       )}
       {!notes ? (
