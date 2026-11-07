@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-06 — Task 2.7 Inbox and Library (basic)
+- **Inbox → Unsorted** lists captures with status `unsorted`, `needs_review` or `failed`, newest first, each with one-tap **Sort as** buttons (Task, Event, Reading, Idea, Meeting, Note). Sorting by hand creates the item (title = first line of the capture, capitalised; multi-line text kept as the body; links kept in `data.url`), marks the capture `sorted`, and records a `corrections` row (`from_value: { status }`, `to_value: { type }`).
+- **Inbox → To flesh out** shows items with `data.workshop === true` (set by sorting/Workshop in later phases).
+- **Library**: type tabs (All, Tasks, Events, Reading, Ideas, Meetings, Notes), Topic filter, From/To date filter (on `created_at`). It hides deleted, dropped and still-suggested items. Lists get their own screen with Task 3.6.
+- **Item page** (`/library/item/:id`): edit title, notes and type; changing the type records a correction (`from_value: { type }` → `to_value: { type }`); Delete soft-deletes and returns to the Library.
+- **Trash** (`/library/trash`): items deleted in the last 30 days, newest first, with Restore; the nightly server purge removes them after that.
+
 ## 2026-11-06 — Task 2.6 Instant events and suggestions
 - **Confident date** → an `event` item (status `open`, calendar `personal`, start/end/all-day/RRULE from the rules) is saved with the capture, and the capture is marked `sorted` (the free rules handled it). An **"Event added: Sat 11:00 · Undo"** toast (`role="status"`) shows for 8 s (`TOAST_MS`).
 - **Undo** soft-deletes the event (recoverable from Trash for 30 days) and sets the capture back to `unsorted`, so the next AI batch sorts it instead.
