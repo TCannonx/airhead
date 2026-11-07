@@ -11,6 +11,28 @@ export type SafeFetchResult =
   | { status: 'ok'; html: string; finalUrl: string; contentType: string }
   | { status: 'blocked' | 'error' | 'too_large' | 'not_html'; reason: string };
 
+/** What a caller accepts: link reading wants HTML; linked calendars want iCalendar. */
+export interface SafeFetchOptions {
+  accept: string;
+  allowType: RegExp;
+  maxBytes: number;
+  userAgent: string;
+}
+export const HTML_OPTIONS: SafeFetchOptions = {
+  accept: 'text/html,application/xhtml+xml',
+  allowType: /text\/html|application\/xhtml\+xml/i,
+  maxBytes: MAX_BYTES,
+  userAgent: 'Airhead link reader',
+};
+/** Calendar servers label .ics files loosely; the caller checks for BEGIN:VCALENDAR. */
+export const ICS_OPTIONS: SafeFetchOptions = {
+  accept: 'text/calendar,text/plain;q=0.8,*/*;q=0.5',
+  allowType:
+    /text\/calendar|text\/plain|application\/(?:octet-stream|ics|x-ical|calendar)|text\/x-vcalendar|^$/i,
+  maxBytes: 5 * 1024 * 1024,
+  userAgent: 'Airhead calendar reader',
+};
+
 export interface SafeFetchDeps {
   fetch: (url: string, init: RequestInit) => Promise<Response>;
   /** Returns the IPv4/IPv6 addresses for a hostname. */
@@ -68,7 +90,7 @@ async function hostAllowed(url: URL, resolve: SafeFetchDeps['resolve']): Promise
   return addresses.length > 0 && addresses.every((a) => !isPrivateAddress(a));
 }
 
-async function readCapped(res: Response): Promise<string | null> {
+async function readCapped(res: Response, maxBytes: number): Promise<string | null> {
   if (!res.body) return '';
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -77,7 +99,7 @@ async function readCapped(res: Response): Promise<string | null> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       return null;
     }
@@ -92,7 +114,11 @@ async function readCapped(res: Response): Promise<string | null> {
   return new TextDecoder().decode(all);
 }
 
-export async function safeFetch(input: string, deps: SafeFetchDeps): Promise<SafeFetchResult> {
+export async function safeFetch(
+  input: string,
+  deps: SafeFetchDeps,
+  options: SafeFetchOptions = HTML_OPTIONS,
+): Promise<SafeFetchResult> {
   let url: URL;
   try {
     url = new URL(input);
@@ -109,7 +135,7 @@ export async function safeFetch(input: string, deps: SafeFetchDeps): Promise<Saf
       res = await deps.fetch(url.toString(), {
         redirect: 'manual',
         signal: AbortSignal.timeout(TIMEOUT_MS),
-        headers: { 'user-agent': 'Airhead link reader', accept: 'text/html,application/xhtml+xml' },
+        headers: { 'user-agent': options.userAgent, accept: options.accept },
       });
     } catch {
       return { status: 'error', reason: 'could not connect' };
@@ -127,12 +153,14 @@ export async function safeFetch(input: string, deps: SafeFetchDeps): Promise<Saf
       return { status: 'error', reason: `HTTP ${res.status}` };
     }
     const contentType = res.headers.get('content-type') ?? '';
-    if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) {
+    if (!options.allowType.test(contentType.split(';')[0]?.trim() ?? '')) {
       await res.body?.cancel();
       return { status: 'not_html', reason: contentType || 'unknown type' };
     }
-    const html = await readCapped(res);
-    if (html === null) return { status: 'too_large', reason: 'over 2 MB' };
+    const html = await readCapped(res, options.maxBytes);
+    if (html === null) {
+      return { status: 'too_large', reason: `over ${Math.round(options.maxBytes / 1048576)} MB` };
+    }
     return { status: 'ok', html, finalUrl: url.toString(), contentType };
   }
   return { status: 'error', reason: 'too many redirects' };

@@ -75,3 +75,35 @@ export function feedUrl(
 
 /** The same link as webcal://, which opens the subscribe dialog in calendar apps. */
 export const webcalUrl = (url: string) => url.replace(/^https?:\/\//, 'webcal://');
+
+/** Colours offered for linked calendars (distinct from Personal, Us, tasks, leave). */
+export const LINKED_COLOURS = ['#0f766e', '#7c3aed', '#be185d', '#0369a1', '#a16207', '#4d7c0f'];
+
+/** Adds a linked calendar (someone else's secret iCal link). The server fetches it. */
+export async function addLinkedCalendar(
+  db: AirheadDb,
+  userId: string,
+  fields: { url: string; name: string; colour: string },
+): Promise<Feed> {
+  return save(db, 'feeds', {
+    ...baseRecord(userId),
+    kind: 'linked_in',
+    name: fields.name.trim() || 'Linked calendar',
+    colour: fields.colour,
+    token_hash: null,
+    url: fields.url.trim(),
+    enabled: true,
+    settings: {},
+    last_fetched_at: null,
+    last_error: null,
+  });
+}
+
+/** The host only, so the secret part of a link is never shown in full. */
+export function linkHost(url: string | null): string {
+  try {
+    return new URL((url ?? '').replace(/^webcals?:\/\//i, 'https://')).host;
+  } catch {
+    return 'link';
+  }
+}

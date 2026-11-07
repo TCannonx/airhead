@@ -7,6 +7,7 @@ import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
+import LinkedCalendars from './LinkedCalendars';
 import SharingSettings from './SharingSettings';
 import WorkSettings from './WorkSettings';
 import { useAuth } from '../../lib/auth/context';
@@ -125,6 +126,10 @@ export default function SettingsPage() {
 
       <Section title="Sharing">
         <SharingSettings />
+      </Section>
+
+      <Section title="Linked calendars">
+        <LinkedCalendars />
       </Section>
 
       <Section title="Memory">

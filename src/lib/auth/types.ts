@@ -62,6 +62,23 @@ export interface MemoryService {
   checkContradictions(): Promise<ContradictionsOutcome>;
 }
 
+/** Result of a linked-calendar check or refresh (fetch-linked-calendars). */
+export interface CalendarOutcome {
+  ok: boolean;
+  error_code: string | null;
+  message: string;
+  /** validate: the calendar's own name and how many events it has. */
+  name?: string | null;
+  count?: number;
+}
+
+export interface CalendarsService {
+  /** Fetches and parses a pasted link on the server; stores nothing. */
+  validate(url: string): Promise<CalendarOutcome>;
+  /** Refreshes one linked calendar now (it must have synced to the server). */
+  refresh(feedId: string): Promise<CalendarOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -71,4 +88,5 @@ export interface Services {
   sorting?: SortingService;
   usage?: UsageService;
   memory?: MemoryService;
+  calendars?: CalendarsService;
 }

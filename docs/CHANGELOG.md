@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 4.9: linked calendars (check and add a secret iCal link, server fetch every 30 minutes with recurrences expanded 12 months ahead, removals and errors tracked)
 - Task 4.8: outgoing calendar feeds (Us and my-phone links with hashed tokens, `calendar-feed` iCalendar with stable UIDs, recurrences, shared leave as Off and work locations)
 - Task 4.7: work location chip on Today and the desktop panel (one-tap change, one row per day across devices), Insights days per location by week and month
 - Task 4.6: leave UI (book from the calendar or the Work screen, half days, statuses, share to Us; "AL 14–18 July" proposals on Today; leave counter on Today and Work; nightly Taken job)
