@@ -2,6 +2,27 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.8 Outgoing feeds
+- **Tokens are made on the device**: 32 random bytes, base64url (43 characters).
+  - Only the hex SHA-256 goes into `feeds.token_hash`, so creating or renewing a link works offline and the link can never be read back from the server.
+  - The link is shown once (copy, or "Subscribe on this device" via `webcal://`). "New link" replaces the hash on the same feed; "Turn off" soft-deletes it.
+  - Both take effect once the change syncs.
+- **`calendar-feed?t=<token>`**: a public GET (`verify_jwt = false`; calendar apps can't sign in).
+  - It hashes the token and looks the feed up by hash with the service key, always filtered to the owner.
+  - Unknown, revoked or switched-off feeds, and `linked_in` rows, all return the same 404.
+  - Responses are `text/calendar` with `cache-control: private, max-age=300`. The calendar sets `REFRESH-INTERVAL`/`X-PUBLISHED-TTL` to one hour (apps choose their own rate; Google can lag hours).
+- **Contents**:
+  - **`us_out`**: open Us events (title and location; never notes), leave marked "share to Us" as all-day **Off** ("Off (morning)"/"(afternoon)" for a half day), and each working day's location from 14 days back to 120 ahead.
+    - Location sharing follows the Work setting: WFH, Office, … / just "Working" / nothing.
+    - Location markers are `TRANSP:TRANSPARENT`, so they don't block free/busy.
+    - Leave days, holidays, closures and weekends get no location marker.
+  - **`me_out`**: open events from both calendars (with notes), time-blocked tasks ("Task: …"), all leave with type and status, and full locations.
+- **Stable UIDs**: `<item id>@airhead`, `leave-<id>@airhead`, and `loc-<user prefix>-<date>@airhead`. Edits update in place in subscribers.
+- **Recurring timed events**: written with `DTSTART;TZID=<time zone>` plus a VTIMEZONE (GMT/IST rules for Dublin/London), so a weekly 19:00 stays at 19:00 after the clock change (checked through ical.js). Non-recurring timed events use UTC. All-day events use `VALUE=DATE` with an exclusive end.
+- **Hand-written iCalendar writer** (`_shared/ics.ts`): escaping and 75-octet UTF-8-safe folding, no library on the server. Tests round-trip it through **ical.js 2.2.1** (current) as the plan asks.
+- **Shared copy of the holiday rules**: `_shared/holidays/` is a copy of `src/lib/holidays/` with `.ts` import paths, because the function bundle can't import from `src`. A Deno test checks the same dates as the app's tests, and the header says to keep them in step. The work-setting defaults the feed needs are mirrored in `readWork`.
+- **Deno runs locally now** through `npx deno@2.9.6` (the npm package ships the binary). The full function suite passes locally before CI, with the same flags as CI.
+
 ## 2026-11-07 — Task 4.7 Work location
 - **Where today's location is set**:
   - **Today**: a "Today: Office" chip that opens one-tap choices (WFH, Office, Client site, Travel, Off); the weekday's usual place is marked "(usual)".

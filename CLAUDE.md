@@ -180,6 +180,6 @@ DENO_NO_PACKAGE_JSON=1 deno test --node-modules-dir=none --allow-env --allow-net
 ```
 
 Supabase CLI 3.x: `db push`, `db dump` and similar commands target the **local** database unless given `--remote`.
-On this machine (no Docker, Deno or `gh`), database and function tests run only in CI; see `docs/DECISIONS.md`.
+On this machine (no Docker or `gh`), database tests run only in CI. Function tests run locally through `npx deno@2.9.6` with the `deno test` line above; see `docs/DECISIONS.md`.
 
 Keep this section accurate as scripts are added.
