@@ -268,6 +268,38 @@ export const reviewSchema = z.object({
   cost_eur: z.coerce.number(),
 });
 
+/** One Scout run (Task 8.9): server-written log, read-only on devices. */
+export const scoutRunSchema = z.object({
+  ...syncColumns,
+  trigger: z.enum(['weekly', 'manual']),
+  queries: z.array(z.string()),
+  searches: z.number().int(),
+  cards: z.number().int(),
+  cost_eur: z.coerce.number(),
+  status: z.enum(['ok', 'failed']),
+});
+
+export const SUGGESTION_KINDS = [
+  'follow_up',
+  'prep',
+  'routine',
+  'stalled_idea',
+  'free_time',
+  'web',
+] as const;
+
+/** A Scout suggestion card (Task 8.9); accepting creates `proposed`, only on a tap. */
+export const suggestionSchema = z.object({
+  ...syncColumns,
+  run_id: id.nullable(),
+  kind: z.enum(SUGGESTION_KINDS),
+  title: z.string(),
+  body: z.string().nullable(),
+  source_url: z.string().nullable(),
+  proposed: z.record(z.string(), z.unknown()).nullable(),
+  status: z.enum(['open', 'accepted', 'dismissed']),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -290,6 +322,8 @@ export type DraftContent = z.infer<typeof draftContentSchema>;
 export type Draft = z.infer<typeof draftSchema>;
 export type WorkshopSession = z.infer<typeof workshopSessionSchema>;
 export type Review = z.infer<typeof reviewSchema>;
+export type ScoutRun = z.infer<typeof scoutRunSchema>;
+export type Suggestion = z.infer<typeof suggestionSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -313,6 +347,8 @@ export const SYNC_TABLES = [
   'drafts',
   'workshop_sessions',
   'reviews',
+  'scout_runs',
+  'suggestions',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -336,6 +372,8 @@ export const schemas = {
   drafts: draftSchema,
   workshop_sessions: workshopSessionSchema,
   reviews: reviewSchema,
+  scout_runs: scoutRunSchema,
+  suggestions: suggestionSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -358,4 +396,6 @@ export interface RowTypes {
   drafts: Draft;
   workshop_sessions: WorkshopSession;
   reviews: Review;
+  scout_runs: ScoutRun;
+  suggestions: Suggestion;
 }

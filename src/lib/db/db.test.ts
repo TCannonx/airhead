@@ -51,6 +51,8 @@ describe('local database', () => {
         'drafts',
         'workshop_sessions',
         'reviews',
+        'scout_runs',
+        'suggestions',
       ].sort(),
     );
   });

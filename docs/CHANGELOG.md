@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.9: Scout data (run log, suggestion cards) and Settings → Scout (city, searches per run, last run's queries)
 - Task 8.8: Suggest leave on Work (bridges from local data, offline; optional AI picks with reasons; book in one tap) and a bridge hint in the weekly review
 - Task 8.7: bridge-day finder (1–2 leave days that give 4+ days off, ranked; shared by the app and the server)
 - Task 8.6: Insights → Patterns (done by weekday, capture and completion hours, carry-overs, notifications, slipping topics, returning ideas; tables too)

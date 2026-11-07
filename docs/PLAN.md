@@ -460,7 +460,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - One small-tier call with prompt `leave.v1` gets the candidates, upcoming occasions, time since the last break and busy spells, and writes two or three suggestions.
     - Each suggestion books through the existing leave flow, and only on a tap.
     - Tests: Deno with fixtures, component tests.
-- [ ] **8.9 Scout data.** Migration:
+- [x] **8.9 Scout data.** Migration:
     - `scout_runs` (run log: when, trigger, queries used, searches, cost);
     - `suggestions` (cards: kind, title, body, source URL, a proposed item, status open, accepted or dismissed).
     - Both sync, with own-rows RLS; the server writes runs.

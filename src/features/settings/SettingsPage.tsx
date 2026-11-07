@@ -10,6 +10,7 @@ import MemorySettings from './MemorySettings';
 import NotificationSettings from './NotificationSettings';
 import CaptureTokens from './CaptureTokens';
 import LinkedCalendars from './LinkedCalendars';
+import ScoutSettingsPanel from './ScoutSettings';
 import SharingSettings from './SharingSettings';
 import TodaySettings from './TodaySettings';
 import WorkSettings from './WorkSettings';
@@ -145,6 +146,10 @@ export default function SettingsPage() {
 
       <Section title="Linked calendars">
         <LinkedCalendars />
+      </Section>
+
+      <Section title="Scout">
+        <ScoutSettingsPanel />
       </Section>
 
       <Section title="Memory">

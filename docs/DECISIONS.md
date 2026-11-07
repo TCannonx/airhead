@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.9 Scout data
+- **`scout_runs`** (migration 0028) is the run log. It is written by the server and synced read-only, so the exact web queries can be shown: trigger, queries, searches, cards, cost and status.
+- **`suggestions`** are the cards: kind, title, body, source URL, `proposed` (what accepting would create) and status (open, accepted or dismissed). They sync both ways with own-rows RLS, because devices accept and dismiss them.
+- **`scout` becomes a nudge kind**, for the weekly "Airhead has N ideas for you".
+- **Settings → Scout** (`settings.data.scout`):
+  - on or off;
+  - the city, the only place detail web searches may use;
+  - searches per run, 0–3, default 3; 0 means own data only;
+  - the last run's queries are listed.
+  - `save` re-reads the latest settings before writing, so two quick changes don't undo each other.
+- Dexie v9 adds `scout_runs` (pull-only) and `suggestions`.
+
 ## 2026-11-07 — Task 8.8 Holiday suggestions
 - **Candidates are found on the device** (`src/lib/leave/suggest.ts`) from data it already holds:
   - holidays, closure days and the work pattern;
