@@ -145,7 +145,9 @@ export function grownHeight(height: number, lowestY: number): number {
 /** One undoable change to a page. */
 export type InkOp =
   | { kind: 'add'; stroke: StoredStroke }
-  | { kind: 'erase'; removed: { index: number; stroke: StoredStroke }[] };
+  | { kind: 'erase'; removed: { index: number; stroke: StoredStroke }[] }
+  /** Lasso move (Task 9.2): these strokes shifted by (dx, dy). */
+  | { kind: 'move'; indices: number[]; dx: number; dy: number };
 
 /** Undo and redo over a page's strokes. */
 export class UndoStack {
@@ -181,14 +183,28 @@ export class UndoStack {
   }
 }
 
+function shift(strokes: StoredStroke[], indices: number[], dx: number, dy: number) {
+  const set = new Set(indices);
+  return strokes.map((st, i) =>
+    set.has(i)
+      ? {
+          ...st,
+          d: encodePoints(decodePoints(st.d).map((p) => ({ ...p, x: p.x + dx, y: p.y + dy }))),
+        }
+      : st,
+  );
+}
+
 function run(strokes: StoredStroke[], op: InkOp): StoredStroke[] {
   if (op.kind === 'add') return [...strokes, op.stroke];
+  if (op.kind === 'move') return shift(strokes, op.indices, op.dx, op.dy);
   const gone = new Set(op.removed.map((r) => r.index));
   return strokes.filter((_, i) => !gone.has(i));
 }
 
 function revert(strokes: StoredStroke[], op: InkOp): StoredStroke[] {
   if (op.kind === 'add') return strokes.slice(0, -1);
+  if (op.kind === 'move') return shift(strokes, op.indices, -op.dx, -op.dy);
   const out = [...strokes];
   for (const r of [...op.removed].sort((a, b) => a.index - b.index))
     out.splice(r.index, 0, r.stroke);
