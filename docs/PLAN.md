@@ -484,9 +484,28 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - Tests: component tests.
 - Phase done when: the Phase 8 manual checklist passes (a weekly review arrives with a Tidy-up card, a Condense works, patterns show, Suggest leave gives bridge days, and Scout gives at most 5 cards with its queries listed).
 
+## Phase 9: Notebook polish
+
+Goal: handwritten pages get the editing a paper notebook can't do. Lasso strokes to move, delete, copy and paste them; hold the pen still at the end of a stroke to snap it into a clean line, arrow, rectangle or circle. Planned in detail on 2026-11-07 from `DESIGN.md` (Notes: handwritten page; later list).
+
+- [ ] **9.1 Lasso selection.** A Lasso tool on the handwritten page's toolbar. Drawing a free loop with the Pencil or mouse selects:
+    - every stroke with at least half its points inside the loop;
+    - every text box whose top-left corner is inside.
+    - The selection shows a dashed bounding box. Tapping outside, or picking another tool, clears it.
+    - Tests: unit tests (point in polygon, selection rules), a component test.
+- [ ] **9.2 Move and delete.** Drag inside the selection box to move the selection: stroke points and text boxes shift, kept inside the page width, and the page grows if needed. Delete removes the selection. Undo and redo cover moves and deletes (the undo stack gains `move` and `remove` operations).
+    - Tests: unit tests (translate, undo and redo), a component test.
+- [ ] **9.3 Copy and paste.** Copy puts the selection on an in-app clipboard (kept for the session; strokes and text boxes as data, not images). Paste drops it into the same page or another handwritten note, offset so it doesn't cover the original, and selects it for moving. It is one undo step.
+    - Tests: unit tests, a component test (copy in one note, paste in another).
+- [ ] **9.4 Hold-to-snap shapes.** When a stroke ends with the Pencil held still for about half a second, code recognises a straight line, an arrow (a line with a short two-stroke head drawn in one go), a rectangle or a circle/ellipse from the points, and swaps the stroke for a clean one.
+    - The clean shape is stored as an ordinary stroke (points), so sync and rendering don't change.
+    - Undo brings back the hand-drawn stroke. Anything unclear stays as drawn.
+    - Tests: unit tests for the recogniser with synthetic strokes (each shape, wobbly versions, scribbles left alone), a component test for hold timing.
+- Phase done when: the Phase 9 manual checklist passes on the iPad with the Pencil (lasso, move, delete, copy and paste between notes, and each snapped shape plus undo).
+
 ## Phases 5–9 (outline)
 
-These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 to 8 are planned above.
+These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 to 9 are planned above.
 
 | Phase | Scope | Key pieces |
 | --- | --- | --- |
