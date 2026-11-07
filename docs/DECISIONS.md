@@ -2,6 +2,26 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.9 Memory and learned rules
+- **Tables** `memory_facts` (text, category everyday/person/personal, status active/pending_approval/archived, source capture, last_used_at) and `learned_rules` (pattern, match_kind, result `{ type, list_id, calendar }`, hits, enabled; unique per user + kind + pattern). Both are synced to devices (Dexie v3) with the standard RLS, Realtime and 30-day purge (`purge_soft_deleted` now includes them), and are included in exports.
+- **Facts from sorting**:
+  - The sort batch (prompt **`sort-batch.v3`**) returns `proposed_facts` per capture. The planner keeps them **only from typed captures**: web-page captures are dropped, so an injected "remember that…" in a page creates nothing. It caps them at 3 per capture and 200 characters.
+  - `add_memory_facts()` (service role) skips duplicates case-insensitively. `everyday` → `active`; `person`/`personal` → `pending_approval`.
+- **Core profile**:
+  - Contents: active facts, most recently used first (then newest), up to **~400 words** (`_shared/memory.ts`).
+  - Sent as a **second cached system block** after the fixed instructions. The gateway now accepts several system blocks, each its own cache breakpoint (max 4), and drops blank ones.
+  - Facts that were sent get `last_used_at = now`.
+  - Relevance-based selection (embeddings) comes with Ask Airhead in Phase 7, per the design.
+- **Archiving**: `archive_stale_facts()` nightly (`pg_cron` 03:41 UTC) archives active facts unused for 180 days (`last_used_at`, else `created_at`).
+- **Learned rules**:
+  - `learn_rules()` runs after each batch. Its unit is a capture's first word, lower-cased with punctuation stripped, at least 3 letters, and not a filler word.
+  - A rule is created when that word led, ≥ 4 times, to sorted text captures with **exactly one item**, **no correction**, **always the same result** (type, list, calendar), and none were rule-sorted already. The rule is a prefix rule.
+  - **On the device**, `createCapture` applies an enabled matching rule after the free rules (only when there's no link, no date and no photo). The capture is `sorted` with `payload.rule_id` (chip "Sorted (learned rule)"), and the item comes from the rule; list entries drop the prefix word ("buy oat milk" → "Oat milk"). The rule's `hits` +1. Works offline; no AI call.
+  - **A correction against a rule-sorted item switches that rule off** (in `changeItemType`).
+- **UI**:
+  - Settings → **Memory**: "Waiting for your OK" (Remember / Forget), "What Airhead knows about me" (edit, delete, add with a kind), Archived (Restore), and **Learned rules** with on/off switches and use counts.
+  - Inbox → Needs a tap also shows **one-tap cards** for facts waiting for approval (Remember / Don't remember).
+
 ## 2026-11-07 — Task 3.8 Success measures
 - **Insights → Success measures** (top of Insights), three tiles:
   - **Captures per day**: non-deleted captures in the last 30 days ÷ 30. Computed on the device.

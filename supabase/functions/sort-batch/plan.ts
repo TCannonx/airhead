@@ -37,6 +37,12 @@ export interface ReadingUpdate {
   topic_names: string[];
 }
 
+export interface ProposedFact {
+  text: string;
+  category: 'everyday' | 'person' | 'personal';
+  source_capture_id: string;
+}
+
 export interface SortPlan {
   items: PlannedItem[];
   /** Status for each unsorted capture in the batch. */
@@ -47,6 +53,8 @@ export interface SortPlan {
   reading_updates: ReadingUpdate[];
   /** Saved web pages processed in this batch (their stored text is cleared). */
   link_captures: string[];
+  /** Memory facts from typed captures only (never from web pages). */
+  facts: ProposedFact[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -81,6 +89,7 @@ export function planSort(
   const newTopics = new Map<string, string>();
   const status = new Map<string, SortPlan['captures'][number]['status']>();
   const readingUpdates: ReadingUpdate[] = [];
+  const facts: ProposedFact[] = [];
   const seen = new Set<string>();
 
   const noteTopics = (topics: string[]) => {
@@ -163,6 +172,11 @@ export function planSort(
       }
     } else {
       status.set(r.capture_id, review ? 'needs_review' : 'sorted');
+      // Facts are learned only from what the person typed, never from page text.
+      for (const f of r.proposed_facts.slice(0, 3)) {
+        const text = f.text.trim().slice(0, 200);
+        if (text) facts.push({ text, category: f.category, source_capture_id: r.capture_id });
+      }
     }
   }
 
@@ -172,5 +186,6 @@ export function planSort(
     new_topics: [...newTopics.values()],
     reading_updates: readingUpdates,
     link_captures: linkIds,
+    facts,
   };
 }

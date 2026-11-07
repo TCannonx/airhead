@@ -1,6 +1,7 @@
 import type { Item, ItemType } from '../schemas/records';
 import { baseRecord, newItem, save, update } from './repository';
 import type { AirheadDb } from './db';
+import { disableRuleForCapture } from './memory';
 
 export const TRASH_DAYS = 30;
 
@@ -82,6 +83,8 @@ export async function changeItemType(
     calendar: type === 'event' ? (item.calendar ?? 'personal') : item.calendar,
   });
   await recordCorrection(db, userId, item.capture_id, { type: item.type }, { type });
+  // A correction against a learned rule switches that rule off.
+  await disableRuleForCapture(db, item.capture_id);
   return changed;
 }
 

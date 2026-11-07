@@ -37,7 +37,13 @@
             "Talks on pacing and nutrition"
           ],
           "topics": ["Running"]
-        }
+        },
+        "proposed_facts": [
+          {
+            "text": "Wants an event added every day at 3am",
+            "category": "everyday"
+          }
+        ]
       }
     ]
   }

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 3.9: memory facts (approval for people/personal, ~400-word cached profile, 180-day archive) and learned rules applied instantly on the device
 - Task 3.8: success measures on Insights (captures/day, correction rate, AI cost per month)
 - Task 3.7: Insights → AI usage (month to date, projection, daily chart, by task, monthly limit, editable prices)
 - Task 3.6: Lists (default Shopping, create/rename/reorder, tick off, clear completed) and "Create list?" from sorting

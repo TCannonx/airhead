@@ -200,3 +200,18 @@ Deno.test('large tier maps to the large model', async () => {
   await callAI({ client, store }, { ...request(), tier: 'large' });
   assertEquals((calls[0] as { model: string }).model, 'claude-sonnet-5-5');
 });
+
+Deno.test('several system blocks: each is a cache breakpoint, blank ones dropped', async () => {
+  const { client, calls } = fakeClient([{ parsed_output: GOOD }]);
+  const { store } = fakeStore();
+  await callAI(
+    { client, store },
+    { ...request(), system: ['Fixed rules.', '', 'Profile: - Trains on Tuesdays'] },
+  );
+  const system = (calls[0] as { system: { text: string; cache_control: unknown }[] }).system;
+  assertEquals(
+    system.map((b) => b.text),
+    ['Fixed rules.', 'Profile: - Trains on Tuesdays'],
+  );
+  assert(system.every((b) => JSON.stringify(b.cache_control) === '{"type":"ephemeral"}'));
+});

@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
 import { createListFromSuggestion } from '../../lib/db/lists';
+import { approveFact, rejectFact } from '../../lib/db/memory';
 import {
   isInboxSuggestion,
   resolveSuggestion,
@@ -38,6 +39,10 @@ export default function InboxPage() {
     [db],
   );
   const unsure = useLiveQuery(() => db.items.filter(isInboxSuggestion).sortBy('created_at'), [db]);
+  const pendingFacts = useLiveQuery(
+    () => db.memory_facts.filter((f) => f.status === 'pending_approval' && !f.deleted_at).toArray(),
+    [db],
+  );
   const workshop = useLiveQuery(
     () => db.items.filter((i) => !i.deleted_at && i.data.workshop === true).toArray(),
     [db],
@@ -45,11 +50,39 @@ export default function InboxPage() {
 
   return (
     <Page title="Inbox">
-      {unsure && unsure.length > 0 && (
+      {((unsure && unsure.length > 0) || (pendingFacts && pendingFacts.length > 0)) && (
         <section className="mb-8">
           <SectionHeading>Needs a tap</SectionHeading>
           <ul aria-label="Needs a tap" className="space-y-2">
-            {unsure.map((i) => (
+            {pendingFacts?.map((f) => (
+              <li
+                key={f.id}
+                className="rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-900 dark:bg-sky-950/40"
+              >
+                <p className="font-medium">{f.text}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Should Airhead remember this? It&apos;s about{' '}
+                  {f.category === 'person' ? 'a person' : 'something personal'}, so it asks first.
+                </p>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                    onClick={() => void approveFact(db, f.id)}
+                  >
+                    Remember
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                    onClick={() => void rejectFact(db, f.id)}
+                  >
+                    Don’t remember
+                  </button>
+                </div>
+              </li>
+            ))}
+            {(unsure ?? []).map((i) => (
               <li
                 key={i.id}
                 className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"

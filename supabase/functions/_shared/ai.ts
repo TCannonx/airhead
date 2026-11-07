@@ -53,7 +53,7 @@ export interface CallAIRequest<T> {
   task: string;
   tier: Tier;
   /** Fixed instructions (cached). Put anything per-request in `messages`. */
-  system: string;
+  system: string | string[];
   messages: Anthropic.MessageParam[];
   schema: z.ZodType<T>;
   maxTokens?: number;
@@ -111,7 +111,16 @@ export async function callAI<T>(
       response = await deps.client.messages.parse({
         model,
         max_tokens: req.maxTokens ?? 8000,
-        system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
+        // Each block is its own cache breakpoint (fixed instructions, then the
+        // slower-changing memory profile); at most 4 are allowed.
+        system: (Array.isArray(req.system) ? req.system : [req.system])
+          .filter((text) => text.trim())
+          .slice(0, 4)
+          .map((text) => ({
+            type: 'text' as const,
+            text,
+            cache_control: { type: 'ephemeral' as const },
+          })),
         messages: req.messages,
         output_config: {
           format: zodOutputFormat(req.schema),
