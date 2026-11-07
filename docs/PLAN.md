@@ -238,7 +238,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 
 **Calendar**
 
-- [ ] **4.1 Calendar tables.** Migration `0004`: `series`, `nudges`, `feeds`, `external_events`, `work_days`, `leave_bookings`, plus `job_runs (user_id, job, local_date)` with a unique key so scheduled jobs never run twice.
+- [x] **4.1 Calendar tables.** Migration `0004`: `series`, `nudges`, `feeds`, `external_events`, `work_days`, `leave_bookings`, plus `job_runs (user_id, job, local_date)` with a unique key so scheduled jobs never run twice.
 - [ ] **4.2 Calendar views.** FullCalendar with daygrid, timegrid, list, interaction and rrule plugins. Day, week, month and agenda views (agenda is the phone default). Sources: Personal and Us events, linked external events (read-only), public holidays, leave, and a work-location badge on each day; colour per source with show/hide toggles. Drag and resize to reschedule; drag a task from the task list onto the calendar to time-block it; click an empty slot to create; editor in a side panel on desktop and a sheet on phone.
     - Tests: unit tests for the event-source mapping; Playwright for create, drag to reschedule and time-blocking.
 

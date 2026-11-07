@@ -2,6 +2,28 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.1 Calendar tables
+- **Migration number**: the plan says "0004", but 0004–0008 already exist, so this is `20261107000009_calendar.sql`.
+- **Who writes what**:
+  - **Device-written and synced both ways** (own-rows RLS for every action): `series`, `feeds`, `work_days`, `leave_bookings`.
+  - **Server-written, synced to devices read-only**: `external_events`. Authenticated users get select only; the sync engine only ever pulls it, because devices never queue it.
+  - **Server only**: `nudges` and `job_runs`. The owner may read them; they are not synced to devices yet. The notifications tasks decide whether the device needs them.
+- **Feeds**:
+  - One table for all three kinds: `us_out`, `me_out` and `linked_in`.
+  - Outgoing feeds store only `token_hash`, a hex SHA-256 checked by a constraint and uniquely indexed. The device can make the token itself (32 random bytes), so creating a feed works offline.
+  - A linked calendar stores its secret URL, which the server-side fetch needs.
+- **External events**: one row per occurrence, with recurrences expanded on the server. `occurrence_key` = iCal UID + recurrence id/start, unique per feed. Events that disappear from the source are soft-deleted, so devices hear about them.
+- **Work days** hold only the days that differ from the weekly pattern.
+  - `unique (user_id, date)`.
+  - Devices will use a deterministic id per user and date (Task 4.7), so two devices can never push conflicting rows.
+- **Leave bookings**:
+  - `start_half` / `end_half` mark half days.
+  - `leave_type` is a key into settings.
+  - `days` is the deducted working days, computed on the device and cached for the SQL jobs. Postgres `numeric` can come back as a string, so the Zod schema coerces it.
+- **Nudges** have a `dedupe_key` (`unique (user_id, dedupe_key)`) so the reminder trigger can regenerate them without duplicates, plus a partial index on pending `send_at`.
+- **`job_runs`** has primary key `(user_id, job, local_date)`. `claim_job(user, job, date)` (security definer, not callable by users) returns true only for the first claim. The nightly purge drops `job_runs` older than 90 days and covers the new soft-delete tables.
+- **Dexie v4** adds the five synced tables.
+
 ## 2026-11-07 — Task 3.10 Memory Check-up
 - **"Run check-up"** in Settings → Memory and on Insights runs free code checks (`src/lib/memory/checkup.ts`):
   - **profile size**: active facts over ~400 words; fix: archive the least used overflow;

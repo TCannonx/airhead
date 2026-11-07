@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 4.1: calendar tables (series, feeds, linked events, work days, leave bookings, nudges, job runs) with RLS, sync and Dexie v4
 - release: phase 3
 - Task 3.10: memory check-up (code checks with one-tap fixes and savings, contradictions check, monthly run on Insights)
 - Task 3.9: memory facts (approval for people/personal, ~400-word cached profile, 180-day archive) and learned rules applied instantly on the device

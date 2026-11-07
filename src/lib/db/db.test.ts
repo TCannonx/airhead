@@ -41,6 +41,11 @@ describe('local database', () => {
         'settings',
         'sync_state',
         'topics',
+        'series',
+        'feeds',
+        'external_events',
+        'work_days',
+        'leave_bookings',
       ].sort(),
     );
   });

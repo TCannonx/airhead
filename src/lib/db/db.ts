@@ -72,5 +72,13 @@ export function openUserDb(userId: string): AirheadDb {
     memory_facts: 'id, status, server_updated_at',
     learned_rules: 'id, pattern, server_updated_at',
   });
+  // v4: calendar, work and leave, sharing (Task 4.1). external_events is pull-only.
+  db.version(4).stores({
+    series: 'id, server_updated_at',
+    feeds: 'id, kind, server_updated_at',
+    external_events: 'id, feed_id, start_at, server_updated_at',
+    work_days: 'id, date, server_updated_at',
+    leave_bookings: 'id, start_date, end_date, server_updated_at',
+  });
   return db;
 }
