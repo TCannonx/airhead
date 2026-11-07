@@ -6,6 +6,7 @@ import { useDb } from '../../lib/db/context';
 import { filterLibrary, TYPE_LABELS } from '../../lib/db/sorting';
 import { useSearch } from '../../lib/search/useSearch';
 import type { ItemType } from '../../lib/schemas/records';
+import NewNoteButtons from '../notes/NewNoteButtons';
 
 const TABS: { label: string; type: ItemType | null }[] = [
   { label: 'All', type: null },
@@ -132,6 +133,7 @@ export default function LibraryPage() {
                 onChange={(e) => setTo(e.target.value)}
               />
             </label>
+            <NewNoteButtons />
             <Link to="/library/lists" className="ml-auto text-sm text-slate-500 underline">
               Lists
             </Link>

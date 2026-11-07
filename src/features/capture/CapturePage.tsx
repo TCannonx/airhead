@@ -8,6 +8,7 @@ import { eventLabel, undoInstantEvent } from '../../lib/db/events';
 import type { Capture, Item } from '../../lib/schemas/records';
 import { TOAST_MS } from './toast';
 import { compressImage } from '../../lib/files/image';
+import NewNoteButtons from '../notes/NewNoteButtons';
 
 const isTouch = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
@@ -225,6 +226,9 @@ export default function CapturePage() {
           </button>
         </div>
       )}
+      <div className="mt-8">
+        <NewNoteButtons />
+      </div>
     </Page>
   );
 }

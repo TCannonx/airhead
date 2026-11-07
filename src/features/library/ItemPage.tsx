@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { Page } from '../../app/Page';
 import ReadingDetails from './ReadingDetails';
 import { useAuth } from '../../lib/auth/context';
@@ -20,6 +20,9 @@ export default function ItemPage() {
   const item = useLiveQuery(() => db.items.get(id), [db, id]);
 
   if (item === undefined) return <Page title="Item" />;
+  // Notes and meeting notes open in the note editor (Task 6.3).
+  if (item && !item.deleted_at && typeof item.data.doc_kind === 'string')
+    return <Navigate to={`/notes/${item.id}`} replace />;
   if (!item || item.deleted_at) {
     return (
       <Page title="Not found">
