@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- plan: phase 8 (Reflection, tasks 8.1–8.12)
+
 ## Phase 7 — Thinking tools (ready for device testing, not yet released)
 
 Capture from anywhere:
