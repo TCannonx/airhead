@@ -54,6 +54,13 @@ describe('sign-in', () => {
     expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument();
   });
 
+  it('explains a failed email link instead of showing a blank form', async () => {
+    window.history.replaceState(null, '', '/#error=access_denied&error_code=otp_expired');
+    const { client } = fakeAuth(null);
+    render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/link has expired/i);
+  });
+
   it('starts Google sign-in from the button', async () => {
     const { client } = fakeAuth(null);
     render(<App services={{ auth: client, appLock: noLock, remote: null }} />);

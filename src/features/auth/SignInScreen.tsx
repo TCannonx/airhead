@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../lib/auth/context';
+import { linkError } from '../../lib/auth/errors';
 
 const button =
   'w-full rounded-lg px-4 py-3 text-sm font-semibold disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
@@ -12,7 +13,10 @@ export default function SignInScreen() {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // A failed email link lands here with error=… in the address; explain it once.
+  const [error, setError] = useState<string | null>(() =>
+    linkError(window.location.search, window.location.hash),
+  );
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
