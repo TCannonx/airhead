@@ -1,6 +1,6 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v1.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v2.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort } from './plan.ts';
 
@@ -33,7 +33,22 @@ export async function runSortBatch(
     .limit(BATCH_SIZE);
   if (error) throw new Error(`load captures: ${error.message}`);
   const batch = (captures ?? []).filter((c) => (c.text ?? c.url ?? '').trim());
-  if (batch.length === 0) {
+
+  // Saved web pages waiting for a summary share the batch (their text was
+  // stored by read-link and is cleared once summarised).
+  const { data: pending } = await db
+    .from('captures')
+    .select('id, text, url, payload')
+    .eq('user_id', userId)
+    .eq('payload->>summary_pending', 'true')
+    .is('deleted_at', null)
+    .order('captured_at', { ascending: true })
+    .limit(Math.max(0, BATCH_SIZE - batch.length));
+  const links = (pending ?? []).filter(
+    (c) => typeof (c.payload as { article_text?: unknown })?.article_text === 'string',
+  );
+
+  if (batch.length === 0 && links.length === 0) {
     return { ok: true, error_code: null, message: 'Nothing to sort.', sorted: 0, items: 0 };
   }
 
@@ -93,10 +108,18 @@ export async function runSortBatch(
       messages: [
         {
           role: 'user',
-          content: buildSortMessage(
-            ctx,
-            batch.map((c) => ({ id: c.id, text: c.text ?? '', url: c.url })),
-          ),
+          content: buildSortMessage(ctx, [
+            ...batch.map((c) => ({ id: c.id, text: c.text ?? '', url: c.url })),
+            ...links.map((c) => {
+              const p = c.payload as { article_text: string; link?: { title?: string | null } };
+              return {
+                id: c.id,
+                text: c.text ?? '',
+                url: c.url,
+                article: { title: p.link?.title ?? null, text: p.article_text },
+              };
+            }),
+          ]),
         },
       ],
       schema: SortResult,
@@ -125,17 +148,20 @@ export async function runSortBatch(
       lists: lists.data ?? [],
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),
     },
+    links.map((c) => c.id),
   );
   const { data: applied, error: applyError } = await db.rpc('apply_sort_batch', {
     p_user_id: userId,
     p_plan: plan,
   });
   if (applyError) throw new Error(`apply: ${applyError.message}`);
-  const counts = applied as { items: number; captures: number };
+  const counts = applied as { items: number; captures: number; links: number };
+  const parts = [`Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}`];
+  if (counts.links) parts.push(`summarised ${counts.links} link${counts.links === 1 ? '' : 's'}`);
   return {
     ok: true,
     error_code: null,
-    message: `Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}.`,
+    message: `${parts.join(', ')}.`,
     sorted: counts.captures,
     items: counts.items,
   };

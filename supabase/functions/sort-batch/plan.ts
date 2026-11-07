@@ -30,14 +30,28 @@ export interface PlannedItem {
   data: Record<string, unknown>;
 }
 
+export interface ReadingUpdate {
+  capture_id: string;
+  summary: string;
+  key_points: string[];
+  topic_names: string[];
+}
+
 export interface SortPlan {
   items: PlannedItem[];
+  /** Status for each unsorted capture in the batch. */
   captures: { id: string; status: 'sorted' | 'needs_review' | 'failed' }[];
   /** Topic names to create (not already existing, case-insensitive). */
   new_topics: string[];
+  /** Summaries for saved web pages (their reading items get these). */
+  reading_updates: ReadingUpdate[];
+  /** Saved web pages processed in this batch (their stored text is cleared). */
+  link_captures: string[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
+const cleanTopics = (topics: string[]) =>
+  [...new Set(topics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
 
 function iso(value: string | null): string | null {
   if (!value) return null;
@@ -49,21 +63,38 @@ function iso(value: string | null): string | null {
  * Turns the model's answer into rows, applying Airhead's own rules (the model
  * suggests, the rules decide): confident future events are created, anything
  * unsure becomes a suggestion, unknown lists ask first, topics are reused.
+ * Anything derived from a saved web page (untrusted content) is only ever a
+ * suggestion.
  */
-export function planSort(captureIds: string[], result: SortResultT, ctx: PlanContext): SortPlan {
-  const inBatch = new Set(captureIds);
+export function planSort(
+  captureIds: string[],
+  result: SortResultT,
+  ctx: PlanContext,
+  linkIds: string[] = [],
+): SortPlan {
+  const unsorted = new Set(captureIds);
+  const links = new Set(linkIds);
   const listByName = new Map(ctx.lists.map((l) => [norm(l.name), l.id]));
   const topicNames = new Set(ctx.topics.map((t) => norm(t.name)));
   const ideaByTitle = new Map(ctx.ideas.map((i) => [norm(i.title), i.id]));
   const items: PlannedItem[] = [];
   const newTopics = new Map<string, string>();
   const status = new Map<string, SortPlan['captures'][number]['status']>();
+  const readingUpdates: ReadingUpdate[] = [];
+  const seen = new Set<string>();
+
+  const noteTopics = (topics: string[]) => {
+    for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
+  };
 
   for (const r of result.results) {
-    if (!inBatch.has(r.capture_id) || status.has(r.capture_id)) continue;
-    let review = r.items.length === 0;
+    const isLink = links.has(r.capture_id);
+    if ((!unsorted.has(r.capture_id) && !isLink) || seen.has(r.capture_id)) continue;
+    seen.add(r.capture_id);
+    let review = r.items.length === 0 && !isLink;
 
     for (const it of r.items) {
+      if (isLink && it.type === 'reading') continue; // the reading item already exists
       const confidence = Math.min(1, Math.max(0, it.confidence));
       const data: Record<string, unknown> = {};
       let itemStatus: PlannedItem['status'] = confidence < REVIEW_BELOW ? 'suggested' : 'open';
@@ -82,16 +113,21 @@ export function planSort(captureIds: string[], result: SortResultT, ctx: PlanCon
           if (it.list_name) data.proposed_list = it.list_name.trim();
         }
       }
+      if (isLink) {
+        // Untrusted content: never acted on automatically.
+        itemStatus = 'suggested';
+        data.from_link = true;
+      }
       if (it.suggest_workshop) data.workshop = true;
       const ideaId = it.related_idea_title
         ? ideaByTitle.get(norm(it.related_idea_title))
         : undefined;
       if (ideaId) data.related_idea_id = ideaId;
 
-      const topics = [...new Set(it.topics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
-      for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
+      const topics = cleanTopics(it.topics);
+      noteTopics(topics);
 
-      if (itemStatus === 'suggested') review = true;
+      if (itemStatus === 'suggested' && !isLink) review = true;
       items.push({
         capture_id: r.capture_id,
         type: it.type,
@@ -110,12 +146,31 @@ export function planSort(captureIds: string[], result: SortResultT, ctx: PlanCon
         data,
       });
     }
-    status.set(r.capture_id, review ? 'needs_review' : 'sorted');
+
+    if (isLink) {
+      if (r.link_summary) {
+        const topics = cleanTopics(r.link_summary.topics);
+        noteTopics(topics);
+        readingUpdates.push({
+          capture_id: r.capture_id,
+          summary: r.link_summary.summary.trim(),
+          key_points: r.link_summary.key_points
+            .map((k) => k.trim())
+            .filter(Boolean)
+            .slice(0, 5),
+          topic_names: topics,
+        });
+      }
+    } else {
+      status.set(r.capture_id, review ? 'needs_review' : 'sorted');
+    }
   }
 
   return {
     items,
     captures: captureIds.map((id) => ({ id, status: status.get(id) ?? 'failed' })),
     new_topics: [...newTopics.values()],
+    reading_updates: readingUpdates,
+    link_captures: linkIds,
   };
 }

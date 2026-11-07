@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { Page } from '../../app/Page';
+import ReadingDetails from './ReadingDetails';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { eventLabel } from '../../lib/db/events';
@@ -90,6 +91,7 @@ function ItemForm({ item }: { item: Item }) {
             </a>
           </p>
         )}
+        <ReadingDetails item={item} />
         <label className="block space-y-1 text-sm font-medium">
           <span>Notes</span>
           <textarea
