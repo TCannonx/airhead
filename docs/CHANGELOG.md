@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 9.4: hold the pen still to snap a stroke into a clean line, arrow, rectangle or circle (undo restores the drawn one)
 - Task 9.3: copy a lasso selection and paste it into the same or another handwritten note
 - Task 9.2: move a lasso selection by dragging, delete it, undo and redo both
 - Task 9.1: lasso selection on handwritten pages

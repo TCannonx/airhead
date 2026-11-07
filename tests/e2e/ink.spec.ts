@@ -182,3 +182,41 @@ test('copy a selection in one note and paste it into another (Task 9.3)', async 
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(second.locator('path[data-stroke="saved"]')).toHaveCount(0);
 });
+
+test('hold the pen still at the end of a line to snap it; undo brings back the drawn one (Task 9.4)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto('/library');
+  await page.getByRole('button', { name: 'New handwritten note' }).click();
+  await expect(page).toHaveURL(/\/notes\//);
+  const canvas = page.getByRole('img', { name: 'Handwritten page' });
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('no page');
+  const saved = canvas.locator('path[data-stroke="saved"]');
+
+  // A slightly wobbly line, then hold still before lifting.
+  await page.mouse.move(box.x + 100, box.y + 200);
+  await page.mouse.down();
+  for (let i = 1; i <= 20; i++)
+    await page.mouse.move(box.x + 100 + i * 15, box.y + 200 + (i % 2 ? 2 : -2));
+  await page.waitForTimeout(900);
+  await expect(page.getByText(/Snapped to a line/).first()).toBeVisible();
+  await page.mouse.up();
+  await expect(saved).toHaveCount(1);
+  const clean = await saved.first().getAttribute('d');
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(saved).toHaveCount(1);
+  await expect.poll(() => saved.first().getAttribute('d')).not.toBe(clean);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(saved).toHaveCount(0);
+
+  // A quick stroke without the hold stays as drawn.
+  await page.mouse.move(box.x + 100, box.y + 400);
+  await page.mouse.down();
+  for (let i = 1; i <= 20; i++)
+    await page.mouse.move(box.x + 100 + i * 15, box.y + 400 + (i % 2 ? 2 : -2));
+  await page.mouse.up();
+  await expect(page.getByText(/Snapped to/)).toHaveCount(0);
+});
