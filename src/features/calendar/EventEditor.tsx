@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { newItem, save, softDelete, update } from '../../lib/db/repository';
 import type { Item } from '../../lib/schemas/records';
+import StartNotesButton from '../notes/StartNotesButton';
 import { deviceTimeZone } from './useCalendarData';
 
 /** What the editor opens with: an existing item, or a new event's times. */
@@ -302,6 +303,14 @@ export default function EventEditor({
           >
             Book as leave
           </button>
+        )}
+        {existing && !isTask && (
+          <StartNotesButton
+            eventKey={existing.id}
+            title={existing.title}
+            date={f.allDay ? f.startDate : f.startTime.slice(0, 10)}
+            className="rounded-lg px-3 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950"
+          />
         )}
         {existing && !isTask && (
           <button

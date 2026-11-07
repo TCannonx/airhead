@@ -58,3 +58,32 @@ export async function saveDoc(
     writer_device: deviceId,
   });
 }
+
+/** The meeting note started from an event, if there is one. */
+export async function notesForEvent(db: AirheadDb, eventId: string): Promise<Item | undefined> {
+  return (await db.items.where('type').equals('meeting').toArray()).find(
+    (i) => !i.deleted_at && i.data.event_id === eventId,
+  );
+}
+
+/**
+ * "Start notes" on an event (Task 6.4): opens its meeting note, or makes one
+ * with the event's title and date, linked to the event. The key is the event's
+ * id, or id|occurrence for one meeting of a repeating series.
+ */
+export async function startNotesFor(
+  db: AirheadDb,
+  userId: string,
+  deviceId: string,
+  event: { key: string; title: string; date: string },
+): Promise<Item> {
+  const existing = await notesForEvent(db, event.key);
+  if (existing) return existing;
+  const { item } = await createNote(db, userId, deviceId, {
+    type: 'meeting',
+    kind: 'typed',
+    title: event.title,
+    data: { event_id: event.key, meeting_date: event.date, attendees: [] },
+  });
+  return item;
+}
