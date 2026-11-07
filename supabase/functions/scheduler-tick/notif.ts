@@ -10,6 +10,7 @@ export const NUDGE_TYPES = [
   'checklist',
   'leave_runout',
   'slip',
+  'morning_brief',
 ] as const;
 export type NudgeType = (typeof NUDGE_TYPES)[number];
 
@@ -24,6 +25,8 @@ export interface NotifSettings {
   evening_review_time: string;
   checklist_time: string;
   morning_time: string;
+  /** When the morning brief and its round-up go out. */
+  brief_time: string;
   event_reminder_minutes: number;
 }
 
@@ -36,6 +39,7 @@ export const DEFAULT_NOTIF: NotifSettings = {
   evening_review_time: '21:00',
   checklist_time: '20:00',
   morning_time: '08:00',
+  brief_time: '07:30',
   event_reminder_minutes: 30,
 };
 
@@ -52,6 +56,7 @@ export function readNotif(data: Record<string, unknown> | null | undefined): Not
     'evening_review_time',
     'checklist_time',
     'morning_time',
+    'brief_time',
   ] as const) {
     if (typeof n[k] === 'string' && HHMM.test(n[k] as string)) out[k] = n[k] as string;
   }

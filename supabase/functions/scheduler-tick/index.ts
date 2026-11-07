@@ -1,6 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { json } from '../_shared/http.ts';
 import { deliver, pusherFromEnv, type DeviceRow } from '../_shared/push.ts';
+import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
+import { supabaseUsageStore } from '../_shared/usageStore.ts';
+import { runMorningBrief } from '../morning-brief/run.ts';
+import { supabaseBriefStore } from '../morning-brief/store.ts';
 import { runTick, type TickStore } from './tick.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -141,17 +145,36 @@ Deno.serve(async (req) => {
   if (!pusher) {
     return json({ ok: false, error_code: 'not_configured', message: 'Push is not set up.' }, 200);
   }
-  const report = await runTick(new Date(), store, async (userId, payload) => {
-    const { data } = await db
-      .from('devices')
-      .select('id, user_id, push_subscription, receives_notifications')
-      .eq('user_id', userId)
-      .eq('receives_notifications', true)
-      .is('deleted_at', null);
-    const res = await deliver((data ?? []) as DeviceRow[], payload, pusher, async (id) => {
-      await db.from('devices').update({ push_subscription: null }).eq('id', id);
-    });
-    return res.sent > 0 ? 'sent' : 'none';
-  });
+  const report = await runTick(
+    new Date(),
+    store,
+    async (userId, payload) => {
+      const { data } = await db
+        .from('devices')
+        .select('id, user_id, push_subscription, receives_notifications')
+        .eq('user_id', userId)
+        .eq('receives_notifications', true)
+        .is('deleted_at', null);
+      const res = await deliver((data ?? []) as DeviceRow[], payload, pusher, async (id) => {
+        await db.from('devices').update({ push_subscription: null }).eq('id', id);
+      });
+      return res.sent > 0 ? 'sent' : 'none';
+    },
+    {
+      brief: async (userId, localDate, at) => {
+        await runMorningBrief(
+          userId,
+          localDate,
+          at,
+          {
+            store: supabaseBriefStore(db),
+            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            usage: supabaseUsageStore(db),
+          },
+          { roundUp: true },
+        );
+      },
+    },
+  );
   return json({ ok: true, error_code: null, message: 'ok', ...report });
 });
