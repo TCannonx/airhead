@@ -1,22 +1,36 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../../lib/auth/context';
-import { linkError } from '../../lib/auth/errors';
 
 const button =
   'w-full rounded-lg px-4 py-3 text-sm font-semibold disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
 const input =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900';
 
+/**
+ * One form for new and returning users: email + password, no emails sent.
+ * The browser's password manager (iOS Keychain, Chrome) saves and fills it.
+ */
 export default function SignInScreen() {
   const { services } = useAuth();
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [password, setPassword] = useState('');
+  const [isNew, setIsNew] = useState(false);
+  const [google, setGoogle] = useState(false);
   const [busy, setBusy] = useState(false);
-  // A failed email link lands here with error=… in the address; explain it once.
-  const [error, setError] = useState<string | null>(() =>
-    linkError(window.location.search, window.location.hash),
-  );
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    services.auth.googleEnabled().then(
+      (on) => {
+        if (alive) setGoogle(on);
+      },
+      () => {},
+    );
+    return () => {
+      alive = false;
+    };
+  }, [services.auth]);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -30,17 +44,9 @@ export default function SignInScreen() {
     }
   }
 
-  function sendCode(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault();
-    void run(async () => {
-      await services.auth.sendEmailCode(email.trim());
-      setStep('code');
-    });
-  }
-
-  function verify(e: FormEvent) {
-    e.preventDefault();
-    void run(() => services.auth.verifyEmailCode(email.trim(), code.trim()));
+    void run(() => services.auth.continueWithPassword(email.trim(), password));
   }
 
   return (
@@ -52,80 +58,69 @@ export default function SignInScreen() {
           <p className="text-sm text-slate-500">Capture anything, sorted later.</p>
         </div>
 
-        <button
-          type="button"
-          className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
-          disabled={busy}
-          onClick={() => void run(() => services.auth.signInWithGoogle())}
-        >
-          Continue with Google
-        </button>
+        <form onSubmit={submit} className="space-y-3">
+          <label className="block space-y-1 text-sm font-medium">
+            <span>Email</span>
+            <input
+              type="email"
+              name="email"
+              required
+              autoComplete="username"
+              autoCapitalize="none"
+              className={input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label className="block space-y-1 text-sm font-medium">
+            <span>{isNew ? 'Choose a password' : 'Password'}</span>
+            <input
+              type="password"
+              name="password"
+              required
+              minLength={isNew ? 8 : undefined}
+              // "new-password" makes iOS and Chrome offer a strong password and save it.
+              autoComplete={isNew ? 'new-password' : 'current-password'}
+              className={input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={busy || !email || !password}
+            className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
+          >
+            {isNew ? 'Create account' : 'Continue'}
+          </button>
+          <button
+            type="button"
+            className="w-full text-sm text-slate-500 underline"
+            onClick={() => {
+              setIsNew(!isNew);
+              setError(null);
+            }}
+          >
+            {isNew ? 'I already have an account' : 'New here? Create an account'}
+          </button>
+        </form>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-          or
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-        </div>
-
-        {step === 'email' ? (
-          <form onSubmit={sendCode} className="space-y-3">
-            <label className="block space-y-1 text-sm font-medium">
-              <span>Email</span>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                className={input}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={busy || !email}
-              className={`${button} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700`}
-            >
-              Email me a code
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={verify} className="space-y-3">
-            <p className="text-sm text-slate-500">
-              We sent a code to <strong>{email}</strong>. Type it here, or tap the link in the email
-              if you&apos;re in a browser.
-            </p>
-            <label className="block space-y-1 text-sm font-medium">
-              <span>6-digit code</span>
-              <input
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]*"
-                maxLength={10}
-                required
-                className={`${input} tracking-widest`}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={busy || !code}
-              className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
-            >
-              Sign in
-            </button>
+        {google && (
+          <>
+            <div className="flex items-center gap-3 text-xs text-slate-400">
+              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              or
+              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            </div>
             <button
               type="button"
-              className="w-full text-sm text-slate-500 underline"
-              onClick={() => {
-                setStep('email');
-                setCode('');
-                setError(null);
-              }}
+              className={`${button} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700`}
+              disabled={busy}
+              onClick={() => void run(() => services.auth.signInWithGoogle())}
             >
-              Use a different email
+              Continue with Google
             </button>
-          </form>
+          </>
         )}
 
         {error && (

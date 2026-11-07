@@ -78,21 +78,21 @@ Phase 1 is merged. Once items 1–5 below are done, run the Phase 1 section of `
 | `SUPABASE_DB_PASSWORD_DEV` | dev database password |
 | `SUPABASE_DB_PASSWORD_LIVE` | live database password |
 
-### 3. Email sign-in code (Task 1.5)
+### 3. Email-and-password sign-in, invite-only (replaces email codes) — do this in each Supabase project
 
-In **each** Supabase project: **Authentication → Emails → Templates**. Paste `supabase/templates/magic_link.html` into **Magic Link** and `supabase/templates/confirmation.html` into **Confirm signup** (first sign-in for a new email uses that one). Both include the code, e.g.:
+Sign-in is email + password with **no emails sent**; new accounts are made on the spot, but only for addresses on the allow-list. In the Supabase project (dev now, live later):
 
-```html
-<h2>Your Airhead sign-in code</h2>
-<p>Type this code in the app: <strong>{{ .Token }}</strong></p>
-<p>Or, in a browser, <a href="{{ .ConfirmationURL }}">sign in with this link</a>.</p>
-```
+1. **Authentication → Sign In / Providers → Email**: turn **Confirm email** off. Save.
+2. **Authentication → Hooks** → add **Before User Created** → type **Postgres** → schema `public`, function `hook_before_user_created` → enable and save. (Without this, anyone with the address could sign up.)
+3. **Table Editor → `signup_allowlist` → Insert row**: `entry` = your email in lower case (one row per person; `@domain.com` allows a whole domain). Save.
+4. **Authentication → Users**: delete any account left over from the old email-code sign-in (e.g. yours), so you can sign up fresh with a password.
+5. On the site, tap **New here? Create an account**, enter your email, and let the iPhone suggest a strong password. You're in; the password is in your Keychain for every device.
 
-Save. Then in **Authentication → URL Configuration** set **Site URL** to `http://localhost:5173` for now and add `http://localhost:5173/**` to **Redirect URLs** (the Cloudflare address gets added in Task 1.7).
+Forgotten password: there's no reset email (no email sender is set up). The password lives in iCloud Keychain / Chrome, so this should be rare; if it happens, a reset path can be added then (an email sender such as Resend, or an owner-run reset).
 
 ### 4. Google login (Task 1.5)
 
-Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes work.
+Optional. Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`; the Google button appears only once Google is switched on in Supabase. New Google accounts also need their address on the allow-list (item 3).
 
 ### 5. Cloudflare hosting for the dev site (Task 1.7) — done 2026-11-07
 
@@ -103,15 +103,6 @@ The dev site is a Cloudflare **Worker** connected to `TCannonx/airhead` (Cloudfl
 - Still to do: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead.xxr5th.workers.dev`, Redirect URLs add `https://airhead.xxr5th.workers.dev/**` and `https://*-airhead.xxr5th.workers.dev/**`. If Google login is set up, add `https://airhead.xxr5th.workers.dev` to the OAuth client's JavaScript origins.
 
 - For the live release workflow (Task 1.8), still create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
-
-### 5b. Sign-in emails need the code (hosted dev) — to do
-
-The hosted dev project still sends Supabase's default emails, which only have a link. The link signs in only in the same browser that asked for it (not from inside a mail app), so the app needs the 6-digit code too. The repo's templates aren't deployed by CI (`config push` would also overwrite the hosted Site URL with localhost).
-
-1. Supabase dev → **Authentication → Emails → Templates**.
-2. **Confirm signup**: subject `Your Airhead sign-in code`; body = `supabase/templates/confirmation.html`.
-3. **Magic link**: subject `Your Airhead sign-in code`; body = `supabase/templates/magic_link.html`.
-4. Save both. New emails then show the code to type in the app.
 
 ### 6. Branch protection (Task 1.8) — now possible: the repo is public
 

@@ -14,9 +14,9 @@ export function localServices(): Services {
     mode: 'local',
     getUser: async () => ({ id: LOCAL_USER_ID, email: null }),
     onChange: () => () => {},
+    googleEnabled: async () => false,
     signInWithGoogle: async () => {},
-    sendEmailCode: async () => {},
-    verifyEmailCode: async () => {},
+    continueWithPassword: async () => {},
     signOut: async () => {},
   };
   return {

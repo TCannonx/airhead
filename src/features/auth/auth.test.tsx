@@ -26,10 +26,10 @@ function fakeAuth(initial: AuthUser | null = null) {
       listeners.add(cb);
       return () => listeners.delete(cb);
     }),
+    googleEnabled: vi.fn(async () => false),
     signInWithGoogle: vi.fn(async () => {}),
-    sendEmailCode: vi.fn(async (_email: string) => {}),
-    verifyEmailCode: vi.fn(async (email: string, code: string) => {
-      if (code !== '123456') throw new Error('That code is wrong or has expired.');
+    continueWithPassword: vi.fn(async (email: string, password: string) => {
+      if (password !== 'correct horse') throw new Error('Wrong password for that email.');
       set({ id: '11111111-1111-4111-8111-111111111111', email });
     }),
     signOut: vi.fn(async () => set(null)),
@@ -47,52 +47,55 @@ beforeEach(async () => {
 });
 
 describe('sign-in', () => {
-  it('shows the sign-in screen when signed out', async () => {
+  it('shows one email-and-password form when signed out, without a dead Google button', async () => {
     const { client } = fakeAuth(null);
     render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
-    expect(await screen.findByRole('button', { name: /continue with google/i })).toBeVisible();
+    expect(await screen.findByLabelText('Email')).toBeVisible();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'current-password');
+    expect(screen.queryByRole('button', { name: /continue with google/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument();
   });
 
-  it('explains a failed email link instead of showing a blank form', async () => {
-    window.history.replaceState(null, '', '/#error=access_denied&error_code=otp_expired');
+  it('shows Google only when the server has it switched on', async () => {
     const { client } = fakeAuth(null);
-    render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent(/link has expired/i);
-  });
-
-  it('starts Google sign-in from the button', async () => {
-    const { client } = fakeAuth(null);
+    client.googleEnabled.mockResolvedValue(true);
     render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
     await userEvent.click(await screen.findByRole('button', { name: /continue with google/i }));
     expect(client.signInWithGoogle).toHaveBeenCalledOnce();
   });
 
-  it('signs in with an emailed code', async () => {
+  it('signs in (or signs up) with email and password, and explains a wrong password', async () => {
     const { client } = fakeAuth(null);
     render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
 
-    await userEvent.type(await screen.findByLabelText('Email'), 'me@example.test');
-    await userEvent.click(screen.getByRole('button', { name: /email me a code/i }));
-    expect(client.sendEmailCode).toHaveBeenCalledWith('me@example.test');
+    await userEvent.type(await screen.findByLabelText('Email'), ' me@example.test ');
+    await userEvent.type(screen.getByLabelText('Password'), 'nope');
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Wrong password');
 
-    await userEvent.type(await screen.findByLabelText(/6-digit code/i), '000000');
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('wrong or has expired');
-
-    await userEvent.clear(screen.getByLabelText(/6-digit code/i));
-    await userEvent.type(screen.getByLabelText(/6-digit code/i), '123456');
-    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    await userEvent.clear(screen.getByLabelText('Password'));
+    await userEvent.type(screen.getByLabelText('Password'), 'correct horse');
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    expect(client.continueWithPassword).toHaveBeenLastCalledWith(
+      'me@example.test',
+      'correct horse',
+    );
     expect(await screen.findByRole('heading', { level: 1, name: 'Capture' })).toBeVisible();
   });
 
-  it('shows a plain message when sending the code fails', async () => {
+  it('switches to account creation so the password manager offers a strong password', async () => {
     const { client } = fakeAuth(null);
-    client.sendEmailCode.mockRejectedValueOnce(new Error('You are offline.'));
+    client.continueWithPassword.mockRejectedValueOnce(
+      new Error('This app is invite-only. Ask the owner to add your email.'),
+    );
     render(<App services={{ auth: client, appLock: noLock, remote: null }} />);
-    await userEvent.type(await screen.findByLabelText('Email'), 'me@example.test');
-    await userEvent.click(screen.getByRole('button', { name: /email me a code/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('You are offline.');
+    await userEvent.click(await screen.findByRole('button', { name: /new here/i }));
+    const pw = screen.getByLabelText('Choose a password');
+    expect(pw).toHaveAttribute('autocomplete', 'new-password');
+    await userEvent.type(screen.getByLabelText('Email'), 'stranger@example.test');
+    await userEvent.type(pw, 'a long password');
+    await userEvent.click(screen.getByRole('button', { name: 'Create account' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('invite-only');
   });
 });
 
@@ -133,7 +136,7 @@ describe('signed in', () => {
     expect(within(list).getByText('This device')).toBeVisible();
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign out' }));
-    expect(await screen.findByRole('button', { name: /continue with google/i })).toBeVisible();
+    expect(await screen.findByLabelText('Email')).toBeVisible();
     expect(client.signOut).toHaveBeenCalledOnce();
   });
 });

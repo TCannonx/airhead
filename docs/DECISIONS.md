@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Sign-in: email and password, invite-only (replaces email codes)
+- **Why:** on the real dev site the email route failed repeatedly: Supabase's built-in sender allows a few emails an hour, its templates can't be edited without a custom sender (so no code in the email), and the link only signs in the browser that asked for it. The user asked for seamless sign-up for "me and a few people".
+- **How:** one form, email + password. `continueWithPassword` tries `signInWithPassword`; on `invalid_credentials` it tries `signUp`, and `user_already_exists` then means "wrong password". Hosted projects need **Confirm email** off so sign-up returns a session at once. Password managers do the rest (`autocomplete` `username` / `current-password`, and `new-password` in "Create an account" so iOS and Chrome offer a strong one).
+- **Invite-only:** migration 0029 adds `signup_allowlist` (addresses or `@domain`) and the **Before User Created** Postgres hook `hook_before_user_created` (free plan; not security definer, runs as `supabase_auth_admin`, per the Supabase auth-hooks docs). Refusals return 403 with a message starting `invite_only:`, which the app turns into plain words. The hook is switched on locally in `config.toml` and by hand in hosted projects (BLOCKERS item 3); `supabase/seed.sql` allows `@example.test` for local and CI only. The owner's address is added in the dashboard, never in a migration (the repo is public).
+- **Google** stays optional: the app reads `/auth/v1/settings` and shows the button only when the provider is on. New Google users pass the same hook.
+- Email codes, the link-error handling and the mail-reading e2e helper are removed. Supersedes the "Email fallback is a 6-digit code" decision below.
+
 ## 2026-11-07 — Dev site is a Cloudflare Worker
 - Cloudflare's **Workers & Pages → Create** now makes a Worker with static assets, so the dev site is the Worker `airhead` at **https://airhead.xxr5th.workers.dev** (the `airhead-dev.pages.dev` name below was never used). Its Git integration builds every push to `main` plus preview builds.
 - Workers static assets honour the same `_headers` file and serve `index.html` for unknown paths, so no repo change was needed; checked on the live dev site.

@@ -40,37 +40,23 @@ export function friendlyAuthError(
   return new Error(known(error, online) ?? withCode(fallback, error));
 }
 
-/** Like friendlyAuthError, for checking a typed code: "invalid/expired" means the code. */
-export function friendlyCodeError(
+/** Errors from email-and-password sign-in and sign-up. */
+export function passwordError(
   error: AuthErrorLike,
   fallback: string,
   online: boolean = isOnline(),
 ): Error {
   const plain = known(error, online);
   if (plain) return new Error(plain);
-  if (/expired|invalid/i.test(error?.message ?? ''))
-    return new Error('That code is wrong or has expired.');
+  const message = error?.message ?? '';
+  // The invite-only sign-up hook (migration 0029) starts its message with this marker.
+  if (/invite_only/i.test(message))
+    return new Error('This app is invite-only. Ask the owner to add your email.');
+  if (error?.code === 'weak_password' || /password should be/i.test(message))
+    return new Error('Choose a longer password (at least 8 characters).');
+  if (error?.code === 'email_not_confirmed')
+    return new Error('This account still needs its email confirmed. Check your inbox.');
+  if (error?.code === 'signup_disabled')
+    return new Error('New accounts are switched off on this server.');
   return new Error(withCode(fallback, error));
-}
-
-/**
- * When a sign-in link from the email fails, Supabase sends the browser back with
- * `error=…` in the query or hash. Returns a plain message, or null when there's none.
- */
-export function linkError(search: string, hash: string): string | null {
-  const params = new URLSearchParams(search);
-  const fromHash = new URLSearchParams(hash.replace(/^#/, ''));
-  const code = params.get('error_code') ?? fromHash.get('error_code');
-  const error = params.get('error') ?? fromHash.get('error');
-  if (!code && !error) {
-    // The sign-in screen only shows once the link's ?code=… exchange is over, so a
-    // code still in the address means it failed: usually the link was opened in a
-    // different browser or app from the one that asked for it.
-    if (params.get('code'))
-      return 'That link has to be opened in the same browser you asked for it in. Type the code from the email instead, or ask for a new one here.';
-    return null;
-  }
-  if (code === 'otp_expired')
-    return 'That sign-in link has expired or was already used. Type the code from the email instead, or ask for a new one.';
-  return 'That sign-in link did not work. Type the code from the email instead, or ask for a new one.';
 }
