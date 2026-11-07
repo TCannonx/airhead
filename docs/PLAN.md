@@ -488,7 +488,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
 
 Goal: handwritten pages get the editing a paper notebook can't do. Lasso strokes to move, delete, copy and paste them; hold the pen still at the end of a stroke to snap it into a clean line, arrow, rectangle or circle. Planned in detail on 2026-11-07 from `DESIGN.md` (Notes: handwritten page; later list).
 
-- [ ] **9.1 Lasso selection.** A Lasso tool on the handwritten page's toolbar. Drawing a free loop with the Pencil or mouse selects:
+- [x] **9.1 Lasso selection.** A Lasso tool on the handwritten page's toolbar. Drawing a free loop with the Pencil or mouse selects:
     - every stroke with at least half its points inside the loop;
     - every text box whose top-left corner is inside.
     - The selection shows a dashed bounding box. Tapping outside, or picking another tool, clears it.

@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 9.1 Lasso selection
+- **Lasso tool** on the handwritten page's toolbar. A free loop (Pencil or mouse; fingers still scroll) selects strokes with at least half their points inside, by even-odd point-in-polygon, and text boxes whose top-left corner is inside. Empty text boxes are ignored.
+- The loop shows as a dashed line while drawing; the selection shows as a dashed, lightly filled box around the strokes (including their width) and text boxes. Choosing another tool, a pen colour or a new loop clears it.
+- **Pure helpers** in `src/lib/ink/selection.ts`: point in polygon, `selectByLasso`, `selectionBox`, `translateStroke` and `clampMove`, the last two ready for 9.2.
+- Tested with unit tests and a Playwright test; pointer drawing is only realistic in a browser.
+- Local e2e note: Playwright reuses a server already on port 4173 (`reuseExistingServer` outside CI). A stale `vite preview` left running locally serves an old build, so CI (fresh server) is the check.
+
 ## 2026-11-07 — Phase 9 plan
 - **Planned before building**, as for Phases 5–8 (by the user's instruction).
 - **Snapped shapes stay ordinary strokes** (point lists drawn with perfect-freehand), so stored data, sync and rendering need nothing new. Undo restores the hand-drawn version.

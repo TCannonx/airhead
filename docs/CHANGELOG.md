@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 9.1: lasso selection on handwritten pages
 - plan: phase 9 (Notebook polish, tasks 9.1–9.4)
 
 ## Phase 8 — Reflection (ready for device testing, not yet released)
