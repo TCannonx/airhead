@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.1 Weekly digest
+- **`weekly_digest(user, week_start)`** (migration 0025) works in the person's time zone, Monday to Sunday. It is service-role only and returns titles only, with capped lists:
+  - tasks due, done, done on time (within a day of the due date), added and carried;
+  - slipped tasks (most carried first) and topics that slip;
+  - captures, plus capture and completion hours (24 counts) and completions by weekday (Monday first);
+  - ideas that captures kept returning to (`data.related_idea_id`, set by sorting) and ideas added;
+  - notifications sent or bundled;
+  - AI spend and calls, by task.
+- It feeds the weekly review (8.3) and Patterns (8.6). Nothing here needs AI.
+
 ## 2026-11-07 — Phase 8 plan
 - **Planned before building**, as for Phases 5–7 (by the user's instruction).
 - **Web search price (verify item)**: Anthropic's web search costs $10 per 1,000 searches, plus normal token costs, according to Claude's current API reference. Scout caps itself at 3 searches a run, at most about €0.03 a week for search. Task 8.11 checks the tool version and options again before building.

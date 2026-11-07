@@ -418,7 +418,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
 
 Goal: once a week Airhead looks back. A review gives themes, wins, what slipped, a few suggestions and the AI spend. A Tidy-up clears clutter safely. Patterns show habits. Leave suggestions come from bridge days. Scout proposes things to do from your own data and a few capped web searches. Every suggestion is a card you accept or dismiss. Planned in detail on 2026-11-07 from `DESIGN.md` (Insights; Memory; Scout and Check-up; Work and leave; Tidy-up and link reading).
 
-- [ ] **8.1 Weekly digest.** SQL `weekly_digest(user, week_start)` (security definer, service role), titles only:
+- [x] **8.1 Weekly digest.** SQL `weekly_digest(user, week_start)` (security definer, service role), titles only:
     - completion rate, carry-overs, captures and completions by hour and weekday;
     - task types and topics that slip;
     - ideas that keep coming back;
