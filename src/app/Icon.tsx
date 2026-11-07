@@ -1,9 +1,11 @@
-export type IconName = 'capture' | 'today' | 'inbox' | 'library' | 'insights' | 'settings';
+export type IconName =
+  'capture' | 'today' | 'calendar' | 'inbox' | 'library' | 'insights' | 'settings';
 
 // Simple 24px stroke icons drawn for Airhead (no icon library needed yet).
 const PATHS: Record<IconName, string> = {
   capture: 'M12 5v14M5 12h14',
   today: 'M4 7h16v13H4zM4 11h16M8 3v4M16 3v4',
+  calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h2M12 14h2M16 14h2M8 17h2M12 17h2',
   inbox: 'M4 13l2.5-8h11L20 13v6H4zM4 13h5l1 2h4l1-2h5',
   library: 'M5 4h4v16H5zM10 4h4v16h-4zM15.5 5l3.5-1 2.5 15.5-3.5 1z',
   insights: 'M4 20V10M10 20V4M16 20v-7M21 20H3',

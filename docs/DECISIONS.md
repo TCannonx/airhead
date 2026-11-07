@@ -2,6 +2,46 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.2 Calendar views
+- **Verified: FullCalendar 7.1.4 (MIT) is current.**
+  - The plugins now ship inside `@fullcalendar/react` (`/daygrid`, `/timegrid`, `/list`, `/interaction`), with themes as plugins (`/themes/classic` plus its CSS).
+  - `temporal-polyfill` 1.0.8 is a required peer.
+  - The v6 packages (`@fullcalendar/core`, `/daygrid`, …) must not be installed alongside.
+  - Breaking changes used here, from the upgrade guide: `headerToolbar` is off by default, `dayCellContent` → `dayCellTopContent`, `slotLabelFormat` → `slotHeaderFormat`, no `fc-*` class names, and callback dates are still `Date`.
+- **No `@fullcalendar/rrule` plugin.** Recurring items are expanded in `src/lib/calendar/sources.ts` with the `rrule` library already used for parsing.
+  - It works on floating wall-clock times in the person's time zone, so a weekly 19:00 stays at 19:00 across the clock change (unit-tested over 25 October 2026).
+  - This one function will also serve the feed (4.8) and reminders.
+  - Recurring occurrences are not draggable: an occurrence edit would need exception dates. Editing one opens the series.
+- **Sources and colours**:
+
+  | Source | Colour |
+  | --- | --- |
+  | Personal | indigo |
+  | Us | rose |
+  | Time-blocked tasks | amber |
+  | Public holidays | slate; common days off lighter |
+  | Leave | green |
+  | Each linked calendar | its own colour, or teal |
+
+  Show/hide toggles are per device (`localStorage`, wrapped in try/catch).
+- **Linked events, holidays and leave are read-only on the calendar.** Leave is edited in the leave sheet (4.6).
+- **All-day items** store local midnight of the first day and, for multi-day items, of the last day (inclusive, matching the capture rules). FullCalendar's exclusive end is derived.
+- **Views**:
+  - Day (timeGridDay), Week (timeGridWeek, desktop default), Month (dayGridMonth), Agenda (the next 14 days, phone default).
+  - Weeks start on Monday, with a 24-hour clock.
+  - Our own toolbar, because v7's is off by default and ours fits the app's styling.
+  - Timed views have a fixed height scrolled to 07:00.
+- **Work-location badge**: in day headers (day and week views) and day cells (month view). It is Off on leave, holidays, closures and non-working days, so it is hidden there.
+- **Interactions**:
+  - Selecting an empty slot opens the editor; a single 30-minute slot becomes an hour.
+  - Drag and resize write `start_at`/`end_at`/`all_day` through `movedTimes`.
+  - Tasks with no time are listed in a "Tasks to plan" tray (tablet/desktop) using FullCalendar's `Draggable`. A drop sets a 30-minute block (`create: false`, so the item itself is the only event).
+  - The editor is a side panel on tablet/desktop and a bottom sheet on phone. For a time-blocked task it offers "Remove from calendar" instead of Delete.
+- **Navigation**: Calendar is a sidebar entry after Today, and a header button on the phone, so the five phone tabs stay as designed. `Page` gained a `wide` option for full-width screens.
+- **Tests**:
+  - Unit tests for the source mapping: time zones, DST, all-day ranges, filtering, linked feeds, holidays, leave, locations, moves.
+  - Playwright (local mode, fixed clock): create from a slot then drag to another day, and drag a seeded task onto the week. Slot positions are measured once the grid stops moving.
+
 ## 2026-11-07 — Task 4.5 Leave engine
 - `src/lib/leave/engine.ts`: pure functions over YYYY-MM-DD strings, with calendar arithmetic in UTC, so no time zone can move a day.
 - **Leave year**: from the configured MM-DD to the day before it, a year later.
