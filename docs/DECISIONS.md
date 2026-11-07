@@ -2,6 +2,22 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.10 Memory Check-up
+- **"Run check-up"** in Settings → Memory and on Insights runs free code checks (`src/lib/memory/checkup.ts`):
+  - **profile size**: active facts over ~400 words; fix: archive the least used overflow;
+  - **near-duplicate facts**: Jaccard similarity ≥ 0.8 on meaningful words, ignoring case, punctuation and filler; fix: merge, keeping the fact with more meaningful words, the first on a tie;
+  - **facts unused for 90+ days**: fix: archive;
+  - **facts waiting for approval**: fix: open Settings;
+  - **switched-off rules**: fix: delete;
+  - **rarely used rules** (≤ 5 hits after 60 days): fix: switch off;
+  - **average input tokens per AI task**, last 30 days vs the 30 before, flagged at more than 25% growth;
+  - **sync backlog** (> 50 waiting, or no sync for a day): fix: sync now.
+
+  Each finding has a one-tap fix, and fact fixes show an **estimated saving**: words trimmed from every call, and euros a month = words × 4/3 tokens × last 30 days' calls × the small model's cache-read price × `eur_rate`, from the **current price table** (the profile sits in the cached prefix).
+- **Not built**: a storage check (the database's 500 MB lives on the server; the device check would only see browser storage) and a separate cost-trend finding (AI usage already shows the projection). Both go to the later list if real use asks for them.
+- **"Check for contradictions"** (online only): **`check-contradictions`** Edge Function, prompt `contradictions.v1`, one small-tier call over active facts, through the gateway (logged and capped). The reply is validated (`validConflicts`): exactly two different real fact ids, each pair once. The UI offers **Use "merged text"** (when given), **Keep the first** or **Keep the second**; the other fact goes to the Trash.
+- **Monthly code-only run**: Insights runs the check-up by itself when the last one is over 30 days old, stores `{ at, findings }` in the device's `meta`, and shows "Last check-up: …". Kept per device, not synced. A run cut short by the database closing (sign-out) is dropped quietly.
+
 ## 2026-11-07 — Task 3.9 Memory and learned rules
 - **Tables** `memory_facts` (text, category everyday/person/personal, status active/pending_approval/archived, source capture, last_used_at) and `learned_rules` (pattern, match_kind, result `{ type, list_id, calendar }`, hits, enabled; unique per user + kind + pattern). Both are synced to devices (Dexie v3) with the standard RLS, Realtime and 30-day purge (`purge_soft_deleted` now includes them), and are included in exports.
 - **Facts from sorting**:

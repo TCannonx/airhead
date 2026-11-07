@@ -443,3 +443,7 @@ verify_jwt = false
 # read-link: called by the database trigger (service key) or the capture's owner.
 [functions.read-link]
 verify_jwt = false
+
+# check-contradictions: checks the caller's own token itself.
+[functions.check-contradictions]
+verify_jwt = false

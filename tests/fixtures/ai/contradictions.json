@@ -1,0 +1,42 @@
+{
+  "_note": "Saved check-contradictions output. f1/f2 conflict; the model also invented an id and paired a fact with itself, which must be ignored.",
+  "facts": [
+    {
+      "id": "f0000000-0000-4000-8000-000000000001",
+      "text": "Trains on Tuesdays and Thursdays at 7pm"
+    },
+    {
+      "id": "f0000000-0000-4000-8000-000000000002",
+      "text": "Trains on Mondays and Wednesdays at 7pm"
+    },
+    { "id": "f0000000-0000-4000-8000-000000000003", "text": "Lives in Dublin" }
+  ],
+  "output": {
+    "conflicts": [
+      {
+        "fact_ids": [
+          "f0000000-0000-4000-8000-000000000001",
+          "f0000000-0000-4000-8000-000000000002"
+        ],
+        "explanation": "They give different training days.",
+        "merged_text": null
+      },
+      {
+        "fact_ids": [
+          "f0000000-0000-4000-8000-000000000003",
+          "f0000000-0000-4000-8000-0000000000ff"
+        ],
+        "explanation": "Invented id.",
+        "merged_text": "x"
+      },
+      {
+        "fact_ids": [
+          "f0000000-0000-4000-8000-000000000003",
+          "f0000000-0000-4000-8000-000000000003"
+        ],
+        "explanation": "Same fact twice.",
+        "merged_text": null
+      }
+    ]
+  }
+}

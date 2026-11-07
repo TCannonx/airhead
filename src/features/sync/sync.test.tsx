@@ -65,6 +65,7 @@ describe('SyncIndicator', () => {
 describe('Settings → Sync', () => {
   it('shows the last successful sync and a Sync now button', async () => {
     const { default: SettingsPage } = await import('../settings/SettingsPage');
+    const { MemoryRouter } = await import('react-router');
     const { AuthProvider } = await import('../../lib/auth/AuthProvider');
     const { LOCAL_USER_ID, localServices } = await import('../../lib/auth/localAuth');
     const { DataProvider } = await import('../../lib/db/DataProvider');
@@ -75,7 +76,9 @@ describe('Settings → Sync', () => {
         <DataProvider userId={LOCAL_USER_ID}>
           <AppLockProvider>
             <SyncContext value={{ status: s({ lastSyncedAt: new Date().toISOString() }), syncNow }}>
-              <SettingsPage />
+              <MemoryRouter>
+                <SettingsPage />
+              </MemoryRouter>
             </SyncContext>
           </AppLockProvider>
         </DataProvider>

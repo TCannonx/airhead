@@ -5,6 +5,7 @@ import AppLockSettings from '../applock/AppLockSettings';
 import { lastSyncedText } from '../sync/labels';
 import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
+import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -118,6 +119,10 @@ export default function SettingsPage() {
 
       <Section title="Memory">
         <MemorySettings />
+        <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <h3 className="mb-2 text-sm font-medium">Check-up</h3>
+          <CheckupPanel />
+        </div>
       </Section>
 
       <Section title="Your data">
