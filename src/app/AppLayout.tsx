@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
+import { SyncIndicator } from '../features/sync/SyncIndicator';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
 import { SETTINGS, TABS, type NavItem } from './nav';
@@ -35,6 +36,7 @@ function Sidebar() {
   return (
     <div className="flex w-56 shrink-0 flex-col gap-4 border-r border-slate-200 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] dark:border-slate-800">
       <Brand />
+      <SyncIndicator className="-mt-3 px-3" />
       <nav aria-label="Sidebar" className="flex flex-1 flex-col gap-1">
         {TABS.map((item) => (
           <SidebarLink key={item.to} item={item} />
@@ -52,6 +54,7 @@ function PhoneLayout() {
     <div className="flex h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 px-2 pt-[env(safe-area-inset-top)] dark:border-slate-800">
         <Brand />
+        <SyncIndicator className="ml-auto mr-1" />
         <NavLink
           to={SETTINGS.to}
           aria-label="Settings"

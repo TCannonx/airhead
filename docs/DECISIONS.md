@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 2.10 Sync visibility
+- **Indicator** (`SyncIndicator`): a coloured dot and a label in the phone top bar and under the brand in the iPad/desktop sidebar. Labels: "Synced", "Syncing…", "N waiting", "Offline" / "Offline · N waiting", "N waiting · will retry" / "Not synced yet · will retry". The engine's plain-language message is the tooltip. "N" = distinct rows in the outbox, refreshed after every local write. It's `aria-live="polite"` rather than `role="status"`, to avoid competing with toasts.
+- **Hidden in local mode** (nothing syncs); Settings → Sync explains it instead.
+- **Settings → Sync**: last successful sync ("Today at 10:41" / "Thu 5 Nov at 08:05" / "Never"), the current message, and a visible **Sync now** button.
+- The cross-device e2e now checks the indicator reads "Offline · N waiting" while offline and "Synced" after reconnecting.
+
 ## 2026-11-07 — Task 2.9 Export everything
 - **JSZip 3.10.2.** Settings → Your data → **Export everything** downloads `airhead-export-YYYY-MM-DD.zip`:
   - `data.json`: `{ format: 'airhead-export', version: 1, exported_at, tables }` with **every row of every synced table, soft-deleted rows included** (it's the backup and re-import source; the version field allows a future importer).
