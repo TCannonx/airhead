@@ -3,6 +3,7 @@ import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
 import { supabaseAuth } from './auth/supabaseAuth';
 import { supabaseUsage } from './ai/supabaseUsage';
+import { supabaseMemory } from './memory/supabaseMemory';
 import { supabaseSorting } from './sort/supabaseSorting';
 import { supabaseRemote } from './sync/supabaseRemote';
 import type { Services } from './auth/types';
@@ -27,5 +28,6 @@ export function createServices(): Services {
     remote: supabaseRemote(supabase),
     sorting: supabaseSorting(supabase),
     usage: supabaseUsage(supabase),
+    memory: supabaseMemory(supabase),
   };
 }

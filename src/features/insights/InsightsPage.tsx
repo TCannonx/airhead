@@ -1,4 +1,5 @@
 import { Page } from '../../app/Page';
+import CheckupPanel from '../settings/CheckupPanel';
 import AiUsage from './AiUsage';
 import SuccessMeasures from './SuccessMeasures';
 
@@ -22,6 +23,15 @@ export default function InsightsPage() {
           AI usage
         </h2>
         <AiUsage />
+      </section>
+      <section aria-labelledby="checkup-heading" className="mb-10">
+        <h2
+          id="checkup-heading"
+          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
+        >
+          Memory check-up
+        </h2>
+        <CheckupPanel auto />
       </section>
     </Page>
   );

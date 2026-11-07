@@ -50,6 +50,18 @@ export interface UsageService {
   savePrice(price: Omit<import('../ai/usage').PriceRow, 'id' | 'user_id'>): Promise<void>;
 }
 
+export interface ContradictionsOutcome {
+  ok: boolean;
+  error_code: string | null;
+  message: string;
+  conflicts: { fact_ids: [string, string]; explanation: string; merged_text: string | null }[];
+}
+
+/** Server-side memory checks (one AI call); absent in local mode. */
+export interface MemoryService {
+  checkContradictions(): Promise<ContradictionsOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -58,4 +70,5 @@ export interface Services {
   /** AI sorting on the server; absent in local mode. */
   sorting?: SortingService;
   usage?: UsageService;
+  memory?: MemoryService;
 }
