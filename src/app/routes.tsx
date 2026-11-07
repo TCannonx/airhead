@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router';
 import CalendarPage from '../features/calendar/CalendarPage';
 import ImportPage from '../features/calendar/ImportPage';
 import CapturePage from '../features/capture/CapturePage';
+import SharePage from '../features/capture/SharePage';
 import InboxPage from '../features/inbox/InboxPage';
 import InsightsPage from '../features/insights/InsightsPage';
 import ItemPage from '../features/library/ItemPage';
@@ -23,6 +24,7 @@ export const routes: RouteObject[] = [
       // Capture is the home screen.
       { index: true, element: <Navigate to="/capture" replace /> },
       { path: 'capture', Component: CapturePage },
+      { path: 'share', Component: SharePage },
       { path: 'today', Component: TodayPage },
       { path: 'calendar', Component: CalendarPage },
       { path: 'calendar/import', Component: ImportPage },

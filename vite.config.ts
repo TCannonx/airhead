@@ -40,6 +40,12 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Android and desktop Chrome: "Share" to Airhead lands on /share (Task 7.4).
+        share_target: {
+          action: '/share',
+          method: 'GET',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webp,woff2}'],

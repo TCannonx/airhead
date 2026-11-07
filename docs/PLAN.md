@@ -388,7 +388,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - **Quick thought**: Back Tap or the Action Button, dictated or typed.
     - Both use "Get contents of URL" with the token. When the request fails, the Shortcut says to open the app and capture offline.
     - Tests: a docs check that the guide names the function URL pattern and never contains a real token.
-- [ ] **7.4 Bookmarklet and share target.** "Send to Airhead" bookmarklet: a link to drag to the bookmarks bar. It opens Airhead's own `/share?url=&title=&text=` page in a small window, and the signed-in app saves the capture there. No token goes into web pages, so a page's scripts can never read it. The same route becomes the PWA manifest's `share_target` (Android and desktop Chrome).
+- [x] **7.4 Bookmarklet and share target.** "Send to Airhead" bookmarklet: a link to drag to the bookmarks bar. It opens Airhead's own `/share?url=&title=&text=` page in a small window, and the signed-in app saves the capture there. No token goes into web pages, so a page's scripts can never read it. The same route becomes the PWA manifest's `share_target` (Android and desktop Chrome).
     - Tests: component tests for `/share` (saves once, shows Saved, closes), and a unit test for the bookmarklet code (encodes the selection, the title and the URL).
 - [ ] **7.5 Workshop data.** Migration:
     - `drafts`: id, item_id, version, `content` jsonb with summary, sections [{heading, body}], open_questions and next_steps; `source` auto, session or edit. Append-only versions.

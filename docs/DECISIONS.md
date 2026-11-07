@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.4 Bookmarklet and share target
+- **The bookmarklet only opens Airhead's own `/share?url=&title=&text=`** in a 420×320 window. It holds no token and makes no request from the page it runs on.
+  - The signed-in app saves the capture itself, through the same `createCapture` as the Capture tab: free rules, offline, synced later.
+  - The window closes itself after "Saved to Airhead."
+- **The selection is capped at 4,000 characters.** The capture text is the page title plus the quoted selection, or just the title.
+- **React 19 blocks `javascript:` links in JSX**, so the Settings link sets its `href` on the element after mount. It is draggable, and a click on it in Airhead itself does nothing.
+- **PWA `share_target`** (GET, title/text/url) points at the same `/share`, for Android and desktop Chrome. iOS uses the Shortcuts from 7.3.
+- The bookmarklet also works in local mode (no server needed), so Settings shows it there too.
+
 ## 2026-11-07 — Task 7.3 iOS Shortcuts
 - **Guide in two places**: `docs/SETUP-SHORTCUTS.md` (full, click by click) and a short in-app version under Settings → Capture from anywhere. The in-app version shows this install's real address (from `VITE_SUPABASE_URL`) with Copy.
 - **Photos are converted to JPEG and base64-encoded in the Shortcut**, so one JSON request covers every kind of capture.
