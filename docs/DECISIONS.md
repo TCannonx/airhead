@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 5.6 Scheduling the brief
+- **The scheduler tick runs the morning brief** as a once-a-day job (`morning_brief`, claimed through `job_runs`) at `settings.data.notifications.brief_time` (default 07:30, local time).
+  - It runs in-process (`runMorningBrief` with the round-up), so there is no extra function call.
+  - The round-up nudge it writes goes out in the same tick, under the usual quiet hours and cap.
+  - A failing brief is caught, so the rest of the tick still runs. The brief has its own code-built fallback anyway.
+- **One switch**: "Morning brief and round-up" (`morning_brief`) is a new notification type, on by default, in both the server and app copies of the settings shape. Turning it off skips the brief altogether, since the round-up is its only delivery.
+- **Quiet days**: a day with no tasks and no events is skipped by the brief itself (5.4).
+
 ## 2026-11-07 — Tasks 5.7 Today tab and 5.8 Top 3 and carry-over prompts
 - **One PR**: both change the same Today screen and Top 3 rows.
 - **Today, in order**:

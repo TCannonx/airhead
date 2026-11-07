@@ -161,7 +161,17 @@ export function occurrencesBetween(e: RecurringRow, from: Date, to: Date, tz: st
     .filter((t) => t > from && t <= to);
 }
 
-export async function runTick(now: Date, store: TickStore, send: Sender): Promise<TickReport> {
+/** Extra once-a-day jobs that live in other functions (the morning brief, Task 5.6). */
+export interface TickExtras {
+  brief?: (userId: string, localDate: string, now: Date) => Promise<void>;
+}
+
+export async function runTick(
+  now: Date,
+  store: TickStore,
+  send: Sender,
+  extras: TickExtras = {},
+): Promise<TickReport> {
   const report: TickReport = { sent: 0, deferred: 0, bundled: 0, cancelled: 0, jobs: [] };
   const nowIso = now.toISOString();
 
@@ -196,6 +206,15 @@ export async function runTick(now: Date, store: TickStore, send: Sender): Promis
     }
 
     // 2. Local-time jobs, once per local day each.
+    if (
+      extras.brief &&
+      notif.types.morning_brief &&
+      (await job('morning_brief', notif.brief_time))
+    ) {
+      report.jobs.push('morning_brief');
+      // A failed brief must not stop the rest of the tick (it falls back inside anyway).
+      await extras.brief(u.user_id, local.date, now).catch(() => undefined);
+    }
     if (notif.types.evening_review && (await job('evening_review', notif.evening_review_time))) {
       report.jobs.push('evening_review');
       const tasks = (await store.openTasks(u.user_id)).filter(

@@ -326,7 +326,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
     Used by 5.4 on failure and shown on the device when no brief exists yet (offline).
     - Tests: unit tests for the ordering and ties.
-- [ ] **5.6 Scheduling the brief.** A once-a-day `morning_brief` job in the scheduler tick at the chosen time (default 07:30; `settings.data.notifications.brief_time`), running the brief in the same function. A new notification type "Morning round-up" with its own switch. Skipped on a day with nothing to say (no tasks or events).
+- [x] **5.6 Scheduling the brief.** A once-a-day `morning_brief` job in the scheduler tick at the chosen time (default 07:30; `settings.data.notifications.brief_time`), running the brief in the same function. A new notification type "Morning round-up" with its own switch. Skipped on a day with nothing to say (no tasks or events).
     - Tests: Deno tick tests (time zone, once a day, switched off).
 - [x] **5.7 Today tab.** In order:
     - the brief's lines;

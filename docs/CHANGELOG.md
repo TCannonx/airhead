@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 5.6: the morning brief runs from the scheduler at the chosen time (default 07:30) with its round-up; one switch for both
 - Tasks 5.7 and 5.8: Today tab (brief, events, Top 3 with Block slots, Also today, desktop glance), Top 3 by hand with swap, From yesterday cards
 - Task 5.4: morning-brief function (one large-tier call with server-side refusal fallback, validated Top 3 with code-found slots, prep nudges, round-up; code-built list on any failure)
 - Tasks 5.3 and 5.5: free time slots and the code-built daily list (shared by the app and the server)

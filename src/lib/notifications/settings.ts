@@ -14,6 +14,7 @@ export const NUDGE_TYPES = [
   'checklist',
   'leave_runout',
   'slip',
+  'morning_brief',
 ] as const;
 export type NudgeType = (typeof NUDGE_TYPES)[number];
 
@@ -25,6 +26,7 @@ export const NUDGE_LABELS: Record<NudgeType, string> = {
   checklist: 'Location checklist the evening before',
   leave_runout: 'Leave running out',
   slip: 'Tasks that keep slipping',
+  morning_brief: 'Morning brief and round-up',
 };
 
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
@@ -45,6 +47,7 @@ export const notifSettingsSchema = z.object({
   evening_review_time: hhmm.default('21:00'),
   checklist_time: hhmm.default('20:00'),
   morning_time: hhmm.default('08:00'),
+  brief_time: hhmm.default('07:30'),
   event_reminder_minutes: z.number().int().min(0).max(1440).default(30),
 });
 export type NotifSettings = z.infer<typeof notifSettingsSchema>;

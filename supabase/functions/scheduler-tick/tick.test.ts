@@ -384,3 +384,85 @@ Deno.test(
     assertEquals(m.nudges.filter((x) => x.kind === 'event_reminder').length, 1);
   },
 );
+
+Deno.test(
+  'the morning brief runs once a day at the brief time, in local time (Task 5.6)',
+  async () => {
+    const runs: string[] = [];
+    const only = {
+      notifications: {
+        types: { evening_review: false, checklist: false, slip: false, leave_runout: false },
+      },
+    };
+    const m = memory({ settings: only });
+    const extras = {
+      brief: (userId: string, date: string) => {
+        runs.push(`${userId} ${date}`);
+        return m.store.addNudge(userId, {
+          kind: 'morning_brief',
+          send_at: '2026-07-15T06:30:00.000Z',
+          title: 'Good morning',
+          body: 'Top 3: A',
+          url: '/today',
+          dedupe_key: `brief:${date}`,
+        });
+      },
+    };
+    await runTick(at('2026-07-15T06:29:00Z'), m.store, m.send, extras); // 07:29 Irish time
+    assertEquals(runs, []);
+    const r = await runTick(at('2026-07-15T06:30:00Z'), m.store, m.send, extras);
+    assertEquals(r.jobs, ['morning_brief']);
+    assertEquals(runs, [`${U} 2026-07-15`]);
+    // The round-up it wrote goes out in the same tick.
+    assertEquals(
+      m.sent.map((s) => s.title),
+      ['Good morning'],
+    );
+    await runTick(at('2026-07-15T06:45:00Z'), m.store, m.send, extras);
+    assertEquals(runs.length, 1);
+
+    const off = memory({
+      settings: {
+        notifications: {
+          ...only.notifications,
+          types: { ...only.notifications.types, morning_brief: false },
+        },
+      },
+    });
+    const offRuns: string[] = [];
+    await runTick(at('2026-07-15T06:30:00Z'), off.store, off.send, {
+      brief: (u) => {
+        offRuns.push(u);
+        return Promise.resolve();
+      },
+    });
+    assertEquals(offRuns, []);
+
+    const late = memory({
+      settings: { ...only, notifications: { ...only.notifications, brief_time: '09:00' } },
+    });
+    const lateRuns: string[] = [];
+    await runTick(at('2026-07-15T06:30:00Z'), late.store, late.send, {
+      brief: (u) => {
+        lateRuns.push(u);
+        return Promise.resolve();
+      },
+    });
+    assertEquals(lateRuns, []);
+  },
+);
+
+Deno.test('a failing brief does not stop the rest of the tick', async () => {
+  const m = memory({
+    settings: quietJobs,
+    nudges: [{ title: 'Due now', send_at: '2026-07-15T06:29:00.000Z' }],
+  });
+  const r = await runTick(at('2026-07-15T06:30:00Z'), m.store, m.send, {
+    brief: () => Promise.reject(new Error('boom')),
+  });
+  assertEquals(
+    m.sent.map((s) => s.title),
+    ['Due now'],
+  );
+  assertEquals(r.sent, 1);
+});
