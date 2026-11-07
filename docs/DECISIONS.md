@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 2.9 Export everything
+- **JSZip 3.10.2.** Settings → Your data → **Export everything** downloads `airhead-export-YYYY-MM-DD.zip`:
+  - `data.json`: `{ format: 'airhead-export', version: 1, exported_at, tables }` with **every row of every synced table, soft-deleted rows included** (it's the backup and re-import source; the version field allows a future importer).
+  - `items/<type>/<created-date>-<slug>.md`: one Markdown file per **live** item, with YAML front matter (type, status, dates, repeats, calendar, url, topics, id), the title as `#`, the body, and the original capture quoted under "Original capture".
+  - `files/<user>/<capture>/<file>`: attached photos as stored on the device; plus a short `README.md`.
+- YAML values are quoted only when they'd otherwise be misread, so URLs and timestamps stay readable.
+- The download uses an object URL and `<a download>`; on iOS this opens the share/save sheet.
+
 ## 2026-11-07 — Task 2.8 On-device search
 - **MiniSearch 7.2.0** (MIT). One in-memory index per user database covers item titles (boosted ×2) and bodies, and capture text. Prefix matching and fuzzy 0.2 ("compsting" finds "Composting"); all words must match (AND).
 - **Incremental**: `SearchIndex.sync(items, captures)` re-indexes only rows whose `updated_at` changed (`replace`), adds new ones, and `discard`s deleted or dropped ones. It's fed by a Dexie live query, so new captures are searchable immediately, offline included. Not persisted: the index is rebuilt in memory on app open, which is fast at personal scale.
