@@ -25,6 +25,7 @@ import {
 import { byWhen, fromServer, type ProposedEvent } from '../../lib/import/types';
 import { useSync } from '../../lib/sync/context';
 import { todayKey } from '../leave/useWork';
+import SeriesList from './SeriesList';
 import { deviceTimeZone, useCalendarData } from './useCalendarData';
 
 type Source = 'file' | 'paste' | 'link';
@@ -363,6 +364,7 @@ export default function ImportPage() {
           </p>
         </div>
       )}
+      {step.kind === 'source' && <SeriesList />}
 
       {step.kind === 'mapping' && (
         <div className="space-y-3">

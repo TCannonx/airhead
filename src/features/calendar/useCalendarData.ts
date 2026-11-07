@@ -13,13 +13,14 @@ export function useCalendarData(): CalendarData | undefined {
   const { user } = useAuth();
   const userId = user?.id ?? '';
   return useLiveQuery(async () => {
-    const [items, external, feeds, leave, workDays, settings] = await Promise.all([
+    const [items, external, feeds, leave, workDays, settings, series] = await Promise.all([
       db.items.where('type').anyOf(['event', 'task']).toArray(),
       db.external_events.toArray(),
       db.feeds.toArray(),
       db.leave_bookings.toArray(),
       db.work_days.toArray(),
       db.settings.get(userId),
+      db.series.toArray(),
     ]);
     return {
       items: items.filter((i) => !i.deleted_at),
@@ -28,6 +29,7 @@ export function useCalendarData(): CalendarData | undefined {
       leave: leave.filter((b) => !b.deleted_at),
       workDays: workDays.filter((w) => !w.deleted_at),
       work: readWorkSettings(settings),
+      series: series.filter((s) => !s.deleted_at),
     };
   }, [db, userId]);
 }
