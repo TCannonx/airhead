@@ -11,8 +11,8 @@ export default function NewNoteButtons() {
   const db = useDb();
   const { user, deviceId } = useAuth();
   const navigate = useNavigate();
-  const make = (type: 'note' | 'meeting') =>
-    void createNote(db, user?.id ?? '', deviceId ?? '', { type, kind: 'typed', title: '' }).then(
+  const make = (type: 'note' | 'meeting', kind: 'typed' | 'ink' = 'typed') =>
+    void createNote(db, user?.id ?? '', deviceId ?? '', { type, kind, title: '' }).then(
       ({ item }) => navigate(`/notes/${item.id}`),
     );
   return (
@@ -22,6 +22,9 @@ export default function NewNoteButtons() {
       </button>
       <button type="button" className={btn} onClick={() => make('meeting')}>
         New meeting note
+      </button>
+      <button type="button" className={btn} onClick={() => make('note', 'ink')}>
+        New handwritten note
       </button>
     </div>
   );

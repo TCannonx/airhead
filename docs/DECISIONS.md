@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.5 Handwritten page
+- **Verified: perfect-freehand 1.2.3** (MIT). Each stroke's outline comes from `getStroke`, drawn as a filled SVG path. Pressure is real for the Pencil; for a mouse it is simulated.
+- **The page**: one fixed-width page (1000 units wide, starting 1400 tall) in an SVG scaled to the screen.
+  - It grows by 600 units whenever writing comes within 250 of the bottom.
+  - Stage 1 keeps a single growing page (`pages[0]`); the document shape allows more later.
+- **Pencil versus finger**:
+  - The page sets `touch-action: none`.
+  - Pointer type `pen` (and `mouse` on desktop) draws; `touch` scrolls the main pane by hand, so a resting palm or finger never draws.
+- **Tools**: pen in black, blue, red or green, at two widths (3.5 and 7 units); a highlighter (yellow, 18 units, 35% opacity); a stroke eraser that removes whole strokes it touches, by hit-testing against the stroke's segments; undo and redo over add and erase.
+- **Storage**: strokes are stored as compact data: `{ tool, color, width, d }`, with `d` holding coordinates in half units and pressure in hundredths, delta-encoded after the first point, with sub-half-unit noise dropped. Never images.
+- **Saving**: the document saves 800 ms after the last change and on leaving, and syncs as a whole like typed notes (with conflict copies, 6.2).
+- **New handwritten note** joins the New note buttons.
+- **Tests**: unit tests for encoding, noise, paths, eraser hits, growth, undo and redo, and reading old or partial documents. A Playwright test draws with the mouse, erases, undoes and reloads.
+
 ## 2026-11-07 — Task 6.4 Meeting details
 - **What a meeting note holds**: `data.meeting_date` and `data.attendees` (a list of names), edited at the top of the note. Attendees are typed comma-separated and saved when you leave the field.
 - **"Start notes"** on an event creates a meeting note with the event's title and date, linked by `data.event_id`. Where it appears:
