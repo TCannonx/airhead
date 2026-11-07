@@ -149,7 +149,9 @@ export type InkOp =
   /** Lasso move (Task 9.2): these strokes shifted by (dx, dy). */
   | { kind: 'move'; indices: number[]; dx: number; dy: number }
   /** Paste (Task 9.3): strokes appended at the end. */
-  | { kind: 'paste'; strokes: StoredStroke[] };
+  | { kind: 'paste'; strokes: StoredStroke[] }
+  /** Hold-to-snap (Task 9.4): a stroke swapped for its clean shape. */
+  | { kind: 'replace'; index: number; before: StoredStroke; after: StoredStroke };
 
 /** Undo and redo over a page's strokes. */
 export class UndoStack {
@@ -201,6 +203,7 @@ function run(strokes: StoredStroke[], op: InkOp): StoredStroke[] {
   if (op.kind === 'add') return [...strokes, op.stroke];
   if (op.kind === 'move') return shift(strokes, op.indices, op.dx, op.dy);
   if (op.kind === 'paste') return [...strokes, ...op.strokes];
+  if (op.kind === 'replace') return strokes.map((st, i) => (i === op.index ? op.after : st));
   const gone = new Set(op.removed.map((r) => r.index));
   return strokes.filter((_, i) => !gone.has(i));
 }
@@ -209,6 +212,7 @@ function revert(strokes: StoredStroke[], op: InkOp): StoredStroke[] {
   if (op.kind === 'add') return strokes.slice(0, -1);
   if (op.kind === 'move') return shift(strokes, op.indices, -op.dx, -op.dy);
   if (op.kind === 'paste') return strokes.slice(0, strokes.length - op.strokes.length);
+  if (op.kind === 'replace') return strokes.map((st, i) => (i === op.index ? op.before : st));
   const out = [...strokes];
   for (const r of [...op.removed].sort((a, b) => a.index - b.index))
     out.splice(r.index, 0, r.stroke);

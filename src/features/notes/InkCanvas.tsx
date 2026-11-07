@@ -22,6 +22,7 @@ import {
   type Tool,
 } from '../../lib/ink/strokes';
 import { copyInk, pasted, useInkClipboard } from '../../lib/ink/clipboard';
+import { recognise, type Snapped } from '../../lib/ink/shapes';
 import {
   EMPTY_SELECTION,
   isEmpty,
@@ -33,6 +34,8 @@ import {
 } from '../../lib/ink/selection';
 
 export const INK_SAVE_DEBOUNCE_MS = 800;
+/** Hold the pen still this long at the end of a stroke to snap it to a shape (Task 9.4). */
+export const SNAP_HOLD_MS = 500;
 
 const COLORS: [string, string][] = [
   ['#111827', 'Black'],
@@ -74,6 +77,10 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
   // Dragging a selection (Task 9.2): where it started, and the offset so far.
   const dragFrom = useRef<InkPoint | null>(null);
+  // Hold-to-snap (Task 9.4).
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const snapped = useRef<Snapped | null>(null);
+  const [snapNote, setSnapNote] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
   const selBox = isEmpty(selection)
     ? null
@@ -96,6 +103,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
+      if (holdTimer.current) clearTimeout(holdTimer.current);
       if (pending.current) save.current(pending.current);
     },
     [],
@@ -132,6 +140,19 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     setStrokes(next);
     persist(next, height);
     return next;
+  };
+
+  const armSnap = () => {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    if (mode !== 'pen') return;
+    holdTimer.current = setTimeout(() => {
+      const pts = drawing.current;
+      const shape = pts && !snapped.current ? recognise(pts) : null;
+      if (!shape) return;
+      snapped.current = shape;
+      setLive(shape.points);
+      setSnapNote(`Snapped to ${shape.kind === 'ellipse' ? 'a circle' : `a ${shape.kind}`}`);
+    }, SNAP_HOLD_MS);
   };
 
   const inside = (p: InkPoint, b: { x: number; y: number; w: number; h: number }) =>
@@ -229,7 +250,10 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       return;
     }
     drawing.current = [at];
+    snapped.current = null;
+    setSnapNote(null);
     setLive([at]);
+    armSnap();
   };
 
   const onMove = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -257,8 +281,12 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       erase(at, strokes);
       return;
     }
+    // Once snapped, the shape stays until the pen lifts.
+    if (snapped.current) return;
+    const last = drawing.current[drawing.current.length - 1];
     drawing.current.push(at);
     setLive([...drawing.current]);
+    if (!last || Math.hypot(at.x - last.x, at.y - last.y) > 3) armSnap();
   };
 
   const onUp = (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -273,6 +301,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       if (d && (d.dx !== 0 || d.dy !== 0)) moveSelection(d.dx, d.dy);
       return;
     }
+    if (holdTimer.current) clearTimeout(holdTimer.current);
     const pts = drawing.current;
     drawing.current = null;
     setLive(null);
@@ -289,7 +318,18 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       width: tool === 'highlighter' ? HIGHLIGHTER.width : width,
       d: encodePoints(simplify(pts)),
     };
-    const next = undo.apply(strokes, { kind: 'add', stroke });
+    let next = undo.apply(strokes, { kind: 'add', stroke });
+    const shape = snapped.current;
+    snapped.current = null;
+    if (shape) {
+      // Two undo steps: the first brings back the hand-drawn stroke.
+      next = undo.apply(next, {
+        kind: 'replace',
+        index: next.length - 1,
+        before: stroke,
+        after: { ...stroke, d: encodePoints(shape.points) },
+      });
+    }
     const h = grownHeight(height, Math.max(...pts.map((p) => p.y)));
     setStrokes(next);
     setHeight(h);
@@ -415,6 +455,14 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           Redo
         </button>
       </div>
+      <p role="status" aria-live="polite" className="sr-only">
+        {snapNote ?? ''}
+      </p>
+      {snapNote && (
+        <p className="mb-1 text-xs text-indigo-600 dark:text-indigo-400">
+          {snapNote} · Undo for the hand-drawn one
+        </p>
+      )}
       <div className="relative">
         <svg
           ref={svg}

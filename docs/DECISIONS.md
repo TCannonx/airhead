@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 9.4 Hold-to-snap shapes
+- **Recogniser** (`src/lib/ink/shapes.ts`), pure geometry in page units:
+  - **line**: endpoints at least 40 apart, every point within 6% of the length (min 6) of the chord, and a path no longer than 115% of the chord.
+  - **closed shapes**: the end returns within 15% of the path length.
+    - **ellipse**: normalised radius spread ≤ 0.09 around the bounding ellipse.
+    - **rectangle**: ≥ 92% of points within 10% of the bounding box's edges.
+  - **arrow**: a straight shaft to the farthest point, then a head of 12–90% of the shaft's length near the tip, behind it and on both sides. Snapped to a clean shaft plus a 30° head.
+  - Anything else (scribbles, half circles, short marks) returns null and stays as drawn.
+- **Hold**: with the pen tool, no movement over 3 units for 500 ms (`SNAP_HOLD_MS`) while the pen is down snaps the live stroke. The preview shows at once with "Snapped to a line" (also in a polite live region). Moving on after a snap keeps the shape; lifting commits it.
+- **Undo**: the stroke is committed as the hand-drawn `add` plus a `replace` with the clean points (a new undo operation). So the first Undo brings back the hand-drawn stroke and the second removes it.
+- **Stored as ordinary points**, so sync, rendering and summaries need nothing new.
+
 ## 2026-11-07 — Task 9.3 Copy and paste
 - **In-app ink clipboard** (`src/lib/ink/clipboard.ts`): "Copy selection" stores a snapshot of the selected strokes and text boxes for this session.
   - It never touches the system clipboard, so pages never need clipboard permission and nothing leaks out.
