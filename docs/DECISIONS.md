@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — CI minutes
+- **The 2,000 free Actions minutes ran out** after about 70 merged PRs. Each merged PR cost about 27 billed minutes:
+  - CI on the PR, about 13 (seven jobs, each rounded up to a whole minute);
+  - the same CI again on `main` after the squash merge, about 13;
+  - the dev deploy, about 1.
+  - The daily keep-alive and the weekly backup add about 35 a month.
+- **CI now runs on pull requests only.** A squash merge lands exactly the branch that just passed, and PRs are merged one at a time from an up-to-date main, so the second run checked nothing new. It can still be run by hand (`workflow_dispatch`).
+- **Lint, typecheck and the function tests share one `checks` job**, saving two rounded-up minutes per run. The required checks are now `checks`, `unit tests`, `e2e tests`, `e2e sync tests` and `database tests`.
+- Expected cost per merged PR: about 12 minutes, roughly 165 PRs a month within the free allowance.
+- **Then the repo was made public** (the user's choice, reversible), which makes Actions free. The history was checked for secrets first: none, only the two Supabase project addresses, which the app already exposes.
+
 ## 2026-11-07 — Task 7.4 Bookmarklet and share target
 - **The bookmarklet only opens Airhead's own `/share?url=&title=&text=`** in a 420×320 window. It holds no token and makes no request from the page it runs on.
   - The signed-in app saves the capture itself, through the same `createCapture` as the Capture tab: free rules, offline, synced later.

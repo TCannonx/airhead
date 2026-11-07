@@ -1,8 +1,8 @@
 name: CI
 
+# Pull requests only: a squash merge lands exactly the tested, up-to-date
+# branch, so re-running everything on main only doubled the minutes used.
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -14,9 +14,14 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: lint
+  # Lint, typecheck and the function tests share one runner: each job is billed
+  # in whole minutes, so three one-minute jobs cost three minutes.
+  checks:
+    name: checks
     runs-on: ubuntu-latest
+    env:
+      # The repo root's package.json belongs to the app; Deno must not read it.
+      DENO_NO_PACKAGE_JSON: '1'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -25,18 +30,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-
-  typecheck:
-    name: typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
       - run: npm run typecheck
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # Type-check every function entry point and shared module (tests only check what they import).
+      - run: deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/*/index.ts
+      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 --allow-read=tests/fixtures,src/lib/today,supabase/functions/_shared/today supabase/functions
 
   unit:
     name: unit tests
@@ -109,21 +109,6 @@ jobs:
             playwright-report
             test-results
           retention-days: 7
-
-  functions:
-    name: function tests
-    runs-on: ubuntu-latest
-    env:
-      # The repo root's package.json belongs to the app; Deno must not read it.
-      DENO_NO_PACKAGE_JSON: '1'
-    steps:
-      - uses: actions/checkout@v7
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      # Type-check every function entry point and shared module (tests only check what they import).
-      - run: deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/*/index.ts
-      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 --allow-read=tests/fixtures,src/lib/today,supabase/functions/_shared/today supabase/functions
 
   db:
     name: database tests
