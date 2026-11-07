@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 9.2 Move and delete
+- **Drag inside the selection box** (Lasso tool) to move it.
+  - The selected strokes and the box follow the pointer live, kept inside the page width and below the top.
+  - On release the strokes shift as one undo step (a new `move` operation on the undo stack, undone by shifting back). Text boxes move with them.
+  - The page grows if the selection lands near the bottom.
+- **"Delete selection"** appears while something is selected. It removes the selected strokes as one undo step (the existing `erase` operation) and the selected text boxes.
+- **Text boxes stay outside undo**, as since 6.6: they move and delete with the selection but undo doesn't bring them back.
+
 ## 2026-11-07 — Task 9.1 Lasso selection
 - **Lasso tool** on the handwritten page's toolbar. A free loop (Pencil or mouse; fingers still scroll) selects strokes with at least half their points inside, by even-odd point-in-polygon, and text boxes whose top-left corner is inside. Empty text boxes are ignored.
 - The loop shows as a dashed line while drawing; the selection shows as a dashed, lightly filled box around the strokes (including their width) and text boxes. Choosing another tool, a pen colour or a new loop clears it.

@@ -88,3 +88,25 @@ describe('lasso selection (Task 9.1)', () => {
     expect(clampMove({ x: 900, y: 10, w: 80, h: 50 }, 100, -50)).toEqual({ dx: 20, dy: -10 });
   });
 });
+
+describe('move and delete (Task 9.2)', () => {
+  it('a move is one undo step, and redo moves it again', async () => {
+    const { UndoStack } = await import('./strokes');
+    const undo = new UndoStack();
+    const a = stroke([
+      [10, 10],
+      [20, 20],
+    ]);
+    const b = stroke([
+      [50, 50],
+      [60, 60],
+    ]);
+    const moved = undo.apply([a, b], { kind: 'move', indices: [1], dx: 100, dy: 5 });
+    expect(decodePoints(moved[1]?.d ?? [])[0]).toMatchObject({ x: 150, y: 55 });
+    expect(moved[0]).toBe(a);
+    const back = undo.undo(moved);
+    expect(decodePoints(back[1]?.d ?? [])[0]).toMatchObject({ x: 50, y: 50 });
+    const again = undo.redo(back);
+    expect(decodePoints(again[1]?.d ?? [])[0]).toMatchObject({ x: 150, y: 55 });
+  });
+});

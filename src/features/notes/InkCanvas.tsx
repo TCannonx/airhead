@@ -25,7 +25,9 @@ import {
   EMPTY_SELECTION,
   isEmpty,
   selectByLasso,
+  clampMove,
   selectionBox,
+  translateStroke,
   type Selection,
 } from '../../lib/ink/selection';
 
@@ -69,6 +71,9 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   // Lasso (Task 9.1): the loop being drawn, and what it caught.
   const [loop, setLoop] = useState<InkPoint[] | null>(null);
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
+  // Dragging a selection (Task 9.2): where it started, and the offset so far.
+  const dragFrom = useRef<InkPoint | null>(null);
+  const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
   const selBox = isEmpty(selection)
     ? null
     : selectionBox(strokes, texts, selection, TEXT_BOX_WIDTH);
@@ -128,6 +133,37 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     return next;
   };
 
+  const inside = (p: InkPoint, b: { x: number; y: number; w: number; h: number }) =>
+    p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
+
+  /** Moves the selected strokes (one undo step) and text boxes; the page grows if needed. */
+  const moveSelection = (dx: number, dy: number) => {
+    const next = undo.apply(strokes, { kind: 'move', indices: selection.strokes, dx, dy });
+    const ids = new Set(selection.texts);
+    const movedTexts = texts.map((t) => (ids.has(t.id) ? { ...t, x: t.x + dx, y: t.y + dy } : t));
+    const box = selectionBox(next, movedTexts, selection, TEXT_BOX_WIDTH);
+    const h = box ? grownHeight(height, box.y + box.h) : height;
+    setStrokes(next);
+    setTexts(movedTexts);
+    setHeight(h);
+    persist(next, h, movedTexts);
+  };
+
+  /** Deletes the selected strokes (one undo step) and text boxes. */
+  const deleteSelection = () => {
+    const removed = selection.strokes.flatMap((index) => {
+      const stroke = strokes[index];
+      return stroke ? [{ index, stroke }] : [];
+    });
+    const next = removed.length ? undo.apply(strokes, { kind: 'erase', removed }) : strokes;
+    const ids = new Set(selection.texts);
+    const keptTexts = texts.filter((t) => !ids.has(t.id));
+    setStrokes(next);
+    setTexts(keptTexts);
+    setSelection(EMPTY_SELECTION);
+    persist(next, height, keptTexts);
+  };
+
   const onDown = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (e.pointerType === 'touch') {
       // Fingers scroll the page; only the Pencil (or a mouse) writes.
@@ -136,6 +172,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     }
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const at = toPage(e);
+    if (mode === 'lasso' && selBox && inside(at, selBox)) {
+      dragFrom.current = at;
+      setDrag({ dx: 0, dy: 0 });
+      return;
+    }
     if (mode === 'lasso') {
       drawing.current = [at];
       setLoop([at]);
@@ -169,6 +210,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       }
       return;
     }
+    if (dragFrom.current && selBox) {
+      const at = toPage(e);
+      setDrag(clampMove(selBox, at.x - dragFrom.current.x, at.y - dragFrom.current.y));
+      return;
+    }
     if (!drawing.current) return;
     const at = toPage(e);
     if (mode === 'lasso') {
@@ -187,6 +233,13 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   const onUp = (e: ReactPointerEvent<SVGSVGElement>) => {
     if (e.pointerType === 'touch') {
       fingerY.current = null;
+      return;
+    }
+    if (dragFrom.current) {
+      dragFrom.current = null;
+      const d = drag;
+      setDrag(null);
+      if (d && (d.dx !== 0 || d.dy !== 0)) moveSelection(d.dx, d.dy);
       return;
     }
     const pts = drawing.current;
@@ -299,6 +352,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
         >
           Lasso
         </button>
+        {selBox && (
+          <button type="button" className={btn(false)} onClick={deleteSelection}>
+            Delete selection
+          </button>
+        )}
         <button
           type="button"
           className={btn(false)}
@@ -329,7 +387,14 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           onPointerUp={onUp}
           onPointerCancel={onUp}
         >
-          {[...strokes, ...(liveStroke ? [liveStroke] : [])].map((s, i) => (
+          {[
+            ...(drag && (drag.dx || drag.dy)
+              ? strokes.map((st, i) =>
+                  selection.strokes.includes(i) ? translateStroke(st, drag.dx, drag.dy) : st,
+                )
+              : strokes),
+            ...(liveStroke ? [liveStroke] : []),
+          ].map((s, i) => (
             <path
               key={i}
               data-stroke={i < strokes.length ? 'saved' : 'live'}
@@ -352,8 +417,8 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
             <rect
               data-lasso="selection"
               aria-label="Selection"
-              x={selBox.x}
-              y={selBox.y}
+              x={selBox.x + (drag?.dx ?? 0)}
+              y={selBox.y + (drag?.dy ?? 0)}
               width={selBox.w}
               height={selBox.h}
               fill="#6366f1"
