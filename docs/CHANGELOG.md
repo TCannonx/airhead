@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix: unknown sign-in failures show the server's error code; email-sender errors get plain messages
 - fix: sign-in errors say what failed (sending, the code, or the email link) instead of always blaming the code
 - fix: docs point at the real dev site `https://airhead.xxr5th.workers.dev` (a Cloudflare Worker)
 - fix: docs point at the dev site `airhead-dev.pages.dev` (`airhead.pages.dev` belongs to someone else)
