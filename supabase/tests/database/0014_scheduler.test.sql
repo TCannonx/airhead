@@ -19,11 +19,12 @@ select is(public.dispatch_scheduler_tick(), false, 'nothing to send: no call');
 insert into public.job_runs (user_id, job, local_date) values
   ('00000000-0000-0000-0000-00000000000a', 'evening_review', '2027-01-10')
   on conflict do nothing;
-select is((with ins as (
-  insert into public.job_runs (user_id, job, local_date) values
-    ('00000000-0000-0000-0000-00000000000a', 'evening_review', '2027-01-10')
-  on conflict do nothing returning 1) select count(*)::int from ins), 0,
-  'a second claim for the same day inserts nothing');
+insert into public.job_runs (user_id, job, local_date) values
+  ('00000000-0000-0000-0000-00000000000a', 'evening_review', '2027-01-10')
+  on conflict do nothing;
+select is((select count(*)::int from public.job_runs
+  where user_id = '00000000-0000-0000-0000-00000000000a' and job = 'evening_review' and local_date = '2027-01-10'),
+  1, 'a second claim for the same day adds no row');
 
 select * from finish();
 rollback;
