@@ -26,6 +26,14 @@ export const SortResult = z.object({
     z.object({
       capture_id: z.string(),
       items: z.array(SortedItem),
+      /** Only for saved web pages; null otherwise. */
+      link_summary: z
+        .object({
+          summary: z.string(),
+          key_points: z.array(z.string()),
+          topics: z.array(z.string()),
+        })
+        .nullable(),
     }),
   ),
 });

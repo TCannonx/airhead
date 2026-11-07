@@ -6,7 +6,11 @@
       "text": "need milk and bin bags, dentist Tue 3pm, call the plumber about the boiler",
       "url": null
     },
-    { "id": "c0000000-0000-4000-8000-000000000002", "text": "garden thing", "url": null },
+    {
+      "id": "c0000000-0000-4000-8000-000000000002",
+      "text": "garden thing",
+      "url": null
+    },
     {
       "id": "c0000000-0000-4000-8000-000000000003",
       "text": "idea: raised beds for the garden, maybe cedar",
@@ -78,7 +82,8 @@
             "suggest_workshop": false,
             "related_idea_title": null
           }
-        ]
+        ],
+        "link_summary": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000002",
@@ -98,7 +103,8 @@
             "suggest_workshop": false,
             "related_idea_title": null
           }
-        ]
+        ],
+        "link_summary": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000003",
@@ -118,11 +124,13 @@
             "suggest_workshop": true,
             "related_idea_title": "Vegetable patch"
           }
-        ]
+        ],
+        "link_summary": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-0000000000ff",
-        "items": []
+        "items": [],
+        "link_summary": null
       }
     ]
   }

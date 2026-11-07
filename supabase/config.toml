@@ -439,3 +439,7 @@ verify_jwt = false
 # from the scheduler), so the gateway's JWT check is off.
 [functions.sort-batch]
 verify_jwt = false
+
+# read-link: called by the database trigger (service key) or the capture's owner.
+[functions.read-link]
+verify_jwt = false

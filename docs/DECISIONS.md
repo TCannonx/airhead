@@ -2,6 +2,25 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.5 Link reading
+- **When**: an `AFTER INSERT` trigger on `captures` (`kind = 'link'`) `pg_net`-POSTs `{ capture_id }` to **`read-link`** with the Vault-stored service key, i.e. "after a link capture syncs", whatever its source (app, Shortcut, bookmarklet). No Vault secrets → nothing happens. The owner may also call it with their token.
+- **Safe fetch** (`read-link/safeFetch.ts`, shared later by linked calendars):
+  - `http`/`https` only.
+  - Every hop's host is checked. `localhost`, `*.local` and IP literals in private, loopback, link-local (incl. 169.254.169.254 metadata), CGNAT, multicast, reserved, IPv6 ULA/link-local and IPv4-mapped ranges are rejected, and hostnames are resolved (A + AAAA) with *all* answers required to be public.
+  - At most 3 redirects (followed manually, each re-checked), a 10 s timeout, a 2 MB cap enforced while streaming, and HTML only.
+  - Network failures return a status; they never throw.
+  - Known limit: DNS can change between the check and the connection (rebinding); accepted for a personal app.
+- **Extraction**: **@mozilla/readability 0.6.0** on **linkedom 0.18.15**.
+  - Title = `og:title`, else the page's `<h1>` when `<title>` is "Headline | Site", else `<title>`. Description = `og:description`/meta description.
+  - **Readable** = at least 120 words of article text, and not a paywall teaser (paywall phrases with under 400 words). Reading time is words ÷ 230, rounded, minimum 1. Up to **3,000 words** of text are stored as `payload.article_text`.
+  - YouTube/Vimeo are `title_only`. Anything unreadable, blocked or failed is `unreadable` ("couldn't read"), with title and description when known.
+- **Stored on the capture**: `payload.link = { status, title, description, word_count, reading_minutes, fetched_at }`, `payload.article_text`, `payload.summary_pending` (true only when readable). The reading item gets `description`, `reading_minutes`, `couldnt_read`, and the page title if it was still the bare URL. A race where the item hasn't synced yet is harmless: the next sort batch writes the summary onto it.
+- **Summaries in the next sort batch** (prompt now **`sort-batch.v2`**):
+  - Pages waiting for a summary share the batch's 20 slots, with their text inside an `<article>` block (escaped like captures). The model returns `link_summary { summary, key_points, topics }` and an action only when the page clearly calls for one.
+  - **Actions from a page are always `suggested`** (`data.from_link`), whatever the model's confidence: untrusted content never acts automatically.
+  - `apply_sort_batch` v2 (new migration) merges the summary, key points and topics into the reading item, then **clears `article_text`** and sets `summary_pending` false. Link captures keep their own status.
+- **App**: a reading item's page shows the reading time, summary and key points, or "Couldn't read this page" with the description, or "will be read and summarised soon".
+
 ## 2026-11-07 — Task 3.4 Review and corrections
 - **Inbox → Needs a tap** lists unsure items from AI sorting (status `suggested`, not events) with one-tap choices: **Keep as <type>** (confirms; no correction recorded) or any other sortable type (re-sorts via `changeItemType`, which records a correction `{ type: old } → { type: new }`). Either way the item becomes `open`.
 - When a `needs_review` capture has no unsure items left, it becomes `sorted`. `needs_review` captures no longer appear in Unsorted (their items are shown instead); Unsorted is `unsorted` + `failed`.
