@@ -296,9 +296,57 @@ v0.1 is done when every box below is ticked on real devices; then release to `ai
 - [ ] After four uncorrected "buy …" captures, a learned rule sorts the fifth instantly offline.
 - [ ] Run check-up finds a planted duplicate fact and a stale fact, and fixes both in one tap each.
 
+## Phase 5: Today and morning brief
+
+Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built digest into a short brief, a Top 3 with suggested time slots (found in free calendar gaps by code), an "Also today" list and prep nudges. If the call fails, a code-built list goes out instead. Planned in detail on 2026-11-07 from `DESIGN.md` (see DECISIONS).
+
+- [ ] **5.1 Brief table.** Migration: `briefs` (`user_id`, `local_date`, `status` ok / fallback, `content` jsonb, `model`, `cost_eur`), one per person per day, synced to devices read-only like `external_events`. Zod schema, Dexie table, sync.
+    - Tests: pgTAP for RLS (owner reads, devices can't write) and one brief per day.
+- [ ] **5.2 Digest.** SQL `morning_digest(user_id, local_date)` returns compact JSON:
+    - today's and the next 7 days' events, including linked calendars, leave, holidays and today's location;
+    - open tasks with due dates, carry counts and current Top 3;
+    - yesterday's numbers (done, carried over, captured);
+    - up to 10 active ideas.
+
+    Titles only, no notes, so the call stays small.
+    - Tests: pgTAP with seeded data (time zones, deleted rows left out, size limits).
+- [ ] **5.3 Free slots.** Shared code (device and server) that finds free gaps in a day from timed events, inside a day window (work hours on working days, a wider window on days off), and fits each Top 3 task into the earliest gap of its estimated length (15 to 120 minutes), e.g. "Dentist call fits 12:30–12:45".
+    - Tests: unit tests for overlaps, edges, all-day events, no room, and the clock-change day.
+- [ ] **5.4 Morning brief function.** `morning-brief` (large tier, prompt `brief.v1`, structured output). From the digest it returns:
+    - a two- or three-line reflection on yesterday;
+    - a Top 3 (item ids from the digest only, a reason and minutes each);
+    - "Also today" ids;
+    - up to 3 prep nudges with local send times.
+
+    Code validates ids and times, adds the slots (5.3), writes the brief, sets `top3_date` on the chosen tasks, writes prep nudges (`kind = 'prep'`, with keys) and sends the round-up notification. Uses the large-tier refusal fallback (verify the current API option). If AI fails or the cap is reached, it falls back to the code-built list (5.5).
+    - Tests: Deno with AI fixtures (a normal day, invented ids dropped, a refusal or cap leading to the fallback), and prompt checks (digest marked as data).
+- [ ] **5.5 Fallback list.** Code-only Top 3 and Also today:
+    - overdue, then due today, then the most carried over, then oldest;
+    - events and leave listed; no reflection.
+
+    Used by 5.4 on failure and shown on the device when no brief exists yet (offline).
+    - Tests: unit tests for the ordering and ties.
+- [ ] **5.6 Scheduling the brief.** A once-a-day `morning_brief` job in the scheduler tick at the chosen time (default 07:30; `settings.data.notifications.brief_time`), running the brief in the same function. A new notification type "Morning round-up" with its own switch. Skipped on a day with nothing to say (no tasks or events).
+    - Tests: Deno tick tests (time zone, once a day, switched off).
+- [ ] **5.7 Today tab.** In order:
+    - the brief's lines;
+    - today's events (Airhead, linked, holidays, leave) and the location chip;
+    - **Top 3** shown prominently with suggested slots ("Block 12:30–12:45" sets the task's time) and done checkboxes;
+    - collapsed **Also today**;
+    - suggestion cards (fuzzy events, leave proposals, carry-over prompts from 5.8);
+    - leave counter.
+
+    With no brief yet, the fallback list (5.5) is computed on the device. The desktop right panel shows the same Top 3 and next events (today at a glance).
+    - Tests: component tests with a brief, without one, and offline.
+- [ ] **5.8 Top 3 and carry-over prompts.** Add to or remove from today's Top 3 from Today and from any task (at most 3; a fourth asks which to swap). In the morning, cards for yesterday's unfinished Top 3 and due tasks: Done, Today, or Drop (Today increments `carry_count`, as the evening review does).
+    - Tests: unit and component tests.
+- [ ] **5.9 Brief settings and Regenerate.** Settings → Today: brief on or off, its time, the day window for slots, and a **Regenerate brief** button (online only, with its cost estimate, counted in AI usage).
+    - Tests: component tests (settings saved, cost line shown, button disabled offline).
+- Phase done when: the Phase 5 manual checklist passes (a brief arrives at the chosen time with sensible slots; a failed call still sends the fallback list).
+
 ## Phases 5–9 (outline)
 
-These phases get their own detailed task plan after v0.1 has been used for a few weeks; the order may change based on real use. Do not start them from this outline.
+These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phase 5 is planned above.
 
 | Phase | Scope | Key pieces |
 | --- | --- | --- |

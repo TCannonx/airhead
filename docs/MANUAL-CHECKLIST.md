@@ -114,6 +114,18 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] — — More than the daily limit arrives as one summary notification
 - [ ] — [ ] Settings → Notifications: switch a device on or off; change quiet hours and the reminder default
 
+## Phase 5 — Today and morning brief
+
+- [ ] — — The morning round-up arrives at the chosen time and opens Today
+- [ ] [ ] [ ] Today shows the brief, today's events, Top 3 with suggested slots, and Also today (collapsed)
+- [ ] [ ] [ ] "Block" on a Top 3 slot puts the task on the calendar at that time
+- [ ] [ ] [ ] Yesterday's unfinished Top 3 shows as carry-over cards; Today / Done / Drop work
+- [ ] [ ] [ ] Add a task to today's Top 3 from the Library; a fourth asks which to swap
+- [ ] [ ] [ ] Offline before the brief: Today still shows a code-built list
+- [ ] [ ] [ ] Settings → Today: Regenerate brief shows its cost and works; brief time can be changed
+- [ ] — [ ] Desktop right panel shows Top 3 and next events
+- [ ] With a low test AI cap, the morning list still arrives (fallback)
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Phase 5 plan
+- Phase 5 is planned in `PLAN.md` (tasks 5.1–5.9), following the user's instruction that phases 5–9 are planned and then built after Phase 4.
+- **Kept to the design**:
+  - one large-tier call a day, fed a SQL digest;
+  - Top 3 slots from gaps computed in code;
+  - prep nudges written to `nudges`;
+  - a code-built fallback;
+  - a round-up notification.
+- **Additions, each small and tied to a design line**:
+  - Carry-over prompts on Today: "suggestion cards … carry-over decisions".
+  - The desktop right panel: "Today on the left of a week view" ("today at a glance").
+  - A Regenerate button, with a cost estimate per the AI usage design.
+- **Brief ids are validated**: the model may only pick ids from the digest. Anything else is dropped, as with contradictions (3.10).
+
 ## 2026-11-07 — Fix: managing imported series
 - **The gap**: the design's "edit, recolour or delete the whole series at once" and the Phase 4 checklist's "deleting the series removes all its events" had only the Undo shown straight after an import.
 - **Calendar → Import** now lists imported schedules, with event count and calendar.
