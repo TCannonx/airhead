@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.3 Typed notes
+- **Verified: TipTap 3.33.0** (MIT): `@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, and `@tiptap/extension-list` for the checklist (`TaskList`/`TaskItem`; in v3 the list extensions live together there). `Placeholder` comes from `@tiptap/extensions`.
+- **Editor** (`src/features/notes/NoteEditor.tsx`):
+  - Headings, bullets, numbered lists, nested checklists, bold and italic, with StarterKit's Markdown-style input rules (`# `, `- `, `1. `, `[ ] `, `**…**`) and a toolbar.
+  - It re-renders on each change so the toolbar shows the active formatting.
+  - The document is stored as HTML (`note_docs.doc.html`).
+- **Saving**: `saveDoc` runs 600 ms after typing pauses, and on leaving the page. The sync engine pushes the whole document about a second later, so "a few seconds after you pause" as designed.
+- **The editor keeps its own content while open**: a version arriving from another device during editing doesn't reset the cursor. It shows on reopen, and a clash in between becomes a conflicted copy (6.2).
+- **Where notes start and open**:
+  - "New note" and "New meeting note" are in the Library and on Capture, and open `/notes/:id`.
+  - Library item links for notes redirect there.
+  - The note page has an editable title; meeting details come in 6.4.
+- **Tests**: jsdom has no layout, so the component test fills in `getClientRects` and `elementFromPoint` for ProseMirror. A Playwright test checks typing with Markdown shortcuts and reload in a real browser.
+
 ## 2026-11-07 — Task 6.2 Conflict copies
 - **Two places, because sync pushes before it pulls**: a device coming back online sends its edit before it sees the other device's newer one. So the server keeps both too, not only the device.
 - **On the server** (migration `20261107000019_note_conflicts.sql`, trigger `a_note_conflict_copy`, which runs before the version bump):

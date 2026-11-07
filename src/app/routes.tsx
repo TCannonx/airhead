@@ -12,6 +12,7 @@ import SettingsPage from '../features/settings/SettingsPage';
 import TodayPage from '../features/today/TodayPage';
 import WorkPage from '../features/leave/WorkPage';
 import ReviewPage from '../features/review/ReviewPage';
+import NotePage from '../features/notes/NotePage';
 import AppLayout from './AppLayout';
 
 export const routes: RouteObject[] = [
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
       { path: 'settings', Component: SettingsPage },
       { path: 'work', Component: WorkPage },
       { path: 'review', Component: ReviewPage },
+      { path: 'notes/:id', Component: NotePage },
       { path: '*', element: <Navigate to="/capture" replace /> },
     ],
   },
