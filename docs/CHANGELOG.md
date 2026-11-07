@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(auth): email-and-password sign-in with instant, invite-only sign-up (no emails); Google button only when switched on
 - fix: unknown sign-in failures show the server's error code; email-sender errors get plain messages
 - fix: sign-in errors say what failed (sending, the code, or the email link) instead of always blaming the code
 - fix: docs point at the real dev site `https://airhead.xxr5th.workers.dev` (a Cloudflare Worker)

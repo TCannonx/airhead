@@ -15,10 +15,14 @@ export interface AuthClient {
   mode: 'server' | 'local';
   getUser(): Promise<AuthUser | null>;
   onChange(cb: (user: AuthUser | null) => void): () => void;
+  /** True when the server has Google sign-in switched on (the button shows only then). */
+  googleEnabled(): Promise<boolean>;
   signInWithGoogle(): Promise<void>;
-  /** Emails a 6-digit code (the same email also carries a sign-in link). */
-  sendEmailCode(email: string): Promise<void>;
-  verifyEmailCode(email: string, code: string): Promise<void>;
+  /**
+   * Email and password, no emails sent: signs in, or creates the account when the
+   * address is new (sign-up is invite-only on the server).
+   */
+  continueWithPassword(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
 }
 

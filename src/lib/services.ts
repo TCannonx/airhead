@@ -34,7 +34,7 @@ export function createServices(): Services {
     },
   });
   return {
-    auth: supabaseAuth(supabase),
+    auth: supabaseAuth(supabase, { url, key }),
     appLock: webAuthnAppLock,
     remote: supabaseRemote(supabase),
     sorting: supabaseSorting(supabase),
