@@ -2,6 +2,22 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.10 Ask Airhead
+- **`hybrid_search(query_text, query_embedding, match_count)`** (migration 0023) follows Supabase's hybrid search guide:
+  - full-text (`websearch_to_tsquery`, `ts_rank_cd`) and vector (inner product `<#>`) lists, each up to twice the match count;
+  - merged by reciprocal rank fusion with k = 50.
+  - It runs as security invoker and filters on `auth.uid()` as well as RLS. It is granted to authenticated users only.
+- **`ask` function**:
+  - embeds the question with gte-small, then calls `hybrid_search` with a client that carries the user's own token, so search never uses the service role;
+  - drops passages whose item is gone and numbers the top 8;
+  - makes one call with prompt `ask.v1`: the small tier by default, or the large tier when `settings.data.ask_model` is `large`.
+  - Passages are data, never instructions.
+  - Citations are kept only when they name a passage that was sent, one per item. With no passages, there is no AI call, just "Nothing in Airhead matches that yet."
+- **Library → Ask** sits above the search box:
+  - online only, with an estimate (≈ €0.002 quick, ≈ €0.01 thorough) and a model choice stored in the synced settings;
+  - citations open the source (notes open in the note page through the item redirect);
+  - offline, it says search below works offline.
+
 ## 2026-11-07 — Task 7.9 Embeddings
 - **Verified**: Supabase's Vector columns guide gives `vector(384)` for its built-in `gte-small` model (huggingface.co/Supabase/gte-small). It is called in Edge Functions as `new Supabase.ai.Session('gte-small')` with `run(text, { mean_pool: true, normalize: true })`.
   - Input is cut at 512 tokens, so chunks stay around 300 words: a 40-word overlap, each chunk led by the item's title.

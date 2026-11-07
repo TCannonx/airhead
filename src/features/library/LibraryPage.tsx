@@ -7,6 +7,7 @@ import { filterLibrary, TYPE_LABELS } from '../../lib/db/sorting';
 import { useSearch } from '../../lib/search/useSearch';
 import type { ItemType } from '../../lib/schemas/records';
 import NewNoteButtons from '../notes/NewNoteButtons';
+import AskPanel from './AskPanel';
 
 const TABS: { label: string; type: ItemType | null }[] = [
   { label: 'All', type: null },
@@ -45,6 +46,7 @@ export default function LibraryPage() {
 
   return (
     <Page title="Library">
+      <AskPanel />
       <input
         ref={searchRef}
         type="search"

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.10: Ask Airhead (hybrid keyword and vector search, cited answers in the Library)
 - Task 7.9: embeddings (gte-small, 384 dimensions) for every item's text, kept up to date by the scheduler
 - Task 7.8: a draft's next steps become tasks in one tap (linked to the idea)
 - Task 7.7: Work on it together (two or three questions per turn, draft updated as a new version; answers typed offline are sent later)

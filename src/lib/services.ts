@@ -9,6 +9,7 @@ import { supabasePush } from './push/supabasePush';
 import { supabaseBriefs } from './today/supabaseBriefs';
 import { supabaseTokens } from './capture/supabaseTokens';
 import { supabaseWorkshop } from './workshop/supabaseWorkshop';
+import { supabaseAsk } from './ask/supabaseAsk';
 import { supabaseNotes } from './notes/supabaseNotes';
 import { supabaseMemory } from './memory/supabaseMemory';
 import { supabaseSorting } from './sort/supabaseSorting';
@@ -43,5 +44,6 @@ export function createServices(): Services {
     notes: supabaseNotes(supabase),
     captureTokens: supabaseTokens(supabase),
     workshop: supabaseWorkshop(supabase),
+    ask: supabaseAsk(supabase),
   };
 }
