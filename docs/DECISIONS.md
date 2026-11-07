@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Tasks 5.3 Free slots and 5.5 Fallback list
+- **One PR for both**: they are the two pure helpers the brief (5.4) is built on, with no UI or database of their own.
+- **Shared with no imports**: `src/lib/today/slots.ts` and `fallback.ts` have no imports, so the very same text is copied to `supabase/functions/_shared/today/`. A Deno test fails if the copies ever differ. CI's Deno run may now read those two folders.
+- **Slots** work in local wall-clock minutes, so a clock-change day needs nothing special:
+  - Busy spans get a 5-minute buffer and are merged. Gaps start on a quarter hour and must be at least 15 minutes.
+  - Each Top 3 task, in order, goes into the earliest gap of its estimate (clamped to 15–120 minutes). A task that fits nowhere gets no slot.
+  - Default day window: 08:00–21:00 on working days, 09:00–21:00 off; settable in 5.9.
+- **Fallback order**: today's Top 3, then overdue (oldest due first), then due today (by time), then most carried over, then oldest; ties by title.
+  - Top 3 = the first three.
+  - Also today = the rest that are due by today or carried over (at most 10), so the list stays short.
+
 ## 2026-11-07 — Task 5.2 Morning digest
 - **`morning_digest(user_id, local_date)`** (migration `20261107000016_morning_digest.sql`) returns compact JSON in the person's time zone:
   - non-recurring events from today to 7 days ahead (local date and times, calendar, location, time-TBC);

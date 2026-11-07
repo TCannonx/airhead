@@ -81,7 +81,17 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       # Auth, REST, Realtime and the local mail catcher are needed; the rest isn't.
-      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+      # Runners sometimes fail Docker's port binding ("address already in use");
+      # clean up and retry instead of failing the run.
+      - name: Start the local stack
+        run: |
+          for attempt in 1 2 3; do
+            npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta && exit 0
+            echo "supabase start failed (attempt $attempt); stopping and retrying"
+            npx supabase stop --no-backup || true
+            sleep 15
+          done
+          exit 1
       - name: Point the app at the local stack
         run: |
           npx supabase status -o env > /tmp/sb.env
@@ -113,7 +123,7 @@ jobs:
           deno-version: v2.x
       # Type-check every function entry point and shared module (tests only check what they import).
       - run: deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/*/index.ts
-      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 --allow-read=tests/fixtures supabase/functions
+      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 --allow-read=tests/fixtures,src/lib/today,supabase/functions/_shared/today supabase/functions
 
   db:
     name: database tests

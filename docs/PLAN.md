@@ -310,7 +310,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
     Titles only, no notes, so the call stays small.
     - Tests: pgTAP with seeded data (time zones, deleted rows left out, size limits).
-- [ ] **5.3 Free slots.** Shared code (device and server) that finds free gaps in a day from timed events, inside a day window (work hours on working days, a wider window on days off), and fits each Top 3 task into the earliest gap of its estimated length (15 to 120 minutes), e.g. "Dentist call fits 12:30–12:45".
+- [x] **5.3 Free slots.** Shared code (device and server) that finds free gaps in a day from timed events, inside a day window (work hours on working days, a wider window on days off), and fits each Top 3 task into the earliest gap of its estimated length (15 to 120 minutes), e.g. "Dentist call fits 12:30–12:45".
     - Tests: unit tests for overlaps, edges, all-day events, no room, and the clock-change day.
 - [ ] **5.4 Morning brief function.** `morning-brief` (large tier, prompt `brief.v1`, structured output). From the digest it returns:
     - a two- or three-line reflection on yesterday;
@@ -320,7 +320,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
     Code validates ids and times, adds the slots (5.3), writes the brief, sets `top3_date` on the chosen tasks, writes prep nudges (`kind = 'prep'`, with keys) and sends the round-up notification. Uses the large-tier refusal fallback (verify the current API option). If AI fails or the cap is reached, it falls back to the code-built list (5.5).
     - Tests: Deno with AI fixtures (a normal day, invented ids dropped, a refusal or cap leading to the fallback), and prompt checks (digest marked as data).
-- [ ] **5.5 Fallback list.** Code-only Top 3 and Also today:
+- [x] **5.5 Fallback list.** Code-only Top 3 and Also today:
     - overdue, then due today, then the most carried over, then oldest;
     - events and leave listed; no reflection.
 
