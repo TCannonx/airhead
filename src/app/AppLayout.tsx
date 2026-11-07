@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router';
+import { useEffect } from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
 import { SETTINGS, TABS, type NavItem } from './nav';
@@ -113,8 +114,29 @@ function DesktopLayout() {
   );
 }
 
+const isTyping = (el: Element | null) =>
+  !!el &&
+  (el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement ||
+    (el as HTMLElement).isContentEditable);
+
 export default function AppLayout() {
   const layout = useLayout();
+  const navigate = useNavigate();
+
+  // Desktop shortcut: "/" jumps to the (visible) Library search box.
+  useEffect(() => {
+    if (layout === 'phone') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || isTyping(document.activeElement))
+        return;
+      e.preventDefault();
+      void navigate('/library', { state: { focusSearch: Date.now() } });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [layout, navigate]);
   return (
     <div className="bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {layout === 'phone' && <PhoneLayout />}
