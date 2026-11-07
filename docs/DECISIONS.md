@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.3 Batch triggers
+- **Device**: `SortProvider` (inside sync) runs sorting **once when the app opens** if any local capture is `unsorted`, and on demand from a visible **Sort now** button in Inbox → Unsorted. Each run = sync (push offline captures first) → `sort-batch` → sync (pull the new items). Offline: no call, just a plain message. Not present in local mode.
+- **Server**: `pg_cron` job `dispatch-sort-batches` every 5 minutes runs `dispatch_sort_batches()`, which `pg_net`-POSTs to `/functions/v1/sort-batch` with the service key and `{ user_id }` for each user returned by `users_due_for_sorting()`:
+  - due = unsorted captures with text or a link (not deleted) ≥ `settings.data.batch_threshold_count` (default 5), **or** the oldest waiting ≥ `batch_threshold_minutes` (default 60).
+  - Both functions are service-only.
+- **Vault**: the dispatcher reads `project_url` and `service_role_key` from `vault.decrypted_secrets`; with either missing it does nothing (returns 0). The user creates them once per project with `vault.create_secret` (BLOCKERS), so no key is in a migration or the repo.
+- The app calls the function through `supabase.functions.invoke` with the user's token; non-2xx responses still carry `{ ok, error_code, message }`, which the Inbox shows as is (e.g. the cap message).
+
 ## 2026-11-07 — Task 3.2 Sort batch
 - **`sort-batch` Edge Function** (`verify_jwt = false`; it authenticates itself): called by the app with the user's access token (on demand), or by the scheduler with the service key and `{ user_id }` (background, Task 3.3). Without `ANTHROPIC_API_KEY` it answers `503 not_configured` ("AI sorting is not set up yet") and captures simply wait.
 - Takes up to **20** of the user's oldest `unsorted` captures with text or a link (photo-only captures wait for Phase 6 vision). Digest: now + time zone (`settings.data.time_zone`, default Europe/Dublin), topic names, up to 30 open idea titles, list names, and the last 5 corrections **with the capture text they were about**. One small-tier call with effort `low`, max 8,000 output tokens.

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import { DataProvider } from '../../lib/db/DataProvider';
+import { SortProvider } from '../../lib/sort/SortProvider';
 import { SyncProvider } from '../../lib/sync/SyncProvider';
 import { AppLockProvider } from '../applock/AppLockProvider';
 import SignInScreen from './SignInScreen';
@@ -18,7 +19,9 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   return (
     <DataProvider userId={user.id}>
       <SyncProvider>
-        <AppLockProvider>{children}</AppLockProvider>
+        <SortProvider>
+          <AppLockProvider>{children}</AppLockProvider>
+        </SortProvider>
       </SyncProvider>
     </DataProvider>
   );

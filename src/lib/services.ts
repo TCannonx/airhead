@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
 import { supabaseAuth } from './auth/supabaseAuth';
+import { supabaseSorting } from './sort/supabaseSorting';
 import { supabaseRemote } from './sync/supabaseRemote';
 import type { Services } from './auth/types';
 
@@ -23,5 +24,6 @@ export function createServices(): Services {
     auth: supabaseAuth(supabase),
     appLock: webAuthnAppLock,
     remote: supabaseRemote(supabase),
+    sorting: supabaseSorting(supabase),
   };
 }
