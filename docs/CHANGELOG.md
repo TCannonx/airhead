@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.7: bridge-day finder (1–2 leave days that give 4+ days off, ranked; shared by the app and the server)
 - Task 8.6: Insights → Patterns (done by weekday, capture and completion hours, carry-overs, notifications, slipping topics, returning ideas; tables too)
 - Task 8.5: the morning brief reads the last 4 weekly digests instead of raw history
 - Task 8.4: Insights → This week: the weekly review with Tidy-up (keep, archive, delete, condense into a dated timeline) and memory changes, each on a tap
