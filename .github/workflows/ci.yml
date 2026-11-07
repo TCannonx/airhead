@@ -108,6 +108,8 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      # Type-check every function entry point and shared module (tests only check what they import).
+      - run: deno check supabase/functions/_shared/*.ts supabase/functions/*/index.ts
       - run: deno test --allow-env --allow-net=127.0.0.1 supabase/functions
 
   db:

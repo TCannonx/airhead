@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.1 AI gateway
+- **Verify (model IDs and prices)**, from Anthropic's current model table (Claude API skill, cached 2026-10-06): small tier **`claude-haiku-5-5`** ($0.10 in / $0.50 out per MTok for prompts up to 100K tokens; cache reads $0.01, 5-minute cache writes $0.125 = 1.25× input), large tier **`claude-sonnet-5-5`** ($2 / $10; cache reads $0.20, writes $2.50). These follow the design doc's own choice ("small, e.g. Claude Haiku"; "larger, e.g. Claude Sonnet"); IDs live in `MODELS` in `_shared/ai.ts`. The price table is seeded with these values and is editable per user (`ai_prices` rows with the user's id override the defaults).
+- **`eur_rate` seeded at 0.86 euros per dollar as a placeholder**, editable in Insights → AI usage (3.7). The Claude Console is the true record of spend; the app's figures are estimates.
+- **Structured output via `output_config.format`, not forced tool use.** The plan says to force JSON output with a tool, but current models reject forced `tool_choice` (`any`/`tool`) with a 400. The gateway calls the SDK's `messages.parse` with `zodOutputFormat(schema)` (JSON-schema structured output), re-validates with Zod, and retries once on invalid output (including JSON the SDK couldn't parse).
+- **SDK `npm:@anthropic-ai/sdk@1.6.0`** (Zod peer `^3.25 || ^4`), `npm:zod@4.6.7`, pinned in the import specifiers.
+- **Usage rows**: one per *attempt* (tokens were spent), including failures: `cap_reached` (nothing sent), `api_error` (no retry: the batch stays queued for the next run), `invalid_output`, `refused` (`stop_reason: "refusal"`, not retried). Cost = tokens × prices (input, output, cache read, cache write) × `eur_rate`, rounded to 6 decimals.
+- **Monthly cap**: `settings.data.ai_monthly_cap_eur` (absent or 0 = no cap). Month-to-date comes from `ai_month_to_date_eur(user)` (calendar month in Europe/Dublin, failed attempts included), callable only by the service role. Background tasks return `cap_reached` and leave work queued; on-demand callers show the plain message.
+- **Prompt caching**: the fixed system prompt is sent as a `cache_control: ephemeral` block; per-request content goes in `messages`. Haiku 5.5's 100K+ prompt price tier is ignored (batches are far smaller).
+- **Refusal fallbacks** (the server-side `fallbacks` option recommended for Sonnet 5.5) are left for the first large-tier task (Phase 5): sorting uses Haiku 5.5, which has no server-side fallback, and a refused batch simply stays unsorted.
+- `ai_usage` is not synced to devices: users read it through the `ai_usage_mine` view (security invoker; RLS restricts it to their rows), and only the gateway (service role) writes it. CI now runs `deno check` on every shared module and function entry point.
+
 ## 2026-11-07 — Task 2.10 Sync visibility
 - **Indicator** (`SyncIndicator`): a coloured dot and a label in the phone top bar and under the brand in the iPad/desktop sidebar. Labels: "Synced", "Syncing…", "N waiting", "Offline" / "Offline · N waiting", "N waiting · will retry" / "Not synced yet · will retry". The engine's plain-language message is the tooltip. "N" = distinct rows in the outbox, refreshed after every local write. It's `aria-live="polite"` rather than `role="status"`, to avoid competing with toasts.
 - **Hidden in local mode** (nothing syncs); Settings → Sync explains it instead.

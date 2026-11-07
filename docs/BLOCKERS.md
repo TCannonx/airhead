@@ -82,4 +82,4 @@ Add to https://github.com/TCannonx/airhead/settings/secrets/actions: `VITE_SUPAB
 
 ### 8. Anthropic API key with a spend limit (needed from Phase 3)
 
-Plan setup step 2. Create it in the Claude Console with a monthly spend limit. Don't paste it anywhere yet; it goes into Supabase secrets in Phase 3.
+Plan setup step 2. In the Claude Console (https://platform.claude.com): **Settings → Limits** set a monthly spend limit, then **API keys → Create key** (name `airhead-dev`). Put it straight into Supabase, never into chat or the repo: dashboard → project **airhead-dev** → **Edge Functions → Secrets** → **Add new secret**: name `ANTHROPIC_API_KEY`, value: the key. (Repeat with a separate `airhead-live` key in the live project before the first release.) Until then, AI sorting simply waits: captures stay in Unsorted and nothing breaks.
