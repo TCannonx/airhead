@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 4.5: leave engine (leave years, working-day counting with half days, balances, carry-over and expiry, weekend-holiday days, closures, pace, run-out)
 - Task 4.4: Settings → Work (working days and hours, leave year, entitlement and carry-over, weekend holiday rule, closure days, one-off holidays, leave types, weekly locations, checklists, Us sharing)
 - Task 4.3: Irish public holidays on device (Easter computus, St Brigid's Day rule, common days off, manual one-offs)
 - Task 4.1: calendar tables (series, feeds, linked events, work days, leave bookings, nudges, job runs) with RLS, sync and Dexie v4
