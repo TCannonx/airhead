@@ -475,3 +475,7 @@ verify_jwt = false
 # summarise-note: checks the caller's own token itself.
 [functions.summarise-note]
 verify_jwt = false
+
+[functions.ingest-capture]
+# Called by iOS Shortcuts with a capture token, not a Supabase session.
+verify_jwt = false

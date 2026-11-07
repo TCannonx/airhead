@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.2 ingest-capture
+- **`ingest-capture`** takes `Authorization: Bearer <capture token>`, hashes it and calls `use_capture_token` with the service role. Unknown or revoked tokens get 401, over the limit gets 429.
+  - `verify_jwt = false`, since the caller has a capture token, not a Supabase session.
+  - No CORS: only Shortcuts call it. The bookmarklet goes through the app's own `/share` page (7.4).
+- **Saved as sent, Unsorted, `source: 'shortcut'`**, for the existing sorting batch (which also reads links) to handle. The server does not run the free date rules, so dates in a Shortcut capture are read by the AI sort. Nothing in a capture is acted on by this function.
+  - A share that is only a link becomes a link capture.
+  - Photos (JPEG, PNG, WebP or HEIC, at most 5 MB, base64 in the JSON) go to `captures/<user>/<capture>/<file>` and are listed in `payload.files`, as on the device.
+- **Plain-text replies** ("Saved to Airhead." or the reason), which the Shortcut can show as they are.
+
 ## 2026-11-07 — Task 7.1 Capture tokens
 - **The table already existed** (`capture_tokens` from migration 0001: sha-256 `token_hash`, `label`, `revoked_at`, own-rows RLS). Migration 0020 only adds:
   - `last_used_at`;
