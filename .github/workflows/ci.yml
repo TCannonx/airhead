@@ -81,7 +81,17 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       # Auth, REST, Realtime and the local mail catcher are needed; the rest isn't.
-      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta
+      # Runners sometimes fail Docker's port binding ("address already in use");
+      # clean up and retry instead of failing the run.
+      - name: Start the local stack
+        run: |
+          for attempt in 1 2 3; do
+            npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta && exit 0
+            echo "supabase start failed (attempt $attempt); stopping and retrying"
+            npx supabase stop --no-backup || true
+            sleep 15
+          done
+          exit 1
       - name: Point the app at the local stack
         run: |
           npx supabase status -o env > /tmp/sb.env
