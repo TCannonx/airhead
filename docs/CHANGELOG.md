@@ -2,6 +2,10 @@
 
 One line per merged PR, newest first.
 
+## Phase 2 — Capture core and sync (ready for device testing, not yet released)
+
+Usable offline from here: Capture tab (box, paste link, compressed photos), free on-device rules (links → reading list, British dates, instant events with Undo, suggestions, recurrence), local database per user with an outbox, two-way sync with Supabase (Realtime nudges, late-commit overlap, offline queue, photo upload), Inbox with one-tap sorting and corrections, Library with filters, item editing, Trash, on-device search, export everything, and a sync status indicator. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 2.
+
 ## Phase 1 — Foundations (ready for device testing, not yet released)
 
 Installable, signed-in app shell for iPhone, iPad and desktop Chrome: offline shell, responsive layouts, Google / email-code sign-in, device list, optional Face ID / Touch ID lock, Supabase schema with RLS, CI with database and function tests, dev deploy, live release, keep-alive and backup workflows. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 1.
