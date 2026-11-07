@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- plan: phase 9 (Notebook polish, tasks 9.1–9.4)
+
 ## Phase 8 — Reflection (ready for device testing, not yet released)
 
 Once a week (Sunday 19:00 by default) the weekly review looks back over a SQL-built digest:

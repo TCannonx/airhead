@@ -158,6 +158,13 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] [ ] [ ] Scout now: at most 5 cards; the run log lists the web queries (interests and city only)
 - [ ] [ ] [ ] Accepting a card creates the item; dismissing one adds a "not interested" fact in Memory
 
+## Phase 9 — Notebook polish
+
+- [ ] — [ ] — Lasso a few strokes and a text box: they are selected with a dashed box
+- [ ] — [ ] — Drag the selection to move it; Delete removes it; undo and redo work for both
+- [ ] — [ ] — Copy a selection and paste it into another handwritten note
+- [ ] — [ ] — Hold the Pencil still at the end of a line, arrow, rectangle and circle: each snaps clean; undo brings the hand-drawn one back; a scribble stays as drawn
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

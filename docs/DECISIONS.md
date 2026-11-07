@@ -2,6 +2,11 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Phase 9 plan
+- **Planned before building**, as for Phases 5–8 (by the user's instruction).
+- **Snapped shapes stay ordinary strokes** (point lists drawn with perfect-freehand), so stored data, sync and rendering need nothing new. Undo restores the hand-drawn version.
+- **The lasso clipboard lives in the app**, not the system clipboard: strokes are app data, and the page should never read the system clipboard without a paste gesture.
+
 ## 2026-11-07 — Task 8.12 Suggestion cards
 - **Ideas on Today and Insights** (`ScoutCards`): the open cards (up to 5), each with Accept and Dismiss, a Source link for web ideas, and "Scout now" (online, one AI call at most, ≈ €0.04).
 - **Accept creates the proposal, and only then**:
