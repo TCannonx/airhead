@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.3 Weekly review function
+- **`reviews`** (migration 0027): one per person per week, Monday start. Written by the server and synced read-only like briefs. Holds `content` plus a `digest` paragraph for later briefs and reviews (8.5). `weekly_review` becomes a nudge kind.
+- **`weekly-review`** makes one large-tier call with prompt `review.v1` (task `weekly_review`, a background call so it respects the monthly cap):
+  - In: the week's digest (8.1), the last 4 digests, `ask` Tidy-up candidates (titles, types, reasons and ages only; at most 60) and up to 40 facts, least recently used first.
+  - Out: up to 4 themes, 5 wins, 5 slipped and 3 suggestions; a Keep / Archive / Condense / Delete proposal per candidate; fact merges and retirements; a digest of at most 80 words.
+- **Validation**: proposals are kept only for `ask` candidates the model was given, and fact changes only for given fact ids. A merge needs two or more facts and the merged text; a retire needs exactly one.
+  - Condense needs notes, ideas or meetings in a group of two or more; otherwise it becomes Keep.
+  - An injected or made-up id is simply dropped.
+- **`auto` candidates go to the Trash at once**, as soft deletes recoverable for 30 days, even when the AI fails (no AI needed). They are listed in the review as "tidied for you".
+- **On failure** a numbers-only review is stored (`fallback`) with a code-built digest line.
+- **When**: the scheduler runs it on the chosen day and time (notification settings `review_day`, 0 = Monday … 6 = Sunday, default Sunday; `review_time`, default 19:00), once per day through `claim_job`, then sends "Your weekly review is ready".
+  - A Sunday run covers the week ending that day; any other day covers the week before.
+  - A signed-in "Run now" (`{ mode: 'run' }`) is there for Insights (8.4).
+
 ## 2026-11-07 — Task 8.2 Tidy-up candidates
 - **`tidy_candidates(user)`** (migration 0026) is service-role only and finds everything in SQL. Each row gives its reason and a mode:
   - `auto` (low risk, from DESIGN): tasks done over 90 days ago, reading items read over 90 days ago, past events over 30 days old with no notes or linked meeting note, and exact duplicates (same type and title, ignoring case and spaces; the oldest copy is kept and the rest point at it);

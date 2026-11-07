@@ -164,7 +164,13 @@ export function occurrencesBetween(e: RecurringRow, from: Date, to: Date, tz: st
 /** Extra once-a-day jobs that live in other functions (the morning brief, Task 5.6). */
 export interface TickExtras {
   brief?: (userId: string, localDate: string, now: Date) => Promise<void>;
+  /** The weekly review (Task 8.3), on the chosen day and time. */
+  review?: (userId: string, localDate: string, now: Date) => Promise<void>;
 }
+
+/** 0 = Monday … 6 = Sunday, for a local YYYY-MM-DD. */
+export const weekdayOf = (localDate: string) =>
+  (new Date(`${localDate}T12:00:00Z`).getUTCDay() + 6) % 7;
 
 export async function runTick(
   now: Date,
@@ -214,6 +220,15 @@ export async function runTick(
       report.jobs.push('morning_brief');
       // A failed brief must not stop the rest of the tick (it falls back inside anyway).
       await extras.brief(u.user_id, local.date, now).catch(() => undefined);
+    }
+    if (
+      extras.review &&
+      notif.types.weekly_review &&
+      weekdayOf(local.date) === notif.review_day &&
+      (await job('weekly_review', notif.review_time))
+    ) {
+      report.jobs.push('weekly_review');
+      await extras.review(u.user_id, local.date, now).catch(() => undefined);
     }
     if (notif.types.evening_review && (await job('evening_review', notif.evening_review_time))) {
       report.jobs.push('evening_review');

@@ -5,6 +5,8 @@ import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runMorningBrief } from '../morning-brief/run.ts';
 import { supabaseBriefStore } from '../morning-brief/store.ts';
+import { lastWeekStart, runWeeklyReview } from '../weekly-review/run.ts';
+import { supabaseReviewStore } from '../weekly-review/store.ts';
 import { runTick, type TickStore } from './tick.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -172,6 +174,18 @@ Deno.serve(async (req) => {
             usage: supabaseUsageStore(db),
           },
           { roundUp: true },
+        );
+      },
+      review: async (userId, localDate) => {
+        await runWeeklyReview(
+          userId,
+          lastWeekStart(localDate),
+          {
+            store: supabaseReviewStore(db),
+            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            usage: supabaseUsageStore(db),
+          },
+          { notify: true },
         );
       },
     },
