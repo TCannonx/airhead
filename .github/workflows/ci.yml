@@ -103,13 +103,15 @@ jobs:
   functions:
     name: function tests
     runs-on: ubuntu-latest
+    env:
+      # The repo root's package.json belongs to the app; Deno must not read it.
+      DENO_NO_PACKAGE_JSON: '1'
     steps:
       - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       # Type-check every function entry point and shared module (tests only check what they import).
-      # The repo root has a package.json, so tell Deno to resolve npm: imports from its own cache.
       - run: deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/*/index.ts
       - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 supabase/functions
 
