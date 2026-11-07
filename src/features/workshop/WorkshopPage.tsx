@@ -8,6 +8,7 @@ import { draftsFor } from '../../lib/db/workshop';
 import { draftSchema, type Draft } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
 import { FLESH_OUT_COST_TEXT } from '../../lib/workshop/cost';
+import SessionPanel from './SessionPanel';
 
 const button =
   'rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50';
@@ -134,6 +135,7 @@ export default function WorkshopPage() {
           {message}
         </p>
       )}
+      <SessionPanel itemId={item.id} />
       {drafts.length > 1 && (
         <section aria-label="Versions" className="mt-6">
           <h3 className="mb-1 text-sm font-semibold">Versions</h3>
