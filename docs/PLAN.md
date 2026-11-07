@@ -271,7 +271,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 - [x] **4.13 Scheduler tick.** `pg_cron` every minute calls `scheduler-tick`, which: sends due nudges, deferring those in quiet hours (event reminders can be allowed through) and bundling anything over the daily cap into one summary notification; runs per-user local-time jobs guarded by `job_runs`: evening review, location checklist the evening before, leave run-out checks (about 90, 42 and 14 days before the leave year ends, when remaining days exceed carry-over), the slip nudge for tasks carried over 3 or more times, and marking leave Taken.
     - Tests: Deno tests with a fixed clock for quiet hours, cap bundling, time zones and duplicate-run protection.
 - [x] **4.14 Evening review.** The notification opens a screen to tick off, carry over or drop today's open tasks; carrying over increments `carry_count`.
-- [ ] **4.15 Notification settings.** Per-type toggles, quiet hours, daily cap, reminder default, per-device toggle.
+- [x] **4.15 Notification settings.** Per-type toggles, quiet hours, daily cap, reminder default, per-device toggle.
 - Phase done when: the Phase 4 manual checklist passes, including a real notification on the iPhone and my girlfriend seeing the Us calendar in her app.
 
 ## v0.1 acceptance checklist

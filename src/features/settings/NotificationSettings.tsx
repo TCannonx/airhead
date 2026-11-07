@@ -9,9 +9,10 @@ import {
   saveSubscription,
   subscribe,
   unsubscribe,
-  sendNotificationsHere,
 } from '../../lib/push/push';
 import { useSync } from '../../lib/sync/context';
+import { update } from '../../lib/db/repository';
+import NotificationPrefs from './NotificationPrefs';
 
 const small =
   'rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800';
@@ -96,11 +97,39 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
       )}
       <p className="text-sm">
         {receiver
-          ? receiver.id === deviceId
+          ? me?.receives_notifications
             ? 'This device gets notifications.'
             : `Notifications go to ${receiver.name}.`
           : 'Notifications are off on all devices.'}
       </p>
+      {devices.some((d) => d.push_subscription) && (
+        <ul aria-label="Devices that get notifications" className="space-y-1">
+          {devices
+            .filter((d) => d.push_subscription)
+            .map((d) => (
+              <li key={d.id} className="flex items-center justify-between gap-2 text-sm">
+                <span>
+                  {d.name}
+                  {d.id === deviceId ? ' (this device)' : ''}
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={d.receives_notifications}
+                  aria-label={`Notifications on ${d.name}`}
+                  className={small}
+                  onClick={() =>
+                    void update(db, 'devices', d.id, {
+                      receives_notifications: !d.receives_notifications,
+                    })
+                  }
+                >
+                  {d.receives_notifications ? 'On' : 'Off'}
+                </button>
+              </li>
+            ))}
+        </ul>
+      )}
       {support === 'supported' && (
         <div className="flex flex-wrap gap-2">
           {!me?.push_subscription ? (
@@ -109,15 +138,6 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
             </button>
           ) : (
             <>
-              {receiver?.id !== deviceId && (
-                <button
-                  type="button"
-                  className={small}
-                  onClick={() => void sendNotificationsHere(db, deviceId ?? '')}
-                >
-                  Send them here instead
-                </button>
-              )}
               <button type="button" className={small} disabled={busy} onClick={() => void test()}>
                 Send test notification
               </button>
@@ -137,6 +157,9 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
           {message}
         </p>
       )}
+      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+        <NotificationPrefs />
+      </div>
     </div>
   );
 }

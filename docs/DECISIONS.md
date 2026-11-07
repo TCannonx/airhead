@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.15 Notification settings
+- **Where**: Settings → Notifications, below the device controls (4.11). The values live in `settings.data.notifications`.
+  - `src/lib/notifications/settings.ts` is a Zod copy of the scheduler's `notif.ts` shape and defaults; keep the two in step.
+  - Each bad field falls back alone, per-type switches included.
+- **Preferences**:
+  - Per-type switches: event reminders, task due, time-TBC checks, evening review, location checklist, leave running out, slipping tasks.
+  - Quiet hours (default 22:00–07:30), with "event reminders still come through" (default on).
+  - Most notifications a day (default 8, 1–50); extras are bundled into a summary.
+  - The default event reminder (at the start, or 5 minutes to 2 hours before; default 30). The reminder trigger in the database reads it (4.12).
+  - Times for the evening review (21:00), the checklist (20:00) and morning nudges (08:00).
+  - Saved with one button, like Work settings.
+- **Per-device toggle**: every device that has turned notifications on is listed with an On/Off switch (`devices.receives_notifications`). More than one device can be on, so desktop Chrome can join the iPhone if wanted (design: "desktop Chrome can be switched on per device"). The first device turned on, or an iPhone, still becomes the receiver automatically (4.11).
+- **Not built**: per-notification snooze or done actions. iOS web push doesn't support notification action buttons yet, and the design says "where iOS allows". This stays on the later list.
+
 ## 2026-11-07 — Task 4.14 Evening review
 - **`/review`**: opened by the 21:00 notification (its URL), and linked from Today. It lists today's open tasks: due today or earlier (by the person's local date), or in today's Top 3. Overdue tasks appear so they get a decision.
 - **One tap each**:
