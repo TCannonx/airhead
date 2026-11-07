@@ -5,6 +5,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 const LOCAL_USER = '00000000-0000-4000-8000-000000000001';
 
+// Times below are Irish wall-clock times; CI machines run in UTC.
+test.use({ timezoneId: 'Europe/Dublin' });
+
 /** The centre of a week-view slot: the column for `date`, the row for `time`. */
 async function slot(page: Page, date: string, time: string) {
   const rowLocator = page.locator(`[data-time="${time}"]`).first();
