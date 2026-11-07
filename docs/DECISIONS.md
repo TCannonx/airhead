@@ -2,6 +2,19 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 5.2 Morning digest
+- **`morning_digest(user_id, local_date)`** (migration `20261107000016_morning_digest.sql`) returns compact JSON in the person's time zone:
+  - non-recurring events from today to 7 days ahead (local date and times, calendar, location, time-TBC);
+  - recurring events, for the function to expand;
+  - linked-calendar occurrences;
+  - up to 60 open tasks, ordered overdue or due today first, then today's Top 3, then most carried over, then oldest (with due, carry count and age);
+  - yesterday's numbers: tasks done, unfinished Top 3, captures;
+  - this week's leave and location overrides;
+  - up to 10 active ideas.
+- **Titles only, cut to 120 characters, and never notes or bodies**, so the call stays small and private details aren't sent.
+- **Holidays, today's location and recurring occurrences are added by the brief function** (5.4) from the shared TypeScript (holiday rules, work settings, rrule). They are computed in code, not stored, so SQL can't produce them; the plan's digest line is met by the pair together.
+- **Access**: security definer, not callable by devices. `service_role` is granted execute explicitly, because revoking from PUBLIC also removes it from the service role.
+
 ## 2026-11-07 — Task 5.1 Brief table
 - **`briefs`** (migration `20261107000015_briefs.sql`): one row per person per local day (`unique (user_id, local_date)`).
   - `status` is `ok` (the AI brief) or `fallback` (the code-built list); also `model` and `cost_eur`.

@@ -302,7 +302,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
 - [x] **5.1 Brief table.** Migration: `briefs` (`user_id`, `local_date`, `status` ok / fallback, `content` jsonb, `model`, `cost_eur`), one per person per day, synced to devices read-only like `external_events`. Zod schema, Dexie table, sync.
     - Tests: pgTAP for RLS (owner reads, devices can't write) and one brief per day.
-- [ ] **5.2 Digest.** SQL `morning_digest(user_id, local_date)` returns compact JSON:
+- [x] **5.2 Digest.** SQL `morning_digest(user_id, local_date)` returns compact JSON:
     - today's and the next 7 days' events, including linked calendars, leave, holidays and today's location;
     - open tasks with due dates, carry counts and current Top 3;
     - yesterday's numbers (done, carried over, captured);
