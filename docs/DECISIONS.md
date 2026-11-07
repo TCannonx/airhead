@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.1 Capture tokens
+- **The table already existed** (`capture_tokens` from migration 0001: sha-256 `token_hash`, `label`, `revoked_at`, own-rows RLS). Migration 0020 only adds:
+  - `last_used_at`;
+  - a `capture_token_uses` log (no user access) for the rate limit;
+  - `use_capture_token(hash)`, callable by the service role only. It returns the owner and whether this use is allowed (60 per token per hour) and records the use.
+- **Tokens are `ah_` + 32 random bytes in base64url**, made on the device. Only the hash is sent and stored, and the token is shown once with Copy.
+- **Not synced to devices**: Settings → Capture from anywhere reads and writes the table directly (own rows). Revoking sets `revoked_at`, after which the lookup no longer finds the token.
+
 ## 2026-11-07 — Phase 7 plan
 - **Planned before building**, as for Phases 5 and 6 (by the user's instruction).
 - **Embeddings, verified** in Supabase's docs (AI models, Generate text embeddings, Hybrid search):

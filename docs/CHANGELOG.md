@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.1: capture tokens for iOS Shortcuts (create once, last use, revoke; hashed; 60 an hour)
 - plan: phase 7 (Thinking tools, tasks 7.1–7.11)
 
 ## Phase 6 — Notes (ready for device testing, not yet released)

@@ -8,6 +8,7 @@ import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
 import NotificationSettings from './NotificationSettings';
+import CaptureTokens from './CaptureTokens';
 import LinkedCalendars from './LinkedCalendars';
 import SharingSettings from './SharingSettings';
 import TodaySettings from './TodaySettings';
@@ -136,6 +137,10 @@ export default function SettingsPage() {
 
       <Section title="Sharing">
         <SharingSettings />
+      </Section>
+
+      <Section title="Capture from anywhere">
+        <CaptureTokens />
       </Section>
 
       <Section title="Linked calendars">
