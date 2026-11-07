@@ -371,7 +371,7 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
     - Tests: Deno with AI fixtures (typed; ink with a transcription; an injection line inside the note does nothing), and output validation.
 - [x] **6.8 Action items to tasks.** After Summarise, a checklist of proposed action items, all unticked. Confirmed ones become tasks linked to the note, with due dates parsed by the free rules. Nothing is created without a tap.
     - Tests: component tests.
-- [ ] **6.9 Notes in the Library.** Meetings and Notes tabs list documents. Opening a summarised note shows the summary, decisions and action items above the original (typed text or the pages, view-only on phone and desktop, editable on iPad). Search covers titles, typed text, transcriptions and summaries.
+- [x] **6.9 Notes in the Library.** Meetings and Notes tabs list documents. Opening a summarised note shows the summary, decisions and action items above the original (typed text or the pages, view-only on phone and desktop, editable on iPad). Search covers titles, typed text, transcriptions and summaries.
     - Tests: component tests and search tests.
 - Phase done when: the Phase 6 manual checklist passes (write on the iPad with the Pencil, fingers scroll, it syncs, it summarises, actions become tasks, and a conflicted copy appears when both devices edit offline).
 

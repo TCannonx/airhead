@@ -100,6 +100,14 @@ export default function SummarisePanel({
             </div>
           )}
           {stored.actions.length > 0 && <ActionItems note={item} actions={stored.actions} />}
+          {stored.transcription && (
+            <details>
+              <summary className="cursor-pointer font-semibold">Transcription</summary>
+              <p className="mt-1 whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                {stored.transcription}
+              </p>
+            </details>
+          )}
         </div>
       )}
       {!notes ? (

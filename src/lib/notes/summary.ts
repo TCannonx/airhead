@@ -1,5 +1,5 @@
 import type { NoteSummary } from '../auth/types';
-import type { Item } from '../schemas/records';
+import type { Item, NoteDoc } from '../schemas/records';
 
 export type StoredSummary = NoteSummary & { at: string };
 
@@ -37,3 +37,25 @@ export function summaryText(item: Pick<Item, 'data'>): string {
 
 /** Rough cost of one Summarise at the default Sonnet prices (a typed note or a page or two). */
 export const SUMMARISE_COST_TEXT = '≈ €0.02';
+
+/** Visible text of a typed note's HTML (for search); blocks become lines. */
+export function htmlText(html: string): string {
+  if (!html) return '';
+  const spaced = html.replace(/<(?:br|\/p|\/h[1-6]|\/li|\/div)[^>]*>/gi, '$&\n');
+  if (typeof DOMParser !== 'undefined')
+    return new DOMParser().parseFromString(spaced, 'text/html').body.textContent?.trim() ?? '';
+  return spaced.replace(/<[^>]*>/g, ' ').trim();
+}
+
+/** Typed text or ink text boxes of a note document, for search. */
+export function docText(doc: Pick<NoteDoc, 'kind' | 'doc'>): string {
+  if (doc.kind === 'typed') return htmlText(typeof doc.doc.html === 'string' ? doc.doc.html : '');
+  const pages = Array.isArray(doc.doc.pages)
+    ? (doc.doc.pages as { texts?: { text?: unknown }[] }[])
+    : [];
+  return pages
+    .flatMap((p) => (Array.isArray(p.texts) ? p.texts : []))
+    .map((t) => (typeof t.text === 'string' ? t.text : ''))
+    .filter(Boolean)
+    .join('\n');
+}

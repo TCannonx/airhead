@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.9 Notes in the Library
+- **The Meetings and Notes tabs already existed** (Task 3.x) and list the note items. Opening one (from a tab or from search) goes to `/notes/:id` through the item page's redirect.
+- **Reading view**: the summary, decisions, action items and a collapsible transcription sit above the original.
+  - Typed notes stay editable everywhere.
+  - Summarised handwritten pages are view-only on phone and desktop (`InkView`: a plain SVG plus text, so scrolling and selecting work and nothing can mark the page). On the iPad they stay editable.
+  - The iPad is detected with the existing `detectPlatform`: iPadOS reports itself as a Mac with touch points.
+  - An "Edit pages" link switches to the editor elsewhere, so a page is never locked.
+- **Search** now indexes the note documents as well: typed text (HTML to plain text, one line per block) and ink text boxes, plus the summary and transcription from 6.7.
+  - A note re-indexes when either its item or its document changes; the version is both `updated_at` values.
+
 ## 2026-11-07 — Task 6.8 Action items to tasks
 - **Checklist under the summary**: every proposed action starts unticked, and "Add as task" (or "Add N as tasks") creates only the ticked ones. Nothing is created without that tap.
 - **Linked by `data.note_id`** on the task. The owner goes in `data.owner` and in the body ("Owner: Mark"), and the original due text goes in `data.due_text`.

@@ -1,6 +1,6 @@
 import MiniSearch from 'minisearch';
-import { summaryText } from '../notes/summary';
-import type { Capture, Item, ItemType } from '../schemas/records';
+import { docText, summaryText } from '../notes/summary';
+import type { Capture, Item, ItemType, NoteDoc } from '../schemas/records';
 
 export interface SearchResult {
   kind: 'item' | 'capture';
@@ -22,7 +22,8 @@ interface Doc {
 const firstLine = (s: string) => s.split('\n')[0]?.trim() ?? '';
 
 /**
- * On-device full-text search over item titles and bodies and capture text
+ * On-device full-text search over item titles and bodies, note text (typed
+ * text, text boxes, and the summary and transcription once summarised) and capture text
  * (MiniSearch). Kept in memory and updated incrementally: only rows whose
  * updated_at changed are re-indexed; deleted or dropped rows are removed.
  */
@@ -39,18 +40,24 @@ export class SearchIndex {
     return this.mini.documentCount;
   }
 
-  sync(items: Item[], captures: Capture[]): { added: number; updated: number; removed: number } {
+  sync(
+    items: Item[],
+    captures: Capture[],
+    noteDocs: NoteDoc[] = [],
+  ): { added: number; updated: number; removed: number } {
     const next = new Map<string, { version: string; doc: Doc }>();
+    const docs = new Map(noteDocs.filter((d) => !d.deleted_at).map((d) => [d.id, d]));
     for (const i of items) {
       if (i.deleted_at || i.status === 'dropped') continue;
+      const nd = docs.get(i.id);
       next.set(`i:${i.id}`, {
-        version: i.updated_at,
+        version: nd ? `${i.updated_at}|${nd.updated_at}` : i.updated_at,
         doc: {
           key: `i:${i.id}`,
           kind: 'item',
           id: i.id,
           title: i.title,
-          body: [i.body ?? '', summaryText(i)].filter(Boolean).join('\n'),
+          body: [i.body ?? '', nd ? docText(nd) : '', summaryText(i)].filter(Boolean).join('\n'),
           itemType: i.type,
         },
       });

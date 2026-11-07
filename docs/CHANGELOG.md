@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 6.9: notes in the Library: summary above the original, view-only pages on phone and desktop, search over typed text, text boxes, summaries and transcriptions
 - Task 6.8: action items from a summary become tasks (ticked ones only, linked to the note, due dates read by the free rules)
 - Task 6.7: Summarise notes (typed text or handwritten pages as images): summary, decisions and action items, stored on the note and searchable
 - Task 6.6: text boxes on handwritten pages (add, move, delete)
