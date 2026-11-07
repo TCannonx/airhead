@@ -483,3 +483,7 @@ verify_jwt = false
 [functions.workshop]
 # Checks the caller's own token itself.
 verify_jwt = false
+
+[functions.embed-items]
+# Called by the scheduler with the service role key; checks it itself.
+verify_jwt = false

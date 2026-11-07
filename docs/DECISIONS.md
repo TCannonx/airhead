@@ -2,6 +2,24 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.9 Embeddings
+- **Verified**: Supabase's Vector columns guide gives `vector(384)` for its built-in `gte-small` model (huggingface.co/Supabase/gte-small). It is called in Edge Functions as `new Supabase.ai.Session('gte-small')` with `run(text, { mean_pool: true, normalize: true })`.
+  - Input is cut at 512 tokens, so chunks stay around 300 words: a 40-word overlap, each chunk led by the item's title.
+- **`chunks`** (migration 0022) is server-only, readable by its owner, written only by the service role, and not synced.
+  - It holds content, hash, a generated English `fts` tsvector (GIN) and `embedding vector(384)` with HNSW `vector_ip_ops`. The vectors are normalised, so inner product ranks like cosine.
+- **What is indexed**:
+  - the title and body;
+  - typed note text (HTML to text) and ink text boxes;
+  - a note's summary, decisions, action titles and transcription;
+  - a reading item's summary and key points;
+  - the newest Workshop draft.
+- **Change tracking by triggers**: changes to items (title, body, data, status, deleted_at), note documents and drafts queue the item in `embed_queue`. Other edits (e.g. a Top 3 date) don't. Every existing item is queued once.
+- **`embed-items`**, called every 5 minutes by pg_cron + pg_net (only when something is queued, with the Vault secrets from 3.3):
+  - takes up to 25 items (`take_embed_queue`, skip-locked) and re-embeds only chunks whose sha-256 changed;
+  - removes chunks past the new end, and all chunks of deleted, dropped or missing items.
+  - The service role key is checked in the function itself (`verify_jwt = false`).
+- Not checked on a real embedding locally: there is no Docker or Edge Runtime here. The embedder is injected in the Deno tests, and the dev deploy runs the real one.
+
 ## 2026-11-07 — Task 7.8 Next steps to tasks
 - **Same code as action items (6.8)**: `actionsToTasks` and `tasksFromNote` take a link field, `note_id` for notes or `idea_id` for Workshop ideas. The once-per-title check and the free-rules due parsing are shared.
 - **Every step starts ticked** (the plan's choice: in the Workshop the person is already deciding), and "Add N tasks" creates the ticked ones. Steps already added show "Task added", even after a new draft version, because they are matched by title.
