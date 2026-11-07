@@ -219,6 +219,20 @@ export const briefSchema = z.object({
   cost_eur: z.coerce.number(),
 });
 
+/** A note's content (Task 6.1): typed HTML or handwritten pages, one per note item. */
+export const noteDocSchema = z.object({
+  ...syncColumns,
+  kind: z.enum(['typed', 'ink']),
+  doc: z.record(z.string(), z.unknown()),
+  /** Numbered by the server on every write. */
+  version: z.number().int().min(0),
+  /** The server version this device's edit was based on. */
+  base_version: z.number().int().min(0),
+  /** The device that wrote this version. */
+  writer_device: id.nullable(),
+  summary: z.record(z.string(), z.unknown()).nullable(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -236,6 +250,7 @@ export type WorkDay = z.infer<typeof workDaySchema>;
 export type WorkLocation = WorkDay['location'];
 export type LeaveBooking = z.infer<typeof leaveBookingSchema>;
 export type Brief = z.infer<typeof briefSchema>;
+export type NoteDoc = z.infer<typeof noteDocSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -255,6 +270,7 @@ export const SYNC_TABLES = [
   'work_days',
   'leave_bookings',
   'briefs',
+  'note_docs',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -274,6 +290,7 @@ export const schemas = {
   work_days: workDaySchema,
   leave_bookings: leaveBookingSchema,
   briefs: briefSchema,
+  note_docs: noteDocSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -292,4 +309,5 @@ export interface RowTypes {
   work_days: WorkDay;
   leave_bookings: LeaveBooking;
   briefs: Brief;
+  note_docs: NoteDoc;
 }
