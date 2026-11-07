@@ -2,6 +2,11 @@
 
 One line per merged PR, newest first.
 
+## Phase 5 — Today and morning brief (ready for device testing, not yet released)
+
+Each morning, one large-tier AI call (with a server-side refusal fallback) turns a SQL digest into a short brief, a Top 3 with free time slots found in code, Also today and prep nudges. If the AI isn't available, a code-built list goes out instead. A round-up notification arrives at the chosen time. Today shows the brief, events, Top 3 (Block a slot; add, swap or remove by hand), Also today and From yesterday cards; the desktop panel shows Today at a glance; Settings → Today sets the time and day window and can regenerate the brief. Needs BLOCKERS items 8–10 in dev. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 5.
+
+- release: phase 5
 - Task 5.9: Settings → Today (brief time, day window for slots, Regenerate with its cost)
 - Task 5.6: the morning brief runs from the scheduler at the chosen time (default 07:30) with its round-up; one switch for both
 - Tasks 5.7 and 5.8: Today tab (brief, events, Top 3 with Block slots, Also today, desktop glance), Top 3 by hand with swap, From yesterday cards
