@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { SyncIndicator } from '../features/sync/SyncIndicator';
+import TodayGlance from '../features/today/TodayGlance';
 import LocationPicker from '../features/work/LocationPicker';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
@@ -124,7 +125,7 @@ function DesktopLayout() {
       >
         <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">Today</h2>
         <LocationPicker />
-        <p className="text-sm text-slate-500">Today at a glance appears here.</p>
+        <TodayGlance />
       </aside>
     </div>
   );

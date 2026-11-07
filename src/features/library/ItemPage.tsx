@@ -9,6 +9,7 @@ import { eventLabel } from '../../lib/db/events';
 import { softDelete, update } from '../../lib/db/repository';
 import { changeItemType, SORTABLE_TYPES, TYPE_LABELS } from '../../lib/db/sorting';
 import type { Item, ItemType } from '../../lib/schemas/records';
+import { Top3Button } from '../today/Top3Controls';
 
 const field =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900';
@@ -117,6 +118,7 @@ function ItemForm({ item }: { item: Item }) {
             Delete
           </button>
         </div>
+        <Top3Button item={item} />
       </div>
     </Page>
   );

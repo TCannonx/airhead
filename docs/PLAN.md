@@ -328,7 +328,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
     - Tests: unit tests for the ordering and ties.
 - [ ] **5.6 Scheduling the brief.** A once-a-day `morning_brief` job in the scheduler tick at the chosen time (default 07:30; `settings.data.notifications.brief_time`), running the brief in the same function. A new notification type "Morning round-up" with its own switch. Skipped on a day with nothing to say (no tasks or events).
     - Tests: Deno tick tests (time zone, once a day, switched off).
-- [ ] **5.7 Today tab.** In order:
+- [x] **5.7 Today tab.** In order:
     - the brief's lines;
     - today's events (Airhead, linked, holidays, leave) and the location chip;
     - **Top 3** shown prominently with suggested slots ("Block 12:30–12:45" sets the task's time) and done checkboxes;
@@ -338,7 +338,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
     With no brief yet, the fallback list (5.5) is computed on the device. The desktop right panel shows the same Top 3 and next events (today at a glance).
     - Tests: component tests with a brief, without one, and offline.
-- [ ] **5.8 Top 3 and carry-over prompts.** Add to or remove from today's Top 3 from Today and from any task (at most 3; a fourth asks which to swap). In the morning, cards for yesterday's unfinished Top 3 and due tasks: Done, Today, or Drop (Today increments `carry_count`, as the evening review does).
+- [x] **5.8 Top 3 and carry-over prompts.** Add to or remove from today's Top 3 from Today and from any task (at most 3; a fourth asks which to swap). In the morning, cards for yesterday's unfinished Top 3 and due tasks: Done, Today, or Drop (Today increments `carry_count`, as the evening review does).
     - Tests: unit and component tests.
 - [ ] **5.9 Brief settings and Regenerate.** Settings → Today: brief on or off, its time, the day window for slots, and a **Regenerate brief** button (online only, with its cost estimate, counted in AI usage).
     - Tests: component tests (settings saved, cost line shown, button disabled offline).
