@@ -1,0 +1,14 @@
+/* Calendar tweaks on top of FullCalendar's classic theme (Task 4.2). */
+.ah-calendar {
+  --fc-classic-primary: #4f46e5;
+  --fc-classic-today: #6366f114;
+}
+
+.ah-calendar[data-color-scheme='dark'] {
+  --fc-classic-background: #020617;
+}
+
+/* Common days off (Good Friday, Christmas Eve, New Year's Eve) are lighter. */
+.ah-calendar .ah-common-day {
+  opacity: 0.6;
+}

@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router';
 import { SyncIndicator } from '../features/sync/SyncIndicator';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
-import { SETTINGS, TABS, type NavItem } from './nav';
+import { CALENDAR, SETTINGS, TABS, type NavItem } from './nav';
 
 function Brand() {
   return (
@@ -39,7 +39,10 @@ function Sidebar() {
       <SyncIndicator className="-mt-3 px-3" />
       <nav aria-label="Sidebar" className="flex flex-1 flex-col gap-1">
         {TABS.map((item) => (
-          <SidebarLink key={item.to} item={item} />
+          <div key={item.to} className="contents">
+            <SidebarLink item={item} />
+            {item.to === '/today' && <SidebarLink item={CALENDAR} />}
+          </div>
         ))}
         <div className="mt-auto">
           <SidebarLink item={SETTINGS} />
@@ -55,6 +58,13 @@ function PhoneLayout() {
       <header className="flex items-center justify-between border-b border-slate-200 px-2 pt-[env(safe-area-inset-top)] dark:border-slate-800">
         <Brand />
         <SyncIndicator className="ml-auto mr-1" />
+        <NavLink
+          to={CALENDAR.to}
+          aria-label="Calendar"
+          className="rounded-lg p-2 text-slate-600 dark:text-slate-300"
+        >
+          <Icon name="calendar" />
+        </NavLink>
         <NavLink
           to={SETTINGS.to}
           aria-label="Settings"

@@ -50,7 +50,7 @@ describe('AppLayout', () => {
       within(sidebar)
         .getAllByRole('link')
         .map((a) => a.textContent),
-    ).toEqual([...TABS, 'Settings']);
+    ).toEqual(['Capture', 'Today', 'Calendar', 'Inbox', 'Library', 'Insights', 'Settings']);
     expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument();
     expect(screen.queryByRole('complementary', { name: 'Side panel' })).not.toBeInTheDocument();
     expect(screen.getByRole('main')).toBeInTheDocument();

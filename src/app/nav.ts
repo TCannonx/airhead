@@ -15,4 +15,7 @@ export const TABS: NavItem[] = [
   { to: '/insights', label: 'Insights', icon: 'insights' },
 ];
 
+/** Calendar: in the sidebar after Today; on the phone a header button (five tabs stay). */
+export const CALENDAR: NavItem = { to: '/calendar', label: 'Calendar', icon: 'calendar' };
+
 export const SETTINGS: NavItem = { to: '/settings', label: 'Settings', icon: 'settings' };
