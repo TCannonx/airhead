@@ -57,4 +57,24 @@ describe('friendlyAuthError', () => {
     expect(linkError('?code=abc', '')).toMatch(/same browser/i);
     expect(linkError('', '')).toBeNull();
   });
+
+  it('names the server error code on unknown failures, and knows the email ones', () => {
+    expect(
+      friendlyAuthError(
+        { message: 'Error sending magic link email', code: 'unexpected_failure' },
+        'The email could not be sent. Try again.',
+        online,
+      ).message,
+    ).toBe('The email could not be sent. Try again (unexpected_failure).');
+    expect(
+      friendlyAuthError({ message: 'x', code: 'email_address_not_authorized' }, 'f', online)
+        .message,
+    ).toMatch(/email sender/i);
+    expect(
+      friendlyAuthError({ message: 'x', code: 'over_email_send_rate_limit' }, 'f', online).message,
+    ).toMatch(/too many/i);
+    expect(
+      friendlyAuthError({ message: 'x', code: '<b>bad</b>' }, 'Try again.', online).message,
+    ).toBe('Try again.');
+  });
 });
