@@ -55,3 +55,41 @@ test('text boxes: add with the text tool, kept after a reload, deleted', async (
   await page.getByRole('button', { name: 'Delete text box Book the room' }).click();
   await expect(page.getByRole('textbox', { name: 'Text box' })).toHaveCount(0);
 });
+
+test('lasso: a loop around strokes selects them; another tool clears it (Task 9.1)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.goto('/library');
+  await page.getByRole('button', { name: 'New handwritten note' }).click();
+  await expect(page).toHaveURL(/\/notes\//);
+  const canvas = page.getByRole('img', { name: 'Handwritten page' });
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('no page');
+
+  // Draw a short stroke.
+  await page.mouse.move(box.x + 200, box.y + 200);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++) await page.mouse.move(box.x + 200 + i * 10, box.y + 200 + i * 5);
+  await page.mouse.up();
+
+  // Lasso round it.
+  await page.getByRole('button', { name: 'Lasso' }).click();
+  const loop = [
+    [150, 150],
+    [350, 150],
+    [350, 300],
+    [150, 300],
+    [150, 150],
+  ];
+  await page.mouse.move(box.x + 150, box.y + 150);
+  await page.mouse.down();
+  for (const [x, y] of loop)
+    await page.mouse.move(box.x + (x ?? 0), box.y + (y ?? 0), { steps: 4 });
+  await page.mouse.up();
+  await expect(canvas.locator('rect[data-lasso="selection"]')).toHaveCount(1);
+
+  // A loop around nothing selects nothing; switching tools clears.
+  await page.getByRole('button', { name: 'Highlighter' }).click();
+  await expect(canvas.locator('rect[data-lasso="selection"]')).toHaveCount(0);
+});

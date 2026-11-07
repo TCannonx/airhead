@@ -21,6 +21,13 @@ import {
   type TextBox,
   type Tool,
 } from '../../lib/ink/strokes';
+import {
+  EMPTY_SELECTION,
+  isEmpty,
+  selectByLasso,
+  selectionBox,
+  type Selection,
+} from '../../lib/ink/selection';
 
 export const INK_SAVE_DEBOUNCE_MS = 800;
 
@@ -41,7 +48,7 @@ const btn = (on: boolean) =>
     on ? 'bg-slate-200 dark:bg-slate-700' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
   }`;
 
-type Mode = Tool | 'eraser' | 'text';
+type Mode = Tool | 'eraser' | 'text' | 'lasso';
 
 /**
  * A handwritten page (Task 6.5): fixed width, grows downwards as you write.
@@ -59,6 +66,16 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   const [color, setColor] = useState(COLORS[0]?.[0] ?? '#111827');
   const [width, setWidth] = useState(WIDTHS[0]?.[0] ?? 3.5);
   const [live, setLive] = useState<InkPoint[] | null>(null);
+  // Lasso (Task 9.1): the loop being drawn, and what it caught.
+  const [loop, setLoop] = useState<InkPoint[] | null>(null);
+  const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
+  const selBox = isEmpty(selection)
+    ? null
+    : selectionBox(strokes, texts, selection, TEXT_BOX_WIDTH);
+  const pick = (m: Mode) => {
+    setMode(m);
+    setSelection(EMPTY_SELECTION);
+  };
   // Mutable, but kept in state (not a ref) because render reads canUndo/canRedo.
   const [undo] = useState(() => new UndoStack());
   const svg = useRef<SVGSVGElement>(null);
@@ -119,6 +136,12 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     }
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const at = toPage(e);
+    if (mode === 'lasso') {
+      drawing.current = [at];
+      setLoop([at]);
+      setSelection(EMPTY_SELECTION);
+      return;
+    }
     if (mode === 'text') {
       // Keep focus in the new box (the page itself would take it and blur the box away).
       e.preventDefault();
@@ -148,6 +171,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     }
     if (!drawing.current) return;
     const at = toPage(e);
+    if (mode === 'lasso') {
+      drawing.current.push(at);
+      setLoop([...drawing.current]);
+      return;
+    }
     if (mode === 'eraser') {
       erase(at, strokes);
       return;
@@ -164,6 +192,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     const pts = drawing.current;
     drawing.current = null;
     setLive(null);
+    if (mode === 'lasso') {
+      setLoop(null);
+      setSelection(selectByLasso(strokes, texts, pts ?? []));
+      return;
+    }
     if (!pts || mode === 'eraser' || mode === 'text' || pts.length === 0) return;
     const tool: Tool = mode;
     const stroke: StoredStroke = {
@@ -205,7 +238,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           type="button"
           aria-pressed={mode === 'pen'}
           className={btn(mode === 'pen')}
-          onClick={() => setMode('pen')}
+          onClick={() => pick('pen')}
         >
           Pen
         </button>
@@ -218,7 +251,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
             className={`size-6 rounded-full border-2 ${mode === 'pen' && color === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`}
             style={{ background: c }}
             onClick={() => {
-              setMode('pen');
+              pick('pen');
               setColor(c);
             }}
           />
@@ -238,7 +271,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           type="button"
           aria-pressed={mode === 'highlighter'}
           className={btn(mode === 'highlighter')}
-          onClick={() => setMode('highlighter')}
+          onClick={() => pick('highlighter')}
         >
           Highlighter
         </button>
@@ -246,7 +279,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           type="button"
           aria-pressed={mode === 'eraser'}
           className={btn(mode === 'eraser')}
-          onClick={() => setMode('eraser')}
+          onClick={() => pick('eraser')}
         >
           Eraser
         </button>
@@ -254,9 +287,17 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           type="button"
           aria-pressed={mode === 'text'}
           className={btn(mode === 'text')}
-          onClick={() => setMode('text')}
+          onClick={() => pick('text')}
         >
           Text
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === 'lasso'}
+          className={btn(mode === 'lasso')}
+          onClick={() => pick('lasso')}
+        >
+          Lasso
         </button>
         <button
           type="button"
@@ -297,6 +338,31 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
               opacity={s.tool === 'highlighter' ? 0.35 : 1}
             />
           ))}
+          {loop && loop.length > 1 && (
+            <polyline
+              data-lasso="loop"
+              points={loop.map((p) => `${p.x},${p.y}`).join(' ')}
+              fill="none"
+              stroke="#6366f1"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+            />
+          )}
+          {selBox && (
+            <rect
+              data-lasso="selection"
+              aria-label="Selection"
+              x={selBox.x}
+              y={selBox.y}
+              width={selBox.w}
+              height={selBox.h}
+              fill="#6366f1"
+              fillOpacity={0.06}
+              stroke="#6366f1"
+              strokeWidth={2}
+              strokeDasharray="8 6"
+            />
+          )}
         </svg>
         {texts.map((t) => (
           <div
