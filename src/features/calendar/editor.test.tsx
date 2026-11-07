@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AuthProvider } from '../../lib/auth/AuthProvider';
 import { LOCAL_USER_ID, localServices } from '../../lib/auth/localAuth';
@@ -14,19 +15,21 @@ const db = () => openUserDb(U);
 
 function renderEditor(item?: Item) {
   render(
-    <AuthProvider services={localServices()}>
-      <DataProvider userId={U}>
-        <EventEditor
-          draft={{
-            item,
-            start: new Date('2027-03-06T19:00:00Z'),
-            end: new Date('2027-03-06T20:00:00Z'),
-            allDay: false,
-          }}
-          onClose={() => {}}
-        />
-      </DataProvider>
-    </AuthProvider>,
+    <MemoryRouter>
+      <AuthProvider services={localServices()}>
+        <DataProvider userId={U}>
+          <EventEditor
+            draft={{
+              item,
+              start: new Date('2027-03-06T19:00:00Z'),
+              end: new Date('2027-03-06T20:00:00Z'),
+              allDay: false,
+            }}
+            onClose={() => {}}
+          />
+        </DataProvider>
+      </AuthProvider>
+    </MemoryRouter>,
   );
 }
 

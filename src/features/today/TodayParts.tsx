@@ -4,6 +4,7 @@ import { update } from '../../lib/db/repository';
 import { completeTask } from '../../lib/db/review';
 import { removeFromTop3 } from '../../lib/db/top3';
 import type { Item } from '../../lib/schemas/records';
+import StartNotesButton from '../notes/StartNotesButton';
 import { hhmmOf, slotTimes, type TodayView, type TopTask } from './useToday';
 
 const h2 = 'mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase';
@@ -39,6 +40,17 @@ export function TodayEvents({ view }: { view: TodayView }) {
               />
               {e.title}
             </span>
+            {e.extendedProps.itemId && (
+              <StartNotesButton
+                eventKey={
+                  e.extendedProps.occurrence
+                    ? `${e.extendedProps.itemId}|${e.extendedProps.occurrence}`
+                    : e.extendedProps.itemId
+                }
+                title={e.title}
+                date={view.date}
+              />
+            )}
           </li>
         ))}
       </ul>

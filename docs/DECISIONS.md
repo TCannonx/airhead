@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.4 Meeting details
+- **What a meeting note holds**: `data.meeting_date` and `data.attendees` (a list of names), edited at the top of the note. Attendees are typed comma-separated and saved when you leave the field.
+- **"Start notes"** on an event creates a meeting note with the event's title and date, linked by `data.event_id`. Where it appears:
+  - Today's events list.
+  - The calendar's event editor.
+- **Once notes exist**, the same button reads "Open notes" and opens them.
+- **The link key** is the event id, or `id|occurrence` for one meeting of a repeating series, so a weekly meeting gets a note per week.
+- **Tests**: the event-editor test now renders inside a router, since the button navigates.
+
 ## 2026-11-07 — Task 6.3 Typed notes
 - **Verified: TipTap 3.33.0** (MIT): `@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, and `@tiptap/extension-list` for the checklist (`TaskList`/`TaskItem`; in v3 the list extensions live together there). `Placeholder` comes from `@tiptap/extensions`.
 - **Editor** (`src/features/notes/NoteEditor.tsx`):

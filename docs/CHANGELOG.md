@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 6.4: meeting details (date, attendees) and Start notes / Open notes on events
 - Task 6.3: typed notes (TipTap editor with headings, lists and checklists; saved while typing; New note and New meeting note)
 - Task 6.2: conflicted copies for notes edited on two devices (on the server and on pull); nothing is lost
 - Task 6.1: note documents (typed or handwritten, one per note, server-numbered versions)

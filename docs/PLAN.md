@@ -354,7 +354,7 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
     - Tests: sync engine unit tests (no conflict, conflict, a conflict while offline then two edits).
 - [x] **6.3 Typed notes.** A keyboard-first editor (TipTap starter kit, MIT; verify the current version): headings, bullets, numbered lists, checkboxes, bold and italic, and Markdown-style shortcuts. Saved locally on each change (debounced); a whole-document push a few seconds after typing pauses. "New note" and "New meeting note" in the Library and Capture.
     - Tests: component tests (create, type, reopen, debounce saves).
-- [ ] **6.4 Meeting details.** Title, date and attendees on a meeting note. "Start notes" on an event (Today and the calendar editor) creates a meeting note linked to it, with the event's title and time. The event shows a link to its notes.
+- [x] **6.4 Meeting details.** Title, date and attendees on a meeting note. "Start notes" on an event (Today and the calendar editor) creates a meeting note linked to it, with the event's title and time. The event shows a link to its notes.
     - Tests: component tests.
 - [ ] **6.5 Handwritten page.** A fixed-width page that scrolls and grows as you write, drawn with perfect-freehand (MIT).
     - Apple Pencil (pointer type pen) draws and fingers scroll; on desktop the mouse can draw too.

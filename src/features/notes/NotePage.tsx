@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { saveDoc } from '../../lib/db/notes';
 import { update } from '../../lib/db/repository';
+import MeetingDetails from './MeetingDetails';
 import NoteEditor from './NoteEditor';
 
 /** A note or meeting note (Task 6.3): its title and its document. */
@@ -44,6 +45,7 @@ export default function NotePage() {
             void update(db, 'items', item.id, { title: title.trim() });
         }}
       />
+      {item.type === 'meeting' && <MeetingDetails key={item.id} item={item} />}
       {doc.kind === 'typed' ? (
         // Keyed by id: switching notes starts a fresh editor.
         <NoteEditor
