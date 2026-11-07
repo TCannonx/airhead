@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import type { CaptureTokenRow } from '../../lib/capture/tokens';
+import ShortcutsGuide from './ShortcutsGuide';
 
 const field =
   'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
@@ -128,6 +129,7 @@ export default function CaptureTokens() {
           {message}
         </p>
       )}
+      <ShortcutsGuide />
     </div>
   );
 }

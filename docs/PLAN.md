@@ -383,7 +383,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: pgTAP (RLS, a revoked token stays revoked), component tests.
 - [x] **7.2 `ingest-capture`.** A function taking `Authorization: Bearer <capture token>` (looked up by hash with the service role; revoked or unknown tokens give 401). The body is `{ text?, url?, image? (base64, at most 5 MB), source: 'shortcut' }`. It inserts an Unsorted capture exactly as sent (data, never instructions) and updates `last_used_at`. Rate limit: 60 captures per token per hour. Plain-text replies ("Saved to Airhead.") for the Shortcut to show.
     - Tests: Deno (valid, revoked, oversized, rate limited, text and link and image), pgTAP for the lookup function.
-- [ ] **7.3 iOS Shortcuts.** `docs/SETUP-SHORTCUTS.md` plus an in-app guide on the same Settings page, with click-by-click steps:
+- [x] **7.3 iOS Shortcuts.** `docs/SETUP-SHORTCUTS.md` plus an in-app guide on the same Settings page, with click-by-click steps:
     - **Send to Airhead**: share sheet, for links, text and images.
     - **Quick thought**: Back Tap or the Action Button, dictated or typed.
     - Both use "Get contents of URL" with the token. When the request fails, the Shortcut says to open the app and capture offline.

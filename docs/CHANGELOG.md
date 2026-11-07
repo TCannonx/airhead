@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.3: iOS Shortcuts guide (Send to Airhead from the share sheet, Quick thought on Back Tap or the Action Button), in the docs and in Settings
 - Task 7.2: ingest-capture function for Shortcuts (text, links and photos saved Unsorted; token checked and rate limited)
 - Task 7.1: capture tokens for iOS Shortcuts (create once, last use, revoke; hashed; 60 an hour)
 - plan: phase 7 (Thinking tools, tasks 7.1–7.11)

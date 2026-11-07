@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.3 iOS Shortcuts
+- **Guide in two places**: `docs/SETUP-SHORTCUTS.md` (full, click by click) and a short in-app version under Settings → Capture from anywhere. The in-app version shows this install's real address (from `VITE_SUPABASE_URL`) with Copy.
+- **Photos are converted to JPEG and base64-encoded in the Shortcut**, so one JSON request covers every kind of capture.
+- **Offline**: "Get Contents of URL" fails without a connection, so the guide says to open Airhead and capture there (it works offline). HTTP errors still return the function's plain-text reason, which the Shortcut shows.
+- A test checks that the guide names the address pattern and never contains a real token.
+
 ## 2026-11-07 — Task 7.2 ingest-capture
 - **`ingest-capture`** takes `Authorization: Bearer <capture token>`, hashes it and calls `use_capture_token` with the service role. Unknown or revoked tokens get 401, over the limit gets 429.
   - `verify_jwt = false`, since the caller has a capture token, not a Supabase session.
