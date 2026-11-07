@@ -9,6 +9,7 @@ import ListsPage from '../features/library/ListsPage';
 import TrashPage from '../features/library/TrashPage';
 import SettingsPage from '../features/settings/SettingsPage';
 import TodayPage from '../features/today/TodayPage';
+import WorkPage from '../features/leave/WorkPage';
 import AppLayout from './AppLayout';
 
 export const routes: RouteObject[] = [
@@ -28,6 +29,7 @@ export const routes: RouteObject[] = [
       { path: 'library/lists', Component: ListsPage },
       { path: 'insights', Component: InsightsPage },
       { path: 'settings', Component: SettingsPage },
+      { path: 'work', Component: WorkPage },
       { path: '*', element: <Navigate to="/capture" replace /> },
     ],
   },
