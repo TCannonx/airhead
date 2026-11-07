@@ -48,7 +48,12 @@ as $$
 declare
   v_item uuid;
 begin
-  v_item := case tg_table_name when 'drafts' then new.item_id else new.id end;
+  -- Separate branches: plpgsql would fail on new.item_id for tables without it.
+  if tg_table_name = 'drafts' then
+    v_item := new.item_id;
+  else
+    v_item := new.id;
+  end if;
   insert into public.embed_queue (item_id, user_id) values (v_item, new.user_id)
     on conflict (item_id) do update set queued_at = now();
   return new;
