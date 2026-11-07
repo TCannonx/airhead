@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 5.1: morning briefs table (one per day, server-written, synced read-only)
 - plan: phase 5 (Today and morning brief, tasks 5.1–5.9)
 
 ## Phase 4 — Calendar, sharing, work and leave, import, notifications (ready for device testing, not yet released)

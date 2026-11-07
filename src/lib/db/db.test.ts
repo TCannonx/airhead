@@ -46,6 +46,7 @@ describe('local database', () => {
         'external_events',
         'work_days',
         'leave_bookings',
+        'briefs',
       ].sort(),
     );
   });

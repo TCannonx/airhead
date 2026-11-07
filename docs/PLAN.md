@@ -300,7 +300,7 @@ v0.1 is done when every box below is ticked on real devices; then release to `ai
 
 Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built digest into a short brief, a Top 3 with suggested time slots (found in free calendar gaps by code), an "Also today" list and prep nudges. If the call fails, a code-built list goes out instead. Planned in detail on 2026-11-07 from `DESIGN.md` (see DECISIONS).
 
-- [ ] **5.1 Brief table.** Migration: `briefs` (`user_id`, `local_date`, `status` ok / fallback, `content` jsonb, `model`, `cost_eur`), one per person per day, synced to devices read-only like `external_events`. Zod schema, Dexie table, sync.
+- [x] **5.1 Brief table.** Migration: `briefs` (`user_id`, `local_date`, `status` ok / fallback, `content` jsonb, `model`, `cost_eur`), one per person per day, synced to devices read-only like `external_events`. Zod schema, Dexie table, sync.
     - Tests: pgTAP for RLS (owner reads, devices can't write) and one brief per day.
 - [ ] **5.2 Digest.** SQL `morning_digest(user_id, local_date)` returns compact JSON:
     - today's and the next 7 days' events, including linked calendars, leave, holidays and today's location;
