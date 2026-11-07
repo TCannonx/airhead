@@ -2,10 +2,7 @@
 
 One line per merged PR, newest first.
 
-## Phase 3 — AI sorting, link reading, lists, memory (ready for device testing, not yet released)
-
-Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
-
+- Tasks 5.7 and 5.8: Today tab (brief, events, Top 3 with Block slots, Also today, desktop glance), Top 3 by hand with swap, From yesterday cards
 - Task 5.4: morning-brief function (one large-tier call with server-side refusal fallback, validated Top 3 with code-found slots, prep nudges, round-up; code-built list on any failure)
 - Tasks 5.3 and 5.5: free time slots and the code-built daily list (shared by the app and the server)
 - Task 5.2: morning digest in SQL (events, tasks, yesterday, leave, ideas; titles only)
@@ -39,6 +36,11 @@ Needs BLOCKERS items 8–10 (Vault secrets, Anthropic key, VAPID keys) in dev. D
 - Task 4.4: Settings → Work (working days and hours, leave year, entitlement and carry-over, weekend holiday rule, closure days, one-off holidays, leave types, weekly locations, checklists, Us sharing)
 - Task 4.3: Irish public holidays on device (Easter computus, St Brigid's Day rule, common days off, manual one-offs)
 - Task 4.1: calendar tables (series, feeds, linked events, work days, leave bookings, nudges, job runs) with RLS, sync and Dexie v4
+
+## Phase 3 — AI sorting, link reading, lists, memory (ready for device testing, not yet released)
+
+Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
+
 - release: phase 3
 - Task 3.10: memory check-up (code checks with one-tap fixes and savings, contradictions check, monthly run on Insights)
 - Task 3.9: memory facts (approval for people/personal, ~400-word cached profile, 180-day archive) and learned rules applied instantly on the device

@@ -73,7 +73,8 @@ test('create an event from an empty slot, then drag it to another day', async ({
   await editor.getByLabel('Title').fill('Dentist');
   await editor.getByRole('button', { name: 'Save' }).click();
 
-  const event = page.getByText('Dentist', { exact: true });
+  // Inside the calendar (the desktop side panel lists today's events too).
+  const event = page.locator('.ah-calendar').getByText('Dentist', { exact: true });
   await expect(event).toBeVisible();
   let dentist = (await readItems(page)).find((i) => i.title === 'Dentist');
   expect(dentist?.start_at).toBe('2026-07-15T09:00:00.000Z');

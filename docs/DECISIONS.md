@@ -2,6 +2,25 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Tasks 5.7 Today tab and 5.8 Top 3 and carry-over prompts
+- **One PR**: both change the same Today screen and Top 3 rows.
+- **Today, in order**:
+  1. Location chip.
+  2. The brief's lines.
+  3. Today's events: Airhead, linked calendars, holidays and leave, all-day first.
+  4. **Top 3**: each row has a done tick, its reason, and a **"Block 12:30–12:45"** button that turns the suggested slot into a time block on the calendar ("On the calendar at …" once it's there, or "No free slot today").
+  5. Collapsed **Also today**.
+  6. **From yesterday** cards, leave proposals, other suggestion cards, the leave counter, and the evening review link.
+- **With today's brief**: its Top 3 and Also today, using current items. Done items stay ticked; dropped ones disappear. Tasks added by hand after the brief also show.
+- **Without one** (before it arrives, offline, or no server): the device ranks open tasks with the shared fallback code (5.5) and finds slots in today's calendar with the shared slot code (5.3) from now on. A line says so.
+- **Desktop right panel**: "Today at a glance", a compact Top 3 and today's events.
+- **Top 3 by hand**:
+  - "Add to today's Top 3" on a task (item page). When three are already picked, a "Swap with" choice appears.
+  - ✕ on a Top 3 row removes it.
+  - All of it uses `top3_date`, which the brief and the digest already read.
+- **From yesterday**: open tasks in yesterday's Top 3 or due yesterday, and not yet in today's.
+  - **Today** carries the task over (same as the evening review: `carry_count + 1`, due time moved) and adds it to today's Top 3 if there's room.
+  - **Done** and **Drop** close it.
 ## 2026-11-07 — Task 5.4 Morning brief function
 - **Verified: large-tier refusal fallback.** Per the current API docs, Sonnet 5.5 large-tier calls send `fallbacks: "default"` with the beta header `server-side-fallback-2026-07-01`, so on a decline the API re-runs the request on its recommended model within the same call.
   - Haiku 5.5 has no server-side fallback, so small-tier calls don't ask for one.
