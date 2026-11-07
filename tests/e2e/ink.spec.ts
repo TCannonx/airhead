@@ -90,6 +90,6 @@ test('lasso: a loop around strokes selects them; another tool clears it (Task 9.
   await expect(canvas.locator('rect[data-lasso="selection"]')).toHaveCount(1);
 
   // A loop around nothing selects nothing; switching tools clears.
-  await page.getByRole('button', { name: 'Thin' }).click();
+  await page.getByRole('button', { name: 'Highlighter' }).click();
   await expect(canvas.locator('rect[data-lasso="selection"]')).toHaveCount(0);
 });
