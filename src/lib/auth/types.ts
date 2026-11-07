@@ -151,6 +151,14 @@ export interface NotesService {
   summarise(req: SummariseRequest): Promise<SummariseOutcome>;
 }
 
+/** Capture tokens for iOS Shortcuts (Task 7.1); server only, never synced. */
+export interface CaptureTokensService {
+  list(): Promise<import('../capture/tokens').CaptureTokenRow[]>;
+  /** Creates a token and returns it (the only time it is visible). */
+  create(label: string): Promise<string>;
+  revoke(id: string): Promise<void>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -165,4 +173,5 @@ export interface Services {
   push?: PushService;
   briefs?: BriefsService;
   notes?: NotesService;
+  captureTokens?: CaptureTokensService;
 }
