@@ -466,3 +466,39 @@ Deno.test('a failing brief does not stop the rest of the tick', async () => {
   );
   assertEquals(r.sent, 1);
 });
+
+Deno.test('the weekly review runs on the chosen day and time, once (Task 8.3)', async () => {
+  const only = {
+    notifications: {
+      types: { evening_review: false, checklist: false, slip: false, leave_runout: false },
+    },
+  };
+  const runs: string[] = [];
+  const review = (u: string, date: string) => {
+    runs.push(`${u} ${date}`);
+    return Promise.resolve();
+  };
+  const m = memory({ settings: only });
+  // Saturday 18 July 2026, 19:00 Irish time: not the day.
+  await runTick(at('2026-07-18T18:00:00Z'), m.store, m.send, { review });
+  assertEquals(runs, []);
+  // Sunday 19 July, 18:59 then 19:00 Irish time.
+  await runTick(at('2026-07-19T17:59:00Z'), m.store, m.send, { review });
+  assertEquals(runs, []);
+  const r = await runTick(at('2026-07-19T18:00:00Z'), m.store, m.send, { review });
+  assertEquals(r.jobs.includes('weekly_review'), true);
+  await runTick(at('2026-07-19T18:30:00Z'), m.store, m.send, { review });
+  assertEquals(runs, [`${U} 2026-07-19`]);
+
+  const friday = memory({
+    settings: { notifications: { ...only.notifications, review_day: 4, review_time: '17:00' } },
+  });
+  const fridayRuns: string[] = [];
+  await runTick(at('2026-07-17T16:00:00Z'), friday.store, friday.send, {
+    review: (u) => {
+      fridayRuns.push(u);
+      return Promise.resolve();
+    },
+  });
+  assertEquals(fridayRuns, [U]);
+});

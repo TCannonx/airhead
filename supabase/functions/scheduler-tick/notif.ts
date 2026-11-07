@@ -11,6 +11,7 @@ export const NUDGE_TYPES = [
   'leave_runout',
   'slip',
   'morning_brief',
+  'weekly_review',
 ] as const;
 export type NudgeType = (typeof NUDGE_TYPES)[number];
 
@@ -27,6 +28,9 @@ export interface NotifSettings {
   morning_time: string;
   /** When the morning brief and its round-up go out. */
   brief_time: string;
+  /** The weekly review: day (0 = Monday … 6 = Sunday) and time (Task 8.3). */
+  review_day: number;
+  review_time: string;
   event_reminder_minutes: number;
 }
 
@@ -40,6 +44,8 @@ export const DEFAULT_NOTIF: NotifSettings = {
   checklist_time: '20:00',
   morning_time: '08:00',
   brief_time: '07:30',
+  review_day: 6,
+  review_time: '19:00',
   event_reminder_minutes: 30,
 };
 
@@ -57,6 +63,7 @@ export function readNotif(data: Record<string, unknown> | null | undefined): Not
     'checklist_time',
     'morning_time',
     'brief_time',
+    'review_time',
   ] as const) {
     if (typeof n[k] === 'string' && HHMM.test(n[k] as string)) out[k] = n[k] as string;
   }
@@ -67,6 +74,12 @@ export function readNotif(data: Record<string, unknown> | null | undefined): Not
     (n.daily_cap as number) <= 50
   )
     out.daily_cap = n.daily_cap as number;
+  if (
+    Number.isInteger(n.review_day) &&
+    (n.review_day as number) >= 0 &&
+    (n.review_day as number) <= 6
+  )
+    out.review_day = n.review_day as number;
   if (Number.isInteger(n.event_reminder_minutes) && (n.event_reminder_minutes as number) >= 0)
     out.event_reminder_minutes = n.event_reminder_minutes as number;
   return out;

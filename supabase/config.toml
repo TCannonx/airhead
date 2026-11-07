@@ -491,3 +491,7 @@ verify_jwt = false
 [functions.ask]
 # Checks the caller's own token itself; searches as that user.
 verify_jwt = false
+
+[functions.weekly-review]
+# Signed-in users or the scheduler's service key; checked in the function.
+verify_jwt = false

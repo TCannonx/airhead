@@ -432,7 +432,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - Unsorted captures over 30 days old.
     - Each is marked `auto` (the low-risk cases in DESIGN) or `ask`. Meeting notes and ideas are always `ask`.
     - Tests: pgTAP.
-- [ ] **8.3 Weekly review function.** Migration `reviews` (one per user and week, server-written, synced read-only). Function `weekly-review` makes one large-tier call with prompt `review.v1`.
+- [x] **8.3 Weekly review function.** Migration `reviews` (one per user and week, server-written, synced read-only). Function `weekly-review` makes one large-tier call with prompt `review.v1`.
     - In: the digest, the last 4 weekly digests, the tidy candidates (titles and ages only), and near-duplicate or stale facts.
     - Out: themes, wins, what slipped, two or three organisation suggestions, Keep / Archive / Condense / Delete with a one-line reason per `ask` candidate, fact merges and retirements, and a short digest of the week.
     - `auto` candidates are soft-deleted or archived at once; all removals can be recovered for 30 days.

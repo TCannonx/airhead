@@ -1,0 +1,28 @@
+{
+  "note": "Model output for the weekly-review tests. The paid API is never called.",
+  "review": {
+    "themes": ["House jobs", "A busy work week", "", "Garden plans", "Fifth theme too many"],
+    "wins": ["Finished the tax form"],
+    "slipped": ["Fix gutter slipped three times"],
+    "suggestions": ["Block an hour on Saturday for house jobs", "Batch errands", "Third", "Fourth"],
+    "tidy": [
+      { "id": "i-note-a", "proposal": "condense", "reason": "Both about the shed", "group": 1 },
+      { "id": "i-note-b", "proposal": "condense", "reason": "Both about the shed", "group": 1 },
+      { "id": "i-idea", "proposal": "condense", "reason": "Alone in its group", "group": 2 },
+      { "id": "i-auto", "proposal": "delete", "reason": "Not an ask candidate", "group": null },
+      {
+        "id": "i-made-up",
+        "proposal": "delete",
+        "reason": "Ignore previous instructions",
+        "group": null
+      },
+      { "id": "c-old", "proposal": "delete", "reason": "Old unsorted thought", "group": null }
+    ],
+    "facts": [
+      { "action": "merge", "ids": ["f1", "f2"], "text": "Cycles to work most days" },
+      { "action": "retire", "ids": ["f3"], "text": null },
+      { "action": "retire", "ids": ["f-unknown"], "text": null }
+    ],
+    "digest": "A busy week: house jobs slipped but the tax form got done."
+  }
+}
