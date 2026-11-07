@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { buildEvents, localDate, localMidnight, type CalEvent } from '../../lib/calendar/sources';
+import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import type { Brief, Item } from '../../lib/schemas/records';
 import { fallbackList, type ListTask } from '../../lib/today/fallback';
@@ -69,7 +70,13 @@ export function useToday(): TodayView | undefined {
       null,
     [db, today],
   );
-  if (!data || brief === undefined) return undefined;
+  const { user } = useAuth();
+  const todaySettings = useLiveQuery(
+    async () =>
+      ((await db.settings.get(user?.id ?? ''))?.data.today ?? {}) as Record<string, unknown>,
+    [db, user?.id],
+  );
+  if (!data || brief === undefined || todaySettings === undefined) return undefined;
 
   const range = {
     start: new Date(localMidnight(today, tz)),
@@ -115,7 +122,13 @@ export function useToday(): TodayView | undefined {
     }));
   const now = new Date();
   const fromMinutes = now.getHours() * 60 + now.getMinutes();
-  const window = DEFAULT_WINDOW.working;
+  const hhmm = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const ws = todaySettings.window_start;
+  const we = todaySettings.window_end;
+  const window =
+    typeof ws === 'string' && typeof we === 'string' && hhmm.test(ws) && hhmm.test(we) && we > ws
+      ? { start: toMinutes(ws), end: toMinutes(we) }
+      : DEFAULT_WINDOW.working;
   const slots = fitTasks(
     list.top3.map((id) => ({ id, minutes: 30 })),
     freeGaps(busy, window, fromMinutes),

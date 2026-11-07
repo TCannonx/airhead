@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 5.9 Brief settings and Regenerate
+- **Settings → Today**:
+  - **Brief time** (`notifications.brief_time`, default 07:30).
+  - **Day window** for Top 3 slots (`today.window_start` and `window_end`, default 08:00–21:00). The day must end after it starts.
+  - Both are saved with one button.
+  - The window is used by the server's brief (`dayWindow`) and by the device's own list.
+- **Brief on or off** is the "Morning brief and round-up" switch in Notifications (5.6). Today says where it is rather than having a second switch for the same thing.
+- **Regenerate today's brief (≈ €0.01)**: `POST morning-brief { mode: 'regenerate' }`. It rebuilds and replaces today's brief (with no round-up notification); prep nudges are re-planned.
+  - One AI call, counted in AI usage.
+  - Disabled offline, and in local mode (no server).
+  - The cost line is a fixed estimate from the default Sonnet prices (~3,000 tokens in, ~600 out), shown as an estimate per the design.
+
 ## 2026-11-07 — Task 5.6 Scheduling the brief
 - **The scheduler tick runs the morning brief** as a once-a-day job (`morning_brief`, claimed through `job_runs`) at `settings.data.notifications.brief_time` (default 07:30, local time).
   - It runs in-process (`runMorningBrief` with the round-up), so there is no extra function call.

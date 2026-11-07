@@ -10,6 +10,7 @@ import MemorySettings from './MemorySettings';
 import NotificationSettings from './NotificationSettings';
 import LinkedCalendars from './LinkedCalendars';
 import SharingSettings from './SharingSettings';
+import TodaySettings from './TodaySettings';
 import WorkSettings from './WorkSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -123,6 +124,10 @@ export default function SettingsPage() {
             Not syncing: no server is configured, so everything stays on this device.
           </p>
         )}
+      </Section>
+
+      <Section title="Today">
+        <TodaySettings />
       </Section>
 
       <Section title="Work">

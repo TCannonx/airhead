@@ -118,6 +118,11 @@ export interface PushService {
   sendTest(deviceId: string): Promise<{ ok: boolean; message: string }>;
 }
 
+export interface BriefsService {
+  /** Rebuilds today's brief now (one large-tier AI call, or the fallback list). */
+  regenerate(): Promise<{ ok: boolean; message: string }>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -130,4 +135,5 @@ export interface Services {
   calendars?: CalendarsService;
   imports?: ImportsService;
   push?: PushService;
+  briefs?: BriefsService;
 }
