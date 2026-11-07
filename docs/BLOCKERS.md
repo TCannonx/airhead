@@ -80,6 +80,17 @@ GitHub refuses branch protection and rulesets on a **private** repo on the free 
 
 Add to https://github.com/TCannonx/airhead/settings/secrets/actions: `VITE_SUPABASE_URL_LIVE`, `VITE_SUPABASE_ANON_KEY_LIVE` (live project → Project Settings → API), plus `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (item 5, step 8). In Cloudflare create a second Pages project named `airhead-live` using **Direct Upload** (not Git), since the release workflow uploads to it. The release workflow fails loudly, before touching anything, if any secret is missing.
 
-### 8. Anthropic API key with a spend limit (needed from Phase 3)
+### 8. Background sorting: two Vault secrets (Task 3.3)
+
+The scheduler calls `sort-batch` every 5 minutes, but only once it knows the project address and service key. In **each** project: dashboard → **SQL Editor** → New query, paste and run (replace the two values; the key is under **Project Settings → API Keys → service_role / secret**):
+
+```sql
+select vault.create_secret('https://tfxpbxmkvlwxybaysjxy.supabase.co', 'project_url');
+select vault.create_secret('<the service role key>', 'service_role_key');
+```
+
+For live, use `https://qqobvcelbzhrcehqukrs.supabase.co` and the live key. Until then, sorting still runs when the app opens and from **Sort now** in the Inbox.
+
+### 9. Anthropic API key with a spend limit (needed from Phase 3)
 
 Plan setup step 2. In the Claude Console (https://platform.claude.com): **Settings → Limits** set a monthly spend limit, then **API keys → Create key** (name `airhead-dev`). Put it straight into Supabase, never into chat or the repo: dashboard → project **airhead-dev** → **Edge Functions → Secrets** → **Add new secret**: name `ANTHROPIC_API_KEY`, value: the key. (Repeat with a separate `airhead-live` key in the live project before the first release.) Until then, AI sorting simply waits: captures stay in Unsorted and nothing breaks.

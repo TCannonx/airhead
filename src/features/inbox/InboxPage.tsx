@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
 import { SORTABLE_TYPES, sortCaptureAs, TYPE_LABELS } from '../../lib/db/sorting';
+import { useSort } from '../../lib/sort/context';
 
 const WAITING = new Set(['unsorted', 'needs_review', 'failed']);
 
@@ -18,6 +19,7 @@ function SectionHeading({ children }: { children: string }) {
 export default function InboxPage() {
   const db = useDb();
   const { user } = useAuth();
+  const sort = useSort();
   const unsorted = useLiveQuery(
     () =>
       db.captures
@@ -35,7 +37,24 @@ export default function InboxPage() {
   return (
     <Page title="Inbox">
       <section className="mb-8">
-        <SectionHeading>Unsorted</SectionHeading>
+        <div className="flex items-start justify-between gap-3">
+          <SectionHeading>Unsorted</SectionHeading>
+          {sort.available && unsorted && unsorted.some((c) => c.status === 'unsorted') && (
+            <button
+              type="button"
+              disabled={sort.running}
+              onClick={() => void sort.sortNow()}
+              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {sort.running ? 'Sorting…' : 'Sort now'}
+            </button>
+          )}
+        </div>
+        {sort.last && (
+          <p className="mb-2 text-sm text-slate-500" aria-live="polite">
+            {sort.last.message}
+          </p>
+        )}
         {unsorted && unsorted.length === 0 && (
           <p className="text-sm text-slate-500">Nothing waiting. Everything is sorted.</p>
         )}

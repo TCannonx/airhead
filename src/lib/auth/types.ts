@@ -31,9 +31,23 @@ export interface AppLockAuthenticator {
   verify(credentialId: string): Promise<void>;
 }
 
+export interface SortOutcome {
+  ok: boolean;
+  error_code: string | null;
+  /** Plain-language result to show ("Sorted 3 captures." / why it couldn't). */
+  message: string;
+}
+
+/** Asks the server to sort waiting captures now (AI batch). */
+export interface SortingService {
+  sortNow(): Promise<SortOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
   /** The sync server; null in local mode (nothing leaves the device). */
   remote: Remote | null;
+  /** AI sorting on the server; absent in local mode. */
+  sorting?: SortingService;
 }
