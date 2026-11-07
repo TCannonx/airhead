@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.6 Patterns
+- **Built on the device from the reviews' weekly stats** (`content.stats` is the 8.1 digest), last 8 weeks. There is no AI and no server call, so it works offline and costs nothing.
+- **Shown**:
+  - the done rate;
+  - tasks done by weekday (Monday first);
+  - capture hours and completion hours (local);
+  - carry-overs and notifications per week;
+  - topics that slip, and ideas you keep coming back to.
+- **Charts** (dataviz guidance): one general `Bars` component, single series, so one hue (indigo, with its dark-mode step) and the title instead of a legend. Thin bars with 4px rounded tops on the baseline, a 2px gap, labels only at the ends, a hover tooltip, a "Show as table" view for each chart, and an accessible name stating the peak.
+
 ## 2026-11-07 — Task 8.5 Memory digests
 - **The weekly digest paragraph is the memory**: each review stores its digest (at most 80 words, or a code-built line), and nothing else is kept as "history".
 - **The morning brief** adds the last 4 digests, newest first, after its digest as "Recent weeks (from weekly reviews)". Each is capped at 600 characters, so at most about 2,400 characters ride along.

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.6: Insights → Patterns (done by weekday, capture and completion hours, carry-overs, notifications, slipping topics, returning ideas; tables too)
 - Task 8.5: the morning brief reads the last 4 weekly digests instead of raw history
 - Task 8.4: Insights → This week: the weekly review with Tidy-up (keep, archive, delete, condense into a dated timeline) and memory changes, each on a tap
 - Task 8.3: weekly review function (themes, wins, slips, suggestions, Tidy-up proposals, fact changes, digest; low-risk tidying done automatically; scheduled with its notification)
