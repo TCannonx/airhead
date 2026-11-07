@@ -6,6 +6,7 @@ import {
   precacheAndRoute,
 } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
+import { parsePush } from './payload';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -22,4 +23,37 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')));
 self.skipWaiting();
 clientsClaim();
 
-// Push and notification-click handlers are added in Task 4.11.
+// Push notifications (Task 4.11): show what the server sent; a tap opens the
+// linked screen in an open Airhead window, or a new one.
+self.addEventListener('push', (event) => {
+  const n = parsePush(event.data?.text());
+  event.waitUntil(
+    self.registration.showNotification(n.title, {
+      body: n.body,
+      ...(n.tag ? { tag: n.tag } : {}),
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-64x64.png',
+      data: { url: n.url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL(
+    (event.notification.data as { url?: string } | null)?.url ?? '/today',
+    self.location.origin,
+  ).href;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin);
+      if (open) {
+        await open.navigate(url).catch(() => null);
+        await open.focus();
+      } else {
+        await self.clients.openWindow(url);
+      }
+    })(),
+  );
+});

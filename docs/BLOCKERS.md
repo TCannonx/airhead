@@ -98,3 +98,16 @@ For live, use `https://qqobvcelbzhrcehqukrs.supabase.co` and the live key. Until
 ### 9. Anthropic API key with a spend limit (needed from Phase 3)
 
 Plan setup step 2. In the Claude Console (https://platform.claude.com): **Settings → Limits** set a monthly spend limit, then **API keys → Create key** (name `airhead-dev`). Put it straight into Supabase, never into chat or the repo: dashboard → project **airhead-dev** → **Edge Functions → Secrets** → **Add new secret**: name `ANTHROPIC_API_KEY`, value: the key. (Repeat with a separate `airhead-live` key in the live project before the first release.) Until then, AI sorting simply waits: captures stay in Unsorted and nothing breaks.
+
+
+### 10. Push notification keys (Task 4.11; needed for reminders)
+
+VAPID keys let Airhead's server send notifications. Make them on this computer so the private key never passes through chat or the repo:
+
+1. In the repo folder: `npx deno@2.9.6 run scripts/generate-vapid-keys.ts > vapid.env`
+2. Open `vapid.env` and change `VAPID_SUBJECT` to `mailto:` plus your own email address.
+3. `npx supabase secrets set --env-file vapid.env --project-ref tfxpbxmkvlwxybaysjxy` (dev). Before the first release, do the same for live (`qqobvcelbzhrcehqukrs`); using the same keys keeps existing subscriptions working after the release.
+4. Delete `vapid.env`.
+5. On the iPhone: open Airhead from the Home Screen → Settings → Notifications → **Turn on notifications** → **Send test notification**.
+
+Until the keys are set, the Notifications section says the server isn't set up yet; nothing else is affected.
