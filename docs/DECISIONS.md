@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.4 Review and corrections
+- **Inbox → Needs a tap** lists unsure items from AI sorting (status `suggested`, not events) with one-tap choices: **Keep as <type>** (confirms; no correction recorded) or any other sortable type (re-sorts via `changeItemType`, which records a correction `{ type: old } → { type: new }`). Either way the item becomes `open`.
+- When a `needs_review` capture has no unsure items left, it becomes `sorted`. `needs_review` captures no longer appear in Unsorted (their items are shown instead); Unsorted is `unsorted` + `failed`.
+- Date suggestions (unsure events, from free rules or AI) keep their home on **Today**.
+- **Corrections feed the next batch**: `sort-batch` already sends the last 5 corrections with the capture text they were about (Task 3.2), and the prompt tells the model to follow past corrections.
+
 ## 2026-11-07 — Task 3.3 Batch triggers
 - **Device**: `SortProvider` (inside sync) runs sorting **once when the app opens** if any local capture is `unsorted`, and on demand from a visible **Sort now** button in Inbox → Unsorted. Each run = sync (push offline captures first) → `sort-batch` → sync (pull the new items). Offline: no call, just a plain message. Not present in local mode.
 - **Server**: `pg_cron` job `dispatch-sort-batches` every 5 minutes runs `dispatch_sort_batches()`, which `pg_net`-POSTs to `/functions/v1/sort-batch` with the service key and `{ user_id }` for each user returned by `users_due_for_sorting()`:

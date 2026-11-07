@@ -3,10 +3,17 @@ import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
-import { SORTABLE_TYPES, sortCaptureAs, TYPE_LABELS } from '../../lib/db/sorting';
+import {
+  isInboxSuggestion,
+  resolveSuggestion,
+  SORTABLE_TYPES,
+  sortCaptureAs,
+  TYPE_LABELS,
+} from '../../lib/db/sorting';
 import { useSort } from '../../lib/sort/context';
 
-const WAITING = new Set(['unsorted', 'needs_review', 'failed']);
+// needs_review captures show their unsure items under "Needs a tap" instead.
+const WAITING = new Set(['unsorted', 'failed']);
 
 function SectionHeading({ children }: { children: string }) {
   return (
@@ -29,6 +36,7 @@ export default function InboxPage() {
         .toArray(),
     [db],
   );
+  const unsure = useLiveQuery(() => db.items.filter(isInboxSuggestion).sortBy('created_at'), [db]);
   const workshop = useLiveQuery(
     () => db.items.filter((i) => !i.deleted_at && i.data.workshop === true).toArray(),
     [db],
@@ -36,6 +44,44 @@ export default function InboxPage() {
 
   return (
     <Page title="Inbox">
+      {unsure && unsure.length > 0 && (
+        <section className="mb-8">
+          <SectionHeading>Needs a tap</SectionHeading>
+          <ul aria-label="Needs a tap" className="space-y-2">
+            {unsure.map((i) => (
+              <li
+                key={i.id}
+                className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
+              >
+                <p className="font-medium">{i.title}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Sorted as {TYPE_LABELS[i.type].toLowerCase()}, but not sure. Is that right?
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                    onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, i.type)}
+                  >
+                    Keep as {TYPE_LABELS[i.type]}
+                  </button>
+                  {SORTABLE_TYPES.filter((t) => t !== i.type).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                      onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, t)}
+                    >
+                      {TYPE_LABELS[t]}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mb-8">
         <div className="flex items-start justify-between gap-3">
           <SectionHeading>Unsorted</SectionHeading>
