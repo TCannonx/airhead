@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.8 Success measures
+- **Insights → Success measures** (top of Insights), three tiles:
+  - **Captures per day**: non-deleted captures in the last 30 days ÷ 30. Computed on the device.
+  - **Sorting correction rate**: corrections ÷ items sorted from captures (items with a `capture_id`), both over the last 30 days, shown as a percentage with "n of m" and the note that a rising rate means sorting needs tuning. Zero when nothing was sorted. Computed on the device.
+  - **AI cost per month**: totals for the last 3 calendar months (Europe/Dublin), empty months included, from the server's usage log; "shown once connected" in local mode.
+
 ## 2026-11-07 — Task 3.7 AI usage screen
 - **Insights → AI usage** (online only: the usage log lives on the server; local mode explains this). Shows:
   - month-to-date spend (calendar month in the user's time zone, failed attempts included) and the number of calls.
