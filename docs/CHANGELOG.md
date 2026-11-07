@@ -2,6 +2,25 @@
 
 One line per merged PR, newest first.
 
+## Phase 7 — Thinking tools (ready for device testing, not yet released)
+
+Capture from anywhere:
+- iOS Shortcuts post with a personal, revocable capture token (hashed, rate limited) to `ingest-capture`.
+- A "Send to Airhead" bookmarklet and the PWA share target open Airhead's own `/share` page, so no token enters web pages.
+
+The Workshop:
+- Auto flesh-out turns an idea into a structured draft.
+- "Work on it together" asks two or three questions at a time and updates the draft as a new version. An answer typed offline is sent later.
+- Next steps become tasks in one tap.
+
+Ask Airhead:
+- Every item's text is embedded with Supabase's gte-small model.
+- Questions run a hybrid keyword and vector search and get a short answer with citations that open the source.
+- Memory facts are now chosen by relevance too.
+
+Needs BLOCKERS items 8 (Vault secrets, for the embedder) and 9 (Anthropic key) in dev. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 7.
+
+- release: phase 7
 - Task 7.11: memory by relevance (facts embedded; sorting and the Workshop add the most similar facts, with a keyword fallback)
 - Task 7.10: Ask Airhead (hybrid keyword and vector search, cited answers in the Library)
 - Task 7.9: embeddings (gte-small, 384 dimensions) for every item's text, kept up to date by the scheduler
