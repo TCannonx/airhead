@@ -397,7 +397,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: pgTAP (RLS, version uniqueness), Zod and Dexie.
 - [x] **7.6 Auto flesh-out.** Function `workshop`, mode `flesh_out`: one large-tier call with prompt `fleshout.v1`. It gets the item, its links' text and the relevant memory facts, and returns the structured draft. That draft is saved as a new version. The draft view shows the newest version, older versions are one tap away, and it links to the original. Online only, with its cost estimate.
     - Tests: Deno with AI fixtures (valid draft, schema failure retried once, an injection line in a linked page does nothing), component tests for versions.
-- [ ] **7.7 Work on it together.** Mode `turn`: it sends only the current draft and the last 6 turns plus the new answer. It returns two or three questions and an updated draft (a new version). Answers typed offline wait in `pending` and are sent when back online. A session can be left and resumed.
+- [x] **7.7 Work on it together.** Mode `turn`: it sends only the current draft and the last 6 turns plus the new answer. It returns two or three questions and an updated draft (a new version). Answers typed offline wait in `pending` and are sent when back online. A session can be left and resumed.
     - Tests: Deno (only the recent turns are sent), component tests (offline answer queued, then sent).
 - [ ] **7.8 Next steps to tasks.** A draft's next steps become tasks in one tap: a checklist, all ticked by default (the user is already deciding in the Workshop), with "Add N tasks". Each task is linked to the idea (`data.idea_id`) and its due text is read by the free rules (reuses `actionsToTasks`).
     - Tests: component tests.

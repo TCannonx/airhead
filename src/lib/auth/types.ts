@@ -163,10 +163,22 @@ export type WorkshopOutcome =
   | { ok: true; error_code: null; message: string; draft: Record<string, unknown> }
   | { ok: false; error_code: string; message: string };
 
+export type WorkshopTurnOutcome =
+  | {
+      ok: true;
+      error_code: null;
+      message: string;
+      draft: Record<string, unknown>;
+      session: Record<string, unknown>;
+    }
+  | { ok: false; error_code: string; message: string };
+
 /** The Workshop's AI (Tasks 7.6–7.7); absent in local mode. */
 export interface WorkshopService {
   /** Auto flesh-out: one large-tier call; returns the new draft version. */
   fleshOut(itemId: string): Promise<WorkshopOutcome>;
+  /** One turn of Work on it together (answer null to start). */
+  turn?(itemId: string, answer: string | null): Promise<WorkshopTurnOutcome>;
 }
 
 export interface Services {

@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.7 Work on it together
+- **`workshop` mode `turn`**: one large-tier call with prompt `workshop-turn.v1`, task `workshop_turn`.
+  - Sent: the idea, the current draft and only the last 6 turns, plus the new answer (none on the first turn). The linked page is not sent again.
+  - Returned: two or three questions (capped at three) and the full updated draft, saved as a new version with source `session`.
+- **Only the server writes session turns.** It appends the answer and the questions and upserts `workshop_sessions` (id = the item), then returns both rows for the device to show at once.
+  - Devices never push sessions, so a stale offline copy can't overwrite newer turns. The synced `pending` column stays unused.
+- **An answer typed offline waits on that device** (`meta` key `workshop_pending:<item>`, not synced). The panel shows it as "Waiting to send when you're online" and sends it as soon as the `online` event fires.
+- A session is left and resumed simply by leaving the page: the turns are stored.
+
 ## 2026-11-07 — Task 7.6 Auto flesh-out
 - **One `workshop` function** (mode `flesh_out` now, `turn` in 7.7): one large-tier call with prompt `fleshout.v1`, task `workshop_flesh_out`, medium effort. `callAI` already retries once on invalid output.
 - **Input**:
