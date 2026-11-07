@@ -445,7 +445,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - Tests: component tests.
 - [x] **8.5 Memory digests.** Each review's digest of the week is kept. The morning brief and the next reviews read the last 4 digests instead of raw history.
     - Tests: Deno (brief input includes the digests; the budget is kept).
-- [ ] **8.6 Patterns.** Insights → Patterns, built from the digests and SQL stats with no AI:
+- [x] **8.6 Patterns.** Insights → Patterns, built from the digests and SQL stats with no AI:
     - completion by weekday;
     - capture and completion hours;
     - the carry-over trend;

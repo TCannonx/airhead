@@ -4,6 +4,7 @@ import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
 import SuccessMeasures from './SuccessMeasures';
 import WeeklyReview from './WeeklyReview';
+import Patterns from './Patterns';
 
 export default function InsightsPage() {
   return (
@@ -16,6 +17,15 @@ export default function InsightsPage() {
           This week
         </h2>
         <WeeklyReview />
+      </section>
+      <section aria-labelledby="patterns-heading" className="mb-10">
+        <h2
+          id="patterns-heading"
+          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
+        >
+          Patterns
+        </h2>
+        <Patterns />
       </section>
       <section aria-labelledby="measures-heading" className="mb-10">
         <h2
