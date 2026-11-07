@@ -132,7 +132,10 @@ export default function LibraryPage() {
                 onChange={(e) => setTo(e.target.value)}
               />
             </label>
-            <Link to="/library/trash" className="ml-auto text-sm text-slate-500 underline">
+            <Link to="/library/lists" className="ml-auto text-sm text-slate-500 underline">
+              Lists
+            </Link>
+            <Link to="/library/trash" className="text-sm text-slate-500 underline">
               Trash
             </Link>
           </div>

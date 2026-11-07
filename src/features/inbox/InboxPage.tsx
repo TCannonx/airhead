@@ -3,6 +3,7 @@ import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
+import { createListFromSuggestion } from '../../lib/db/lists';
 import {
   isInboxSuggestion,
   resolveSuggestion,
@@ -55,16 +56,28 @@ export default function InboxPage() {
               >
                 <p className="font-medium">{i.title}</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300">
-                  Sorted as {TYPE_LABELS[i.type].toLowerCase()}, but not sure. Is that right?
+                  {typeof i.data.proposed_list === 'string'
+                    ? `For a list called “${i.data.proposed_list}”, which doesn’t exist yet.`
+                    : `Sorted as ${TYPE_LABELS[i.type].toLowerCase()}, but not sure. Is that right?`}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
-                    onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, i.type)}
-                  >
-                    Keep as {TYPE_LABELS[i.type]}
-                  </button>
+                  {typeof i.data.proposed_list === 'string' ? (
+                    <button
+                      type="button"
+                      className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                      onClick={() => void createListFromSuggestion(db, user?.id ?? '', i.id)}
+                    >
+                      Create list &apos;{i.data.proposed_list}&apos;
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                      onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, i.type)}
+                    >
+                      Keep as {TYPE_LABELS[i.type]}
+                    </button>
+                  )}
                   {SORTABLE_TYPES.filter((t) => t !== i.type).map((t) => (
                     <button
                       key={t}

@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.6 Lists
+- **Library → Lists** (`/library/lists`): list chooser, **Create**, **Rename**, **Move up / Move down** (visible buttons instead of drag, which also works on touch), add entries (Enter), tick off (`status: done`, `completed_at`), **Clear completed** (soft delete: recoverable from Trash). Entries show open first, then done.
+- **Default Shopping list** is created when Lists first opens. Its id is derived from the user id (`5b0f0000-` + the rest of the user id), so two devices creating it offline write the same row instead of two lists.
+- **Unknown list from sorting**: Inbox → Needs a tap shows "For a list called 'Packing', which doesn't exist yet" with **Create list 'Packing'**. It creates the list, or reuses one with that name case-insensitively, and files **every** waiting entry proposed for it. The other type buttons remain for "not a list entry".
+- The Library's All tab now leaves list entries out (they live on Lists); they still appear when the type is asked for explicitly.
+- **Fix**: settling an unsure item now changes its type and status in **one** write (`changeItemType(..., { status: 'open' })`). Two writes left a moment where a re-typed item still read as unsure, visible to tests and to other devices mid-sync.
+
 ## 2026-11-07 — Task 3.5 Link reading
 - **When**: an `AFTER INSERT` trigger on `captures` (`kind = 'link'`) `pg_net`-POSTs `{ capture_id }` to **`read-link`** with the Vault-stored service key, i.e. "after a link capture syncs", whatever its source (app, Shortcut, bookmarklet). No Vault secrets → nothing happens. The owner may also call it with their token.
 - **Safe fetch** (`read-link/safeFetch.ts`, shared later by linked calendars):

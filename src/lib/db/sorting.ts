@@ -69,10 +69,15 @@ export async function changeItemType(
   userId: string,
   itemId: string,
   type: ItemType,
+  /** Other changes made in the same write (e.g. status). */
+  extra: Partial<Item> = {},
 ): Promise<Item | undefined> {
   const item = await db.items.get(itemId);
-  if (!item || item.type === type) return item;
+  if (!item) return item;
+  if (item.type === type)
+    return Object.keys(extra).length ? update(db, 'items', itemId, extra) : item;
   const changed = await update(db, 'items', itemId, {
+    ...extra,
     type,
     calendar: type === 'event' ? (item.calendar ?? 'personal') : item.calendar,
   });
@@ -90,13 +95,16 @@ export interface LibraryFilter {
 
 /** Live library items (not deleted, not dropped, not suggestions) matching the filter, newest first. */
 export function filterLibrary(items: Item[], f: LibraryFilter): Item[] {
-  return items
-    .filter((i) => !i.deleted_at && i.status !== 'dropped' && i.status !== 'suggested')
-    .filter((i) => !f.type || i.type === f.type)
-    .filter((i) => !f.topicId || i.topic_ids.includes(f.topicId))
-    .filter((i) => !f.from || i.created_at.slice(0, 10) >= f.from)
-    .filter((i) => !f.to || i.created_at.slice(0, 10) <= f.to)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return (
+    items
+      .filter((i) => !i.deleted_at && i.status !== 'dropped' && i.status !== 'suggested')
+      // List entries live on the Lists screen unless asked for explicitly.
+      .filter((i) => (f.type ? i.type === f.type : i.type !== 'list_entry'))
+      .filter((i) => !f.topicId || i.topic_ids.includes(f.topicId))
+      .filter((i) => !f.from || i.created_at.slice(0, 10) >= f.from)
+      .filter((i) => !f.to || i.created_at.slice(0, 10) <= f.to)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+  );
 }
 
 /** Items in the Trash (deleted within TRASH_DAYS), most recently deleted first. */
@@ -120,8 +128,8 @@ export async function resolveSuggestion(
 ): Promise<void> {
   const item = await db.items.get(itemId);
   if (!item) return;
-  if (type !== item.type) await changeItemType(db, userId, itemId, type);
-  await update(db, 'items', itemId, { status: 'open' });
+  // One write: never a re-typed item that still reads as unsure.
+  await changeItemType(db, userId, itemId, type, { status: 'open' });
   if (!item.capture_id) return;
   const stillUnsure = await db.items
     .where('capture_id')
