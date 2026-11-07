@@ -99,7 +99,7 @@ Deno.test('syncing upserts occurrences by key and soft-deletes ones that disappe
 
   // The dinner is dropped from her calendar; the trip moves a day.
   const changed = ics
-    .replace(/BEGIN:VEVENT\r\nUID:dinner@her[\s\S]*?END:VEVENT\r\n/, '')
+    .replace(/BEGIN:VEVENT\r?\nUID:dinner@her[\s\S]*?END:VEVENT\r?\n/, '')
     .replace('DTSTART;VALUE=DATE:20261120', 'DTSTART;VALUE=DATE:20261121');
   const second = await syncFeed(FEED, deps(changed), store, NOW);
   assertEquals(second, { ok: true, count: 5, removed: 1 });
