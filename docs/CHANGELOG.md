@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.11: Scout (own-data cards in code, plus capped web search from interests and city only; at most 5 cards; weekly with the review)
 - Task 8.10: Scout findings from your own data (meeting follow-ups, birthday and event prep, overdue routines, stalled ideas, weekends free for you both)
 - Task 8.9: Scout data (run log, suggestion cards) and Settings → Scout (city, searches per run, last run's queries)
 - Task 8.8: Suggest leave on Work (bridges from local data, offline; optional AI picks with reasons; book in one tap) and a bridge hint in the weekly review

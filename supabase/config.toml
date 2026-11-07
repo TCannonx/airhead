@@ -499,3 +499,7 @@ verify_jwt = false
 [functions.suggest-leave]
 # Checks the caller's own token itself.
 verify_jwt = false
+
+[functions.scout]
+# Signed-in users or the scheduler's service key; checked in the function.
+verify_jwt = false

@@ -473,7 +473,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - ideas with no activity for 30 days (suggest a first step);
     - weekend slots free on both calendars.
     - Tests: unit tests.
-- [ ] **8.11 Scout function.** **Verify** before building: the web search tool (`web_search_20260209`, currently $10 per 1,000 searches) and its `max_uses` and `user_location` options, in the current docs.
+- [x] **8.11 Scout function.** **Verify** before building: the web search tool (`web_search_20260209`, currently $10 per 1,000 searches) and its `max_uses` and `user_location` options, in the current docs.
     - Function `scout` runs weekly with the review and from "Scout now" on Today and Insights.
     - One large-tier call gets the code findings and up to 3 web searches. Queries are built in code from interests in memory and the city only; a filter rejects names, health and personal details, and every query goes in the run log.
     - Out: at most 5 suggestion cards.
