@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 9.3 Copy and paste
+- **In-app ink clipboard** (`src/lib/ink/clipboard.ts`): "Copy selection" stores a snapshot of the selected strokes and text boxes for this session.
+  - It never touches the system clipboard, so pages never need clipboard permission and nothing leaks out.
+  - It survives moving between notes inside the app, not a reload.
+- **Paste** (shown while the clipboard has something) adds the strokes as one undo step (a new `paste` operation) and the text boxes with new ids.
+  - Everything is shifted 30 units right and down from where it was copied, so a paste into the same page doesn't cover the original.
+  - The page grows if needed, and the paste is left selected in Lasso mode, ready to move.
+
 ## 2026-11-07 — Task 9.2 Move and delete
 - **Drag inside the selection box** (Lasso tool) to move it.
   - The selected strokes and the box follow the pointer live, kept inside the page width and below the top.
