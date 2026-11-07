@@ -1,6 +1,7 @@
 import type { Feed } from '../schemas/records';
 import type { AirheadDb } from './db';
 import { baseRecord, save, softDelete } from './repository';
+import { configuredSupabaseUrl, normaliseSupabaseUrl } from '../supabaseUrl';
 
 /**
  * Outgoing calendar feeds (Task 4.8). The token is made on the device (32
@@ -65,12 +66,10 @@ export async function issueFeedToken(
 export const revokeFeed = (db: AirheadDb, id: string) => softDelete(db, 'feeds', id);
 
 /** https://…/functions/v1/calendar-feed?t=… for a token, or null without a server. */
-export function feedUrl(
-  token: string,
-  base = import.meta.env.VITE_SUPABASE_URL as string | undefined,
-) {
-  if (!base) return null;
-  return `${base.replace(/\/$/, '')}/functions/v1/calendar-feed?t=${encodeURIComponent(token)}`;
+export function feedUrl(token: string, base = configuredSupabaseUrl()) {
+  const root = normaliseSupabaseUrl(base);
+  if (!root) return null;
+  return `${root}/functions/v1/calendar-feed?t=${encodeURIComponent(token)}`;
 }
 
 /** The same link as webcal://, which opens the subscribe dialog in calendar apps. */

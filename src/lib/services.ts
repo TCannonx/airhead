@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { configuredSupabaseUrl } from './supabaseUrl';
 import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
 import { supabaseAuth } from './auth/supabaseAuth';
@@ -21,8 +22,8 @@ import type { Services } from './auth/types';
 
 /** Real services when the Supabase env vars are set, otherwise local-only mode. */
 export function createServices(): Services {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+  const url = configuredSupabaseUrl();
+  const key = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
   if (!url || !key) return localServices();
 
   const supabase = createClient(url, key, {
