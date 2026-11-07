@@ -231,6 +231,17 @@ export interface BriefDeps {
   store: UsageStore;
   /** Memory profile text (cached second system block), or ''. */
   profile: string;
+  /** The last few weekly digests, newest first (Task 8.5). */
+  recentWeeks?: { week_start: string; digest: string }[];
+}
+
+/** The weekly digests that go with the brief: at most 4, each at most 600 characters. */
+export function weeksText(weeks: { week_start: string; digest: string }[] = []): string {
+  const lines = weeks
+    .filter((w) => w.digest?.trim())
+    .slice(0, 4)
+    .map((w) => `- Week of ${w.week_start}: ${w.digest.trim().slice(0, 600)}`);
+  return lines.length ? `\n\nRecent weeks (from weekly reviews):\n${lines.join('\n')}` : '';
 }
 
 /**
@@ -257,7 +268,12 @@ export async function buildBrief(
       tier: 'large',
       system: [BRIEF_SYSTEM, deps.profile],
       messages: [
-        { role: 'user', content: buildBriefMessage(enriched, `${digest.date} ${nowLocal.hhmm}`) },
+        {
+          role: 'user',
+          content:
+            buildBriefMessage(enriched, `${digest.date} ${nowLocal.hhmm}`) +
+            weeksText(deps.recentWeeks),
+        },
       ],
       schema: BriefResult,
       maxTokens: 4000,

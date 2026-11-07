@@ -27,6 +27,17 @@ export function supabaseBriefStore(db: SupabaseClient): BriefStore {
         .is('deleted_at', null);
       return buildProfile((data ?? []) as FactRow[]).text;
     },
+    async recentWeeks(userId, n) {
+      const { data } = await db
+        .from('reviews')
+        .select('week_start, digest')
+        .eq('user_id', userId)
+        .is('deleted_at', null)
+        .not('digest', 'is', null)
+        .order('week_start', { ascending: false })
+        .limit(n);
+      return (data ?? []) as { week_start: string; digest: string }[];
+    },
     async saveBrief(userId, localDate, b) {
       const { error } = await db.from('briefs').upsert(
         {

@@ -7,6 +7,8 @@ export interface BriefStore {
   settings(userId: string): Promise<Record<string, unknown>>;
   /** Memory profile text for the cached system block. */
   profile(userId: string): Promise<string>;
+  /** The last weekly digests, newest first (Task 8.5); optional for older fakes. */
+  recentWeeks?(userId: string, n: number): Promise<{ week_start: string; digest: string }[]>;
   saveBrief(userId: string, localDate: string, brief: BuiltBrief): Promise<void>;
   /** Marks tasks as today's Top 3. */
   setTop3(userId: string, itemIds: string[], localDate: string): Promise<void>;
@@ -48,14 +50,16 @@ export async function runMorningBrief(
     digest.recurring.length > 0;
   if (digest.tasks.length === 0 && !eventsToday) return { status: 'skipped', reason: 'quiet_day' };
 
-  const [settings, profile] = await Promise.all([
+  const [settings, profile, recentWeeks] = await Promise.all([
     deps.store.settings(userId),
     deps.store.profile(userId),
+    deps.store.recentWeeks?.(userId, 4) ?? Promise.resolve([]),
   ]);
   const brief = await buildBrief(userId, digest, settings, now, {
     ai: deps.ai,
     store: deps.usage,
     profile,
+    recentWeeks,
   });
 
   await deps.store.saveBrief(userId, localDate, brief);
