@@ -80,5 +80,7 @@ export function openUserDb(userId: string): AirheadDb {
     work_days: 'id, date, server_updated_at',
     leave_bookings: 'id, start_date, end_date, server_updated_at',
   });
+  // v5: morning briefs (Task 5.1), pull-only.
+  db.version(5).stores({ briefs: 'id, local_date, server_updated_at' });
   return db;
 }

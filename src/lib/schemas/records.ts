@@ -193,6 +193,32 @@ export const leaveBookingSchema = z.object({
   capture_id: id.nullable(),
 });
 
+/** A morning brief (Task 5.1): written by the server, read-only on devices. */
+export const briefTop3Schema = z.object({
+  item_id: id,
+  title: z.string(),
+  why: z.string().nullable(),
+  minutes: z.number().int().min(5).max(480),
+  /** Suggested free slot today, local HH:MM, or null when nothing fits. */
+  slot: z.object({ start: z.string(), end: z.string() }).nullable(),
+});
+
+export const briefContentSchema = z.object({
+  reflection: z.string().nullable().default(null),
+  top3: z.array(briefTop3Schema).default([]),
+  also_today: z.array(id).default([]),
+  prep: z.array(z.object({ text: z.string(), send_at: ts, item_id: id.nullable() })).default([]),
+});
+
+export const briefSchema = z.object({
+  ...syncColumns,
+  local_date: date,
+  status: z.enum(['ok', 'fallback']),
+  content: briefContentSchema,
+  model: z.string().nullable(),
+  cost_eur: z.coerce.number(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -209,6 +235,8 @@ export type ExternalEvent = z.infer<typeof externalEventSchema>;
 export type WorkDay = z.infer<typeof workDaySchema>;
 export type WorkLocation = WorkDay['location'];
 export type LeaveBooking = z.infer<typeof leaveBookingSchema>;
+export type Brief = z.infer<typeof briefSchema>;
+export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
 export const SYNC_TABLES = [
@@ -226,6 +254,7 @@ export const SYNC_TABLES = [
   'external_events',
   'work_days',
   'leave_bookings',
+  'briefs',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -244,6 +273,7 @@ export const schemas = {
   external_events: externalEventSchema,
   work_days: workDaySchema,
   leave_bookings: leaveBookingSchema,
+  briefs: briefSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -261,4 +291,5 @@ export interface RowTypes {
   external_events: ExternalEvent;
   work_days: WorkDay;
   leave_bookings: LeaveBooking;
+  briefs: Brief;
 }

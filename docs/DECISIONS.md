@@ -2,6 +2,14 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 5.1 Brief table
+- **`briefs`** (migration `20261107000015_briefs.sql`): one row per person per local day (`unique (user_id, local_date)`).
+  - `status` is `ok` (the AI brief) or `fallback` (the code-built list); also `model` and `cost_eur`.
+  - `content` holds the reflection, the Top 3 (item id, title, reason, minutes, suggested local slot), Also today ids and prep nudges.
+- **Server-written, read-only on devices**, like `external_events`: owners can only select it. It is synced and published to Realtime, so the Today tab updates when the brief lands.
+- **Kept a year**: the nightly purge drops briefs older than 366 days and soft-deleted ones after 30 days.
+- **Device**: Zod schema (`content` fields default, so an older or partial brief still reads; `cost_eur` coerced from numeric), Dexie v5, and pull-only sync.
+
 ## 2026-11-07 — Phase 5 plan
 - Phase 5 is planned in `PLAN.md` (tasks 5.1–5.9), following the user's instruction that phases 5–9 are planned and then built after Phase 4.
 - **Kept to the design**:

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { feedSchema, leaveBookingSchema, schemas, SYNC_TABLES, workDaySchema } from './records';
+import {
+  briefSchema,
+  feedSchema,
+  leaveBookingSchema,
+  schemas,
+  SYNC_TABLES,
+  workDaySchema,
+} from './records';
 
 const base = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -55,5 +62,20 @@ describe('calendar record schemas (Task 4.1)', () => {
     const day = { ...base, date: '2026-07-14', location: 'office', note: null };
     expect(workDaySchema.safeParse(day).success).toBe(true);
     expect(workDaySchema.safeParse({ ...day, location: 'beach' }).success).toBe(false);
+  });
+});
+
+describe('brief schema (Task 5.1)', () => {
+  it('fills content defaults and reads cost as a number', () => {
+    const b = briefSchema.parse({
+      ...base,
+      local_date: '2027-01-10',
+      status: 'fallback',
+      content: {},
+      model: null,
+      cost_eur: '0.012300',
+    });
+    expect(b.content).toEqual({ reflection: null, top3: [], also_today: [], prep: [] });
+    expect(b.cost_eur).toBeCloseTo(0.0123);
   });
 });
