@@ -2,6 +2,11 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Cloudflare Pages address
+- **`airhead.pages.dev` is not ours.** It belongs to another Cloudflare account (it serves an nginx welcome page). Cloudflare Pages was never connected (BLOCKERS item 5), so no dev site has been deployed yet.
+- The dev Pages project is to be named **`airhead-dev`** (`https://airhead-dev.pages.dev`, free when checked), matching the Supabase dev project. Live stays `airhead-live` (also free).
+- The docs now use that address. Earlier I reported the dev site as online because the address answered 200; the page itself wasn't checked. Checks of a deployed site now look at the content.
+
 ## 2026-11-07 — Task 9.4 Hold-to-snap shapes
 - **Recogniser** (`src/lib/ink/shapes.ts`), pure geometry in page units:
   - **line**: endpoints at least 40 apart, every point within 6% of the length (min 6) of the chord, and a path no longer than 115% of the chord.
