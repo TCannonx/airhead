@@ -466,7 +466,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - Both sync, with own-rows RLS; the server writes runs.
     - Settings → Scout: on or off, city, interests come from memory, at most 3 searches per run.
     - Tests: pgTAP, Zod and Dexie.
-- [ ] **8.10 Scout findings from own data.** Code only:
+- [x] **8.10 Scout findings from own data.** Code only:
     - meetings with no summary or actions after a day;
     - prep for events and birthdays in the next 10 days;
     - overdue routines (recurring tasks past due);
