@@ -344,9 +344,40 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
     - Tests: component tests (settings saved, cost line shown, button disabled offline).
 - Phase done when: the Phase 5 manual checklist passes (a brief arrives at the chosen time with sensible slots; a failed call still sends the fallback list).
 
+## Phase 6: Notes
+
+Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instantly, synced as whole documents without ever losing writing, then summarised once into a summary, decisions and action items you confirm into tasks. Planned in detail on 2026-11-07 from `DESIGN.md` (Notes; Offline and sync).
+
+- [ ] **6.1 Note documents.** Migration: `note_docs` (id = the note item's id, `kind` typed or ink, `doc` jsonb, `version`, `base_version`, `summary` jsonb), synced both ways with own-rows RLS. A note or meeting item points at its document. A server trigger bumps `version` on each write.
+    - Tests: pgTAP (RLS, version bump), Zod schema and Dexie table.
+- [ ] **6.2 Conflict copies.** When a pull brings a newer version of a document that also has unsynced local changes, keep both: the local text becomes a new note titled "… (conflicted copy, <device> <time>)" and the server version is applied. Writing is never silently discarded. Applies to note documents only; other tables stay newest-wins.
+    - Tests: sync engine unit tests (no conflict, conflict, a conflict while offline then two edits).
+- [ ] **6.3 Typed notes.** A keyboard-first editor (TipTap starter kit, MIT; verify the current version): headings, bullets, numbered lists, checkboxes, bold and italic, and Markdown-style shortcuts. Saved locally on each change (debounced); a whole-document push a few seconds after typing pauses. "New note" and "New meeting note" in the Library and Capture.
+    - Tests: component tests (create, type, reopen, debounce saves).
+- [ ] **6.4 Meeting details.** Title, date and attendees on a meeting note. "Start notes" on an event (Today and the calendar editor) creates a meeting note linked to it, with the event's title and time. The event shows a link to its notes.
+    - Tests: component tests.
+- [ ] **6.5 Handwritten page.** A fixed-width page that scrolls and grows as you write, drawn with perfect-freehand (MIT).
+    - Apple Pencil (pointer type pen) draws and fingers scroll; on desktop the mouse can draw too.
+    - Toolbar: pen in a few colours and two widths, highlighter, stroke eraser, undo and redo.
+    - Strokes are stored as compact point data (rounded, delta-encoded) in the document, not images.
+    - Tests: unit tests for stroke encoding and decoding, hit-testing for the eraser and the undo stack; a Playwright check that a drawn stroke survives a reload.
+- [ ] **6.6 Text boxes.** Tap with the text tool to add a quick text label on a handwritten page; move, edit, delete. Stored in the same document.
+    - Tests: unit and component tests.
+- [ ] **6.7 Summarise.** "Done → Summarise", one large-tier call with prompt `summarise.v1`:
+    - Handwritten pages are rendered to images on the device (vision); typed notes are sent as text.
+    - Returns a transcription (ink), a short summary, decisions and action items (title, owner if mentioned, due if mentioned).
+    - Stored once on the document; the transcription and summary are added to search.
+    - Online only, with its cost estimate. The note is data, never instructions.
+    - Tests: Deno with AI fixtures (typed; ink with a transcription; an injection line inside the note does nothing), and output validation.
+- [ ] **6.8 Action items to tasks.** After Summarise, a checklist of proposed action items, all unticked. Confirmed ones become tasks linked to the note, with due dates parsed by the free rules. Nothing is created without a tap.
+    - Tests: component tests.
+- [ ] **6.9 Notes in the Library.** Meetings and Notes tabs list documents. Opening a summarised note shows the summary, decisions and action items above the original (typed text or the pages, view-only on phone and desktop, editable on iPad). Search covers titles, typed text, transcriptions and summaries.
+    - Tests: component tests and search tests.
+- Phase done when: the Phase 6 manual checklist passes (write on the iPad with the Pencil, fingers scroll, it syncs, it summarises, actions become tasks, and a conflicted copy appears when both devices edit offline).
+
 ## Phases 5–9 (outline)
 
-These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phase 5 is planned above.
+These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 and 6 are planned above.
 
 | Phase | Scope | Key pieces |
 | --- | --- | --- |
