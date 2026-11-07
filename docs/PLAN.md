@@ -414,9 +414,79 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: Deno (relevant facts chosen, fallback).
 - Phase done when: the Phase 7 manual checklist passes (Shortcut from the share sheet and Back Tap, bookmarklet on desktop Chrome, a flesh-out and a two-turn session with versions, next steps to tasks, and an Ask answer with working citations).
 
+## Phase 8: Reflection
+
+Goal: once a week Airhead looks back. A review gives themes, wins, what slipped, a few suggestions and the AI spend. A Tidy-up clears clutter safely. Patterns show habits. Leave suggestions come from bridge days. Scout proposes things to do from your own data and a few capped web searches. Every suggestion is a card you accept or dismiss. Planned in detail on 2026-11-07 from `DESIGN.md` (Insights; Memory; Scout and Check-up; Work and leave; Tidy-up and link reading).
+
+- [ ] **8.1 Weekly digest.** SQL `weekly_digest(user, week_start)` (security definer, service role), titles only:
+    - completion rate, carry-overs, captures and completions by hour and weekday;
+    - task types and topics that slip;
+    - ideas that keep coming back;
+    - notifications sent, and the week's AI spend by task.
+    - Tests: pgTAP with seeded weeks.
+- [ ] **8.2 Tidy-up candidates.** SQL `tidy_candidates(user)`, all found in code:
+    - completed tasks and read reading items over 90 days old;
+    - past events with no notes;
+    - exact duplicates (same type and normalised title);
+    - near-duplicates (chunk embeddings, similarity ≥ 0.95);
+    - Unsorted captures over 30 days old.
+    - Each is marked `auto` (the low-risk cases in DESIGN) or `ask`. Meeting notes and ideas are always `ask`.
+    - Tests: pgTAP.
+- [ ] **8.3 Weekly review function.** Migration `reviews` (one per user and week, server-written, synced read-only). Function `weekly-review` makes one large-tier call with prompt `review.v1`.
+    - In: the digest, the last 4 weekly digests, the tidy candidates (titles and ages only), and near-duplicate or stale facts.
+    - Out: themes, wins, what slipped, two or three organisation suggestions, Keep / Archive / Condense / Delete with a one-line reason per `ask` candidate, fact merges and retirements, and a short digest of the week.
+    - `auto` candidates are soft-deleted or archived at once; all removals can be recovered for 30 days.
+    - If the AI fails, a code-built review (stats only) is stored instead.
+    - The scheduler runs it on the chosen day and time (default Sunday 19:00), with a "Weekly review ready" notification. A "Run now" button is on Insights.
+    - Tests: Deno with fixtures (valid; schema failure falls back; an injection title does nothing; only `ask` candidates can be proposed).
+- [ ] **8.4 Weekly review page.** Insights → This week: themes, wins, slipped, suggestions and the AI spend line.
+    - The Tidy-up card approves or skips each proposal. **Condense** creates one note with a dated timeline of the originals, linked back, and archives the originals, which stay searchable.
+    - A memory card applies fact merges and retirements.
+    - Tests: component tests.
+- [ ] **8.5 Memory digests.** Each review's digest of the week is kept. The morning brief and the next reviews read the last 4 digests instead of raw history.
+    - Tests: Deno (brief input includes the digests; the budget is kept).
+- [ ] **8.6 Patterns.** Insights → Patterns, built from the digests and SQL stats with no AI:
+    - completion by weekday;
+    - capture and completion hours;
+    - the carry-over trend;
+    - task types that slip;
+    - idea return counts;
+    - notifications sent.
+    - Charts follow the dataviz guidance (one hue per series, a table view, dark mode).
+    - Tests: component tests.
+- [ ] **8.7 Bridge-day finder.** Shared code (device and server, like `today/slots.ts`): from public holidays, the work pattern and leave balances, find 1–2 leave days that give 4–5 days off. Rank by days off per leave day, and drop clashes with events and the linked calendar.
+    - Tests: unit tests (Irish holidays, weekends, an existing clash, no balance left).
+- [ ] **8.8 Holiday suggestions.** A "Suggest leave" button on Work. It also runs monthly, and inside the weekly review when a good bridge is within 8 weeks.
+    - One small-tier call with prompt `leave.v1` gets the candidates, upcoming occasions, time since the last break and busy spells, and writes two or three suggestions.
+    - Each suggestion books through the existing leave flow, and only on a tap.
+    - Tests: Deno with fixtures, component tests.
+- [ ] **8.9 Scout data.** Migration:
+    - `scout_runs` (run log: when, trigger, queries used, searches, cost);
+    - `suggestions` (cards: kind, title, body, source URL, a proposed item, status open, accepted or dismissed).
+    - Both sync, with own-rows RLS; the server writes runs.
+    - Settings → Scout: on or off, city, interests come from memory, at most 3 searches per run.
+    - Tests: pgTAP, Zod and Dexie.
+- [ ] **8.10 Scout findings from own data.** Code only:
+    - meetings with no summary or actions after a day;
+    - prep for events and birthdays in the next 10 days;
+    - overdue routines (recurring tasks past due);
+    - ideas with no activity for 30 days (suggest a first step);
+    - weekend slots free on both calendars.
+    - Tests: unit tests.
+- [ ] **8.11 Scout function.** **Verify** before building: the web search tool (`web_search_20260209`, currently $10 per 1,000 searches) and its `max_uses` and `user_location` options, in the current docs.
+    - Function `scout` runs weekly with the review and from "Scout now" on Today and Insights.
+    - One large-tier call gets the code findings and up to 3 web searches. Queries are built in code from interests in memory and the city only; a filter rejects names, health and personal details, and every query goes in the run log.
+    - Out: at most 5 suggestion cards.
+    - Web results are untrusted content and never create anything themselves. Searches are counted in AI usage (the price table gains a per-search price).
+    - One weekly notification: "Airhead has N ideas for you".
+    - Tests: Deno (the query builder keeps names and health out; never more than 5 cards or 3 searches; an injection in a search result does nothing; the run log is written).
+- [ ] **8.12 Suggestion cards.** On Today and Insights. **Accept** creates the proposed task or event (only then), and **Dismiss** removes the card. Both feed memory: accepting adds an interest fact, and dismissing adds a "not interested in …" fact (a personal fact needs approval as usual).
+    - Tests: component tests.
+- Phase done when: the Phase 8 manual checklist passes (a weekly review arrives with a Tidy-up card, a Condense works, patterns show, Suggest leave gives bridge days, and Scout gives at most 5 cards with its queries listed).
+
 ## Phases 5–9 (outline)
 
-These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5, 6 and 7 are planned above.
+These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 to 8 are planned above.
 
 | Phase | Scope | Key pieces |
 | --- | --- | --- |

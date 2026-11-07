@@ -2,6 +2,13 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Phase 8 plan
+- **Planned before building**, as for Phases 5–7 (by the user's instruction).
+- **Web search price (verify item)**: Anthropic's web search costs $10 per 1,000 searches, plus normal token costs, according to Claude's current API reference. Scout caps itself at 3 searches a run, at most about €0.03 a week for search. Task 8.11 checks the tool version and options again before building.
+- **Tidy-up candidates are found in code** (SQL). The model only judges the uncertain `ask` ones. Low-risk `auto` cases are removed without a call and can be recovered for 30 days.
+- **Bridge-day finder is shared code** like the free-slot finder, so the Work page can show candidates offline. The AI only adds judgement and wording.
+- **Scout queries are built in code** from interests and the city, never by the model, so a filter can keep names and personal details out. Every query is logged.
+
 ## 2026-11-07 — Task 7.11 Memory by relevance
 - **Fact embeddings live in a server-only `fact_embeddings` table** (migration 0024), not on `memory_facts`. That table syncs to devices, and 384 numbers per fact would ride along on every pull.
   - Each row stores the md5 of the text it embedded, so an edited fact is embedded again.

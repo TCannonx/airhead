@@ -149,6 +149,15 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] [ ] [ ] Next steps become tasks in one tap
 - [ ] [ ] [ ] Ask Airhead answers a question about a meeting note, with citations that open the source
 
+## Phase 8 — Reflection
+
+- [ ] [ ] [ ] The weekly review arrives on the chosen day (notification on iPhone) with themes, wins, what slipped, suggestions and the AI spend
+- [ ] [ ] [ ] Tidy-up: low-risk items were archived automatically (and can be restored from Trash); approving a Condense makes one note with a timeline
+- [ ] [ ] [ ] Insights → Patterns shows completion by weekday and capture hours, with a table view
+- [ ] [ ] [ ] Work → Suggest leave lists bridge days that avoid your and the linked calendar's events; booking one uses the normal leave flow
+- [ ] [ ] [ ] Scout now: at most 5 cards; the run log lists the web queries (interests and city only)
+- [ ] [ ] [ ] Accepting a card creates the item; dismissing one adds a "not interested" fact in Memory
+
 ## v0.1 release
 
 - [ ] Everything above is ticked
