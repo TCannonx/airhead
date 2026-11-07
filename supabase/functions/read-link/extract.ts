@@ -19,7 +19,15 @@ export interface LinkInfo {
   text: string | null;
 }
 
-function meta(doc: Document) {
+/** The slice of the DOM used here (Deno has no browser DOM types; linkedom provides it). */
+interface HtmlDoc {
+  querySelector(selector: string): {
+    getAttribute(name: string): string | null;
+    textContent: string | null;
+  } | null;
+}
+
+function meta(doc: HtmlDoc) {
   const content = (sel: string) => doc.querySelector(sel)?.getAttribute('content')?.trim() || null;
   const docTitle = doc.querySelector('title')?.textContent?.trim() || null;
   const h1 = doc.querySelector('h1')?.textContent?.trim() || null;
@@ -34,7 +42,7 @@ function meta(doc: Document) {
 }
 
 const parse = (html: string) =>
-  new DOMParser().parseFromString(html, 'text/html') as unknown as Document;
+  new DOMParser().parseFromString(html, 'text/html') as unknown as HtmlDoc;
 
 export function extractArticle(html: string, _url: string): LinkInfo {
   const m = meta(parse(html));
@@ -45,7 +53,9 @@ export function extractArticle(html: string, _url: string): LinkInfo {
   } | null = null;
   try {
     // Readability changes the document it reads, so give it its own copy.
-    article = new Readability(parse(html)).parse();
+    article = new Readability(
+      parse(html) as unknown as ConstructorParameters<typeof Readability>[0],
+    ).parse();
   } catch {
     article = null;
   }
