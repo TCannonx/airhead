@@ -7,6 +7,7 @@ import type {
   Feed,
   Item,
   LeaveBooking,
+  Series,
   WorkDay,
   WorkLocation,
 } from '../schemas/records';
@@ -61,6 +62,8 @@ export interface CalendarData {
   leave: LeaveBooking[];
   workDays: WorkDay[];
   work: WorkSettings;
+  /** Imported series: a series colour, when set, colours its events. */
+  series?: Series[];
 }
 
 export interface Range {
@@ -131,7 +134,13 @@ export function expandOccurrences(item: Item, range: Range, timeZone: string): s
     });
 }
 
-function itemEvent(item: Item, start: string, timeZone: string, occurrence?: string): CalEvent {
+function itemEvent(
+  item: Item,
+  start: string,
+  timeZone: string,
+  occurrence?: string,
+  colour?: string | null,
+): CalEvent {
   const source = sourceOfItem(item);
   const duration =
     item.start_at && item.end_at ? Date.parse(item.end_at) - Date.parse(item.start_at) : null;
@@ -139,7 +148,7 @@ function itemEvent(item: Item, start: string, timeZone: string, occurrence?: str
   const base = {
     id: occurrence ? `${item.id}|${occurrence}` : item.id,
     title: item.type === 'task' && item.status === 'done' ? `✓ ${item.title}` : item.title,
-    color: SOURCE_COLOURS[source as 'personal'],
+    color: colour ?? SOURCE_COLOURS[source as 'personal'],
     editable: !item.rrule,
     extendedProps: { source, itemId: item.id, ...(occurrence ? { occurrence } : {}) },
   };
@@ -170,14 +179,18 @@ export function buildEvents(
   const startDate = localDate(range.start, timeZone);
   const endDate = localDate(new Date(range.end.getTime() - 1), timeZone);
 
+  const seriesColour = new Map(
+    (data.series ?? []).filter((x) => !x.deleted_at && x.colour).map((x) => [x.id, x.colour]),
+  );
+  const colourOf = (i: Item) => (i.series_id ? seriesColour.get(i.series_id) : undefined);
   for (const item of data.items) {
     if (!isCalendarItem(item) || !show(sourceOfItem(item)) || !item.start_at) continue;
     if (item.rrule) {
       for (const occ of expandOccurrences(item, range, timeZone)) {
-        out.push(itemEvent(item, occ, timeZone, occ));
+        out.push(itemEvent(item, occ, timeZone, occ, colourOf(item)));
       }
     } else if (overlaps(item.start_at, item.end_at, range)) {
-      out.push(itemEvent(item, item.start_at, timeZone));
+      out.push(itemEvent(item, item.start_at, timeZone, undefined, colourOf(item)));
     }
   }
 

@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Fix: managing imported series
+- **The gap**: the design's "edit, recolour or delete the whole series at once" and the Phase 4 checklist's "deleting the series removes all its events" had only the Undo shown straight after an import.
+- **Calendar → Import** now lists imported schedules, with event count and calendar.
+  - **Recolour**: a series colour, when set, colours its events on the calendar (`CalendarData.series`).
+  - **Delete**: two taps ("Delete" then "Delete N events"; no browser dialog) soft-delete the series and all its events. They stay restorable from the Trash for 30 days.
+
 ## 2026-11-07 — Task 4.15 Notification settings
 - **Where**: Settings → Notifications, below the device controls (4.11). The values live in `settings.data.notifications`.
   - `src/lib/notifications/settings.ts` is a Zod copy of the scheduler's `notif.ts` shape and defaults; keep the two in step.
