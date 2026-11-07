@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.6: Workshop page and Auto flesh-out (structured draft, saved as a new version; older versions one tap away)
 - Task 7.5: Workshop data (draft versions numbered by the server, sessions, Send to the Workshop)
 - Task 7.4: "Send to Airhead" bookmarklet and PWA share target (both land on /share; no token in web pages)
 - Task 7.3: iOS Shortcuts guide (Send to Airhead from the share sheet, Quick thought on Back Tap or the Action Button), in the docs and in Settings

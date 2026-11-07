@@ -479,3 +479,7 @@ verify_jwt = false
 [functions.ingest-capture]
 # Called by iOS Shortcuts with a capture token, not a Supabase session.
 verify_jwt = false
+
+[functions.workshop]
+# Checks the caller's own token itself.
+verify_jwt = false

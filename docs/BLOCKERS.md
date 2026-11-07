@@ -92,11 +92,19 @@ Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes w
 7. Add the new address to sign-in: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead.pages.dev`, Redirect URLs add `https://airhead.pages.dev/**` and `https://*.airhead.pages.dev/**` (PR previews). If Google login is set up, add `https://airhead.pages.dev` to the OAuth client's JavaScript origins.
 8. For the live release workflow (Task 1.8), also create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
 
-### 6. Branch protection needs GitHub Pro (Task 1.8)
+### 6. Branch protection (Task 1.8) — now possible: the repo is public
 
-GitHub refuses branch protection and rulesets on a **private** repo on the free plan (`403 Upgrade to GitHub Pro or make this repository public`). Choose one:
-- **Upgrade to GitHub Pro** (github.com/settings/billing), then tell Claude Code "GitHub Pro is on". It applies the protection with the exact call recorded in `docs/DECISIONS.md`.
-- **Keep the free plan.** Until then, a local hook blocks pushes to `main`, and Claude Code's merge script merges only when all six CI jobs (lint, typecheck, unit tests, e2e tests, function tests, database tests) have run and passed.
+Public repos get branch protection on the free plan. Claude Code's permission check blocked it from changing protection itself, so either run this once (`!` prefix in Claude Code) or tell Claude Code it may:
+
+```
+gh api -X PUT repos/TCannonx/airhead/branches/main/protection --input - <<'JSON'
+{"required_status_checks":{"strict":true,"checks":[{"context":"checks"},{"context":"unit tests"},{"context":"e2e tests"},{"context":"e2e sync tests"},{"context":"database tests"}]},
+ "enforce_admins":true,"required_pull_request_reviews":{"required_approving_review_count":0},
+ "restrictions":null,"allow_force_pushes":false,"allow_deletions":false,"required_linear_history":true}
+JSON
+```
+
+Or in the browser: Settings → Branches → Add classic branch protection rule for `main` → require a pull request (0 approvals), require these status checks (strict), include administrators, block force pushes and deletions. Until then, the merge script merges only when all five CI jobs have passed. If the repo goes private again, the protection is suspended on the free plan.
 
 ### 7. Secrets for the live release (before the first `v*` tag)
 
