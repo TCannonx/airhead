@@ -16,6 +16,7 @@ import {
 } from '../../lib/db/tidy';
 import { readReview } from '../../lib/review/review';
 import { useOnline } from '../../lib/useOnline';
+import BridgeHint from './BridgeHint';
 
 const btn =
   'rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700';
@@ -150,6 +151,7 @@ export default function WeeklyReview() {
       <List title="Wins" items={review.wins} />
       <List title="What slipped" items={review.slipped} />
       <List title="Suggestions" items={review.suggestions} />
+      <BridgeHint />
 
       {(review.tidy.length > 0 || review.auto_done.length > 0) && (
         <section
