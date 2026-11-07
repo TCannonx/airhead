@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.12: Scout cards on Today and Insights (accept creates the item, dismiss hides it; web ideas teach memory; Scout now)
 - Task 8.11: Scout (own-data cards in code, plus capped web search from interests and city only; at most 5 cards; weekly with the review)
 - Task 8.10: Scout findings from your own data (meeting follow-ups, birthday and event prep, overdue routines, stalled ideas, weekends free for you both)
 - Task 8.9: Scout data (run log, suggestion cards) and Settings → Scout (city, searches per run, last run's queries)

@@ -5,6 +5,7 @@ import AiUsage from './AiUsage';
 import SuccessMeasures from './SuccessMeasures';
 import WeeklyReview from './WeeklyReview';
 import Patterns from './Patterns';
+import ScoutCards from '../today/ScoutCards';
 
 export default function InsightsPage() {
   return (
@@ -17,6 +18,7 @@ export default function InsightsPage() {
           This week
         </h2>
         <WeeklyReview />
+        <ScoutCards />
       </section>
       <section aria-labelledby="patterns-heading" className="mb-10">
         <h2
