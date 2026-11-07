@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.6 Text boxes
+- **Text tool**: a new tool on the handwritten page's toolbar. A tap with the Pencil or mouse adds a typed label there and focuses it.
+  - The tap's default is prevented so the page doesn't take focus and blur the new box away.
+  - Boxes are HTML inputs laid over the SVG, positioned in page units (so they scale with the page) and kept inside it.
+  - With the text tool on, a ⠿ handle moves a box and × deletes it.
+- **Stored with the strokes**: `pages[0].texts: [{ id, x, y, text }]`, saved with the same debounce. Boxes left empty are dropped (on blur and when saving).
+- **Undo and redo cover strokes only**: text boxes are edited directly, like any text field.
+- **Helpers**: `src/lib/ink/texts.ts` (add, edit, move, remove, drop empty), with unit tests. The e2e adds a box, reloads and deletes it.
+
 ## 2026-11-07 — Task 6.5 Handwritten page
 - **Verified: perfect-freehand 1.2.3** (MIT). Each stroke's outline comes from `getStroke`, drawn as a filled SVG path. Pressure is real for the Pencil; for a mouse it is simulated.
 - **The page**: one fixed-width page (1000 units wide, starting 1400 tall) in an SVG scaled to the screen.
