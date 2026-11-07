@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.5 Workshop data
+- **`drafts`**: one row per version (id, item_id, version, content, source), synced both ways with own-rows RLS.
+  - The server numbers versions per item (trigger, advisory lock, unique per item), so two devices adding versions offline never collide.
+  - The device uses max + 1 as a placeholder until the next pull.
+  - A version's number never changes: devices push with upsert, which fires the insert trigger, so the trigger keeps an existing row's number and update ignores a new one.
+- **`workshop_sessions`**: one per item (id = the item's id), holding `turns` and an offline `pending` answer. Newest write wins, like other tables. A session belongs to one person on their own devices, so the risk is small.
+- **No foreign key to `items`**: tables sync in a fixed order and offline pushes may arrive first, as with `note_docs`.
+- **"In the Workshop" stays `items.data.workshop = true`**: sorting already sets it, and the Inbox already listed it. The item page gains "Send to the Workshop" / "Take out of the Workshop", and the Inbox entries now open the item.
+- Draft content is `{ summary, sections [{heading, body}], open_questions, next_steps }`; each part defaults to empty.
 ## 2026-11-07 — CI minutes
 - **The 2,000 free Actions minutes ran out** after about 70 merged PRs. Each merged PR cost about 27 billed minutes:
   - CI on the PR, about 13 (seven jobs, each rounded up to a whole minute);

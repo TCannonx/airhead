@@ -48,6 +48,8 @@ describe('local database', () => {
         'leave_bookings',
         'briefs',
         'note_docs',
+        'drafts',
+        'workshop_sessions',
       ].sort(),
     );
   });

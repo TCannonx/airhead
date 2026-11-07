@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router';
 import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
@@ -190,7 +191,9 @@ export default function InboxPage() {
                 key={i.id}
                 className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
               >
-                {i.title}
+                <Link to={`/library/item/${i.id}`} className="hover:underline">
+                  {i.title}
+                </Link>
               </li>
             ))}
           </ul>

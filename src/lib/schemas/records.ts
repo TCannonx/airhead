@@ -233,6 +233,31 @@ export const noteDocSchema = z.object({
   summary: z.record(z.string(), z.unknown()).nullable(),
 });
 
+/** A Workshop draft's structure (Task 7.5); every part may be empty. */
+export const draftContentSchema = z.object({
+  summary: z.string().default(''),
+  sections: z.array(z.object({ heading: z.string(), body: z.string() })).default([]),
+  open_questions: z.array(z.string()).default([]),
+  next_steps: z.array(z.string()).default([]),
+});
+
+/** One version of an item's Workshop draft; the server numbers versions per item. */
+export const draftSchema = z.object({
+  ...syncColumns,
+  item_id: id,
+  version: z.number().int().min(0),
+  content: draftContentSchema,
+  source: z.enum(['auto', 'session', 'edit']),
+});
+
+/** The Workshop conversation for one item (id = the item's id). */
+export const workshopSessionSchema = z.object({
+  ...syncColumns,
+  turns: z.array(z.object({ role: z.enum(['airhead', 'me']), text: z.string(), at: ts })),
+  /** An answer typed offline, sent when back online. */
+  pending: z.object({ text: z.string(), at: ts }).nullable(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -251,6 +276,9 @@ export type WorkLocation = WorkDay['location'];
 export type LeaveBooking = z.infer<typeof leaveBookingSchema>;
 export type Brief = z.infer<typeof briefSchema>;
 export type NoteDoc = z.infer<typeof noteDocSchema>;
+export type DraftContent = z.infer<typeof draftContentSchema>;
+export type Draft = z.infer<typeof draftSchema>;
+export type WorkshopSession = z.infer<typeof workshopSessionSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -271,6 +299,8 @@ export const SYNC_TABLES = [
   'leave_bookings',
   'briefs',
   'note_docs',
+  'drafts',
+  'workshop_sessions',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -291,6 +321,8 @@ export const schemas = {
   leave_bookings: leaveBookingSchema,
   briefs: briefSchema,
   note_docs: noteDocSchema,
+  drafts: draftSchema,
+  workshop_sessions: workshopSessionSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -310,4 +342,6 @@ export interface RowTypes {
   leave_bookings: LeaveBooking;
   briefs: Brief;
   note_docs: NoteDoc;
+  drafts: Draft;
+  workshop_sessions: WorkshopSession;
 }
