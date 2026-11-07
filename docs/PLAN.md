@@ -410,7 +410,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - It returns an answer with citations restricted to the passages it was given.
     - Library → Ask: online only, with its cost estimate. Each citation taps through to its item or note. Offline, it says to use search.
     - Tests: pgTAP (hybrid ranking, RLS), Deno with fixtures (citations outside the passages are dropped, an injection passage does nothing), component tests.
-- [ ] **7.11 Memory by relevance.** Facts get embeddings too. Sorting and the Workshop add the facts most similar to the captures at hand (top 8 above a threshold) after the core profile. Keyword matching stays as the fallback when embeddings aren't ready.
+- [x] **7.11 Memory by relevance.** Facts get embeddings too. Sorting and the Workshop add the facts most similar to the captures at hand (top 8 above a threshold) after the core profile. Keyword matching stays as the fallback when embeddings aren't ready.
     - Tests: Deno (relevant facts chosen, fallback).
 - Phase done when: the Phase 7 manual checklist passes (Shortcut from the share sheet and Back Tap, bookmarklet on desktop Chrome, a flesh-out and a two-turn session with versions, next steps to tasks, and an Ask answer with working citations).
 

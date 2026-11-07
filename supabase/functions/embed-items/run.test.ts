@@ -62,7 +62,7 @@ Deno.test('only changed chunks are embedded; a shorter text drops the extra chun
   const items: Record<string, ItemText | null> = { i1: item };
   const queue = ['i1'];
   const { d, store, embedded } = fake(items, queue);
-  assertEquals(await runEmbed(d), { items: 1, embedded: 2, skipped: 0, removed: 0 });
+  assertEquals(await runEmbed(d), { items: 1, embedded: 2, skipped: 0, removed: 0, facts: 0 });
 
   queue.push('i1');
   assertEquals((await runEmbed(d)).skipped, 2);
@@ -70,7 +70,7 @@ Deno.test('only changed chunks are embedded; a shorter text drops the extra chun
 
   items.i1 = { ...item, parts: [words(100, 'new')] };
   queue.push('i1');
-  assertEquals(await runEmbed(d), { items: 1, embedded: 1, skipped: 0, removed: 1 });
+  assertEquals(await runEmbed(d), { items: 1, embedded: 1, skipped: 0, removed: 1, facts: 0 });
   assertEquals([...store.keys()], ['i1:0']);
   assertEquals(store.get('i1:0')?.content.includes('new5'), true);
 });
@@ -129,4 +129,17 @@ Deno.test('item text covers notes, summaries, transcriptions and drafts', () => 
     }),
     ['A reading summary', 'one', 'box'],
   );
+});
+
+Deno.test('waiting memory facts are embedded too', async () => {
+  const { d, embedded } = fake({}, []);
+  const stored: string[] = [];
+  d.factsToEmbed = () => Promise.resolve([{ id: 'f1', text: 'Cycles to work' }]);
+  d.storeFact = (id, e) => {
+    stored.push(`${id}:${e.length}`);
+    return Promise.resolve();
+  };
+  assertEquals((await runEmbed(d)).facts, 1);
+  assertEquals(stored, ['f1:384']);
+  assertEquals(embedded, ['Cycles to work']);
 });

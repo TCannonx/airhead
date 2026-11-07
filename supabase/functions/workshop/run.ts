@@ -1,6 +1,7 @@
 import { z } from 'npm:zod@4.6.7';
 import { callAI, type AIClient, type UsageStore } from '../_shared/ai.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
+import { withRelevant } from '../_shared/relevant.ts';
 import { buildFleshOutMessage, FLESHOUT_SYSTEM } from '../_shared/prompts/fleshout.v1.ts';
 
 export const DraftContent = z.object({
@@ -21,6 +22,8 @@ export interface WorkshopSource {
   /** Article text of a linked page, if it was read. */
   pageText: string | null;
   facts: FactRow[];
+  /** Facts most like this idea beyond the core profile (Task 7.11). */
+  relevant?: FactRow[];
   /** The newest draft, if there is one. */
   current: DraftContentT | null;
 }
@@ -81,6 +84,8 @@ export async function runFleshOut(
   if (!src)
     return { ok: false, error_code: 'not_found', message: 'That idea isn’t here any more.' };
   const profile = buildProfile(src.facts);
+  const extra = (src.relevant ?? []).filter((f) => !profile.ids.includes(f.id));
+  const memory = withRelevant(profile.text, extra);
   const summary = typeof src.item.data.summary === 'string' ? src.item.data.summary : null;
   const result = await callAI(
     { client: deps.ai, store: deps.store },
@@ -88,7 +93,7 @@ export async function runFleshOut(
       userId,
       task: 'workshop_flesh_out',
       tier: 'large',
-      system: profile.text ? [FLESHOUT_SYSTEM, profile.text] : FLESHOUT_SYSTEM,
+      system: memory ? [FLESHOUT_SYSTEM, memory] : FLESHOUT_SYSTEM,
       messages: [
         {
           role: 'user',
@@ -113,6 +118,7 @@ export async function runFleshOut(
   );
   if (!result.ok) return { ok: false, error_code: result.error_code, message: result.message };
   const draft = await deps.saveDraft(itemId, cleanDraft(result.data), 'auto');
-  if (profile.ids.length) await deps.markFactsUsed?.(profile.ids);
+  const used = [...profile.ids, ...extra.map((f) => f.id)];
+  if (used.length) await deps.markFactsUsed?.(used);
   return { ok: true, error_code: null, message: 'Draft ready.', draft };
 }

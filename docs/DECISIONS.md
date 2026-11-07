@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.11 Memory by relevance
+- **Fact embeddings live in a server-only `fact_embeddings` table** (migration 0024), not on `memory_facts`. That table syncs to devices, and 384 numbers per fact would ride along on every pull.
+  - Each row stores the md5 of the text it embedded, so an edited fact is embedded again.
+  - `facts_to_embed`, `store_fact_embedding` and `relevant_facts` are service-role only.
+- **`embed-items` also embeds waiting facts** (50 per run). The 5-minute dispatch now runs when items or facts are waiting.
+- **Choosing facts**:
+  - The core profile comes first (about 400 words, most recently used).
+  - Then come up to 8 facts most like the text at hand: the captures being sorted, or the idea with its body and capture text.
+  - These are picked by gte-small similarity at 0.8 or above (normalised vectors, so similarity = −inner product), and facts already in the profile are skipped.
+  - When facts aren't embedded yet or the model fails, facts sharing the most keywords are used instead (words of 4+ letters, minus common words).
+  - Chosen facts are marked as used.
+- **0.8 is a starting threshold** for gte-small, which scores related English text around 0.8 and up. It is a constant in `_shared/relevant.ts`, to tune once real usage shows how it does.
+- A shared `_shared/embed.ts` (`gteSmall`) serves sorting and the Workshop. `embed-items` and `ask` keep their own copies for now.
+
 ## 2026-11-07 — Task 7.10 Ask Airhead
 - **`hybrid_search(query_text, query_embedding, match_count)`** (migration 0023) follows Supabase's hybrid search guide:
   - full-text (`websearch_to_tsquery`, `ts_rank_cd`) and vector (inner product `<#>`) lists, each up to twice the match count;

@@ -2,6 +2,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v3.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
+import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort } from './plan.ts';
 
@@ -17,7 +18,14 @@ export interface SortBatchOutcome extends Record<string, unknown> {
 
 /** Sorts up to 20 of the user's oldest unsorted captures in one small-tier call. */
 export async function runSortBatch(
-  deps: { db: SupabaseClient; ai: AIClient; store: UsageStore; now?: Date },
+  deps: {
+    db: SupabaseClient;
+    ai: AIClient;
+    store: UsageStore;
+    now?: Date;
+    /** gte-small in the Edge Runtime; without it, relevant facts are picked by keywords. */
+    embed?: (text: string) => Promise<number[]>;
+  },
   userId: string,
   background: boolean,
 ): Promise<SortBatchOutcome> {
@@ -107,6 +115,27 @@ export async function runSortBatch(
     .eq('status', 'active')
     .is('deleted_at', null);
   const profile = buildProfile((factRows ?? []) as FactRow[]);
+  // Beyond the core profile: the facts most like these captures (Task 7.11).
+  const extra = await relevantFacts(
+    {
+      embed: deps.embed,
+      nearest: async (embedding, limit, min) => {
+        const { data, error: err } = await db.rpc('relevant_facts', {
+          p_user: userId,
+          p_embedding: JSON.stringify(embedding),
+          p_limit: limit,
+          p_min: min,
+        });
+        if (err) throw new Error(err.message);
+        return (data ?? []) as FactRow[];
+      },
+    },
+    [...batch.map((c) => c.text ?? c.url ?? ''), ...links.map((c) => c.text ?? c.url ?? '')].join(
+      '\n',
+    ),
+    (factRows ?? []) as FactRow[],
+    profile.ids,
+  );
 
   const result = await callAI(
     { client: deps.ai, store: deps.store },
@@ -114,7 +143,7 @@ export async function runSortBatch(
       userId,
       task: 'sort_batch',
       tier: 'small',
-      system: [SORT_BATCH_SYSTEM, profile.text],
+      system: [SORT_BATCH_SYSTEM, withRelevant(profile.text, extra)],
       messages: [
         {
           role: 'user',
@@ -168,8 +197,9 @@ export async function runSortBatch(
 
   // Memory: record when facts were last sent, add proposed facts, learn rules.
   // Best-effort: a failure here never undoes the sorting above.
-  if (profile.ids.length) {
-    await db.from('memory_facts').update({ last_used_at: now.toISOString() }).in('id', profile.ids);
+  const usedIds = [...profile.ids, ...extra.map((f) => f.id)];
+  if (usedIds.length) {
+    await db.from('memory_facts').update({ last_used_at: now.toISOString() }).in('id', usedIds);
   }
   if (plan.facts.length) {
     await db.rpc('add_memory_facts', { p_user_id: userId, p_facts: plan.facts });

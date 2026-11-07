@@ -93,6 +93,18 @@ Deno.serve(async (req) => {
       await db.from('chunks').delete().eq('item_id', itemId).gte('chunk_index', fromIndex);
     },
     embed,
+    async factsToEmbed(limit) {
+      const { data, error } = await db.rpc('facts_to_embed', { p_limit: limit });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as { id: string; text: string }[];
+    },
+    async storeFact(id, embedding) {
+      const { error } = await db.rpc('store_fact_embedding', {
+        p_fact: id,
+        p_embedding: JSON.stringify(embedding),
+      });
+      if (error) throw new Error(error.message);
+    },
   });
   return json({ ok: true, error_code: null, message: 'Embedded.', ...stats });
 });
