@@ -363,7 +363,7 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
     - Tests: unit tests for stroke encoding and decoding, hit-testing for the eraser and the undo stack; a Playwright check that a drawn stroke survives a reload.
 - [x] **6.6 Text boxes.** Tap with the text tool to add a quick text label on a handwritten page; move, edit, delete. Stored in the same document.
     - Tests: unit and component tests.
-- [ ] **6.7 Summarise.** "Done → Summarise", one large-tier call with prompt `summarise.v1`:
+- [x] **6.7 Summarise.** "Done → Summarise", one large-tier call with prompt `summarise.v1`:
     - Handwritten pages are rendered to images on the device (vision); typed notes are sent as text.
     - Returns a transcription (ink), a short summary, decisions and action items (title, owner if mentioned, due if mentioned).
     - Stored once on the document; the transcription and summary are added to search.

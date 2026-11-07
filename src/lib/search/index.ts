@@ -1,4 +1,5 @@
 import MiniSearch from 'minisearch';
+import { summaryText } from '../notes/summary';
 import type { Capture, Item, ItemType } from '../schemas/records';
 
 export interface SearchResult {
@@ -49,7 +50,7 @@ export class SearchIndex {
           kind: 'item',
           id: i.id,
           title: i.title,
-          body: i.body ?? '',
+          body: [i.body ?? '', summaryText(i)].filter(Boolean).join('\n'),
           itemType: i.type,
         },
       });

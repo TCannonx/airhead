@@ -7,6 +7,7 @@ import { supabaseCalendars } from './calendar/supabaseCalendars';
 import { supabaseImports } from './import/supabaseImports';
 import { supabasePush } from './push/supabasePush';
 import { supabaseBriefs } from './today/supabaseBriefs';
+import { supabaseNotes } from './notes/supabaseNotes';
 import { supabaseMemory } from './memory/supabaseMemory';
 import { supabaseSorting } from './sort/supabaseSorting';
 import { supabaseRemote } from './sync/supabaseRemote';
@@ -37,5 +38,6 @@ export function createServices(): Services {
     imports: supabaseImports(supabase),
     push: supabasePush(supabase),
     briefs: supabaseBriefs(supabase),
+    notes: supabaseNotes(supabase),
   };
 }

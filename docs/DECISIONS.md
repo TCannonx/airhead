@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.7 Summarise
+- **One function, `summarise-note`**: one large-tier call (Sonnet with server-side fallback) using prompt `summarise.v1`. It is signed-in only, and the usage row records the task `summarise_note`.
+  - Typed notes go as plain text built from the HTML (list items as "- ", checkboxes as "[ ]"/"[x]") inside `<note>`.
+  - Handwritten pages go as PNG images (vision), at most 4 pages and 4 MB each.
+- **The note is data**: the system prompt says to ignore anything in the note that asks for something. The output is a fixed schema (transcription, summary, decisions, actions with owner and due as written), so nothing in a note can trigger an action. The Deno test sends a note with an injection line in it.
+- **Output is cleaned**: text is trimmed and capped, empty decisions and actions are dropped, and the transcription is kept only for handwritten pages.
+- **Pages are drawn on the device**: `src/lib/ink/render.ts` puts the strokes (via `Path2D` from the same perfect-freehand outline) and the text boxes on a white canvas. The long side stays at 2000 px or less, and empty pages are skipped.
+- **Stored on the note item, not the document**: the result goes in `items.data.summary` with `at`.
+  - The device saves it, so it syncs like any item edit and never races edits to the document (`note_docs`).
+  - The `note_docs.summary` column stays unused for now.
+- **Search** indexes the summary, decisions, action titles and transcription with the item body.
+- **Online only**: the button is off when offline and absent in local mode. It shows a fixed estimate (≈ €0.02), the same way the brief does.
+- `useOnline` moved to `src/lib/useOnline.ts` so Settings → Today and Summarise share it.
+
 ## 2026-11-07 — Task 6.6 Text boxes
 - **Text tool**: a new tool on the handwritten page's toolbar. A tap with the Pencil or mouse adds a typed label there and focuses it.
   - The tap's default is prevented so the page doesn't take focus and blur the new box away.

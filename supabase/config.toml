@@ -471,3 +471,7 @@ verify_jwt = false
 # morning-brief: the owner (Regenerate) or the scheduler's service key; checks it itself.
 [functions.morning-brief]
 verify_jwt = false
+
+# summarise-note: checks the caller's own token itself.
+[functions.summarise-note]
+verify_jwt = false

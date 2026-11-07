@@ -1,10 +1,11 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { updateSettingsData } from '../../lib/db/settings';
 import { readNotifSettings } from '../../lib/notifications/settings';
 import type { SettingsRow } from '../../lib/schemas/records';
+import { useOnline } from '../../lib/useOnline';
 
 const field =
   'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
@@ -21,23 +22,6 @@ function readToday(settings: SettingsRow | undefined) {
     window_end:
       typeof t.window_end === 'string' && HHMM.test(t.window_end) ? t.window_end : '21:00',
   };
-}
-
-function useOnline() {
-  const [online, setOnline] = useState(() =>
-    typeof navigator === 'undefined' ? true : navigator.onLine,
-  );
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => {
-      window.removeEventListener('online', on);
-      window.removeEventListener('offline', off);
-    };
-  }, []);
-  return online;
 }
 
 function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; userId: string }) {
