@@ -22,6 +22,9 @@ import {
 import { useDb } from '../../lib/db/context';
 import { update } from '../../lib/db/repository';
 import { LOCATION_LABELS } from '../../lib/work/settings';
+import type { LeaveFields } from '../../lib/db/leave';
+import type { LeaveBooking } from '../../lib/schemas/records';
+import LeaveSheet from '../leave/LeaveSheet';
 import EventEditor, { type EventDraft } from './EventEditor';
 import { deviceTimeZone, useCalendarData } from './useCalendarData';
 
@@ -109,12 +112,44 @@ export default function CalendarPage() {
   const [view, setView] = useState(layout === 'phone' ? 'agenda' : 'timeGridWeek');
   const [hidden, setHidden] = useState(readHidden);
   const [draft, setDraft] = useState<EventDraft | null>(null);
+  const [leave, setLeave] = useState<{
+    booking?: LeaveBooking;
+    initial?: Partial<LeaveFields>;
+  } | null>(null);
   const [draftKey, setDraftKey] = useState(0);
 
   const open = (d: EventDraft) => {
+    setLeave(null);
     setDraft(d);
     setDraftKey((k) => k + 1);
   };
+  const openLeave = (l: { booking?: LeaveBooking; initial?: Partial<LeaveFields> }) => {
+    setDraft(null);
+    setLeave(l);
+    setDraftKey((k) => k + 1);
+  };
+  const close = () => {
+    setDraft(null);
+    setLeave(null);
+  };
+  const panel =
+    leave && data ? (
+      <LeaveSheet
+        key={draftKey}
+        work={data.work}
+        bookings={data.leave}
+        booking={leave.booking}
+        initial={leave.initial}
+        onClose={close}
+      />
+    ) : draft ? (
+      <EventEditor
+        key={draftKey}
+        draft={draft}
+        onClose={close}
+        onBookLeave={(start_date, end_date) => openLeave({ initial: { start_date, end_date } })}
+      />
+    ) : null;
   const toggle = (key: string) => {
     const next = new Set(hidden);
     if (next.has(key)) next.delete(key);
@@ -225,6 +260,11 @@ export default function CalendarPage() {
           api()?.unselect();
         }}
         eventClick={(info) => {
+          if (info.event.id.startsWith('leave:')) {
+            const booking = data?.leave.find((b) => `leave:${b.id}` === info.event.id);
+            if (booking) openLeave({ booking });
+            return;
+          }
           const id = info.event.extendedProps.itemId as string | undefined;
           const item = id ? itemsById.get(id) : undefined;
           if (item)
@@ -303,6 +343,13 @@ export default function CalendarPage() {
         >
           New event
         </button>
+        <button
+          type="button"
+          className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600"
+          onClick={() => openLeave({})}
+        >
+          Book leave
+        </button>
       </div>
 
       <div role="group" aria-label="Calendars" className="mb-3 flex flex-wrap gap-2">
@@ -334,26 +381,22 @@ export default function CalendarPage() {
         <div className="flex gap-4">
           <div className="min-w-0 flex-1">{calendar}</div>
           <aside aria-label="Calendar panel" className="w-64 shrink-0">
-            {draft ? (
-              <EventEditor key={draftKey} draft={draft} onClose={() => setDraft(null)} />
-            ) : (
-              <TaskTray titles={unplanned} />
-            )}
+            {panel ?? <TaskTray titles={unplanned} />}
           </aside>
         </div>
       ) : (
         <>
           {calendar}
-          {draft && (
+          {panel && (
             <div
               role="dialog"
               aria-modal="true"
               aria-label="Event"
               className="fixed inset-0 z-40 flex items-end bg-black/30"
-              onClick={(e) => e.target === e.currentTarget && setDraft(null)}
+              onClick={(e) => e.target === e.currentTarget && close()}
             >
               <div className="max-h-[85dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:bg-slate-950">
-                <EventEditor key={draftKey} draft={draft} onClose={() => setDraft(null)} />
+                {panel}
               </div>
             </div>
           )}

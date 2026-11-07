@@ -147,3 +147,27 @@ test('drag a task onto the week to time-block it', async ({ page }) => {
     .toBe('2026-07-16T13:00:00.000Z');
   await expect(page.getByRole('list', { name: 'Tasks to plan' })).not.toContainText('Write report');
 });
+
+test('select days in the month view and book them as leave', async ({ page }) => {
+  await page.goto('/calendar');
+  await page.getByRole('button', { name: 'Month' }).click();
+  const from = await page.locator('[data-date="2026-07-20"]').last().boundingBox();
+  const to = await page.locator('[data-date="2026-07-22"]').last().boundingBox();
+  if (!from || !to) throw new Error('month cells not drawn');
+  await drag(
+    page,
+    { x: from.x + from.width / 2, y: from.y + from.height / 2 },
+    { x: to.x + to.width / 2, y: to.y + to.height / 2 },
+  );
+  const editor = page.getByRole('form', { name: 'New event' });
+  await expect(editor).toBeVisible();
+  await editor.getByRole('button', { name: 'Book as leave' }).click();
+
+  const sheet = page.getByRole('form', { name: 'Book leave' });
+  await expect(sheet.getByLabel('From')).toHaveValue('2026-07-20');
+  await expect(sheet.getByLabel('To')).toHaveValue('2026-07-22');
+  await expect(sheet.getByText(/Uses 3 days of leave/)).toBeVisible();
+  await sheet.getByRole('button', { name: 'Book leave' }).click();
+
+  await expect(page.getByText('Annual leave · planned')).toBeVisible();
+});

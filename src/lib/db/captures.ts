@@ -1,5 +1,6 @@
 import { queueFile } from '../files/upload';
-import { analyseCapture } from '../rules';
+import { parseLeave } from '../leave/parse';
+import { analyseCapture, DEFAULT_TIME_ZONE } from '../rules';
 import type { Capture, Item } from '../schemas/records';
 import type { AirheadDb } from './db';
 import { matchRule, ruleItemFor } from './memory';
@@ -33,14 +34,17 @@ export async function createCapture(
   options: { now?: Date } = {},
 ): Promise<CaptureResult> {
   const text = input.text?.trim() || null;
+  // "AL 14–18 July": a leave booking to propose, not an event (Task 4.6).
+  const leave =
+    text && !input.url ? parseLeave(text, options.now ?? new Date(), DEFAULT_TIME_ZONE) : null;
   const analysis = text ? analyseCapture(text, { now: options.now }) : null;
   const url = input.url ?? analysis?.url ?? null;
-  const when = analysis?.when ?? null;
+  const when = leave ? null : (analysis?.when ?? null);
   const at = new Date().toISOString();
 
   // Learned rules run after the free rules, before anything waits for AI.
   const rule =
-    text && !url && !when && !input.photo
+    text && !url && !when && !leave && !input.photo
       ? matchRule(await db.learned_rules.toArray(), text)
       : undefined;
 
@@ -55,8 +59,9 @@ export async function createCapture(
         ? { status: 'sorted' as const, sorted_at: at }
         : { status: 'needs_review' as const }
       : {}),
-    ...(rule ? { status: 'sorted' as const, sorted_at: at } : {}),
+    ...(rule || leave ? { status: 'sorted' as const, sorted_at: at } : {}),
   });
+  if (leave) capture.payload = { ...capture.payload, leave_proposal: leave };
   if (rule) capture.payload = { ...capture.payload, rule_id: rule.id };
   if (input.photo) {
     const file = await queueFile(db, userId, capture.id, input.photo);
@@ -109,6 +114,8 @@ export async function createCapture(
 /** The status chip shown under a capture. */
 export function captureChip(c: Capture): string {
   if (c.kind === 'link') return 'Reading list';
+  if (c.payload.leave_booking_id) return 'Leave booked';
+  if (c.payload.leave_proposal) return 'Leave to book (Today)';
   if (c.status === 'sorted' && typeof c.payload.rule_id === 'string')
     return 'Sorted (learned rule)';
   if (c.status === 'sorted') return 'Sorted';

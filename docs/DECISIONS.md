@@ -2,6 +2,29 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.6 Leave UI
+- **Ways to book leave**:
+  - **Calendar**: select a range (all-day) → the event editor offers **Book as leave**, which opens the leave sheet with the dates filled in.
+  - **"Book leave" buttons** on the calendar toolbar and the new **Work and leave** screen (`/work`).
+  - **Tapping a leave block** on the calendar opens the booking.
+- **The leave sheet** (`src/features/leave/LeaveSheet.tsx`):
+  - Dates, plus half days: one select for a single day (full / morning off / afternoon off); "first day starts at midday" and "last day ends at midday" for ranges.
+  - Type from the work settings, status (Planned → Requested → Approved → Taken), "Show as Off on the Us calendar" (used by the feed, 4.8) and a note.
+  - A live cost line: "Uses 4 days of leave · 17 days left after this", or "not taken from your annual leave" for non-deducting types.
+- **`saveLeave`** caches `days` (the engine's count) on the row, clamps an end before the start, and never sets both halves on one day.
+- **Capture rule** (`src/lib/leave/parse.ts`): "AL 14–18 July", "annual leave 3 Aug", "A/L 1 March", "day off Friday", "sick 2-3 March" and "half day AL Friday (afternoon)".
+  - The date must follow the leave words straight away, so "Leave for the airport Friday" is not leave.
+  - A time means it's not leave.
+  - Instead of an event, the capture gets `payload.leave_proposal` (sorted, chip "Leave to book (Today)"). Today shows a card: **Book as planned** (links the booking) or **Dismiss**. It never books on its own, as the plan says "proposes".
+- **Leave counter**:
+  - Today: a compact card linking to `/work`.
+  - Work screen: the full breakdown (entitlement, extra days, carry-over, expired, taken, booked, planned, remaining), the pace line, and warnings for carried-over days at risk and days that would be lost at year end.
+  - The Work screen lists bookings for this and next leave year and edits the year's opening carry-over (blank = work it out).
+- **Leave sets the location to Off**: `locationFor` already returns Off for full leave days (4.2). Silencing work nudges belongs to the scheduler (4.13), which will use the same check.
+- **Nightly Taken job** (migration `20261107000010_leave_taken.sql`): `mark_leave_taken()` at 01:10 UTC turns requested or approved bookings whose last day has passed (in each person's `settings.data.time_zone`, default Europe/Dublin) into Taken.
+  - Planned bookings are left alone, because they were never asked for.
+  - It only updates `status`/`updated_at`; the sync trigger stamps `server_updated_at`, so devices pull the change.
+
 ## 2026-11-07 — Task 4.2 Calendar views
 - **Verified: FullCalendar 7.1.4 (MIT) is current.**
   - The plugins now ship inside `@fullcalendar/react` (`/daygrid`, `/timegrid`, `/list`, `/interaction`), with themes as plugins (`/themes/classic` plus its CSS).

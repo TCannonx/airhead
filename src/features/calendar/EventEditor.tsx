@@ -60,9 +60,12 @@ function initialState(d: EventDraft, tz: string) {
 export default function EventEditor({
   draft,
   onClose,
+  onBookLeave,
 }: {
   draft: EventDraft;
   onClose: () => void;
+  /** Offered for a new all-day selection: book these days as leave instead. */
+  onBookLeave?: (start: string, end: string) => void;
 }) {
   const db = useDb();
   const { user } = useAuth();
@@ -251,6 +254,17 @@ export default function EventEditor({
         >
           Save
         </button>
+        {!existing && f.allDay && onBookLeave && (
+          <button
+            type="button"
+            className="rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+            onClick={() =>
+              onBookLeave(f.startDate, f.endDate < f.startDate ? f.startDate : f.endDate)
+            }
+          >
+            Book as leave
+          </button>
+        )}
         {existing && !isTask && (
           <button
             type="button"
