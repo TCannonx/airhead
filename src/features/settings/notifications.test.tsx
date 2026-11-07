@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,6 +73,36 @@ describe('Settings → Notifications (Task 4.11)', () => {
     await user.click(screen.getByRole('button', { name: 'Send test notification' }));
     expect(await screen.findByText(/Sent\. It should arrive/)).toBeInTheDocument();
     expect(push.sendTest).toHaveBeenCalledWith(device?.id);
+
+    // Per-device switch.
+    const sw = screen.getByRole('switch', { name: `Notifications on ${device?.name ?? ''}` });
+    expect(sw).toHaveAttribute('aria-checked', 'true');
+    await user.click(sw);
+    expect(await screen.findByText('Notifications are off on all devices.')).toBeInTheDocument();
+  });
+
+  it('saves preferences: types, quiet hours, cap and the reminder default', async () => {
+    const user = userEvent.setup();
+    renderIt({ ...localServices(), push: pushService() });
+    const form = await screen.findByRole('form', { name: 'Notification preferences' });
+    await user.click(within(form).getByLabelText('Tasks that keep slipping'));
+    const start = within(form).getByLabelText('Quiet hours start');
+    await user.clear(start);
+    await user.type(start, '23:00');
+    await user.clear(within(form).getByLabelText('Most notifications a day'));
+    await user.type(within(form).getByLabelText('Most notifications a day'), '5');
+    await user.selectOptions(within(form).getByLabelText('Event reminders by default'), '15');
+    await user.click(within(form).getByRole('button', { name: 'Save notification settings' }));
+    expect(await screen.findByText('Saved')).toBeInTheDocument();
+    const d = db();
+    const settings = await d.settings.get(U);
+    d.close();
+    expect(settings?.data.notifications).toMatchObject({
+      quiet_start: '23:00',
+      daily_cap: 5,
+      event_reminder_minutes: 15,
+      types: { slip: false, event_reminder: true },
+    });
   });
 
   it('explains a refused permission', async () => {

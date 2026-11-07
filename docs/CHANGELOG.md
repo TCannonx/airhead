@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 4.15: notification settings (per-type switches, quiet hours, daily cap, reminder default, job times, per-device on/off)
 - Task 4.14: evening review screen (tick off, carry over with carry count, drop, carry all)
 - Task 4.13: scheduler tick every minute (recurring reminders, evening review, location checklist, slip and leave run-out nudges once a day, quiet hours, daily cap with summaries)
 - Task 4.12: reminders generated in the database from items (event reminders with per-event choice, task due reminders, time-TBC checks; moved, cancelled or re-armed as items change)
