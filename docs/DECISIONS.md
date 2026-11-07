@@ -2,6 +2,21 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 3.2 Sort batch
+- **`sort-batch` Edge Function** (`verify_jwt = false`; it authenticates itself): called by the app with the user's access token (on demand), or by the scheduler with the service key and `{ user_id }` (background, Task 3.3). Without `ANTHROPIC_API_KEY` it answers `503 not_configured` ("AI sorting is not set up yet") and captures simply wait.
+- Takes up to **20** of the user's oldest `unsorted` captures with text or a link (photo-only captures wait for Phase 6 vision). Digest: now + time zone (`settings.data.time_zone`, default Europe/Dublin), topic names, up to 30 open idea titles, list names, and the last 5 corrections **with the capture text they were about**. One small-tier call with effort `low`, max 8,000 output tokens.
+- **Prompt** `_shared/prompts/sort-batch.v1.ts` (versioned file): fixed system text (cached) + a per-request user message where every capture sits in `<capture id>` blocks, stated to be data, not instructions; a literal `</capture>` inside a capture is escaped.
+- **Output schema** (`_shared/schemas/sort.ts`): per capture, an array of items with `type`, `title`, `body`, `start_at`/`end_at` (ISO with offset), `all_day`, `due_at`, `rrule`, `list_name`, `topics`, `confidence`, `suggest_workshop`, `related_idea_title`. Optional values are `nullable` rather than absent, which suits strict structured outputs.
+- **The model suggests, Airhead's rules decide** (`sort-batch/plan.ts`, pure and tested on saved responses):
+  - events are `open` only when confidence ≥ 0.8 **and** the start is in the future; otherwise `suggested`.
+  - any item below 0.6 is `suggested`, and the capture becomes `needs_review`.
+  - a list entry for an unknown list is `suggested` with `data.proposed_list` (the Task 3.6 "Create list?" prompt).
+  - topics are capped at 3 and reused case-insensitively, with new ones created.
+  - `suggest_workshop` → `data.workshop`; a matched related idea → `data.related_idea_id`.
+  - results for capture ids not in the batch are ignored; captures the model skipped are marked `failed` ("Couldn't sort"), so a broken capture isn't retried forever.
+- **Applied atomically** by `apply_sort_batch(user, plan)` (plpgsql, security definer, service role only). It locks the batch's captures and applies items **only for captures still `unsorted`**, so one edited, sorted or deleted on a device meanwhile is left alone. Devices pick up the new rows through normal sync (Realtime nudge).
+- Saved model output lives in `tests/fixtures/ai/sort-batch.json` (brain dump → two shopping-list entries + event + task; ambiguous capture → review; new topic + workshop + related idea).
+
 ## 2026-11-07 — Task 3.1 AI gateway
 - **Verify (model IDs and prices)**, from Anthropic's current model table (Claude API skill, cached 2026-10-06): small tier **`claude-haiku-5-5`** ($0.10 in / $0.50 out per MTok for prompts up to 100K tokens; cache reads $0.01, 5-minute cache writes $0.125 = 1.25× input), large tier **`claude-sonnet-5-5`** ($2 / $10; cache reads $0.20, writes $2.50). These follow the design doc's own choice ("small, e.g. Claude Haiku"; "larger, e.g. Claude Sonnet"); IDs live in `MODELS` in `_shared/ai.ts`. The price table is seeded with these values and is editable per user (`ai_prices` rows with the user's id override the defaults).
 - **`eur_rate` seeded at 0.86 euros per dollar as a placeholder**, editable in Insights → AI usage (3.7). The Claude Console is the true record of spend; the app's figures are estimates.

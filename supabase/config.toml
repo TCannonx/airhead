@@ -434,3 +434,8 @@ enabled = true
 # health: called by the keep-alive workflow without a user, so no JWT check.
 [functions.health]
 verify_jwt = false
+
+# sort-batch: authenticates itself (a user's access token, or the service key
+# from the scheduler), so the gateway's JWT check is off.
+[functions.sort-batch]
+verify_jwt = false
