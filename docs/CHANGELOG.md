@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- Task 3.1: AI gateway (usage log, editable prices, monthly cap, structured output with one retry, prompt caching)
+
 ## Phase 2 — Capture core and sync (ready for device testing, not yet released)
 
 Usable offline from here: Capture tab (box, paste link, compressed photos), free on-device rules (links → reading list, British dates, instant events with Undo, suggestions, recurrence), local database per user with an outbox, two-way sync with Supabase (Realtime nudges, late-commit overlap, offline queue, photo upload), Inbox with one-tap sorting and corrections, Library with filters, item editing, Trash, on-device search, export everything, and a sync status indicator. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 2.

@@ -176,7 +176,7 @@ npm run test:e2e       # Playwright
 supabase start         # local Supabase stack (Docker)
 supabase db reset      # LOCAL only — rebuild local DB from migrations
 npm run test:db        # pgTAP database tests (supabase test db; needs the local stack)
-deno test --allow-env --allow-net=127.0.0.1 supabase/functions
+DENO_NO_PACKAGE_JSON=1 deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 supabase/functions
 ```
 
 Supabase CLI 3.x: `db push`, `db dump` and similar commands target the **local** database unless given `--remote`.
