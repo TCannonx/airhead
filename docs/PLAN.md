@@ -254,7 +254,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 
 **Sharing**
 
-- [ ] **4.8 Outgoing feeds.** `feeds` rows of kind `us_out` (Us calendar) and `me_out` (everything, for my own iPhone). Tokens are 32 random bytes; only a SHA-256 hash is stored, the URL is shown on creation and on regenerate. Function `calendar-feed?t=<token>` returns a valid iCalendar file with stable UIDs, recurrence rules, Us events, shared leave as all-day "Off", and work location per the sharing setting ("WFH"/"Office" or just "Working"). Offer `webcal://` and copy-link buttons.
+- [x] **4.8 Outgoing feeds.** `feeds` rows of kind `us_out` (Us calendar) and `me_out` (everything, for my own iPhone). Tokens are 32 random bytes; only a SHA-256 hash is stored, the URL is shown on creation and on regenerate. Function `calendar-feed?t=<token>` returns a valid iCalendar file with stable UIDs, recurrence rules, Us events, shared leave as all-day "Off", and work location per the sharing setting ("WFH"/"Office" or just "Working"). Offer `webcal://` and copy-link buttons.
     - Tests: round-trip the output through ical.js; a revoked token returns 404.
 - [ ] **4.9 Linked calendars.** Settings → Linked calendars: paste a secret iCal URL, validate by fetching and parsing, name and colour it. A `pg_cron` job every 30 minutes calls `fetch-linked-calendars`: safe fetch, parse, expand recurrences 12 months ahead, upsert by UID, remove events no longer present, record errors on the feed.
 

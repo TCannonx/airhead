@@ -7,6 +7,7 @@ import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
+import SharingSettings from './SharingSettings';
 import WorkSettings from './WorkSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -120,6 +121,10 @@ export default function SettingsPage() {
 
       <Section title="Work">
         <WorkSettings />
+      </Section>
+
+      <Section title="Sharing">
+        <SharingSettings />
       </Section>
 
       <Section title="Memory">

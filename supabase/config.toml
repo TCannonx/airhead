@@ -447,3 +447,7 @@ verify_jwt = false
 # check-contradictions: checks the caller's own token itself.
 [functions.check-contradictions]
 verify_jwt = false
+
+# Calendar apps subscribe without signing in; the secret token in the URL is the key.
+[functions.calendar-feed]
+verify_jwt = false
