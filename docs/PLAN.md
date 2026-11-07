@@ -399,7 +399,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: Deno with AI fixtures (valid draft, schema failure retried once, an injection line in a linked page does nothing), component tests for versions.
 - [x] **7.7 Work on it together.** Mode `turn`: it sends only the current draft and the last 6 turns plus the new answer. It returns two or three questions and an updated draft (a new version). Answers typed offline wait in `pending` and are sent when back online. A session can be left and resumed.
     - Tests: Deno (only the recent turns are sent), component tests (offline answer queued, then sent).
-- [ ] **7.8 Next steps to tasks.** A draft's next steps become tasks in one tap: a checklist, all ticked by default (the user is already deciding in the Workshop), with "Add N tasks". Each task is linked to the idea (`data.idea_id`) and its due text is read by the free rules (reuses `actionsToTasks`).
+- [x] **7.8 Next steps to tasks.** A draft's next steps become tasks in one tap: a checklist, all ticked by default (the user is already deciding in the Workshop), with "Add N tasks". Each task is linked to the idea (`data.idea_id`) and its due text is read by the free rules (reuses `actionsToTasks`).
     - Tests: component tests.
 - [ ] **7.9 Embeddings.** **Verify** Supabase's built-in model: `gte-small` via `Supabase.ai.Session('gte-small')` with `mean_pool` and `normalize`, English, input cut at 512 tokens. Its dimension is expected to be 384; confirm it against a real embedding and record it.
     - Migration `chunks`: id, user_id, item_id, chunk_index, content, `content_hash`, `fts` (generated tsvector), `embedding vector(384)`. HNSW index with `vector_ip_ops`, GIN on `fts`, own-rows RLS for reading only.

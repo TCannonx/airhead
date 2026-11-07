@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.8: a draft's next steps become tasks in one tap (linked to the idea)
 - Task 7.7: Work on it together (two or three questions per turn, draft updated as a new version; answers typed offline are sent later)
 - Task 7.6: Workshop page and Auto flesh-out (structured draft, saved as a new version; older versions one tap away)
 - Task 7.5: Workshop data (draft versions numbered by the server, sessions, Send to the Workshop)

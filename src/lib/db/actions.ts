@@ -23,12 +23,19 @@ export function parseDue(
 
 export const actionKey = (title: string) => title.trim().toLowerCase().replace(/\s+/g, ' ');
 
-/** The tasks already made from this note's action items, by `actionKey` of their title. */
-export async function tasksFromNote(db: AirheadDb, noteId: string): Promise<Map<string, Item>> {
+/** Which field links a task to where it came from: a note (6.8) or a Workshop idea (7.8). */
+export type TaskLink = 'note_id' | 'idea_id';
+
+/** The tasks already made from this source, by `actionKey` of their title. */
+export async function tasksFromNote(
+  db: AirheadDb,
+  sourceId: string,
+  link: TaskLink = 'note_id',
+): Promise<Map<string, Item>> {
   const tasks = await db.items.where('type').equals('task').toArray();
   const out = new Map<string, Item>();
   for (const t of tasks)
-    if (!t.deleted_at && t.data.note_id === noteId) out.set(actionKey(t.title), t);
+    if (!t.deleted_at && t.data[link] === sourceId) out.set(actionKey(t.title), t);
   return out;
 }
 
@@ -37,9 +44,10 @@ export async function actionsToTasks(
   userId: string,
   note: Pick<Item, 'id'>,
   picks: ActionItem[],
-  opts: { now?: Date; timeZone?: string } = {},
+  opts: { now?: Date; timeZone?: string; link?: TaskLink } = {},
 ): Promise<Item[]> {
-  const existing = await tasksFromNote(db, note.id);
+  const link = opts.link ?? 'note_id';
+  const existing = await tasksFromNote(db, note.id, link);
   const made: Item[] = [];
   for (const action of picks) {
     const key = actionKey(action.title);
@@ -53,7 +61,7 @@ export async function actionsToTasks(
         body: action.owner ? `Owner: ${action.owner}` : null,
         due_at: parseDue(action.due_text, opts),
         data: {
-          note_id: note.id,
+          [link]: note.id,
           ...(action.owner ? { owner: action.owner } : {}),
           ...(action.due_text ? { due_text: action.due_text } : {}),
         },

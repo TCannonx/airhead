@@ -8,6 +8,7 @@ import { draftsFor } from '../../lib/db/workshop';
 import { draftSchema, type Draft } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
 import { FLESH_OUT_COST_TEXT } from '../../lib/workshop/cost';
+import NextSteps from './NextSteps';
 import SessionPanel from './SessionPanel';
 
 const button =
@@ -34,16 +35,7 @@ function DraftView({ draft }: { draft: Draft }) {
           </ul>
         </section>
       )}
-      {c.next_steps.length > 0 && (
-        <section>
-          <h3 className="font-semibold">Next steps</h3>
-          <ul className="list-disc pl-5">
-            {c.next_steps.map((q, i) => (
-              <li key={i}>{q}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <NextSteps itemId={draft.item_id} steps={c.next_steps} />
     </article>
   );
 }

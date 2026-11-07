@@ -2,6 +2,10 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.8 Next steps to tasks
+- **Same code as action items (6.8)**: `actionsToTasks` and `tasksFromNote` take a link field, `note_id` for notes or `idea_id` for Workshop ideas. The once-per-title check and the free-rules due parsing are shared.
+- **Every step starts ticked** (the plan's choice: in the Workshop the person is already deciding), and "Add N tasks" creates the ticked ones. Steps already added show "Task added", even after a new draft version, because they are matched by title.
+
 ## 2026-11-07 — Task 7.7 Work on it together
 - **`workshop` mode `turn`**: one large-tier call with prompt `workshop-turn.v1`, task `workshop_turn`.
   - Sent: the idea, the current draft and only the last 6 turns, plus the new answer (none on the first turn). The linked page is not sent again.
