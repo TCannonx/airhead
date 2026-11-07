@@ -6,6 +6,10 @@
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
 
+### Phase 6 ready for device testing and release
+
+Phase 6 (Notes) is merged and deploys to dev. Summarise needs item 9 (Anthropic key); everything else works without it. Run the Phase 6 section of `docs/MANUAL-CHECKLIST.md` (the iPad with the Pencil matters most).
+
 ### Phase 5 ready for device testing and release
 
 Phase 5 (Today and morning brief) is merged and deploys to dev. The brief needs items 8 (Vault secrets, for the scheduler), 9 (Anthropic key) and 10 (VAPID keys, for the round-up). Without the key, the morning list still arrives as the code-built fallback. Run the Phase 5 section of `docs/MANUAL-CHECKLIST.md`.
