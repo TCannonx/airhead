@@ -12,6 +12,13 @@ The account's 2,000 free minutes ran out. On the user's instruction the repo was
 
 To make it private again: GitHub → the repo → Settings → General → Danger Zone → Change visibility. Each merged PR then costs about 12 minutes (after `fix/ci-minutes`), roughly 165 PRs a month. Forks or clones made while it was public stay public.
 
+### Phase 9 ready for device testing — all phases built, v0.1 ready to release
+
+Phase 9 (Notebook polish) is merged and deploys to dev. Every phase in `docs/PLAN.md` is now built. To release v0.1:
+1. Run `docs/MANUAL-CHECKLIST.md` on the iPhone, iPad and desktop Chrome against dev (https://airhead.pages.dev).
+2. Finish item 7 (live secrets and the `airhead-live` Pages project) and set items 8–10 in the live Supabase project.
+3. Create the tag `v0.1.0` (or tell Claude Code to). `release.yml` deploys that commit to `airhead-live`.
+
 ### Phase 8 ready for device testing and release
 
 Phase 8 (Reflection) is merged and deploys to dev. The weekly review, Scout's web ideas and "Ask Airhead to pick" need item 9 (Anthropic key). The scheduled review needs item 8 (Vault secrets). Set a city in Settings → Scout for web ideas. Run the Phase 8 section of `docs/MANUAL-CHECKLIST.md`.

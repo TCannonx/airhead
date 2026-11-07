@@ -2,6 +2,17 @@
 
 One line per merged PR, newest first.
 
+## Phase 9 — Notebook polish (ready for device testing, not yet released)
+
+Handwritten pages gain:
+- a Lasso: select strokes and text boxes, drag to move, delete, copy and paste between notes, each with undo;
+- hold-to-snap: hold the Pencil still at the end of a stroke to turn it into a clean line, arrow, rectangle or circle (undo restores the drawn one).
+
+No server changes. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 9.
+
+All nine phases in `docs/PLAN.md` are now built. The app is ready for the v0.1 device run-through and live release.
+
+- release: phase 9
 - Task 9.4: hold the pen still to snap a stroke into a clean line, arrow, rectangle or circle (undo restores the drawn one)
 - Task 9.3: copy a lasso selection and paste it into the same or another handwritten note
 - Task 9.2: move a lasso selection by dragging, delete it, undo and redo both
