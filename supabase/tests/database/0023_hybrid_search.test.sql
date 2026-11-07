@@ -14,7 +14,7 @@ create temporary table v as select
 grant select on v to authenticated;
 
 insert into public.chunks (user_id, item_id, chunk_index, content, content_hash, embedding)
-select '00000000-0000-0000-0000-00000000000a', 'a0000000-0000-4000-8000-000000000001', 0,
+select '00000000-0000-0000-0000-00000000000a'::uuid, 'a0000000-0000-4000-8000-000000000001'::uuid, 0,
        'Budget review: travel is cut by ten percent', 'h1', e1 from v
 union all
 select '00000000-0000-0000-0000-00000000000a', 'a0000000-0000-4000-8000-000000000002', 0,
