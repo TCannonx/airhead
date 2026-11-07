@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.14 Evening review
+- **`/review`**: opened by the 21:00 notification (its URL), and linked from Today. It lists today's open tasks: due today or earlier (by the person's local date), or in today's Top 3. Overdue tasks appear so they get a decision.
+- **One tap each**:
+  - **Done** sets `status: done` and `completed_at`.
+  - **Tomorrow** carries the task over: `carry_count + 1`. A due time keeps its local time of day on tomorrow's date (an overdue 10:00 task becomes 10:00 tomorrow), and today's Top 3 place becomes tomorrow's.
+  - **Drop** sets `status: dropped`.
+  - **"Carry all to tomorrow"** appears for two or more tasks.
+- **`carry_count`** is what the scheduler's slip nudge looks at (3 or more).
+- **When the list is empty** the screen says "All done for today" with a way back to Today.
+- **Changes are local first and sync like any edit.** Completing or dropping cancels the task's reminder in the database (4.12); moving the due time moves it.
+
 ## 2026-11-07 — Task 4.13 Scheduler tick
 - **Dispatch**: `pg_cron` runs `dispatch_scheduler_tick()` every minute (migration `20261107000014_scheduler.sql`). It makes one `pg_net` call to `scheduler-tick` with the service key, but only when someone has a notification device and the Vault secrets are set. The function rejects any other caller.
 - **Each tick, per person with a receiving device**, in their time zone (`settings.data.time_zone`, default Europe/Dublin):
