@@ -6,6 +6,12 @@
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
 
+### GitHub Actions minutes used up (2026-11-07) — resolved
+
+The account's 2,000 free minutes ran out. On the user's instruction the repo was made **public** (Actions are free for public repos). No secrets are in the history; it was checked before the switch.
+
+To make it private again: GitHub → the repo → Settings → General → Danger Zone → Change visibility. Each merged PR then costs about 12 minutes (after `fix/ci-minutes`), roughly 165 PRs a month. Forks or clones made while it was public stay public.
+
 ### Phase 6 ready for device testing and release
 
 Phase 6 (Notes) is merged and deploys to dev. Summarise needs item 9 (Anthropic key); everything else works without it. Run the Phase 6 section of `docs/MANUAL-CHECKLIST.md` (the iPad with the Pencil matters most).
