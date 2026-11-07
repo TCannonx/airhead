@@ -390,7 +390,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Tests: a docs check that the guide names the function URL pattern and never contains a real token.
 - [x] **7.4 Bookmarklet and share target.** "Send to Airhead" bookmarklet: a link to drag to the bookmarks bar. It opens Airhead's own `/share?url=&title=&text=` page in a small window, and the signed-in app saves the capture there. No token goes into web pages, so a page's scripts can never read it. The same route becomes the PWA manifest's `share_target` (Android and desktop Chrome).
     - Tests: component tests for `/share` (saves once, shows Saved, closes), and a unit test for the bookmarklet code (encodes the selection, the title and the URL).
-- [ ] **7.5 Workshop data.** Migration:
+- [x] **7.5 Workshop data.** Migration:
     - `drafts`: id, item_id, version, `content` jsonb with summary, sections [{heading, body}], open_questions and next_steps; `source` auto, session or edit. Append-only versions.
     - `workshop_sessions`: id, item_id, `turns` jsonb [{role, text, at}], `pending` answer.
     - Both are synced both ways with own-rows RLS. An item is "in the Workshop" via `data.workshop = true`, set from any item, or from sorting's existing Workshop suggestion with one tap. The Inbox "To flesh out" section lists these items.

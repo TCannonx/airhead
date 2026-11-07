@@ -84,5 +84,10 @@ export function openUserDb(userId: string): AirheadDb {
   db.version(5).stores({ briefs: 'id, local_date, server_updated_at' });
   // v6: note documents (Task 6.1).
   db.version(6).stores({ note_docs: 'id, kind, server_updated_at' });
+  // v7: Workshop drafts and sessions (Task 7.5).
+  db.version(7).stores({
+    drafts: 'id, item_id, server_updated_at',
+    workshop_sessions: 'id, server_updated_at',
+  });
   return db;
 }

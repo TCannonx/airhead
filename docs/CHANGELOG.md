@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.5: Workshop data (draft versions numbered by the server, sessions, Send to the Workshop)
 - Task 7.4: "Send to Airhead" bookmarklet and PWA share target (both land on /share; no token in web pages)
 - Task 7.3: iOS Shortcuts guide (Send to Airhead from the share sheet, Quick thought on Back Tap or the Action Button), in the docs and in Settings
 - Task 7.2: ingest-capture function for Shortcuts (text, links and photos saved Unsorted; token checked and rate limited)

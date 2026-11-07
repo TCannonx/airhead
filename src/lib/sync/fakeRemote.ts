@@ -77,6 +77,20 @@ export function createFakeRemote(startMs = Date.parse('2026-11-06T09:00:00Z')) {
           ...next,
           server_updated_at: new Date(clock).toISOString(),
           ...(table === 'note_docs' ? { version: Number(existing?.version ?? 0) + 1 } : {}),
+          // Like 0021: drafts are numbered per item by the server, once.
+          ...(table === 'drafts'
+            ? {
+                version: existing
+                  ? existing.version
+                  : 1 +
+                    Math.max(
+                      0,
+                      ...[...tableOf('drafts').values()]
+                        .filter((d) => d.item_id === row.item_id)
+                        .map((d) => Number(d.version)),
+                    ),
+              }
+            : {}),
         });
       }
     },
