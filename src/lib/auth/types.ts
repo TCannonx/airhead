@@ -201,6 +201,26 @@ export interface ReviewsService {
   run(): Promise<{ ok: boolean; message: string }>;
 }
 
+export interface LeaveSuggestRequest {
+  today: string;
+  candidates: { leave: string[]; start: string; end: string; days_off: number }[];
+  context: {
+    occasions: { date: string; title: string }[];
+    days_since_break: number | null;
+    busy_weeks: { week: string; events: number }[];
+  };
+}
+
+/** Holiday suggestions (Task 8.8): one small AI call picks from the device's candidates. */
+export interface LeaveService {
+  suggest(
+    req: LeaveSuggestRequest,
+  ): Promise<
+    | { ok: true; error_code: null; message: string; picks: { index: number; why: string }[] }
+    | { ok: false; error_code: string; message: string }
+  >;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -219,4 +239,5 @@ export interface Services {
   workshop?: WorkshopService;
   ask?: AskService;
   reviews?: ReviewsService;
+  leave?: LeaveService;
 }

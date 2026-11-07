@@ -9,6 +9,7 @@ import { leaveYearFor } from '../../lib/leave/engine';
 import type { LeaveBooking } from '../../lib/schemas/records';
 import { leaveTypeOf } from '../../lib/work/settings';
 import LeaveCounter from './LeaveCounter';
+import LeaveIdeas from './LeaveIdeas';
 import LeaveSheet from './LeaveSheet';
 import { todayKey, useWork } from './useWork';
 
@@ -20,7 +21,10 @@ export default function WorkPage() {
   const db = useDb();
   const { user } = useAuth();
   const data = useWork();
-  const [open, setOpen] = useState<{ booking?: LeaveBooking } | null>(null);
+  const [open, setOpen] = useState<{
+    booking?: LeaveBooking;
+    initial?: { start_date: string; end_date: string };
+  } | null>(null);
   const [sheetKey, setSheetKey] = useState(0);
   if (!data) return null;
   const { work, bookings } = data;
@@ -28,7 +32,10 @@ export default function WorkPage() {
   const inYear = bookings.filter((b) => b.end_date >= year.start && b.start_date <= year.end);
   const later = bookings.filter((b) => b.start_date > year.end);
   const opening = work.opening_carry_over[year.start];
-  const show = (o: { booking?: LeaveBooking }) => {
+  const show = (o: {
+    booking?: LeaveBooking;
+    initial?: { start_date: string; end_date: string };
+  }) => {
     setOpen(o);
     setSheetKey((k) => k + 1);
   };
@@ -75,11 +82,23 @@ export default function WorkPage() {
               work={work}
               bookings={bookings}
               booking={open.booking}
+              initial={open.initial}
               onClose={() => setOpen(null)}
             />
           </div>
         )}
         <LeaveCounter detailed />
+        <div className="mt-4">
+          <LeaveIdeas
+            work={work}
+            bookings={bookings}
+            onBook={(b) =>
+              show({
+                initial: { start_date: b.leave[0] ?? b.start, end_date: b.leave.at(-1) ?? b.end },
+              })
+            }
+          />
+        </div>
       </section>
 
       <section className={section}>

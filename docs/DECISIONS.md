@@ -2,6 +2,21 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.8 Holiday suggestions
+- **Candidates are found on the device** (`src/lib/leave/suggest.ts`) from data it already holds:
+  - holidays, closure days and the work pattern;
+  - bookings, which are blocked;
+  - Airhead events and the linked calendar, which count as clashes;
+  - the remaining balance.
+  - So "Suggest leave" on Work shows the next six months' bridges instantly, offline and free.
+- **"Ask Airhead to pick"** (`suggest-leave`) makes one small-tier call with prompt `leave.v1`.
+  - It sends the candidates the device found, plus upcoming occasions (event titles that look like birthdays, trips, matches and so on), days since the last break of 3+ days, and weeks with 5+ events.
+  - It returns two or three picks, each with a one-line reason. Picks outside the candidates sent are dropped.
+  - About €0.001.
+- **Booking** opens the normal leave sheet prefilled from the first to the last leave day. Days off in between aren't counted as leave, so the usual rules apply.
+- **In the weekly review**: when a one-day bridge falls in the next 8 weeks, the review shows a hint with a link to Work (code only).
+- **Monthly runs are folded into this**: candidates are recomputed whenever Work or the weekly review opens, so a separate monthly job would add nothing.
+
 ## 2026-11-07 — Task 8.7 Bridge-day finder
 - **`findBridges`** (`src/lib/leave/bridges.ts`) is pure and import-free, and copied verbatim to `supabase/functions/_shared/leave/bridges.ts`. A Deno test checks the two copies match, so the Deno test command (CI and CLAUDE.md) may now read `src/lib/leave` and `_shared/leave`.
 - **Rule**:
