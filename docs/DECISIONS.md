@@ -2,6 +2,30 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 5.4 Morning brief function
+- **Verified: large-tier refusal fallback.** Per the current API docs, Sonnet 5.5 large-tier calls send `fallbacks: "default"` with the beta header `server-side-fallback-2026-07-01`, so on a decline the API re-runs the request on its recommended model within the same call.
+  - Haiku 5.5 has no server-side fallback, so small-tier calls don't ask for one.
+  - A refusal that still comes back is handled like any other failure.
+  - This was the item left over from the Phase 3 gateway decisions.
+- **`morning-brief`** (`buildBrief` + `runMorningBrief`): one large-tier call per brief (`morning_brief` in AI usage), with the memory profile as the cached second system block.
+  - **Input**: the SQL digest (5.2), enriched in code with holidays, today's location and recurring occurrences.
+  - **Prompt `brief.v1`**: a short warm reflection; up to 3 Top 3 ids with a reason and minutes; up to 8 Also-today ids; up to 3 prep nudges with local times. Ids only from the digest; the digest is data, never instructions.
+- **Validation in code**:
+  - Unknown or repeated ids are dropped.
+  - Minutes are clamped to 15–120.
+  - Prep times must be later than now; prep ids must be in the digest or null.
+  - Text is length-capped.
+- **Slots come from code** (5.3): busy = today's timed events from Airhead, recurring occurrences and linked calendars, inside the day window, from now on.
+- **Fallback**: any AI failure (cap, refusal, outage, bad output) gives the code-built list (5.5) with slots, stored as `status: 'fallback'` with no reflection and no prep nudges. The day never goes without a list.
+- **Writes**:
+  - The brief: an upsert per person and day, so Regenerate replaces it.
+  - `top3_date` on the chosen tasks. Earlier choices aren't cleared, so tasks picked by hand stay.
+  - Prep nudges (`kind = 'prep'`); a regenerated brief cancels the day's earlier pending ones first.
+  - For the scheduled run, a round-up nudge: "Good morning · Top 3: A · B · C", opening `/today`. Migration 0017 adds the `morning_brief` nudge kind (a wider check; nothing removed).
+- **Quiet days**: a day with no tasks and no events gets no brief.
+- **Entry point** `POST morning-brief` (`verify_jwt = false`, checks callers itself): the owner's `{ mode: 'regenerate' }` (no round-up), or the scheduler's service key with `{ user_id }`.
+- **New helper**: `localTimeIso` in the scheduler's time helpers, so prep times are correct on clock-change days.
+
 ## 2026-11-07 — Tasks 5.3 Free slots and 5.5 Fallback list
 - **One PR for both**: they are the two pure helpers the brief (5.4) is built on, with no UI or database of their own.
 - **Shared with no imports**: `src/lib/today/slots.ts` and `fallback.ts` have no imports, so the very same text is copied to `supabase/functions/_shared/today/`. A Deno test fails if the copies ever differ. CI's Deno run may now read those two folders.

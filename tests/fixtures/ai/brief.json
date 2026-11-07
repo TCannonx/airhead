@@ -1,0 +1,38 @@
+{
+  "note": "Model output for the morning brief on tests/fixtures/brief/digest.json. Includes an invented id, a time already past and an out-of-range estimate, which the code must clean. Used by morning-brief tests; the paid API is never called.",
+  "output": {
+    "reflection": "Yesterday you cleared four tasks. Today is busy around lunch, with the dentist at three.",
+    "top3": [
+      {
+        "item_id": "a0000000-0000-4000-8000-000000000003",
+        "why": "due at 10:00, slipped 3 times",
+        "minutes": 15
+      },
+      { "item_id": "ffffffff-ffff-4fff-8fff-ffffffffffff", "why": "made up", "minutes": 30 },
+      { "item_id": "a0000000-0000-4000-8000-000000000001", "why": "overdue", "minutes": 400 },
+      {
+        "item_id": "a0000000-0000-4000-8000-000000000002",
+        "why": "already in your Top 3",
+        "minutes": 45
+      }
+    ],
+    "also_today": [
+      "a0000000-0000-4000-8000-000000000004",
+      "a0000000-0000-4000-8000-000000000003",
+      "nope"
+    ],
+    "prep_nudges": [
+      {
+        "text": "Leave by 14:40 for the dentist",
+        "send_at": "14:30",
+        "item_id": "e0000000-0000-4000-8000-000000000001"
+      },
+      { "text": "Too early", "send_at": "06:00", "item_id": null },
+      {
+        "text": "Pack your training bag",
+        "send_at": "17:30",
+        "item_id": "e0000000-0000-4000-8000-000000000003"
+      }
+    ]
+  }
+}

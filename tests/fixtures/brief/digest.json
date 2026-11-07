@@ -1,0 +1,87 @@
+{
+  "date": "2026-07-15",
+  "weekday": "Wednesday",
+  "time_zone": "Europe/Dublin",
+  "events": [
+    {
+      "id": "e0000000-0000-4000-8000-000000000001",
+      "title": "Dentist",
+      "date": "2026-07-15",
+      "start": "14:00",
+      "end": "14:30",
+      "all_day": false,
+      "calendar": "personal",
+      "location": "Smile Clinic",
+      "time_tbc": false
+    },
+    {
+      "id": "e0000000-0000-4000-8000-000000000002",
+      "title": "Team lunch",
+      "date": "2026-07-15",
+      "start": "12:30",
+      "end": "13:30",
+      "all_day": false,
+      "calendar": "personal",
+      "location": null,
+      "time_tbc": false
+    }
+  ],
+  "recurring": [
+    {
+      "id": "e0000000-0000-4000-8000-000000000003",
+      "title": "Training",
+      "start_at": "2026-07-01T18:00:00.000Z",
+      "end_at": "2026-07-01T19:30:00.000Z",
+      "all_day": false,
+      "rrule": "FREQ=WEEKLY;BYDAY=WE",
+      "calendar": "personal"
+    }
+  ],
+  "linked": [
+    {
+      "title": "Her yoga",
+      "date": "2026-07-15",
+      "start": "08:30",
+      "end": "09:30",
+      "calendar": "Her calendar"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "a0000000-0000-4000-8000-000000000001",
+      "title": "Send invoice",
+      "due": "2026-07-14 17:00",
+      "top3": false,
+      "carry_count": 1,
+      "age_days": 6
+    },
+    {
+      "id": "a0000000-0000-4000-8000-000000000002",
+      "title": "Book flights",
+      "due": null,
+      "top3": true,
+      "carry_count": 0,
+      "age_days": 2
+    },
+    {
+      "id": "a0000000-0000-4000-8000-000000000003",
+      "title": "Call plumber",
+      "due": "2026-07-15 10:00",
+      "top3": false,
+      "carry_count": 3,
+      "age_days": 12
+    },
+    {
+      "id": "a0000000-0000-4000-8000-000000000004",
+      "title": "Read contract",
+      "due": null,
+      "top3": false,
+      "carry_count": 0,
+      "age_days": 1
+    }
+  ],
+  "yesterday": { "done": 4, "unfinished_top3": 1, "captured": 9 },
+  "leave": [],
+  "work_days": [{ "date": "2026-07-15", "location": "office" }],
+  "ideas": [{ "id": "a0000000-0000-4000-8000-000000000009", "title": "Garden office" }]
+}
