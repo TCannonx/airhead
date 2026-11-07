@@ -106,3 +106,37 @@ export function trashItems(items: Item[], now = new Date()): Item[] {
     .filter((i) => i.deleted_at && Date.parse(i.deleted_at) > cutoff)
     .sort((a, b) => (b.deleted_at ?? '').localeCompare(a.deleted_at ?? ''));
 }
+
+/**
+ * Settles an unsure (suggested) item from AI sorting with one tap: keep its
+ * type, or pick another (recorded as a correction). When the capture has no
+ * unsure items left, it counts as sorted.
+ */
+export async function resolveSuggestion(
+  db: AirheadDb,
+  userId: string,
+  itemId: string,
+  type: ItemType,
+): Promise<void> {
+  const item = await db.items.get(itemId);
+  if (!item) return;
+  if (type !== item.type) await changeItemType(db, userId, itemId, type);
+  await update(db, 'items', itemId, { status: 'open' });
+  if (!item.capture_id) return;
+  const stillUnsure = await db.items
+    .where('capture_id')
+    .equals(item.capture_id)
+    .filter((i) => i.status === 'suggested' && !i.deleted_at)
+    .count();
+  const capture = await db.captures.get(item.capture_id);
+  if (stillUnsure === 0 && capture?.status === 'needs_review') {
+    await update(db, 'captures', capture.id, {
+      status: 'sorted',
+      sorted_at: new Date().toISOString(),
+    });
+  }
+}
+
+/** Unsure items waiting for a tap in the Inbox (date suggestions live on Today). */
+export const isInboxSuggestion = (i: Item) =>
+  i.status === 'suggested' && !i.deleted_at && i.type !== 'event';

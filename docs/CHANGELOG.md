@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 3.4: Inbox "Needs a tap" one-tap choices for unsure AI sorting; re-sorts recorded as corrections
 - Task 3.3: sorting triggers (app open, Sort now, 5-minute scheduler with thresholds)
 - Task 3.2: sort-batch function (brain-dump splitting, topics, lists, review routing) applied atomically
 - Task 3.1: AI gateway (usage log, editable prices, monthly cap, structured output with one retry, prompt caching)
