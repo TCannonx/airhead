@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { friendlyAuthError } from './errors';
+import { friendlyAuthError, friendlyCodeError, linkError } from './errors';
 
 describe('friendlyAuthError', () => {
   const online = true;
@@ -24,7 +24,7 @@ describe('friendlyAuthError', () => {
       friendlyAuthError({ message: 'Email rate limit exceeded' }, 'f', online).message,
     ).toMatch(/too many attempts/i);
     expect(
-      friendlyAuthError({ message: 'Token has expired or is invalid' }, 'f', online).message,
+      friendlyCodeError({ message: 'Token has expired or is invalid' }, 'f', online).message,
     ).toBe('That code is wrong or has expired.');
     expect(friendlyAuthError({ message: 'anything' }, 'f', false).message).toMatch(/offline/i);
   });
@@ -33,5 +33,28 @@ describe('friendlyAuthError', () => {
     expect(
       friendlyAuthError({ message: 'Database error: xyz' }, 'Try again.', online).message,
     ).toBe('Try again.');
+  });
+
+  it('never blames a code when sending the email failed', () => {
+    expect(
+      friendlyAuthError({ message: 'Email address "x@y" is invalid' }, 'Send failed.', online)
+        .message,
+    ).toBe('That email address does not look right.');
+    expect(
+      friendlyAuthError({ message: 'Token has expired or is invalid' }, 'Send failed.', online)
+        .message,
+    ).toBe('Send failed.');
+    expect(
+      friendlyCodeError({ message: 'Email rate limit exceeded' }, 'f', online).message,
+    ).toMatch(/too many attempts/i);
+  });
+
+  it('explains a sign-in link that failed when it was opened', () => {
+    expect(linkError('?error=access_denied&error_code=otp_expired', '')).toMatch(/link/i);
+    expect(
+      linkError('', '#error=access_denied&error_code=otp_expired&error_description=Email+link'),
+    ).toMatch(/expired/i);
+    expect(linkError('?code=abc', '')).toMatch(/same browser/i);
+    expect(linkError('', '')).toBeNull();
   });
 });

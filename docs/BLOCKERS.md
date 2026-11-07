@@ -104,6 +104,15 @@ The dev site is a Cloudflare **Worker** connected to `TCannonx/airhead` (Cloudfl
 
 - For the live release workflow (Task 1.8), still create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
 
+### 5b. Sign-in emails need the code (hosted dev) — to do
+
+The hosted dev project still sends Supabase's default emails, which only have a link. The link signs in only in the same browser that asked for it (not from inside a mail app), so the app needs the 6-digit code too. The repo's templates aren't deployed by CI (`config push` would also overwrite the hosted Site URL with localhost).
+
+1. Supabase dev → **Authentication → Emails → Templates**.
+2. **Confirm signup**: subject `Your Airhead sign-in code`; body = `supabase/templates/confirmation.html`.
+3. **Magic link**: subject `Your Airhead sign-in code`; body = `supabase/templates/magic_link.html`.
+4. Save both. New emails then show the code to type in the app.
+
 ### 6. Branch protection (Task 1.8) — now possible: the repo is public
 
 Public repos get branch protection on the free plan. Claude Code's permission check blocked it from changing protection itself, so either run this once (`!` prefix in Claude Code) or tell Claude Code it may:

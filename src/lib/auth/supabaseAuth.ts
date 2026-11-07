@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { friendlyAuthError as plain } from './errors';
+import { friendlyAuthError as plain, friendlyCodeError } from './errors';
 import type { AuthClient, AuthUser } from './types';
 
 const toUser = (u: User | null | undefined): AuthUser | null =>
@@ -37,7 +37,7 @@ export function supabaseAuth(supabase: SupabaseClient): AuthClient {
     },
     async verifyEmailCode(email, code) {
       const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-      if (error) throw plain(error, 'That code did not work. Try again.');
+      if (error) throw friendlyCodeError(error, 'That code did not work. Try again.');
     },
     async signOut() {
       // 'local' signs out this device only; other devices stay signed in.
