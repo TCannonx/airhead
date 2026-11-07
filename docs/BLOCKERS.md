@@ -6,6 +6,10 @@
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
 
+### Phase 2 ready for device testing and release
+
+Phase 2 (capture core and sync) is merged and deploys to dev on every merge. Run the Phase 1 and 2 sections of `docs/MANUAL-CHECKLIST.md` once Cloudflare Pages (item 5) is connected, so the app has a web address for your devices. Releasing to live is still your tag.
+
 ### Phase 1 ready for device testing and release
 
 Phase 1 is merged. Once items 1–5 below are done, run the Phase 1 section of `docs/MANUAL-CHECKLIST.md` on iPhone, iPad and desktop Chrome. Release to live by tagging (`v0.0.1`, say) once item 7 is done, or tell Claude Code to tag it. Releases are never made without you.

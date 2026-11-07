@@ -39,6 +39,14 @@ Columns: iP · iPad · DC
 - [ ] [ ] [ ] Delete an item → it's in Trash → restore works
 - [ ] [ ] [ ] Search finds items by title and body
 - [ ] — [ ] Export downloads a zip that opens, with Markdown files and a JSON file
+- [ ] [ ] [ ] "Event added: … · Undo" toast appears for a clear date; Undo removes the event and the capture goes back to "Sorting soon"
+- [ ] [ ] [ ] Suggestion cards on Today: "Add to calendar" and "Dismiss" both work
+- [ ] [ ] [ ] Inbox → Unsorted: "Sort as Task" (etc.) moves a capture out of the Inbox into the Library
+- [ ] [ ] [ ] Library: type tabs, Topic filter and dates filter; an item can be edited, re-typed and deleted
+- [ ] — [ ] Desktop/iPad keyboard: "/" jumps to Library search (not while typing in a box)
+- [ ] [ ] [ ] Paste link: iOS asks to allow pasting only when you tap the button
+- [ ] [ ] [ ] A photo shows up in Supabase Storage (bucket `captures`, folder = your user id) once online
+- [ ] [ ] [ ] Settings → Sync shows "Last successful sync" and "Sync now" works
 
 ## Phase 3 — AI sorting, link reading, lists, memory
 
