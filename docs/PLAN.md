@@ -250,7 +250,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 - [x] **4.5 Leave engine.** `src/lib/leave`: leave-year boundaries, working-day counting with half days (skipping weekends, non-working days, public holidays and, if set, closure days), balances (entitlement + carry-over, taken, booked, planned, remaining), the extra day when a weekend holiday is compensated with leave, and a pace figure.
     - Tests: bookings crossing the December year boundary and Christmas, half days, a booking spanning a public holiday, carry-over expiry, at least 25 cases.
 - [x] **4.6 Leave UI.** Select a range on the calendar → "Book leave" sheet (type, half days, status, share to Us). Capture rule for phrases like "AL 14–18 July" proposes a booking. Leave days set location to Off and silence work nudges. A nightly job marks past bookings Taken. Leave counter on Today and in the Work screen.
-- [ ] **4.7 Work location.** Today chip with one-tap change, desktop control, calendar badge; Insights shows days per location by week and month.
+- [x] **4.7 Work location.** Today chip with one-tap change, desktop control, calendar badge; Insights shows days per location by week and month.
 
 **Sharing**
 

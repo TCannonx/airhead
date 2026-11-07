@@ -2,6 +2,16 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.7 Work location
+- **Where today's location is set**:
+  - **Today**: a "Today: Office" chip that opens one-tap choices (WFH, Office, Client site, Travel, Off); the weekday's usual place is marked "(usual)".
+  - **Desktop**: the same control in the right-hand side panel.
+  - **Calendar**: the badge was added in 4.2.
+- **On a full leave day the chip is disabled ("on leave")**, because leave wins. On a public holiday an override is allowed (working a bank holiday).
+- **One row per day across devices**: `work_days` rows use a **deterministic id per user and date** (`workDayId`, a 128-bit cyrb128 hash shaped as a UUID with version nibble 8). Two devices setting the same day update one row instead of clashing on `unique (user_id, date)`.
+- **Choosing the usual place soft-deletes the override**, so later changes to the weekly pattern apply again. Choosing another place revives the same row.
+- **Insights → "Where I worked"**: days per location by week (last 8, Monday start) and by month (last 6), up to today. Only working days count; columns appear only when used. Computed on the device from the same `locationFor` as the calendar (no SQL needed).
+
 ## 2026-11-07 — Task 4.6 Leave UI
 - **Ways to book leave**:
   - **Calendar**: select a range (all-day) → the event editor offers **Book as leave**, which opens the leave sheet with the dates filled in.
