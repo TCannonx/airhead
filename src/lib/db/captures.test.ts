@@ -20,6 +20,8 @@ describe('createCapture + free rules', () => {
       text: 'read this https://example.com/x later',
     });
     expect(c).toMatchObject({ kind: 'link', url: 'https://example.com/x' });
+    // The free rules handled it: it doesn't wait in the Inbox.
+    expect(c.status).toBe('sorted');
     // The original words are kept exactly as typed.
     expect(c.text).toBe('read this https://example.com/x later');
 

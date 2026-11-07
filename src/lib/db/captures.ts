@@ -39,6 +39,8 @@ export async function createCapture(
     text,
     url,
     kind: input.photo ? 'image' : url ? 'link' : 'text',
+    // A link is handled by the free rules (reading item), so it doesn't wait in the Inbox.
+    ...(url ? { status: 'sorted' as const, sorted_at: at } : {}),
     ...(when
       ? when.confident
         ? { status: 'sorted' as const, sorted_at: at }
@@ -90,10 +92,10 @@ export async function createCapture(
 
 /** The status chip shown under a capture. */
 export function captureChip(c: Capture): string {
+  if (c.kind === 'link') return 'Reading list';
   if (c.status === 'sorted') return 'Sorted';
   if (c.status === 'needs_review') return 'Needs a tap';
   if (c.status === 'failed') return "Couldn't sort";
-  if (c.kind === 'link') return 'Reading list';
   return 'Sorting soon';
 }
 
