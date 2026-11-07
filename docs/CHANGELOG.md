@@ -2,6 +2,27 @@
 
 One line per merged PR, newest first.
 
+## Phase 8 — Reflection (ready for device testing, not yet released)
+
+Once a week (Sunday 19:00 by default) the weekly review looks back over a SQL-built digest:
+- It gives themes, wins, what slipped, a few suggestions and the AI spend.
+- Low-risk clutter goes to the Trash on its own.
+- Everything else waits on a Tidy-up card: keep, archive, delete, or condense notes into one dated timeline.
+- It proposes memory merges and retirements.
+- Each week's digest feeds later briefs and reviews.
+
+Insights → Patterns shows habits from those digests, with charts and tables and no AI.
+
+Work → Suggest leave finds bridge days from your own data (offline) and can ask Airhead to pick two or three.
+
+Scout runs with the review and on "Scout now":
+- It makes cards from your own data (meeting follow-ups, birthdays, overdue routines, stalled ideas, weekends free for you both).
+- It runs up to 3 web searches built from interests and city only, with every query logged.
+- At most 5 cards, created only when accepted. Web ideas teach memory.
+
+Needs BLOCKERS items 8 and 9 in dev. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 8.
+
+- release: phase 8
 - Task 8.12: Scout cards on Today and Insights (accept creates the item, dismiss hides it; web ideas teach memory; Scout now)
 - Task 8.11: Scout (own-data cards in code, plus capped web search from interests and city only; at most 5 cards; weekly with the review)
 - Task 8.10: Scout findings from your own data (meeting follow-ups, birthday and event prep, overdue routines, stalled ideas, weekends free for you both)
