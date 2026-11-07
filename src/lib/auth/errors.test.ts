@@ -68,4 +68,17 @@ describe('friendlyAuthError', () => {
       'Try again (unexpected_failure).',
     );
   });
+
+  it('says when the server could not be reached, and shows the status otherwise', () => {
+    expect(
+      friendlyAuthError(
+        { name: 'AuthRetryableFetchError', message: 'Load failed', status: 0 },
+        'f',
+        online,
+      ).message,
+    ).toMatch(/couldn't reach the server/i);
+    expect(friendlyAuthError({ message: 'x', status: 500 }, 'Try again.', online).message).toBe(
+      'Try again (status 500).',
+    );
+  });
 });

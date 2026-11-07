@@ -1,4 +1,4 @@
-type AuthErrorLike = { message?: string; code?: string } | null;
+type AuthErrorLike = { message?: string; code?: string; name?: string; status?: number } | null;
 
 /** The plain message for a known error, or null. */
 function known(error: AuthErrorLike, online: boolean): string | null {
@@ -11,6 +11,12 @@ function known(error: AuthErrorLike, online: boolean): string | null {
       ? 'Wait a moment, then try again.'
       : `Wait ${seconds} seconds, then try again.`;
   }
+  // supabase-js reports a request that never got an answer this way (status 0).
+  if (
+    error?.name === 'AuthRetryableFetchError' ||
+    /failed to fetch|load failed|network/i.test(message)
+  )
+    return "Couldn't reach the server. Check your connection and try again.";
   if (/rate limit/i.test(message) || error?.code === 'over_email_send_rate_limit')
     return 'Too many attempts. Wait a minute and try again.';
   if (error?.code === 'email_address_not_authorized')
@@ -23,11 +29,13 @@ function known(error: AuthErrorLike, online: boolean): string | null {
   return null;
 }
 
-/** Adds the server's short error code (never its raw text) so a failure can be traced. */
+/** Adds the server's short error code or HTTP status (never its raw text) so a failure can be traced. */
 const withCode = (fallback: string, error: AuthErrorLike) =>
   error?.code && /^[a-z_]{1,60}$/.test(error.code)
     ? `${fallback.replace(/\.?$/, '')} (${error.code}).`
-    : fallback;
+    : error?.status
+      ? `${fallback.replace(/\.?$/, '')} (status ${String(error.status)}).`
+      : fallback;
 
 const isOnline = () => typeof navigator === 'undefined' || navigator.onLine;
 

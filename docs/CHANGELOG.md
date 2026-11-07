@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(auth): sign-in says when the server couldn't be reached, and shows the status for other unknown failures
 - feat(auth): email-and-password sign-in with instant, invite-only sign-up (no emails); Google button only when switched on
 - fix: unknown sign-in failures show the server's error code; email-sender errors get plain messages
 - fix: sign-in errors say what failed (sending, the code, or the email link) instead of always blaming the code
