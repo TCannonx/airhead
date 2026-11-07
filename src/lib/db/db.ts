@@ -91,5 +91,10 @@ export function openUserDb(userId: string): AirheadDb {
   });
   // v8: weekly reviews (Task 8.4), pull-only.
   db.version(8).stores({ reviews: 'id, week_start, server_updated_at' });
+  // v9: Scout runs (pull-only) and suggestion cards (Task 8.9).
+  db.version(9).stores({
+    scout_runs: 'id, created_at, server_updated_at',
+    suggestions: 'id, status, server_updated_at',
+  });
   return db;
 }
