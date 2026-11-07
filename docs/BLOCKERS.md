@@ -6,6 +6,10 @@
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
 
+### Phase 4 ready for device testing and release
+
+Phase 4 (calendar, sharing, work and leave, import, notifications) is merged and deploys to dev. For the AI import and notifications, dev needs items 8 (Vault secrets), 9 (Anthropic key) and 10 (VAPID keys). Then run the Phase 4 section of `docs/MANUAL-CHECKLIST.md`, then the v0.1 acceptance list in `docs/PLAN.md`. Releasing to live (a `v0.1.0` tag) is still yours; live needs items 7–10 too.
+
 ### Phase 3 ready for device testing and release
 
 Phase 3 (AI sorting, link reading, lists, memory) is merged and deploys to dev. AI features need items 8 (Vault secrets) and 9 (Anthropic API key) in the dev project; without them captures still save and free rules still work. Then run the Phase 3 section of `docs/MANUAL-CHECKLIST.md`. Releasing to live is still your tag (live needs items 7–9 as well).

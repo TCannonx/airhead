@@ -6,6 +6,17 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+## Phase 4 — Calendar, sharing, work and leave, import, notifications (ready for device testing, not yet released)
+
+- **Calendar**: day, week, month and agenda views (FullCalendar 7). Personal, Us, time-blocked tasks, linked calendars, Irish holidays and leave each have a colour and a show/hide toggle. Drag to reschedule, drag tasks in to time-block, tap a slot to create.
+- **Work and leave**: settings, an on-device leave engine (half days, carry-over and expiry, weekend holidays), booking from the calendar or "AL 14–18 July" captures, a leave counter, and a work-location chip with Insights.
+- **Sharing**: private Us and my-phone subscribe links (hashed tokens), and linked calendars refreshed every 30 minutes.
+- **Import**: .ics, CSV and Excel exactly on the device; PDFs, screenshots, links and text with one AI call; a review table with clashes and leave; saved as a series you can recolour or delete.
+- **Notifications**: Web Push with Home Screen guidance; reminders generated in the database; a minute-by-minute scheduler (quiet hours, daily cap with summaries, evening review, checklist, slip and leave run-out); notification settings.
+
+Needs BLOCKERS items 8–10 (Vault secrets, Anthropic key, VAPID keys) in dev. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 4.
+
+- release: phase 4
 - Fix: imported schedules can be recoloured or deleted as a whole from Calendar → Import
 - Task 4.15: notification settings (per-type switches, quiet hours, daily cap, reminder default, job times, per-device on/off)
 - Task 4.14: evening review screen (tick off, carry over with carry count, drop, carry all)

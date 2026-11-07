@@ -76,22 +76,32 @@ Calendar
 - [ ] — [ ] Drag an event to a new time; drag a task onto the calendar to time-block it
 - [ ] [ ] [ ] Click/tap an empty slot to create an event
 - [ ] [ ] [ ] Irish public holidays for this year and next match citizensinformation.ie
+- [ ] [ ] [ ] Calendar toggles hide and show Personal, Us, tasks, holidays, leave and each linked calendar
+- [ ] [ ] [ ] Select several days → "Book as leave" opens the leave sheet with those dates
+- [ ] [ ] [ ] Event editor: set a reminder (e.g. 1 hour before) and "No reminder"
 
 Work and leave
 - [ ] [ ] [ ] Work location chip changes with one tap and shows on the calendar
 - [ ] [ ] [ ] Booking leave across a public holiday deducts the right number of days
 - [ ] [ ] [ ] Leave counter is correct for a December–November leave year
 - [ ] [ ] [ ] "AL 14–18 July" in Capture proposes a booking
+- [ ] [ ] [ ] Settings → Work: change entitlement, leave year and usual week; the counter updates
+- [ ] [ ] [ ] Work screen: carried-over days and the run-out warning look right
+- [ ] [ ] [ ] Insights → Where I worked shows days per location by week and month
 
 Sharing
 - [ ] Girlfriend subscribes to the Us link and sees Us events and shared leave in her calendar app
 - [ ] My own "me" feed shows Airhead events in Apple Calendar on my iPhone
 - [ ] Her linked calendar's events appear in Airhead within about 30 minutes
+- [ ] "New link" stops the old Us link (it shows nothing after her calendar app refreshes)
+- [ ] A bad linked-calendar link shows a clear error in Settings → Linked calendars
 
 Import
 - [ ] — [ ] A fixtures PDF with "attending all home games" imports as a reviewed series
 - [ ] — [ ] A .ics file and a CSV both import correctly
 - [ ] [ ] [ ] Deleting the series removes all its events
+- [ ] [ ] — A screenshot of a fixtures list imports (one AI call); unconfirmed times show as "time TBC"
+- [ ] [ ] [ ] A fixtures link that is an .ics offers "Add it as a linked calendar instead"
 
 Notifications (iPhone must be installed to the home screen)
 - [ ] — — Enable notifications → test notification arrives
@@ -100,6 +110,9 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] — — Evening review arrives and its screen works (tick off, carry over, drop)
 - [ ] — — Nothing arrives during quiet hours (except allowed event reminders)
 - [ ] — [ ] iPad and desktop stay silent by default
+- [ ] — — A time-TBC imported event sends "Time confirmed yet?" a week before
+- [ ] — — More than the daily limit arrives as one summary notification
+- [ ] — [ ] Settings → Notifications: switch a device on or off; change quiet hours and the reminder default
 
 ## v0.1 release
 
