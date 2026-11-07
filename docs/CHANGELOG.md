@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.1: weekly digest in SQL (tasks, slips, hours, returning ideas, notifications, AI spend)
 - plan: phase 8 (Reflection, tasks 8.1–8.12)
 
 ## Phase 7 — Thinking tools (ready for device testing, not yet released)
