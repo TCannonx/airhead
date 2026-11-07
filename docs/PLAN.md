@@ -381,7 +381,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
 
 - [x] **7.1 Capture tokens.** Migration `capture_tokens` (id, user_id, name, `token_hash` sha-256, created_at, last_used_at, revoked_at), own-rows RLS for reading and revoking. The token itself is never stored or synced. Settings → Capture from anywhere: create a named token (shown once, with Copy), list tokens with their last use, and revoke one.
     - Tests: pgTAP (RLS, a revoked token stays revoked), component tests.
-- [ ] **7.2 `ingest-capture`.** A function taking `Authorization: Bearer <capture token>` (looked up by hash with the service role; revoked or unknown tokens give 401). The body is `{ text?, url?, image? (base64, at most 5 MB), source: 'shortcut' }`. It inserts an Unsorted capture exactly as sent (data, never instructions) and updates `last_used_at`. Rate limit: 60 captures per token per hour. Plain-text replies ("Saved to Airhead.") for the Shortcut to show.
+- [x] **7.2 `ingest-capture`.** A function taking `Authorization: Bearer <capture token>` (looked up by hash with the service role; revoked or unknown tokens give 401). The body is `{ text?, url?, image? (base64, at most 5 MB), source: 'shortcut' }`. It inserts an Unsorted capture exactly as sent (data, never instructions) and updates `last_used_at`. Rate limit: 60 captures per token per hour. Plain-text replies ("Saved to Airhead.") for the Shortcut to show.
     - Tests: Deno (valid, revoked, oversized, rate limited, text and link and image), pgTAP for the lookup function.
 - [ ] **7.3 iOS Shortcuts.** `docs/SETUP-SHORTCUTS.md` plus an in-app guide on the same Settings page, with click-by-click steps:
     - **Send to Airhead**: share sheet, for links, text and images.
