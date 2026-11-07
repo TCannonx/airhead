@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.1 Note documents
+- **`note_docs`** (migration `20261107000018_note_docs.sql`): one document per note or meeting item, with the same id.
+  - `kind` is typed (`{ html }`) or ink (`{ width, pages: [{ height, strokes, texts }] }`, a 1000-wide page starting 1400 tall).
+  - Plus `summary` for Summarise (6.7).
+  - Own-rows RLS, Realtime, sync index, and the nightly purge.
+- **Versions for safe sync**:
+  - A trigger numbers every write (`version`: 1 on insert, then +1), ignoring what the device sent.
+  - Devices record `base_version` (the server version their edit started from) and `writer_device`.
+  - Together these let 6.2 keep both versions when another device changed the note meanwhile, without mistaking a device's own echoed push for a conflict.
+- **`createNote` / `saveDoc`** (`src/lib/db/notes.ts`): an item (`data.doc_kind`) plus its document; each save stamps `base_version = version` and this device. Dexie v6.
+
 ## 2026-11-07 — Phase 6 plan
 - Phase 6 is planned in `PLAN.md` (tasks 6.1–6.9): build stage 1 of Notes from the design, with lasso and shapes left for Phase 9.
 - **Documents live in their own synced table** (`note_docs`), keyed by the note item's id. Ink strokes can be large, and keeping them apart from `items` keeps item lists and the brief digest small.

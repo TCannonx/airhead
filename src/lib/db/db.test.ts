@@ -47,6 +47,7 @@ describe('local database', () => {
         'work_days',
         'leave_bookings',
         'briefs',
+        'note_docs',
       ].sort(),
     );
   });

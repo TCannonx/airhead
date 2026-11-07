@@ -348,7 +348,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
 
 Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instantly, synced as whole documents without ever losing writing, then summarised once into a summary, decisions and action items you confirm into tasks. Planned in detail on 2026-11-07 from `DESIGN.md` (Notes; Offline and sync).
 
-- [ ] **6.1 Note documents.** Migration: `note_docs` (id = the note item's id, `kind` typed or ink, `doc` jsonb, `version`, `base_version`, `summary` jsonb), synced both ways with own-rows RLS. A note or meeting item points at its document. A server trigger bumps `version` on each write.
+- [x] **6.1 Note documents.** Migration: `note_docs` (id = the note item's id, `kind` typed or ink, `doc` jsonb, `version`, `base_version`, `summary` jsonb), synced both ways with own-rows RLS. A note or meeting item points at its document. A server trigger bumps `version` on each write.
     - Tests: pgTAP (RLS, version bump), Zod schema and Dexie table.
 - [ ] **6.2 Conflict copies.** When a pull brings a newer version of a document that also has unsynced local changes, keep both: the local text becomes a new note titled "… (conflicted copy, <device> <time>)" and the server version is applied. Writing is never silently discarded. Applies to note documents only; other tables stay newest-wins.
     - Tests: sync engine unit tests (no conflict, conflict, a conflict while offline then two edits).

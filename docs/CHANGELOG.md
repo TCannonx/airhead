@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 6.1: note documents (typed or handwritten, one per note, server-numbered versions)
 - plan: phase 6 (Notes, tasks 6.1–6.9)
 
 ## Phase 5 — Today and morning brief (ready for device testing, not yet released)
