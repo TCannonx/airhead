@@ -244,7 +244,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 
 **Work and leave**
 
-- [ ] **4.3 Irish public holidays.** `src/lib/holidays/ie.ts` and `easter.ts` (Gregorian computus). Rules from the design doc; St Brigid's Day only from 2023. Good Friday, Christmas Eve and New Year's Eve are returned as optional "common days off", not holidays. Manual one-off holidays from settings are merged in.
+- [x] **4.3 Irish public holidays.** `src/lib/holidays/ie.ts` and `easter.ts` (Gregorian computus). Rules from the design doc; St Brigid's Day only from 2023. Good Friday, Christmas Eve and New Year's Eve are returned as optional "common days off", not holidays. Manual one-off holidays from settings are merged in.
     - Tests: St Brigid's Day 2023-02-06, 2024-02-05, 2025-02-03, 2026-02-02, 2027-02-01, 2030-02-01 (a Friday); Easter Monday 2026-04-06 and 2027-03-29; October holiday 2026-10-26; no St Brigid's Day in 2022.
 - [ ] **4.4 Work settings.** Settings → Work: working days, hours per day, leave year start (default 1 December), entitlement, carry-over maximum and expiry, how a weekend public holiday is compensated (day off within a month, extra leave day, extra pay), whether closure days use leave, closure days, leave types (deducting or not), default weekly location pattern, a checklist per location.
 - [ ] **4.5 Leave engine.** `src/lib/leave`: leave-year boundaries, working-day counting with half days (skipping weekends, non-working days, public holidays and, if set, closure days), balances (entitlement + carry-over, taken, booked, planned, remaining), the extra day when a weekend holiday is compensated with leave, and a pace figure.

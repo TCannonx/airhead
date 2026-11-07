@@ -2,6 +2,17 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.3 Irish public holidays
+- Built before 4.2 (calendar views): it is pure logic with no dependencies, and the calendar view needs it as a layer.
+- `src/lib/holidays/easter.ts`: anonymous Gregorian computus, plus UTC-only date helpers (`addDays`, `weekday`, `isoDate`) so no time zone can shift a date.
+- `src/lib/holidays/ie.ts`:
+  - **The nine statutory days, plus St Brigid's Day from 2023**: first Monday in February, or 1 February when that is a Friday.
+  - **The one-off 18 March 2022 holiday**: it was a real public holiday, so a past leave year counts correctly.
+- **Weekend holidays are not moved**: under Irish law a holiday on a non-working day gives a day off within a month, an extra leave day or extra pay (Organisation of Working Time Act). That is the Task 4.4 setting, not a different date.
+- **Common days off**: Good Friday, Christmas Eve and New Year's Eve are returned as `kind: 'common'`. They are not days off for leave counting unless added manually.
+- **Manual one-offs** from settings are merged into their year; a date that is already a public holiday is not repeated.
+- **Checked against Citizens Information**: the 2026 and 2027 lists in the tests match its published dates.
+
 ## 2026-11-07 — Task 4.1 Calendar tables
 - **Migration number**: the plan says "0004", but 0004–0008 already exist, so this is `20261107000009_calendar.sql`.
 - **Who writes what**:
