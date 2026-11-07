@@ -2,6 +2,11 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 2.8 On-device search
+- **MiniSearch 7.2.0** (MIT). One in-memory index per user database covers item titles (boosted ×2) and bodies, and capture text. Prefix matching and fuzzy 0.2 ("compsting" finds "Composting"); all words must match (AND).
+- **Incremental**: `SearchIndex.sync(items, captures)` re-indexes only rows whose `updated_at` changed (`replace`), adds new ones, and `discard`s deleted or dropped ones. It's fed by a Dexie live query, so new captures are searchable immediately, offline included. Not persisted: the index is rebuilt in memory on app open, which is fast at personal scale.
+- **Visible Search box** at the top of the Library; results link to the item, or to the Inbox for a capture. **"/"** on iPad and desktop layouts navigates to the Library and focuses the box, except while typing in an input, textarea, select or contenteditable. There's no shortcut on the phone (no hardware keyboard by default).
+
 ## 2026-11-06 — Task 2.7 Inbox and Library (basic)
 - **Inbox → Unsorted** lists captures with status `unsorted`, `needs_review` or `failed`, newest first, each with one-tap **Sort as** buttons (Task, Event, Reading, Idea, Meeting, Note). Sorting by hand creates the item (title = first line of the capture, capitalised; multi-line text kept as the body; links kept in `data.url`), marks the capture `sorted`, and records a `corrections` row (`from_value: { status }`, `to_value: { type }`).
 - **Inbox → To flesh out** shows items with `data.workshop === true` (set by sorting/Workshop in later phases).
