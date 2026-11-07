@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.10 Scout findings from own data
+- **`findFindings`** (`supabase/functions/scout/findings.ts`) is pure code over the person's items, the linked calendar and their time zone. No AI.
+  - **follow_up**: meetings 1–14 days old with no summary and nothing made from them. Proposes "Write up actions from …".
+  - **prep**: birthdays and anniversaries in the next 10 days, plus events marked `data.prep`. Proposes a task due the day before.
+  - **routine**: recurring tasks over a day past due.
+  - **stalled_idea**: ideas untouched for 30 days with no follow-up. Proposes a first-step task.
+  - **free_time**: weekend days in the next two weeks with nothing on either calendar, at most two, and only when a linked calendar exists ("free for you both"). Proposes an all-day event.
+- Ordinary events (a dentist visit) don't make prep cards. Only birthdays, anniversaries and events the person marks for prep do, to keep cards few.
+
 ## 2026-11-07 — Task 8.9 Scout data
 - **`scout_runs`** (migration 0028) is the run log. It is written by the server and synced read-only, so the exact web queries can be shown: trigger, queries, searches, cards, cost and status.
 - **`suggestions`** are the cards: kind, title, body, source URL, `proposed` (what accepting would create) and status (open, accepted or dismissed). They sync both ways with own-rows RLS, because devices accept and dismiss them.
