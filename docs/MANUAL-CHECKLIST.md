@@ -126,6 +126,17 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] — [ ] Desktop right panel shows Top 3 and next events
 - [ ] With a low test AI cap, the morning list still arrives (fallback)
 
+## Phase 6 — Notes
+
+- [ ] [ ] [ ] New typed note: headings, bullets and checkboxes; it saves while typing and is there after a reload
+- [ ] [ ] [ ] "Start notes" on today's event makes a linked meeting note
+- [ ] — [ ] — iPad: the Pencil draws, a finger scrolls; pen colours and widths, highlighter, eraser, undo and redo
+- [ ] — [ ] — The page grows as you write; text boxes can be added, moved and deleted
+- [ ] [ ] [ ] A note edited on two devices while one was offline gives a "conflicted copy"; nothing is lost
+- [ ] [ ] [ ] Summarise a typed note and a handwritten page: summary, decisions and action items appear
+- [ ] [ ] [ ] Ticked action items become tasks; unticked ones don't
+- [ ] [ ] [ ] Search finds words from a handwritten page after it was summarised
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

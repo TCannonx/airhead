@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Phase 6 plan
+- Phase 6 is planned in `PLAN.md` (tasks 6.1–6.9): build stage 1 of Notes from the design, with lasso and shapes left for Phase 9.
+- **Documents live in their own synced table** (`note_docs`), keyed by the note item's id. Ink strokes can be large, and keeping them apart from `items` keeps item lists and the brief digest small.
+- **Conflict copies are limited to note documents**, as the design asks ("both versions are kept and marked Conflicted copy"); every other table stays newest-wins.
+- **Libraries** (MIT): TipTap for typed notes and perfect-freehand for ink. Current versions are checked when each task starts.
+
 ## 2026-11-07 — Task 5.9 Brief settings and Regenerate
 - **Settings → Today**:
   - **Brief time** (`notifications.brief_time`, default 07:30).
