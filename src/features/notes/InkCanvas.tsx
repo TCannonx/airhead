@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
+  addText,
+  editText,
+  moveText,
+  removeText,
+  TEXT_BOX_WIDTH,
+  withoutEmpty,
+} from '../../lib/ink/texts';
+import {
   encodePoints,
   grownHeight,
   hits,
@@ -10,6 +18,7 @@ import {
   type InkDoc,
   type InkPoint,
   type StoredStroke,
+  type TextBox,
   type Tool,
 } from '../../lib/ink/strokes';
 
@@ -32,7 +41,7 @@ const btn = (on: boolean) =>
     on ? 'bg-slate-200 dark:bg-slate-700' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
   }`;
 
-type Mode = Tool | 'eraser';
+type Mode = Tool | 'eraser' | 'text';
 
 /**
  * A handwritten page (Task 6.5): fixed width, grows downwards as you write.
@@ -43,6 +52,9 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
   const page = doc.pages[0] ?? { height: 1400, strokes: [], texts: [] };
   const [strokes, setStrokes] = useState<StoredStroke[]>(page.strokes);
   const [height, setHeight] = useState(page.height);
+  const [texts, setTexts] = useState<TextBox[]>(page.texts);
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const moving = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const [mode, setMode] = useState<Mode>('pen');
   const [color, setColor] = useState(COLORS[0]?.[0] ?? '#111827');
   const [width, setWidth] = useState(WIDTHS[0]?.[0] ?? 3.5);
@@ -66,8 +78,11 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     [],
   );
 
-  const persist = (next: StoredStroke[], h: number) => {
-    pending.current = { ...doc, pages: [{ ...page, height: h, strokes: next }] };
+  const persist = (next: StoredStroke[], h: number, t: TextBox[] = texts) => {
+    pending.current = {
+      ...doc,
+      pages: [{ ...page, height: h, strokes: next, texts: withoutEmpty(t) }],
+    };
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       if (pending.current) save.current(pending.current);
@@ -104,6 +119,15 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     }
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const at = toPage(e);
+    if (mode === 'text') {
+      // Keep focus in the new box (the page itself would take it and blur the box away).
+      e.preventDefault();
+      const id = crypto.randomUUID();
+      const next = addText(texts, at.x, at.y - 12, height, id);
+      setTexts(next);
+      setFocusId(id);
+      return;
+    }
     if (mode === 'eraser') {
       erase(at, strokes);
       drawing.current = [];
@@ -140,7 +164,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     const pts = drawing.current;
     drawing.current = null;
     setLive(null);
-    if (!pts || mode === 'eraser' || pts.length === 0) return;
+    if (!pts || mode === 'eraser' || mode === 'text' || pts.length === 0) return;
     const tool: Tool = mode;
     const stroke: StoredStroke = {
       tool,
@@ -228,6 +252,14 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
         </button>
         <button
           type="button"
+          aria-pressed={mode === 'text'}
+          className={btn(mode === 'text')}
+          onClick={() => setMode('text')}
+        >
+          Text
+        </button>
+        <button
+          type="button"
           className={btn(false)}
           disabled={!undo.canUndo}
           onClick={() => step('undo')}
@@ -243,28 +275,99 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           Redo
         </button>
       </div>
-      <svg
-        ref={svg}
-        role="img"
-        aria-label="Handwritten page"
-        viewBox={`0 0 ${PAGE_WIDTH} ${height}`}
-        className="w-full rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800"
-        style={{ touchAction: 'none', aspectRatio: `${PAGE_WIDTH} / ${height}` }}
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={onUp}
-      >
-        {[...strokes, ...(liveStroke ? [liveStroke] : [])].map((s, i) => (
-          <path
-            key={i}
-            data-stroke={i < strokes.length ? 'saved' : 'live'}
-            d={strokePath(s)}
-            fill={s.color}
-            opacity={s.tool === 'highlighter' ? 0.35 : 1}
-          />
+      <div className="relative">
+        <svg
+          ref={svg}
+          role="img"
+          aria-label="Handwritten page"
+          viewBox={`0 0 ${PAGE_WIDTH} ${height}`}
+          className="w-full rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800"
+          style={{ touchAction: 'none', aspectRatio: `${PAGE_WIDTH} / ${height}` }}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+        >
+          {[...strokes, ...(liveStroke ? [liveStroke] : [])].map((s, i) => (
+            <path
+              key={i}
+              data-stroke={i < strokes.length ? 'saved' : 'live'}
+              d={strokePath(s)}
+              fill={s.color}
+              opacity={s.tool === 'highlighter' ? 0.35 : 1}
+            />
+          ))}
+        </svg>
+        {texts.map((t) => (
+          <div
+            key={t.id}
+            className="absolute flex items-start gap-1"
+            style={{
+              left: `${(t.x / PAGE_WIDTH) * 100}%`,
+              top: `${(t.y / height) * 100}%`,
+              width: `${(TEXT_BOX_WIDTH / PAGE_WIDTH) * 100}%`,
+            }}
+          >
+            {mode === 'text' && (
+              <span
+                role="button"
+                tabIndex={-1}
+                aria-label={`Move text box ${t.text || 'new'}`}
+                className="cursor-move touch-none select-none px-1 text-slate-400"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.setPointerCapture?.(e.pointerId);
+                  const at = toPage(e);
+                  moving.current = { id: t.id, dx: at.x - t.x, dy: at.y - t.y };
+                }}
+                onPointerMove={(e) => {
+                  const m = moving.current;
+                  if (!m || m.id !== t.id) return;
+                  const at = toPage(e);
+                  setTexts((cur) => moveText(cur, t.id, at.x - m.dx, at.y - m.dy, height));
+                }}
+                onPointerUp={() => {
+                  moving.current = null;
+                  setTexts((cur) => {
+                    persist(strokes, height, cur);
+                    return cur;
+                  });
+                }}
+              >
+                ⠿
+              </span>
+            )}
+            <input
+              aria-label="Text box"
+              value={t.text}
+              autoFocus={focusId === t.id}
+              onChange={(e) => {
+                const next = editText(texts, t.id, e.target.value);
+                setTexts(next);
+                persist(strokes, height, next);
+              }}
+              onBlur={() => {
+                if (!t.text.trim()) setTexts((cur) => removeText(cur, t.id));
+              }}
+              className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-lg text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
+            />
+            {mode === 'text' && (
+              <button
+                type="button"
+                aria-label={`Delete text box ${t.text || 'new'}`}
+                className="px-1 text-slate-400 hover:text-red-600"
+                onClick={() => {
+                  const next = removeText(texts, t.id);
+                  setTexts(next);
+                  persist(strokes, height, next);
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
         ))}
-      </svg>
+      </div>
     </div>
   );
 }

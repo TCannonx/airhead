@@ -361,7 +361,7 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
     - Toolbar: pen in a few colours and two widths, highlighter, stroke eraser, undo and redo.
     - Strokes are stored as compact point data (rounded, delta-encoded) in the document, not images.
     - Tests: unit tests for stroke encoding and decoding, hit-testing for the eraser and the undo stack; a Playwright check that a drawn stroke survives a reload.
-- [ ] **6.6 Text boxes.** Tap with the text tool to add a quick text label on a handwritten page; move, edit, delete. Stored in the same document.
+- [x] **6.6 Text boxes.** Tap with the text tool to add a quick text label on a handwritten page; move, edit, delete. Stored in the same document.
     - Tests: unit and component tests.
 - [ ] **6.7 Summarise.** "Done → Summarise", one large-tier call with prompt `summarise.v1`:
     - Handwritten pages are rendered to images on the device (vision); typed notes are sent as text.
