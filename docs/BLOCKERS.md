@@ -15,7 +15,7 @@ To make it private again: GitHub → the repo → Settings → General → Dange
 ### Phase 9 ready for device testing — all phases built, v0.1 ready to release
 
 Phase 9 (Notebook polish) is merged and deploys to dev. Every phase in `docs/PLAN.md` is now built. To release v0.1:
-1. Run `docs/MANUAL-CHECKLIST.md` on the iPhone, iPad and desktop Chrome against dev (https://airhead-dev.pages.dev).
+1. Run `docs/MANUAL-CHECKLIST.md` on the iPhone, iPad and desktop Chrome against dev (https://airhead.xxr5th.workers.dev).
 2. Finish item 7 (live secrets and the `airhead-live` Pages project) and set items 8–10 in the live Supabase project.
 3. Create the tag `v0.1.0` (or tell Claude Code to). `release.yml` deploys that commit to `airhead-live`.
 
@@ -94,18 +94,15 @@ Save. Then in **Authentication → URL Configuration** set **Site URL** to `http
 
 Follow `docs/SETUP-GOOGLE-LOGIN.md` for `airhead-dev`. Until then, email codes work.
 
-### 5. Cloudflare Pages for the dev site (Task 1.7) — still to do: there is no dev site until this is done
+### 5. Cloudflare hosting for the dev site (Task 1.7) — done 2026-11-07
 
-1. Go to https://dash.cloudflare.com and sign in (a free account is fine).
-2. **Workers & Pages → Create → Pages → Connect to Git** → authorise GitHub → choose **TCannonx/airhead** (grant access to that repo only).
-3. Project name: **`airhead-dev`** (gives `https://airhead-dev.pages.dev`). Not `airhead`: `airhead.pages.dev` already belongs to someone else's Cloudflare project (it shows an nginx welcome page). If Cloudflare says a name is taken, it adds a suffix; use the exact address it shows everywhere below. Production branch: `main`.
-4. Build settings: Framework preset **None** (or Vite); Build command `npm run build`; Build output directory `dist`.
-5. **Environment variables** (set for both *Production* and *Preview*), using the **dev** project's values:
-   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Supabase dev → Project Settings → API; the publishable/anon key)
-   - `NODE_VERSION` = `24` (the repo also has a `.node-version` file)
-6. **Save and Deploy.** Every PR then gets a preview link automatically.
-7. Add the new address to sign-in: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead-dev.pages.dev`, Redirect URLs add `https://airhead-dev.pages.dev/**` and `https://*.airhead-dev.pages.dev/**` (PR previews). If Google login is set up, add `https://airhead-dev.pages.dev` to the OAuth client's JavaScript origins.
-8. For the live release workflow (Task 1.8), also create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
+The dev site is a Cloudflare **Worker** connected to `TCannonx/airhead` (Cloudflare's "Create" now makes Workers, not Pages): **https://airhead.xxr5th.workers.dev**. Every merge to `main` rebuilds it; PR builds get `https://<name>-airhead.xxr5th.workers.dev` preview addresses.
+
+- Build variables (Worker → **Settings → Build → Variables and secrets**): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (dev values) and `NODE_VERSION` = `24`. Names must be exact; a misspelt `VITE_SUPABASE_URL` silently builds a local-only app. Changes apply from the next build (**Deployments → ⋯ → Retry build**).
+- Checked: the build carries the dev project's URL and anon key, deep links like `/share` serve the app, and `public/_headers` is applied.
+- Still to do: Supabase dev → **Authentication → URL Configuration** → Site URL `https://airhead.xxr5th.workers.dev`, Redirect URLs add `https://airhead.xxr5th.workers.dev/**` and `https://*-airhead.xxr5th.workers.dev/**`. If Google login is set up, add `https://airhead.xxr5th.workers.dev` to the OAuth client's JavaScript origins.
+
+- For the live release workflow (Task 1.8), still create a Cloudflare API token: **My Profile → API Tokens → Create Token → "Edit Cloudflare Workers"** template (it includes Pages), and add GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the account ID is on the Workers & Pages overview page).
 
 ### 6. Branch protection (Task 1.8) — now possible: the repo is public
 

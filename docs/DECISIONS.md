@@ -2,6 +2,12 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Dev site is a Cloudflare Worker
+- Cloudflare's **Workers & Pages → Create** now makes a Worker with static assets, so the dev site is the Worker `airhead` at **https://airhead.xxr5th.workers.dev** (the `airhead-dev.pages.dev` name below was never used). Its Git integration builds every push to `main` plus preview builds.
+- Workers static assets honour the same `_headers` file and serve `index.html` for unknown paths, so no repo change was needed; checked on the live dev site.
+- `VITE_*` values must be **build** variables (Settings → Build), not runtime variables. A misspelt name (`VITE_SUPABSE_URL`) gave a build in local-only mode; checking the bundle for the project ref catches it.
+- `release.yml` still deploys live with `wrangler pages deploy` to a Pages project `airhead-live`. That path still works (Pages projects can be created from the API/CLI); revisit only if the user prefers a Worker for live too.
+
 ## 2026-11-07 — Cloudflare Pages address
 - **`airhead.pages.dev` is not ours.** It belongs to another Cloudflare account (it serves an nginx welcome page). Cloudflare Pages was never connected (BLOCKERS item 5), so no dev site has been deployed yet.
 - The dev Pages project is to be named **`airhead-dev`** (`https://airhead-dev.pages.dev`, free when checked), matching the Supabase dev project. Live stays `airhead-live` (also free).

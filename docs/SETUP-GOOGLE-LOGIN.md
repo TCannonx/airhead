@@ -36,7 +36,7 @@ Google calls this the **OAuth consent screen** or **Google Auth Platform** (Bran
 2. Application type: **Web application**. Name: `Airhead web`.
 3. **Authorised JavaScript origins** — add:
    - `http://localhost:5173` (local development)
-   - your Cloudflare Pages address once you have it, e.g. `https://airhead-dev.pages.dev`
+   - the dev site address `https://airhead.xxr5th.workers.dev`
 4. **Authorised redirect URIs** — add the Supabase **Callback URL** from step 1.
 5. **Create**, then copy the **Client ID** and **Client secret**.
 
@@ -45,8 +45,8 @@ Google calls this the **OAuth consent screen** or **Google Auth Platform** (Bran
 1. Back in Supabase → **Authentication → Sign In / Providers → Google**.
 2. Enable it, paste the **Client ID** and **Client secret**, and save.
 3. Go to **Authentication → URL Configuration**:
-   - **Site URL**: your Cloudflare Pages address (or `http://localhost:5173` for now).
-   - **Redirect URLs**: add `http://localhost:5173/**` and `https://<your-pages-address>/**`.
+   - **Site URL**: `https://airhead.xxr5th.workers.dev`.
+   - **Redirect URLs**: add `http://localhost:5173/**`, `https://airhead.xxr5th.workers.dev/**` and `https://*-airhead.xxr5th.workers.dev/**` (preview builds).
 
 ## 6. Tell Claude Code it's done
 
