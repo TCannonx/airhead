@@ -110,3 +110,12 @@ export function localMidnightIso(date: string, tz: string): string {
   const shift = local.date === date ? h * 60 + m : h * 60 + m - 1440;
   return new Date(guess.getTime() - shift * 60_000).toISOString();
 }
+
+/** A local wall time on a date as an instant (correct on clock-change days). */
+export function localTimeIso(date: string, hhmm: string, tz: string): string {
+  const [h, m] = hhmm.split(':').map(Number) as [number, number];
+  const want = h * 60 + m;
+  const guess = new Date(Date.parse(localMidnightIso(date, tz)) + want * 60_000);
+  const got = localNow(guess, tz).hhmm.split(':').map(Number) as [number, number];
+  return new Date(guess.getTime() + (want - (got[0] * 60 + got[1])) * 60_000).toISOString();
+}

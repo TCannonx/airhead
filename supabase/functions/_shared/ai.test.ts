@@ -25,10 +25,12 @@ type Step = { parsed_output: unknown; stop_reason?: string } | { throw: unknown 
 
 function fakeClient(steps: Step[]) {
   const calls: Record<string, unknown>[] = [];
+  const options: unknown[] = [];
   const client = {
     messages: {
-      parse: async (params: Record<string, unknown>) => {
+      parse: async (params: Record<string, unknown>, opts?: unknown) => {
         calls.push(params);
+        options.push(opts);
         const step = steps.shift();
         if (!step) throw new Error('unexpected extra call');
         if ('throw' in step) throw step.throw;
@@ -40,7 +42,7 @@ function fakeClient(steps: Step[]) {
       },
     },
   } as unknown as AIClient;
-  return { client, calls };
+  return { client, calls, options };
 }
 
 function fakeStore(opts: { cap?: number | null; spent?: number } = {}) {
@@ -214,4 +216,21 @@ Deno.test('several system blocks: each is a cache breakpoint, blank ones dropped
     ['Fixed rules.', 'Profile: - Trains on Tuesdays'],
   );
   assert(system.every((b) => JSON.stringify(b.cache_control) === '{"type":"ephemeral"}'));
+});
+
+Deno.test('large tier asks for the server-side refusal fallback; small tier does not', async () => {
+  const large = fakeClient([{ parsed_output: GOOD }]);
+  await callAI(
+    { client: large.client, store: fakeStore().store },
+    { ...request(false), tier: 'large' },
+  );
+  assertEquals(large.calls[0]?.fallbacks, 'default');
+  assertEquals(large.options[0], {
+    headers: { 'anthropic-beta': 'server-side-fallback-2026-07-01' },
+  });
+
+  const small = fakeClient([{ parsed_output: GOOD }]);
+  await callAI({ client: small.client, store: fakeStore().store }, request(false));
+  assertEquals(small.calls[0]?.fallbacks, undefined);
+  assertEquals(small.options[0], undefined);
 });

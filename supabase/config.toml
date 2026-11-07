@@ -467,3 +467,7 @@ verify_jwt = false
 # scheduler-tick: pg_cron with the service key; checks it itself.
 [functions.scheduler-tick]
 verify_jwt = false
+
+# morning-brief: the owner (Regenerate) or the scheduler's service key; checks it itself.
+[functions.morning-brief]
+verify_jwt = false

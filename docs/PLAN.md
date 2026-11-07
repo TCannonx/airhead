@@ -312,7 +312,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
     - Tests: pgTAP with seeded data (time zones, deleted rows left out, size limits).
 - [x] **5.3 Free slots.** Shared code (device and server) that finds free gaps in a day from timed events, inside a day window (work hours on working days, a wider window on days off), and fits each Top 3 task into the earliest gap of its estimated length (15 to 120 minutes), e.g. "Dentist call fits 12:30–12:45".
     - Tests: unit tests for overlaps, edges, all-day events, no room, and the clock-change day.
-- [ ] **5.4 Morning brief function.** `morning-brief` (large tier, prompt `brief.v1`, structured output). From the digest it returns:
+- [x] **5.4 Morning brief function.** `morning-brief` (large tier, prompt `brief.v1`, structured output). From the digest it returns:
     - a two- or three-line reflection on yesterday;
     - a Top 3 (item ids from the digest only, a reason and minutes each);
     - "Also today" ids;
