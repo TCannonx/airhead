@@ -138,6 +138,17 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] [ ] [ ] Search finds words from a handwritten page after it was summarised
 - [ ] [ ] [ ] A summarised handwritten note is view-only on the phone and desktop ("Edit pages" unlocks it) and editable on the iPad
 
+## Phase 7 — Thinking tools
+
+- [ ] [ ] — Settings: create a capture token (shown once), see its last use, revoke it (the Shortcut then fails)
+- [ ] [ ] — "Send to Airhead" from the share sheet saves a link, text and a photo; offline it says to open the app
+- [ ] — — "Quick thought" on Back Tap or the Action Button saves a dictated line
+- — — [ ] Bookmarklet on desktop Chrome saves the page (with selected text) in one click
+- [ ] [ ] [ ] Send an idea to the Workshop; Auto flesh-out gives a draft with sections, open questions and next steps
+- [ ] [ ] [ ] Work on it together: answer two rounds of questions; versions are kept; an answer typed offline is sent later
+- [ ] [ ] [ ] Next steps become tasks in one tap
+- [ ] [ ] [ ] Ask Airhead answers a question about a meeting note, with citations that open the source
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

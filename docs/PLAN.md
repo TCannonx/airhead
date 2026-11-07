@@ -375,9 +375,48 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
     - Tests: component tests and search tests.
 - Phase done when: the Phase 6 manual checklist passes (write on the iPad with the Pencil, fingers scroll, it syncs, it summarises, actions become tasks, and a conflicted copy appears when both devices edit offline).
 
+## Phase 7: Thinking tools
+
+Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think ideas through in the Workshop (auto flesh-out and collaborative sessions with versions), and ask questions of everything with cited answers (Ask Airhead). Planned in detail on 2026-11-07 from `DESIGN.md` (Capture; AI; Memory; Scout and Check-up; Desktop).
+
+- [ ] **7.1 Capture tokens.** Migration `capture_tokens` (id, user_id, name, `token_hash` sha-256, created_at, last_used_at, revoked_at), own-rows RLS for reading and revoking. The token itself is never stored or synced. Settings → Capture from anywhere: create a named token (shown once, with Copy), list tokens with their last use, and revoke one.
+    - Tests: pgTAP (RLS, a revoked token stays revoked), component tests.
+- [ ] **7.2 `ingest-capture`.** A function taking `Authorization: Bearer <capture token>` (looked up by hash with the service role; revoked or unknown tokens give 401). The body is `{ text?, url?, image? (base64, at most 5 MB), source: 'shortcut' }`. It inserts an Unsorted capture exactly as sent (data, never instructions) and updates `last_used_at`. Rate limit: 60 captures per token per hour. Plain-text replies ("Saved to Airhead.") for the Shortcut to show.
+    - Tests: Deno (valid, revoked, oversized, rate limited, text and link and image), pgTAP for the lookup function.
+- [ ] **7.3 iOS Shortcuts.** `docs/SETUP-SHORTCUTS.md` plus an in-app guide on the same Settings page, with click-by-click steps:
+    - **Send to Airhead**: share sheet, for links, text and images.
+    - **Quick thought**: Back Tap or the Action Button, dictated or typed.
+    - Both use "Get contents of URL" with the token. When the request fails, the Shortcut says to open the app and capture offline.
+    - Tests: a docs check that the guide names the function URL pattern and never contains a real token.
+- [ ] **7.4 Bookmarklet and share target.** "Send to Airhead" bookmarklet: a link to drag to the bookmarks bar. It opens Airhead's own `/share?url=&title=&text=` page in a small window, and the signed-in app saves the capture there. No token goes into web pages, so a page's scripts can never read it. The same route becomes the PWA manifest's `share_target` (Android and desktop Chrome).
+    - Tests: component tests for `/share` (saves once, shows Saved, closes), and a unit test for the bookmarklet code (encodes the selection, the title and the URL).
+- [ ] **7.5 Workshop data.** Migration:
+    - `drafts`: id, item_id, version, `content` jsonb with summary, sections [{heading, body}], open_questions and next_steps; `source` auto, session or edit. Append-only versions.
+    - `workshop_sessions`: id, item_id, `turns` jsonb [{role, text, at}], `pending` answer.
+    - Both are synced both ways with own-rows RLS. An item is "in the Workshop" via `data.workshop = true`, set from any item, or from sorting's existing Workshop suggestion with one tap. The Inbox "To flesh out" section lists these items.
+    - Tests: pgTAP (RLS, version uniqueness), Zod and Dexie.
+- [ ] **7.6 Auto flesh-out.** Function `workshop`, mode `flesh_out`: one large-tier call with prompt `fleshout.v1`. It gets the item, its links' text and the relevant memory facts, and returns the structured draft. That draft is saved as a new version. The draft view shows the newest version, older versions are one tap away, and it links to the original. Online only, with its cost estimate.
+    - Tests: Deno with AI fixtures (valid draft, schema failure retried once, an injection line in a linked page does nothing), component tests for versions.
+- [ ] **7.7 Work on it together.** Mode `turn`: it sends only the current draft and the last 6 turns plus the new answer. It returns two or three questions and an updated draft (a new version). Answers typed offline wait in `pending` and are sent when back online. A session can be left and resumed.
+    - Tests: Deno (only the recent turns are sent), component tests (offline answer queued, then sent).
+- [ ] **7.8 Next steps to tasks.** A draft's next steps become tasks in one tap: a checklist, all ticked by default (the user is already deciding in the Workshop), with "Add N tasks". Each task is linked to the idea (`data.idea_id`) and its due text is read by the free rules (reuses `actionsToTasks`).
+    - Tests: component tests.
+- [ ] **7.9 Embeddings.** **Verify** Supabase's built-in model: `gte-small` via `Supabase.ai.Session('gte-small')` with `mean_pool` and `normalize`, English, input cut at 512 tokens. Its dimension is expected to be 384; confirm it against a real embedding and record it.
+    - Migration `chunks`: id, user_id, item_id, chunk_index, content, `content_hash`, `fts` (generated tsvector), `embedding vector(384)`. HNSW index with `vector_ip_ops`, GIN on `fts`, own-rows RLS for reading only.
+    - Function `embed-items`, run by the scheduler through `claim_job`, chunks changed items into about 300-word chunks: title, body, typed note text, summary, transcription and Workshop drafts. It embeds only chunks whose hash changed and removes the chunks of deleted items.
+    - Tests: Deno (chunking, hash skip, deletes; the embedder is injected), pgTAP (RLS).
+- [ ] **7.10 Ask Airhead.** SQL `hybrid_search(query_text, query_embedding, match_count)`: security invoker, own rows only. It runs full-text (`websearch_to_tsquery`) and vector search, merged by reciprocal rank fusion (k = 50).
+    - Function `ask`: embeds the question, takes the top 8 passages and makes one call (small tier by default; Settings can choose large) with prompt `ask.v1`. Passages are data, never instructions.
+    - It returns an answer with citations restricted to the passages it was given.
+    - Library → Ask: online only, with its cost estimate. Each citation taps through to its item or note. Offline, it says to use search.
+    - Tests: pgTAP (hybrid ranking, RLS), Deno with fixtures (citations outside the passages are dropped, an injection passage does nothing), component tests.
+- [ ] **7.11 Memory by relevance.** Facts get embeddings too. Sorting and the Workshop add the facts most similar to the captures at hand (top 8 above a threshold) after the core profile. Keyword matching stays as the fallback when embeddings aren't ready.
+    - Tests: Deno (relevant facts chosen, fallback).
+- Phase done when: the Phase 7 manual checklist passes (Shortcut from the share sheet and Back Tap, bookmarklet on desktop Chrome, a flesh-out and a two-turn session with versions, next steps to tasks, and an Ask answer with working citations).
+
 ## Phases 5–9 (outline)
 
-These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 and 6 are planned above.
+These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5, 6 and 7 are planned above.
 
 | Phase | Scope | Key pieces |
 | --- | --- | --- |

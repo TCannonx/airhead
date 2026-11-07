@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Phase 7 plan
+- **Planned before building**, as for Phases 5 and 6 (by the user's instruction).
+- **Embeddings, verified** in Supabase's docs (AI models, Generate text embeddings, Hybrid search):
+  - The built-in model in Edge Functions is `gte-small`: `new Supabase.ai.Session('gte-small')` and `session.run(text, { mean_pool: true, normalize: true })`. It is English-only and cuts input at 512 tokens, so chunks stay around 300 words.
+  - The docs don't state its dimension. 384 is gte-small's published size; Task 7.9 confirms it on a real embedding before the column is fixed.
+  - The index is HNSW with `vector_ip_ops` (inner product suits normalised vectors), and hybrid search is the docs' reciprocal rank fusion (k = 50).
+- **Bookmarklet without a token**: the bookmarklet opens Airhead's own `/share` page instead of posting from the web page. A capture token inside page context could be read by that page's scripts. Capture tokens are only for iOS Shortcuts.
+- **Capture tokens are stored hashed** (sha-256) and shown once.
+
 ## 2026-11-07 — Task 6.9 Notes in the Library
 - **The Meetings and Notes tabs already existed** (Task 3.x) and list the note items. Opening one (from a tab or from search) goes to `/notes/:id` through the item page's redirect.
 - **Reading view**: the summary, decisions, action items and a collapsible transcription sit above the original.
