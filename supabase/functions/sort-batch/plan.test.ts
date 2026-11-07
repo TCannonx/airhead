@@ -72,7 +72,11 @@ Deno.test('a capture the model skipped is marked failed', () => {
 Deno.test('events: past, undated or unsure ones become suggestions', () => {
   const base = output.results[0]!.items[2]!;
   const mk = (over: Partial<typeof base>) =>
-    planSort([C1], { results: [{ capture_id: C1, items: [{ ...base, ...over }] }] }, ctx).items[0];
+    planSort(
+      [C1],
+      { results: [{ capture_id: C1, items: [{ ...base, ...over }], link_summary: null }] },
+      ctx,
+    ).items[0];
   assertEquals(mk({ start_at: '2026-11-01T10:00:00+00:00' })?.status, 'suggested');
   assertEquals(mk({ start_at: null })?.status, 'suggested');
   assertEquals(mk({ start_at: 'not a date' })?.start_at, null);
@@ -88,7 +92,11 @@ Deno.test(
       [C1],
       {
         results: [
-          { capture_id: C1, items: [{ ...base, list_name: 'Packing', title: 'Passport' }] },
+          {
+            capture_id: C1,
+            items: [{ ...base, list_name: 'Packing', title: 'Passport' }],
+            link_summary: null,
+          },
         ],
       },
       ctx,
