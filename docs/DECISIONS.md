@@ -2,6 +2,20 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.11 Scout function
+- **Verified** in Claude's API reference: `web_search_20260209` (dynamic filtering on Sonnet 5.5) accepts `max_uses` and `user_location` (`{ type: 'approximate', city, timezone, … }`). Searches cost $10 per 1,000, reported in `usage.server_tool_use.web_search_requests`.
+- **Split for privacy**:
+  - Own-data findings (8.10) become cards straight from code and are never sent to the model.
+  - The one AI call (large tier, task `scout`) sees only the code-built web queries, which come from interests and the city. It has `max_uses` equal to the number of queries (at most 3).
+  - The model chooses its own search strings, so the run log stores the queries it actually ran (from its `server_tool_use` blocks), falling back to the planned ones.
+- **Queries** (`scout/queries.ts`):
+  - Only facts in the `everyday` category whose text says likes, loves, enjoys, supports, plays, follows, goes to or interested in.
+  - Topics with health words, digits, emails, links or address words are dropped. Capitalised words from facts about people are blocked from any query.
+  - No city, or 0 searches allowed in Settings: no AI call at all.
+- **Web output** is parsed strictly from a JSON array: https links only, at most 2 ideas, trimmed. Anything else gives no web cards. The structured-output gateway isn't used here because the server tool runs in the same call; usage, cost (tokens plus searches) and the monthly cap are recorded and checked as in `callAI`.
+- **Cards**: at most 5, at most 2 from the web, own-data first. Titles already open as cards are skipped. Accepting is 8.12; nothing is created here.
+- **When**: weekly right after the weekly review (unless Scout is off), with one "Airhead has N ideas for you" notification. "Scout now" (signed in, `{ mode: 'run' }`) comes with the cards UI in 8.12.
+
 ## 2026-11-07 — Task 8.10 Scout findings from own data
 - **`findFindings`** (`supabase/functions/scout/findings.ts`) is pure code over the person's items, the linked calendar and their time zone. No AI.
   - **follow_up**: meetings 1–14 days old with no summary and nothing made from them. Proposes "Write up actions from …".

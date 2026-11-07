@@ -7,6 +7,8 @@ import { runMorningBrief } from '../morning-brief/run.ts';
 import { supabaseBriefStore } from '../morning-brief/store.ts';
 import { lastWeekStart, runWeeklyReview } from '../weekly-review/run.ts';
 import { supabaseReviewStore } from '../weekly-review/store.ts';
+import { runScout } from '../scout/run.ts';
+import { supabaseScoutStore } from '../scout/store.ts';
 import { runTick, type TickStore } from './tick.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -187,6 +189,17 @@ Deno.serve(async (req) => {
           },
           { notify: true },
         );
+        // Scout runs weekly alongside the review, unless switched off (Task 8.11).
+        const { data } = await db.from('settings').select('data').eq('id', userId).maybeSingle();
+        const scout = ((data?.data as Record<string, unknown> | undefined)?.scout ?? {}) as {
+          enabled?: boolean;
+        };
+        if (scout.enabled !== false)
+          await runScout(userId, 'weekly', {
+            store: supabaseScoutStore(db),
+            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            usage: supabaseUsageStore(db),
+          }).catch(() => undefined);
       },
     },
   );
