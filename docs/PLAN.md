@@ -405,7 +405,7 @@ Goal: capture from anywhere (iOS Shortcuts and a Chrome bookmarklet), think idea
     - Migration `chunks`: id, user_id, item_id, chunk_index, content, `content_hash`, `fts` (generated tsvector), `embedding vector(384)`. HNSW index with `vector_ip_ops`, GIN on `fts`, own-rows RLS for reading only.
     - Function `embed-items`, run by the scheduler through `claim_job`, chunks changed items into about 300-word chunks: title, body, typed note text, summary, transcription and Workshop drafts. It embeds only chunks whose hash changed and removes the chunks of deleted items.
     - Tests: Deno (chunking, hash skip, deletes; the embedder is injected), pgTAP (RLS).
-- [ ] **7.10 Ask Airhead.** SQL `hybrid_search(query_text, query_embedding, match_count)`: security invoker, own rows only. It runs full-text (`websearch_to_tsquery`) and vector search, merged by reciprocal rank fusion (k = 50).
+- [x] **7.10 Ask Airhead.** SQL `hybrid_search(query_text, query_embedding, match_count)`: security invoker, own rows only. It runs full-text (`websearch_to_tsquery`) and vector search, merged by reciprocal rank fusion (k = 50).
     - Function `ask`: embeds the question, takes the top 8 passages and makes one call (small tier by default; Settings can choose large) with prompt `ask.v1`. Passages are data, never instructions.
     - It returns an answer with citations restricted to the passages it was given.
     - Library → Ask: online only, with its cost estimate. Each citation taps through to its item or note. Offline, it says to use search.

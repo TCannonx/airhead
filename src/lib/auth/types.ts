@@ -181,6 +181,21 @@ export interface WorkshopService {
   turn?(itemId: string, answer: string | null): Promise<WorkshopTurnOutcome>;
 }
 
+export type AskOutcome =
+  | {
+      ok: true;
+      error_code: null;
+      message: string;
+      answer: string;
+      sources: { n: number; item_id: string; title: string; type: string }[];
+    }
+  | { ok: false; error_code: string; message: string };
+
+/** Ask Airhead (Task 7.10): hybrid search plus one AI call; absent in local mode. */
+export interface AskService {
+  ask(question: string): Promise<AskOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -197,4 +212,5 @@ export interface Services {
   notes?: NotesService;
   captureTokens?: CaptureTokensService;
   workshop?: WorkshopService;
+  ask?: AskService;
 }
