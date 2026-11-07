@@ -2,6 +2,25 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.4 Work settings
+- **Where they live**: `settings.data.work`, so they sync with the settings row. Schema: `src/lib/work/settings.ts`.
+- **Every field has a default**. `readWorkSettings` falls back field by field, so one bad value never resets the rest.
+- **Defaults**:
+  - Mon–Fri, 7.5 hours a day; leave year from 1 December.
+  - 21 days' entitlement (Irish statutory minimum is 4 working weeks; 21 is a common contract figure, editable).
+  - Carry-over of up to 5 days, expiring 3 months into the new year.
+  - A public holiday on a non-working day gives a paid day off.
+  - Closure days do not use leave.
+  - Leave types: Annual (deducts), Sick, Other.
+  - Location pattern: Office Mon/Tue/Thu, WFH Wed/Fri.
+  - Office checklist: Laptop, Charger, Pass.
+  - The Us feed shows the full location.
+- **Leave year start is limited to days 1–28**, so it exists in every month.
+- **`opening_carry_over`** (per leave-year start date) is in the schema for the first year Airhead is used. It is edited from the Work screen in Task 4.6, where the leave year is known.
+- **Leave types are keyed by a slug of their name**. Annual leave always deducts and cannot be removed.
+- **The form keeps a draft until "Save work settings"** (one settings write). It is keyed on the stored work object, so a change synced from another device resets it.
+- **Checklist lines are trimmed and blank lines dropped on save.**
+
 ## 2026-11-07 — Task 4.3 Irish public holidays
 - Built before 4.2 (calendar views): it is pure logic with no dependencies, and the calendar view needs it as a layer.
 - `src/lib/holidays/easter.ts`: anonymous Gregorian computus, plus UTC-only date helpers (`addDays`, `weekday`, `isoDate`) so no time zone can shift a date.

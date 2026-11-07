@@ -7,6 +7,7 @@ import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
+import WorkSettings from './WorkSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 
@@ -115,6 +116,10 @@ export default function SettingsPage() {
             Not syncing: no server is configured, so everything stays on this device.
           </p>
         )}
+      </Section>
+
+      <Section title="Work">
+        <WorkSettings />
       </Section>
 
       <Section title="Memory">
