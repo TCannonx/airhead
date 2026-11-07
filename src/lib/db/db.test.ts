@@ -50,6 +50,7 @@ describe('local database', () => {
         'note_docs',
         'drafts',
         'workshop_sessions',
+        'reviews',
       ].sort(),
     );
   });

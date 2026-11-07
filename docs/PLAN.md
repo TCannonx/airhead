@@ -439,7 +439,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - If the AI fails, a code-built review (stats only) is stored instead.
     - The scheduler runs it on the chosen day and time (default Sunday 19:00), with a "Weekly review ready" notification. A "Run now" button is on Insights.
     - Tests: Deno with fixtures (valid; schema failure falls back; an injection title does nothing; only `ask` candidates can be proposed).
-- [ ] **8.4 Weekly review page.** Insights → This week: themes, wins, slipped, suggestions and the AI spend line.
+- [x] **8.4 Weekly review page.** Insights → This week: themes, wins, slipped, suggestions and the AI spend line.
     - The Tidy-up card approves or skips each proposal. **Condense** creates one note with a dated timeline of the originals, linked back, and archives the originals, which stay searchable.
     - A memory card applies fact merges and retirements.
     - Tests: component tests.

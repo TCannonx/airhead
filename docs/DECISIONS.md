@@ -2,6 +2,22 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.4 Weekly review page
+- **Insights → This week** (top of Insights) shows the newest review:
+  - themes, wins, what slipped and suggestions;
+  - "AI this week: €x over n calls";
+  - "Tidied for you" with a link to the Trash;
+  - the Tidy-up card and the memory card;
+  - "Run the weekly review now" (online, ≈ €0.03).
+  - `reviews` sync pull-only, like briefs (Dexie v8).
+- **Every proposal waits for a tap**:
+  - **Keep** sets `data.keep`, so the item isn't offered again (8.2).
+  - **Archive** sets `data.archived`: hidden from Library lists, still searchable. An archived capture goes to the Trash.
+  - **Delete** is a soft delete (Trash, 30 days).
+  - **Condense** merges a group into one typed note titled "<first> (condensed)", with an `<h2>date — title</h2>` section per original, oldest first, and `data.condensed_from`. The originals are archived with `data.condensed_into`.
+- **A proposal's state comes from the item itself** (kept, archived, in the Trash, condensed or gone), so the card reads right on every device without writing to the read-only review.
+- **Memory**: Merge sets the first fact's text to the merged text and removes the others; Retire archives the fact.
+
 ## 2026-11-07 — Task 8.3 Weekly review function
 - **`reviews`** (migration 0027): one per person per week, Monday start. Written by the server and synced read-only like briefs. Holds `content` plus a `digest` paragraph for later briefs and reviews (8.5). `weekly_review` becomes a nudge kind.
 - **`weekly-review`** makes one large-tier call with prompt `review.v1` (task `weekly_review`, a background call so it respects the monthly cap):

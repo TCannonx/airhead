@@ -3,10 +3,20 @@ import CheckupPanel from '../settings/CheckupPanel';
 import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
 import SuccessMeasures from './SuccessMeasures';
+import WeeklyReview from './WeeklyReview';
 
 export default function InsightsPage() {
   return (
     <Page title="Insights">
+      <section aria-labelledby="week-heading" className="mb-10">
+        <h2
+          id="week-heading"
+          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
+        >
+          This week
+        </h2>
+        <WeeklyReview />
+      </section>
       <section aria-labelledby="measures-heading" className="mb-10">
         <h2
           id="measures-heading"

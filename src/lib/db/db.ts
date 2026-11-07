@@ -89,5 +89,7 @@ export function openUserDb(userId: string): AirheadDb {
     drafts: 'id, item_id, server_updated_at',
     workshop_sessions: 'id, server_updated_at',
   });
+  // v8: weekly reviews (Task 8.4), pull-only.
+  db.version(8).stores({ reviews: 'id, week_start, server_updated_at' });
   return db;
 }

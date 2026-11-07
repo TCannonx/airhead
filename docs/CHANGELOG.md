@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 8.4: Insights → This week: the weekly review with Tidy-up (keep, archive, delete, condense into a dated timeline) and memory changes, each on a tap
 - Task 8.3: weekly review function (themes, wins, slips, suggestions, Tidy-up proposals, fact changes, digest; low-risk tidying done automatically; scheduled with its notification)
 - Task 8.2: Tidy-up candidates found in SQL (low-risk ones marked auto; notes and ideas always ask)
 - Task 8.1: weekly digest in SQL (tasks, slips, hours, returning ideas, notifications, AI spend)
