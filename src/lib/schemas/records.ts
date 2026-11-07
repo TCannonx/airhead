@@ -123,6 +123,76 @@ export const learnedRuleSchema = z.object({
   enabled: z.boolean(),
 });
 
+export const CALENDARS = ['personal', 'us'] as const;
+
+export const seriesSchema = z.object({
+  ...syncColumns,
+  name: z.string().min(1),
+  calendar: z.enum(CALENDARS),
+  colour: z.string().nullable(),
+  source_kind: z.enum(['manual', 'import']),
+  source_path: z.string().nullable(),
+  data: z.record(z.string(), z.unknown()),
+});
+
+export const FEED_KINDS = ['us_out', 'me_out', 'linked_in'] as const;
+
+export const feedSchema = z.object({
+  ...syncColumns,
+  kind: z.enum(FEED_KINDS),
+  name: z.string(),
+  colour: z.string().nullable(),
+  /** Hex SHA-256 of an outgoing feed's token; the token itself is never stored. */
+  token_hash: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .nullable(),
+  url: z.string().nullable(),
+  enabled: z.boolean(),
+  settings: z.record(z.string(), z.unknown()),
+  last_fetched_at: ts.nullable(),
+  last_error: z.string().nullable(),
+});
+
+/** One occurrence of a linked calendar's event. Written by the server only. */
+export const externalEventSchema = z.object({
+  ...syncColumns,
+  feed_id: id,
+  occurrence_key: z.string(),
+  title: z.string(),
+  location: z.string().nullable(),
+  description: z.string().nullable(),
+  start_at: ts,
+  end_at: ts.nullable(),
+  all_day: z.boolean(),
+});
+
+export const WORK_LOCATIONS = ['wfh', 'office', 'client', 'travel', 'off'] as const;
+
+export const workDaySchema = z.object({
+  ...syncColumns,
+  date,
+  location: z.enum(WORK_LOCATIONS),
+  note: z.string().nullable(),
+});
+
+export const LEAVE_STATUSES = ['planned', 'requested', 'approved', 'taken'] as const;
+
+export const leaveBookingSchema = z.object({
+  ...syncColumns,
+  start_date: date,
+  end_date: date,
+  start_half: z.boolean(),
+  end_half: z.boolean(),
+  leave_type: z.string().min(1),
+  status: z.enum(LEAVE_STATUSES),
+  share_us: z.boolean(),
+  /** PostgREST returns numeric as a number (or a string for very large values). */
+  days: z.coerce.number().nullable(),
+  note: z.string().nullable(),
+  capture_id: id.nullable(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -133,6 +203,12 @@ export type Topic = z.infer<typeof topicSchema>;
 export type Correction = z.infer<typeof correctionSchema>;
 export type MemoryFact = z.infer<typeof memoryFactSchema>;
 export type LearnedRule = z.infer<typeof learnedRuleSchema>;
+export type Series = z.infer<typeof seriesSchema>;
+export type Feed = z.infer<typeof feedSchema>;
+export type ExternalEvent = z.infer<typeof externalEventSchema>;
+export type WorkDay = z.infer<typeof workDaySchema>;
+export type WorkLocation = WorkDay['location'];
+export type LeaveBooking = z.infer<typeof leaveBookingSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
 export const SYNC_TABLES = [
@@ -145,6 +221,11 @@ export const SYNC_TABLES = [
   'corrections',
   'memory_facts',
   'learned_rules',
+  'series',
+  'feeds',
+  'external_events',
+  'work_days',
+  'leave_bookings',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -158,6 +239,11 @@ export const schemas = {
   corrections: correctionSchema,
   memory_facts: memoryFactSchema,
   learned_rules: learnedRuleSchema,
+  series: seriesSchema,
+  feeds: feedSchema,
+  external_events: externalEventSchema,
+  work_days: workDaySchema,
+  leave_bookings: leaveBookingSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -170,4 +256,9 @@ export interface RowTypes {
   corrections: Correction;
   memory_facts: MemoryFact;
   learned_rules: LearnedRule;
+  series: Series;
+  feeds: Feed;
+  external_events: ExternalEvent;
+  work_days: WorkDay;
+  leave_bookings: LeaveBooking;
 }
