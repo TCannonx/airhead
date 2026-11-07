@@ -208,7 +208,7 @@ Goal: capture anything offline, see links and clear dates handled instantly by f
 - [x] **2.8 On-device search.** MiniSearch (MIT) index over item titles, bodies and capture text, rebuilt incrementally; a visible search box in Library (and `/` as a desktop shortcut to it).
 - [x] **2.9 Export everything.** Settings → Export builds a zip (JSZip) with one Markdown file per item plus a full JSON dump of all tables.
     - Test: export then parse the JSON back and compare row counts.
-- [ ] **2.10 Sync visibility.** Status icon (synced, "n waiting", offline) and last successful sync time in Settings.
+- [x] **2.10 Sync visibility.** Status icon (synced, "n waiting", offline) and last successful sync time in Settings.
 - Phase done when: the Phase 2 lines of the manual checklist pass on all three devices.
 
 ## Phase 3: AI sorting, link reading, lists and AI usage

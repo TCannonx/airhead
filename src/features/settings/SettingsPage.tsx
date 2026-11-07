@@ -2,6 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Page } from '../../app/Page';
 import AppLockSettings from '../applock/AppLockSettings';
+import { lastSyncedText } from '../sync/labels';
+import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -18,6 +20,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsPage() {
   const { user, services, deviceId } = useAuth();
   const db = useDb();
+  const sync = useSync();
   const devices = useLiveQuery(
     () => db.devices.filter((d) => !d.deleted_at).sortBy('created_at'),
     [db],
@@ -83,6 +86,32 @@ export default function SettingsPage() {
               </li>
             ))}
           </ul>
+        )}
+      </Section>
+
+      <Section title="Sync">
+        {sync.status ? (
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-slate-500">Last successful sync</p>
+              <p className="font-medium">{lastSyncedText(sync.status.lastSyncedAt)}</p>
+              {sync.status.message && (
+                <p className="text-sm text-slate-500">{sync.status.message}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              disabled={sync.status.state === 'syncing'}
+              onClick={() => void sync.syncNow()}
+              className="shrink-0 rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700"
+            >
+              Sync now
+            </button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            Not syncing: no server is configured, so everything stays on this device.
+          </p>
         )}
       </Section>
 

@@ -18,6 +18,9 @@ test('a capture made offline on one browser appears on the other after reconnect
   const recentA = a.getByRole('list', { name: 'Recent captures' });
   await expect(recentA.getByText('Dentist Tue 3pm (captured offline)')).toBeVisible();
 
+  // The status indicator shows the changes waiting on this device.
+  await expect(a.getByText(/^Offline · \d+ waiting$/)).toBeVisible({ timeout: 15_000 });
+
   // Still offline: B must not have it yet.
   await b.waitForTimeout(3_000);
   await expect(b.getByText('Dentist Tue 3pm (captured offline)')).toHaveCount(0);
@@ -31,4 +34,5 @@ test('a capture made offline on one browser appears on the other after reconnect
       .getByRole('list', { name: 'Recent captures' })
       .getByText('Dentist Tue 3pm (captured offline)'),
   ).toBeVisible({ timeout: 60_000 });
+  await expect(a.getByText('Synced', { exact: true })).toBeVisible({ timeout: 30_000 });
 });
