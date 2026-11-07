@@ -7,6 +7,6 @@
   "assets": {
     "directory": "./dist",
     // Unknown paths (e.g. /share, /today) get index.html; public/_headers still applies.
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+  },
 }
