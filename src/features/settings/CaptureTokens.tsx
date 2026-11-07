@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import type { CaptureTokenRow } from '../../lib/capture/tokens';
+import BookmarkletLink from './BookmarkletLink';
 import ShortcutsGuide from './ShortcutsGuide';
 
 const field =
@@ -36,9 +37,12 @@ export default function CaptureTokens() {
 
   if (!tokens)
     return (
-      <p className="text-sm text-slate-500">
-        Capturing from Shortcuts needs Airhead&apos;s server (sign in).
-      </p>
+      <div className="space-y-4">
+        <p className="text-sm text-slate-500">
+          Capturing from Shortcuts needs Airhead&apos;s server (sign in).
+        </p>
+        <BookmarkletLink />
+      </div>
     );
 
   const act = async (fn: () => Promise<void>) => {
@@ -130,6 +134,7 @@ export default function CaptureTokens() {
         </p>
       )}
       <ShortcutsGuide />
+      <BookmarkletLink />
     </div>
   );
 }
