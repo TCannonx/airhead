@@ -14,6 +14,18 @@ export interface EventDraft {
   allDay: boolean;
 }
 
+/** Per-event reminder (Task 4.12): '' = the default from Settings → Notifications. */
+const REMINDERS: [string, string][] = [
+  ['', 'Default reminder'],
+  ['none', 'No reminder'],
+  ['0', 'At the start'],
+  ['10', '10 minutes before'],
+  ['30', '30 minutes before'],
+  ['60', '1 hour before'],
+  ['120', '2 hours before'],
+  ['1440', '1 day before'],
+];
+
 const REPEATS: [string, string][] = [
   ['', 'Does not repeat'],
   ['FREQ=DAILY', 'Every day'],
@@ -53,6 +65,7 @@ function initialState(d: EventDraft, tz: string) {
     location: typeof item?.data.location === 'string' ? item.data.location : '',
     body: item?.body ?? '',
     rrule: item?.rrule ?? '',
+    reminder: typeof item?.data.reminder_minutes === 'string' ? item.data.reminder_minutes : '',
   };
 }
 
@@ -106,7 +119,13 @@ export default function EventEditor({
     if (existing) {
       await update(db, 'items', existing.id, {
         ...fields,
-        data: { ...existing.data, location: f.location.trim() || undefined },
+        data: Object.fromEntries(
+          Object.entries({
+            ...existing.data,
+            location: f.location.trim(),
+            reminder_minutes: f.reminder,
+          }).filter(([, v]) => v !== '' && v !== undefined),
+        ),
       });
     } else {
       await save(
@@ -115,7 +134,10 @@ export default function EventEditor({
         newItem(user?.id ?? '', {
           type: 'event',
           ...fields,
-          data: f.location.trim() ? { location: f.location.trim() } : {},
+          data: {
+            ...(f.location.trim() ? { location: f.location.trim() } : {}),
+            ...(f.reminder ? { reminder_minutes: f.reminder } : {}),
+          },
         }),
       );
     }
@@ -222,6 +244,22 @@ export default function EventEditor({
           <select className={field} value={f.rrule} onChange={(e) => set('rrule', e.target.value)}>
             {!knownRepeat && <option value={f.rrule}>Custom ({f.rrule})</option>}
             {REPEATS.map(([v, label]) => (
+              <option key={v} value={v}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {!f.allDay && !isTask && (
+        <label className="block text-sm">
+          Reminder
+          <select
+            className={field}
+            value={f.reminder}
+            onChange={(e) => set('reminder', e.target.value)}
+          >
+            {REMINDERS.map(([v, label]) => (
               <option key={v} value={v}>
                 {label}
               </option>

@@ -2,6 +2,23 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.12 Reminder generation
+- **Trigger** (migration `20261107000013_reminders.sql`): `item_reminders` runs after insert, or after updates to the columns that matter, on `items`. It runs in the database, so reminders exist once the item has synced, whichever device made it.
+- **Event reminder** (`event:<id>`): `start_at − N minutes`.
+  - N is the event's `data.reminder_minutes` (a number, or `"none"`), else `settings.data.notifications.event_reminder_minutes`, else **30**.
+  - Body: "In 30 min · 15:00 · Smile Clinic", in the person's time zone. Opens `/calendar`.
+  - Timed, open, non-recurring events only. All-day events get no timed reminder; suggestions get none until accepted.
+- **Task reminder** (`task:<id>`): at `due_at`, "Due: …", opening the item.
+- **Time-TBC check** (`tbc:<id>`): for all-day events with `data.time_tbc` (from imports), 10:00 local, 7 days before: "Time confirmed yet? …".
+- **Changes**:
+  - **Moving** the item moves its nudge. A nudge that was already sent is armed again only when its send time actually changes, so editing a title doesn't resend it.
+  - **Completing, dropping or deleting** the item cancels pending nudges. So does switching the reminder to "none", or making the event recurring.
+  - **A reminder whose time has already passed** isn't created; a pending one is cancelled rather than sent late.
+- **Recurring events** are left to the scheduler (4.13), which has the recurrence code and plans their next occurrence.
+- **Applied when sending, not stored here**: quiet hours, the daily cap and per-type switches (4.13/4.15).
+- **Helper functions** `upsert_nudge`, `cancel_nudge` and `user_time_zone` are security definer and not callable by devices.
+- **Event editor**: a **Reminder** choice (default, none, at the start, 10 or 30 minutes, 1 or 2 hours, 1 day) writes `data.reminder_minutes`. "Default" removes the override and keeps the rest of `data`.
+
 ## 2026-11-07 — Task 4.11 Push setup
 - **Library**: `jsr:@negrel/webpush@0.5.0`, Deno-native Web Push on WebCrypto (RFC 8291 aes128gcm, RFC 8292 VAPID).
   - Chosen over npm `web-push`, whose Node crypto calls are a poor fit for Edge Functions.

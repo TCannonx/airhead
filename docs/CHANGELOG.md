@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 4.12: reminders generated in the database from items (event reminders with per-event choice, task due reminders, time-TBC checks; moved, cancelled or re-armed as items change)
 - Task 4.11: push notifications setup (VAPID via secrets, Settings → Notifications with Home Screen guidance, one receiving device, test notification, `send-push` clearing expired subscriptions, service worker show and open)
 - Task 4.10: import a schedule (.ics, CSV and Excel exactly on device; PDFs, screenshots, links and pasted text with one AI call; instruction filters; review with clashes and leave; saved as a series with the original file)
 - Task 4.9: linked calendars (check and add a secret iCal link, server fetch every 30 minutes with recurrences expanded 12 months ahead, removals and errors tracked)
