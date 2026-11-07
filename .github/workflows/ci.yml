@@ -113,7 +113,7 @@ jobs:
           deno-version: v2.x
       # Type-check every function entry point and shared module (tests only check what they import).
       - run: deno check --node-modules-dir=none supabase/functions/_shared/*.ts supabase/functions/*/index.ts
-      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 supabase/functions
+      - run: deno test --node-modules-dir=none --allow-env --allow-net=127.0.0.1 --allow-read=tests/fixtures supabase/functions
 
   db:
     name: database tests
