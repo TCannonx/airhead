@@ -80,6 +80,9 @@ const fail = <T>(code: AIErrorCode): CallAIResult<T> => ({
   message: MESSAGES[code],
 });
 
+/** Beta header for `fallbacks: "default"` (server-side refusal fallback). */
+export const LARGE_TIER_BETA = 'server-side-fallback-2026-07-01';
+
 export async function callAI<T>(
   deps: { client: AIClient; store: UsageStore; models?: Record<Tier, string> },
   req: CallAIRequest<T>,
@@ -108,25 +111,33 @@ export async function callAI<T>(
   for (let attempt = 1; attempt <= 2; attempt++) {
     let response: Awaited<ReturnType<AIClient['messages']['parse']>>;
     try {
-      response = await deps.client.messages.parse({
-        model,
-        max_tokens: req.maxTokens ?? 8000,
-        // Each block is its own cache breakpoint (fixed instructions, then the
-        // slower-changing memory profile); at most 4 are allowed.
-        system: (Array.isArray(req.system) ? req.system : [req.system])
-          .filter((text) => text.trim())
-          .slice(0, 4)
-          .map((text) => ({
-            type: 'text' as const,
-            text,
-            cache_control: { type: 'ephemeral' as const },
-          })),
-        messages: req.messages,
-        output_config: {
-          format: zodOutputFormat(req.schema),
-          ...(req.effort ? { effort: req.effort } : {}),
+      // Large tier: if the model declines, the API re-runs the request on its
+      // recommended fallback model in the same call (server-side fallback, beta).
+      // Haiku has no server-side fallback, so small-tier calls don't ask for one.
+      const large = req.tier === 'large';
+      response = await deps.client.messages.parse(
+        {
+          ...(large ? ({ fallbacks: 'default' } as Record<string, unknown>) : {}),
+          model,
+          max_tokens: req.maxTokens ?? 8000,
+          // Each block is its own cache breakpoint (fixed instructions, then the
+          // slower-changing memory profile); at most 4 are allowed.
+          system: (Array.isArray(req.system) ? req.system : [req.system])
+            .filter((text) => text.trim())
+            .slice(0, 4)
+            .map((text) => ({
+              type: 'text' as const,
+              text,
+              cache_control: { type: 'ephemeral' as const },
+            })),
+          messages: req.messages,
+          output_config: {
+            format: zodOutputFormat(req.schema),
+            ...(req.effort ? { effort: req.effort } : {}),
+          },
         },
-      });
+        large ? { headers: { 'anthropic-beta': LARGE_TIER_BETA } } : undefined,
+      );
     } catch (error) {
       // HTTP/API failures carry a status; anything else is the answer failing to parse.
       const isApi = typeof (error as { status?: unknown })?.status === 'number';

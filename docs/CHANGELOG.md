@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Captures are sorted by AI in batches through a logged, capped gateway (Haiku/Sonnet, prompt caching, structured output): brain dumps split into items, topics and lists, unsure items get one-tap choices, links are read safely and summarised, Lists with a default Shopping list, AI usage and success measures on Insights, memory facts with approval and learned rules applied offline, and a memory check-up with one-tap fixes. Needs the Anthropic key and Vault secrets (BLOCKERS 8 and 9). Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 3.
 
+- Task 5.4: morning-brief function (one large-tier call with server-side refusal fallback, validated Top 3 with code-found slots, prep nudges, round-up; code-built list on any failure)
 - Tasks 5.3 and 5.5: free time slots and the code-built daily list (shared by the app and the server)
 - Task 5.2: morning digest in SQL (events, tasks, yesterday, leave, ideas; titles only)
 - Task 5.1: morning briefs table (one per day, server-written, synced read-only)
