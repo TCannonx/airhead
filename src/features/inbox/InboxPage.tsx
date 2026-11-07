@@ -191,7 +191,7 @@ export default function InboxPage() {
                 key={i.id}
                 className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
               >
-                <Link to={`/library/item/${i.id}`} className="hover:underline">
+                <Link to={`/workshop/${i.id}`} className="hover:underline">
                   {i.title}
                 </Link>
               </li>

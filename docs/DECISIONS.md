@@ -2,6 +2,21 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 7.6 Auto flesh-out
+- **One `workshop` function** (mode `flesh_out` now, `turn` in 7.7): one large-tier call with prompt `fleshout.v1`, task `workshop_flesh_out`, medium effort. `callAI` already retries once on invalid output.
+- **Input**:
+  - the item's title and body;
+  - its capture's text and any reading summary, as `<notes>`;
+  - a read link's article text, as `<page>`, up to 12,000 characters;
+  - the newest draft, so a new run improves on it;
+  - the memory profile, whose facts are marked as used.
+  - Everything inside the tags is data; the prompt says to ignore instructions there.
+- **Output**: the draft schema (summary, sections, open questions, next steps), trimmed and capped. It is inserted as a new `drafts` row with the service role, so the database numbers it. The function returns the row and the device puts it in its local table at once; the next pull brings the same row.
+- **Workshop page** `/workshop/:id`:
+  - shows the newest version, with "Version N" chips for older ones, and links to the original;
+  - Auto flesh-out (or Flesh out again) is online only, with an estimate (≈ €0.02).
+  - The Inbox "To flesh out" entries open it, and the item page links to it.
+
 ## 2026-11-07 — Task 7.5 Workshop data
 - **`drafts`**: one row per version (id, item_id, version, content, source), synced both ways with own-rows RLS.
   - The server numbers versions per item (trigger, advisory lock, unique per item), so two devices adding versions offline never collide.

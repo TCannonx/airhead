@@ -131,6 +131,11 @@ function ItemForm({ item }: { item: Item }) {
             {inWorkshop(item) ? 'Take out of the Workshop' : 'Send to the Workshop'}
           </button>
         </div>
+        {inWorkshop(item) && (
+          <Link to={`/workshop/${item.id}`} className="text-sm text-indigo-600 hover:underline">
+            Open in the Workshop
+          </Link>
+        )}
         <Top3Button item={item} />
       </div>
     </Page>

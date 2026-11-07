@@ -159,6 +159,16 @@ export interface CaptureTokensService {
   revoke(id: string): Promise<void>;
 }
 
+export type WorkshopOutcome =
+  | { ok: true; error_code: null; message: string; draft: Record<string, unknown> }
+  | { ok: false; error_code: string; message: string };
+
+/** The Workshop's AI (Tasks 7.6–7.7); absent in local mode. */
+export interface WorkshopService {
+  /** Auto flesh-out: one large-tier call; returns the new draft version. */
+  fleshOut(itemId: string): Promise<WorkshopOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -174,4 +184,5 @@ export interface Services {
   briefs?: BriefsService;
   notes?: NotesService;
   captureTokens?: CaptureTokensService;
+  workshop?: WorkshopService;
 }
