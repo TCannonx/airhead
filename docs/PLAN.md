@@ -340,7 +340,7 @@ Goal: one calm daily list. Each morning one large-tier AI call turns a SQL-built
     - Tests: component tests with a brief, without one, and offline.
 - [x] **5.8 Top 3 and carry-over prompts.** Add to or remove from today's Top 3 from Today and from any task (at most 3; a fourth asks which to swap). In the morning, cards for yesterday's unfinished Top 3 and due tasks: Done, Today, or Drop (Today increments `carry_count`, as the evening review does).
     - Tests: unit and component tests.
-- [ ] **5.9 Brief settings and Regenerate.** Settings → Today: brief on or off, its time, the day window for slots, and a **Regenerate brief** button (online only, with its cost estimate, counted in AI usage).
+- [x] **5.9 Brief settings and Regenerate.** Settings → Today: brief on or off, its time, the day window for slots, and a **Regenerate brief** button (online only, with its cost estimate, counted in AI usage).
     - Tests: component tests (settings saved, cost line shown, button disabled offline).
 - Phase done when: the Phase 5 manual checklist passes (a brief arrives at the chosen time with sensible slots; a failed call still sends the fallback list).
 
