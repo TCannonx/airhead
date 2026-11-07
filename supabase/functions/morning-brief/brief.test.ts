@@ -237,3 +237,31 @@ Deno.test('Regenerate sends no round-up; a quiet day is skipped', async () => {
   assertEquals(res, { status: 'skipped', reason: 'quiet_day' });
   assertEquals(quiet.log, []);
 });
+
+Deno.test('the brief reads the last weekly digests (Task 8.5), at most 4', async () => {
+  const { client, calls } = ai({ parsed_output: aiFixture.output });
+  const weeks = Array.from({ length: 6 }, (_, i) => ({
+    week_start: `2026-06-${String(29 - i * 7).padStart(2, '0')}`,
+    digest: `Week ${i} summary`,
+  }));
+  await buildBrief(USER, digest, {}, NOW, {
+    ai: client,
+    store: usage().store,
+    profile: '',
+    recentWeeks: weeks,
+  });
+  const msg = String((calls[0]?.messages as { content: string }[])[0]?.content);
+  assertStringIncludes(
+    msg,
+    'Recent weeks (from weekly reviews):\n- Week of 2026-06-29: Week 0 summary',
+  );
+  assertStringIncludes(msg, 'Week 3 summary');
+  assertEquals(msg.includes('Week 4 summary'), false);
+
+  const none = ai({ parsed_output: aiFixture.output });
+  await buildBrief(USER, digest, {}, NOW, { ai: none.client, store: usage().store, profile: '' });
+  assertEquals(
+    String((none.calls[0]?.messages as { content: string }[])[0]?.content).includes('Recent weeks'),
+    false,
+  );
+});

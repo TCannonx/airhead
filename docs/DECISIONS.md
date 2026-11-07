@@ -2,6 +2,11 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.5 Memory digests
+- **The weekly digest paragraph is the memory**: each review stores its digest (at most 80 words, or a code-built line), and nothing else is kept as "history".
+- **The morning brief** adds the last 4 digests, newest first, after its digest as "Recent weeks (from weekly reviews)". Each is capped at 600 characters, so at most about 2,400 characters ride along.
+- **The weekly review** already reads the last 4 earlier digests (8.3). Raw history is never sent.
+
 ## 2026-11-07 — Task 8.4 Weekly review page
 - **Insights → This week** (top of Insights) shows the newest review:
   - themes, wins, what slipped and suggestions;
