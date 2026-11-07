@@ -6,6 +6,8 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { saveDoc } from '../../lib/db/notes';
 import { update } from '../../lib/db/repository';
+import { readInk } from '../../lib/ink/strokes';
+import InkCanvas from './InkCanvas';
 import MeetingDetails from './MeetingDetails';
 import NoteEditor from './NoteEditor';
 
@@ -54,7 +56,11 @@ export default function NotePage() {
           onSave={(html) => void saveDoc(db, deviceId ?? '', doc.id, { ...doc.doc, html })}
         />
       ) : (
-        <p className="text-sm text-slate-500">Handwritten pages open here.</p>
+        <InkCanvas
+          key={doc.id}
+          doc={readInk(doc.doc)}
+          onSave={(ink) => void saveDoc(db, deviceId ?? '', doc.id, { ...ink })}
+        />
       )}
     </Page>
   );
