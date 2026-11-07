@@ -6,6 +6,7 @@ Decisions and library versions, newest first.
 - Cloudflare's **Workers & Pages → Create** now makes a Worker with static assets, so the dev site is the Worker `airhead` at **https://airhead.xxr5th.workers.dev** (the `airhead-dev.pages.dev` name below was never used). Its Git integration builds every push to `main` plus preview builds.
 - Workers static assets honour the same `_headers` file and serve `index.html` for unknown paths, so no repo change was needed; checked on the live dev site.
 - **`wrangler.jsonc`** (Worker `airhead`, assets from `./dist`, `not_found_handling: single-page-application`) makes the setup explicit: PR builds run `wrangler preview` (open beta), which fails unless the config has a `previews` block (empty is fine); `main` deploys worked on Cloudflare's auto-detected setup. `wrangler deploy --dry-run` reads it cleanly (wrangler 4.158.0).
+- Preview (non-main) builds have a **separate** set of build variables from production; both must be kept in step.
 - `VITE_*` values must be **build** variables (Settings → Build), not runtime variables. A misspelt name (`VITE_SUPABSE_URL`) gave a build in local-only mode; checking the bundle for the project ref catches it.
 - `release.yml` still deploys live with `wrangler pages deploy` to a Pages project `airhead-live`. That path still works (Pages projects can be created from the API/CLI); revisit only if the user prefers a Worker for live too.
 
