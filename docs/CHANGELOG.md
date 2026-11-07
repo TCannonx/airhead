@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 7.11: memory by relevance (facts embedded; sorting and the Workshop add the most similar facts, with a keyword fallback)
 - Task 7.10: Ask Airhead (hybrid keyword and vector search, cited answers in the Library)
 - Task 7.9: embeddings (gte-small, 384 dimensions) for every item's text, kept up to date by the scheduler
 - Task 7.8: a draft's next steps become tasks in one tap (linked to the idea)

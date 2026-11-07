@@ -1,3 +1,4 @@
+import { gteSmall } from '../_shared/embed.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
 
   try {
     const outcome = await runSortBatch(
-      { db, ai: new Anthropic({ apiKey }), store: supabaseUsageStore(db) },
+      { db, ai: new Anthropic({ apiKey }), store: supabaseUsageStore(db), embed: gteSmall },
       userId,
       background,
     );

@@ -138,3 +138,21 @@ Deno.test('a newer draft builds on the current one; a missing item calls no AI',
   const res = await runFleshOut(ITEM, USER, gone.d);
   assertEquals([res.ok, res.error_code, gone.calls.length], [false, 'not_found', 0]);
 });
+
+Deno.test('facts most like the idea are added after the core profile (Task 7.11)', async () => {
+  const { d, calls, used } = deps([fixture.flesh_out], {
+    ...SOURCE,
+    relevant: [
+      { id: 'f1', text: 'Lives in Dublin', last_used_at: null, created_at: '2026-01-01T00:00:00Z' },
+      { id: 'f9', text: 'Prefers timber', last_used_at: null, created_at: '2026-01-01T00:00:00Z' },
+    ],
+  });
+  await runFleshOut(ITEM, USER, d);
+  const system = calls[0]?.system as { text: string }[] | string;
+  const text = JSON.stringify(system);
+  assertStringIncludes(text, 'Also likely relevant here');
+  assertStringIncludes(text, 'Prefers timber');
+  // f1 is already in the core profile, so it isn't repeated.
+  assertEquals(text.split('Lives in Dublin').length - 1, 1);
+  assertEquals(used, [['f1', 'f9']]);
+});

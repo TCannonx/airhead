@@ -40,7 +40,12 @@ export interface EmbedDeps {
   /** Removes this item's chunks with index >= fromIndex (0 = all). */
   removeFrom(itemId: string, fromIndex: number): Promise<void>;
   embed(text: string): Promise<number[]>;
+  /** Memory facts waiting for an embedding (Task 7.11). */
+  factsToEmbed?(limit: number): Promise<{ id: string; text: string }[]>;
+  storeFact?(id: string, embedding: number[]): Promise<void>;
 }
+
+export const FACT_BATCH = 50;
 
 export async function sha256Hex(s: string): Promise<string> {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
@@ -68,9 +73,9 @@ export function chunkText(title: string, parts: string[]): string[] {
 
 export async function runEmbed(
   deps: EmbedDeps,
-): Promise<{ items: number; embedded: number; skipped: number; removed: number }> {
+): Promise<{ items: number; embedded: number; skipped: number; removed: number; facts: number }> {
   const queued = await deps.take(BATCH);
-  const stats = { items: queued.length, embedded: 0, skipped: 0, removed: 0 };
+  const stats = { items: queued.length, embedded: 0, skipped: 0, removed: 0, facts: 0 };
   for (const q of queued) {
     const item = await deps.load(q.item_id, q.user_id);
     if (!item || item.deleted) {
@@ -103,6 +108,12 @@ export async function runEmbed(
     if ([...known.keys()].some((k) => k >= texts.length)) {
       await deps.removeFrom(item.id, texts.length);
       stats.removed++;
+    }
+  }
+  if (deps.factsToEmbed && deps.storeFact) {
+    for (const f of await deps.factsToEmbed(FACT_BATCH)) {
+      await deps.storeFact(f.id, await deps.embed(f.text));
+      stats.facts++;
     }
   }
   return stats;

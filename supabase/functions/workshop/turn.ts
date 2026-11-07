@@ -1,6 +1,7 @@
 import { z } from 'npm:zod@4.6.7';
 import { callAI } from '../_shared/ai.ts';
 import { buildProfile } from '../_shared/memory.ts';
+import { withRelevant } from '../_shared/relevant.ts';
 import { buildTurnMessage, TURN_SYSTEM } from '../_shared/prompts/workshop-turn.v1.ts';
 import {
   cleanDraft,
@@ -55,13 +56,15 @@ export async function runTurn(
   const turns = await deps.loadTurns(itemId);
   const recent = turns.slice(-RECENT_TURNS);
   const profile = buildProfile(src.facts);
+  const extra = (src.relevant ?? []).filter((f) => !profile.ids.includes(f.id));
+  const memory = withRelevant(profile.text, extra);
   const result = await callAI(
     { client: deps.ai, store: deps.store },
     {
       userId,
       task: 'workshop_turn',
       tier: 'large',
-      system: profile.text ? [TURN_SYSTEM, profile.text] : TURN_SYSTEM,
+      system: memory ? [TURN_SYSTEM, memory] : TURN_SYSTEM,
       messages: [
         {
           role: 'user',
@@ -92,6 +95,7 @@ export async function runTurn(
     ...(text ? [{ role: 'me' as const, text, at }] : []),
     ...(questions.length ? [{ role: 'airhead' as const, text: questions.join('\n'), at }] : []),
   ]);
-  if (profile.ids.length) await deps.markFactsUsed?.(profile.ids);
+  const used = [...profile.ids, ...extra.map((f) => f.id)];
+  if (used.length) await deps.markFactsUsed?.(used);
   return { ok: true, error_code: null, message: 'Updated.', draft, session };
 }

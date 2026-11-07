@@ -1,6 +1,9 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
+import { gteSmall } from '../_shared/embed.ts';
 import { cors, json } from '../_shared/http.ts';
+import type { FactRow } from '../_shared/memory.ts';
+import { relevantFacts } from '../_shared/relevant.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { DraftContent, runFleshOut, type WorkshopDeps } from './run.ts';
 import { runTurn, type Turn, type TurnDeps } from './turn.ts';
@@ -50,12 +53,32 @@ function depsFor(userId: string, apiKey: string): TurnDeps {
         .limit(1)
         .maybeSingle();
       const article = (capture?.payload as Record<string, unknown> | undefined)?.article_text;
+      const allFacts = (facts ?? []) as FactRow[];
+      const relevant = await relevantFacts(
+        {
+          embed: gteSmall,
+          nearest: async (embedding, limit, min) => {
+            const { data, error } = await db.rpc('relevant_facts', {
+              p_user: userId,
+              p_embedding: JSON.stringify(embedding),
+              p_limit: limit,
+              p_min: min,
+            });
+            if (error) throw new Error(error.message);
+            return (data ?? []) as FactRow[];
+          },
+        },
+        [item.title, item.body ?? '', capture?.text ?? ''].join('\n'),
+        allFacts,
+        [],
+      );
       const current = latest ? DraftContent.safeParse(latest.content) : null;
       return {
         item,
         captureText: capture?.text ?? null,
         pageText: typeof article === 'string' ? article : null,
-        facts: facts ?? [],
+        facts: allFacts,
+        relevant,
         current: current?.success ? current.data : null,
       };
     },
