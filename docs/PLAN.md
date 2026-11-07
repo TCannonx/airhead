@@ -495,7 +495,7 @@ Goal: handwritten pages get the editing a paper notebook can't do. Lasso strokes
     - Tests: unit tests (point in polygon, selection rules), a component test.
 - [x] **9.2 Move and delete.** Drag inside the selection box to move the selection: stroke points and text boxes shift, kept inside the page width, and the page grows if needed. Delete removes the selection. Undo and redo cover moves and deletes (the undo stack gains `move` and `remove` operations).
     - Tests: unit tests (translate, undo and redo), a component test.
-- [ ] **9.3 Copy and paste.** Copy puts the selection on an in-app clipboard (kept for the session; strokes and text boxes as data, not images). Paste drops it into the same page or another handwritten note, offset so it doesn't cover the original, and selects it for moving. It is one undo step.
+- [x] **9.3 Copy and paste.** Copy puts the selection on an in-app clipboard (kept for the session; strokes and text boxes as data, not images). Paste drops it into the same page or another handwritten note, offset so it doesn't cover the original, and selects it for moving. It is one undo step.
     - Tests: unit tests, a component test (copy in one note, paste in another).
 - [ ] **9.4 Hold-to-snap shapes.** When a stroke ends with the Pencil held still for about half a second, code recognises a straight line, an arrow (a line with a short two-stroke head drawn in one go), a rectangle or a circle/ellipse from the points, and swaps the stroke for a clean one.
     - The clean shape is stored as an ordinary stroke (points), so sync and rendering don't change.

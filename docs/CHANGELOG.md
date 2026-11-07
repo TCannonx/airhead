@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 9.3: copy a lasso selection and paste it into the same or another handwritten note
 - Task 9.2: move a lasso selection by dragging, delete it, undo and redo both
 - Task 9.1: lasso selection on handwritten pages
 - plan: phase 9 (Notebook polish, tasks 9.1–9.4)

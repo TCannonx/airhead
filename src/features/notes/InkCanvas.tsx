@@ -21,6 +21,7 @@ import {
   type TextBox,
   type Tool,
 } from '../../lib/ink/strokes';
+import { copyInk, pasted, useInkClipboard } from '../../lib/ink/clipboard';
 import {
   EMPTY_SELECTION,
   isEmpty,
@@ -147,6 +148,36 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
     setTexts(movedTexts);
     setHeight(h);
     persist(next, h, movedTexts);
+  };
+
+  const clip = useInkClipboard();
+
+  const copySelection = () =>
+    copyInk({
+      strokes: selection.strokes.flatMap((i) => (strokes[i] ? [strokes[i]] : [])),
+      texts: texts.filter((t) => selection.texts.includes(t.id)),
+    });
+
+  /** Pastes the clipboard (one undo step), offset from where it came from, and selects it. */
+  const paste = () => {
+    if (!clip) return;
+    const add = pasted(clip);
+    const next = add.strokes.length
+      ? undo.apply(strokes, { kind: 'paste', strokes: add.strokes })
+      : strokes;
+    const nextTexts = [...texts, ...add.texts];
+    const sel: Selection = {
+      strokes: add.strokes.map((_, i) => strokes.length + i),
+      texts: add.texts.map((t) => t.id),
+    };
+    const box = selectionBox(next, nextTexts, sel, TEXT_BOX_WIDTH);
+    const h = box ? grownHeight(height, box.y + box.h) : height;
+    setStrokes(next);
+    setTexts(nextTexts);
+    setHeight(h);
+    setMode('lasso');
+    setSelection(sel);
+    persist(next, h, nextTexts);
   };
 
   /** Deletes the selected strokes (one undo step) and text boxes. */
@@ -353,8 +384,18 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           Lasso
         </button>
         {selBox && (
-          <button type="button" className={btn(false)} onClick={deleteSelection}>
-            Delete selection
+          <>
+            <button type="button" className={btn(false)} onClick={copySelection}>
+              Copy selection
+            </button>
+            <button type="button" className={btn(false)} onClick={deleteSelection}>
+              Delete selection
+            </button>
+          </>
+        )}
+        {clip && (clip.strokes.length > 0 || clip.texts.length > 0) && (
+          <button type="button" className={btn(false)} onClick={paste}>
+            Paste
           </button>
         )}
         <button

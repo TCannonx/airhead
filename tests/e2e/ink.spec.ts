@@ -139,3 +139,46 @@ test('lasso: drag a selection to move it, delete it, undo both (Task 9.2)', asyn
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(saved).toHaveCount(1);
 });
+
+test('copy a selection in one note and paste it into another (Task 9.3)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  const newNote = async () => {
+    await page.goto('/library');
+    await page.getByRole('button', { name: 'New handwritten note' }).click();
+    await expect(page).toHaveURL(/\/notes\//);
+    const canvas = page.getByRole('img', { name: 'Handwritten page' });
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error('no page');
+    return { canvas, box };
+  };
+  const first = await newNote();
+  await page.mouse.move(first.box.x + 200, first.box.y + 200);
+  await page.mouse.down();
+  for (let i = 1; i <= 6; i++)
+    await page.mouse.move(first.box.x + 200 + i * 10, first.box.y + 200 + i * 5);
+  await page.mouse.up();
+  await page.getByRole('button', { name: 'Lasso' }).click();
+  await page.mouse.move(first.box.x + 150, first.box.y + 150);
+  await page.mouse.down();
+  for (const [x, y] of [
+    [350, 150],
+    [350, 300],
+    [150, 300],
+    [150, 150],
+  ])
+    await page.mouse.move(first.box.x + (x ?? 0), first.box.y + (y ?? 0), { steps: 4 });
+  await page.mouse.up();
+  await page.getByRole('button', { name: 'Copy selection' }).click();
+
+  // In-app navigation keeps the clipboard (it lives for the session).
+  await page.getByRole('link', { name: 'Library' }).first().click();
+  await page.getByRole('button', { name: 'New handwritten note' }).click();
+  await expect(page).toHaveURL(/\/notes\//);
+  const second = page.getByRole('img', { name: 'Handwritten page' });
+  await expect(second.locator('path[data-stroke="saved"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Paste' }).click();
+  await expect(second.locator('path[data-stroke="saved"]')).toHaveCount(1);
+  await expect(second.locator('rect[data-lasso="selection"]')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(second.locator('path[data-stroke="saved"]')).toHaveCount(0);
+});
