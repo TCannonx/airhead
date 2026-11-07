@@ -23,7 +23,7 @@ Columns: iP · iPad · DC
 - [ ] [ ] [ ] App lock: turning it on asks for Face ID / Touch ID; "Lock after: Immediately" locks every time you leave the app
 - [ ] [ ] [ ] App lock recovery: on the lock screen, "Sign out" → sign back in → app opens unlocked
 - [ ] [ ] [ ] A deep link (e.g. …/today) opened offline in the installed app still shows the app
-- [ ] Cloudflare Pages: a PR shows a preview link; `https://airhead-dev.pages.dev` serves the latest main
+- [ ] Cloudflare: a PR build gets a preview address; `https://airhead.xxr5th.workers.dev` serves the latest main
 
 ## Phase 2 — Capture core and sync
 

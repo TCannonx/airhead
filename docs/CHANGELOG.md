@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix: docs point at the real dev site `https://airhead.xxr5th.workers.dev` (a Cloudflare Worker)
 - fix: docs point at the dev site `airhead-dev.pages.dev` (`airhead.pages.dev` belongs to someone else)
 ## Phase 9 — Notebook polish (ready for device testing, not yet released)
 

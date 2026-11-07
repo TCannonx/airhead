@@ -1,0 +1,14 @@
+// Cloudflare Worker that serves the built app (dev site, Task 1.7).
+// Workers Builds runs `npm run build`, then `wrangler deploy` on main and
+// `wrangler preview` for PR builds; both read this file.
+{
+  "name": "airhead",
+  "compatibility_date": "2026-11-01",
+  // PR builds run `wrangler preview`, which needs this block (it can be empty).
+  "previews": {},
+  "assets": {
+    "directory": "./dist",
+    // Unknown paths (e.g. /share, /today) get index.html; public/_headers still applies.
+    "not_found_handling": "single-page-application",
+  },
+}
