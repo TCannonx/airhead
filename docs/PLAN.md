@@ -454,7 +454,7 @@ Goal: once a week Airhead looks back. A review gives themes, wins, what slipped,
     - notifications sent.
     - Charts follow the dataviz guidance (one hue per series, a table view, dark mode).
     - Tests: component tests.
-- [ ] **8.7 Bridge-day finder.** Shared code (device and server, like `today/slots.ts`): from public holidays, the work pattern and leave balances, find 1–2 leave days that give 4–5 days off. Rank by days off per leave day, and drop clashes with events and the linked calendar.
+- [x] **8.7 Bridge-day finder.** Shared code (device and server, like `today/slots.ts`): from public holidays, the work pattern and leave balances, find 1–2 leave days that give 4–5 days off. Rank by days off per leave day, and drop clashes with events and the linked calendar.
     - Tests: unit tests (Irish holidays, weekends, an existing clash, no balance left).
 - [ ] **8.8 Holiday suggestions.** A "Suggest leave" button on Work. It also runs monthly, and inside the weekly review when a good bridge is within 8 weeks.
     - One small-tier call with prompt `leave.v1` gets the candidates, upcoming occasions, time since the last break and busy spells, and writes two or three suggestions.

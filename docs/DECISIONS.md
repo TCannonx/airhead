@@ -2,6 +2,15 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 8.7 Bridge-day finder
+- **`findBridges`** (`src/lib/leave/bridges.ts`) is pure and import-free, and copied verbatim to `supabase/functions/_shared/leave/bridges.ts`. A Deno test checks the two copies match, so the Deno test command (CI and CLAUDE.md) may now read `src/lib/leave` and `_shared/leave`.
+- **Rule**:
+  - Leave on 1 working day, or on 2 working days in a row (skipping days off between them), so that the whole run of days off containing it is at least 4 days.
+  - Days off come from weekends (non-working days), public holidays and closure days not taken from leave, plus days already booked.
+  - Ranked by days off per leave day, then by date. The same run appears once, with the fewest leave days.
+- **Skipped**: leave days that clash with commitments (`busy`: Airhead events and the linked calendar), and anything over the remaining balance.
+- Each result names the holidays inside its run, for the wording in 8.8.
+
 ## 2026-11-07 — Task 8.6 Patterns
 - **Built on the device from the reviews' weekly stats** (`content.stats` is the 8.1 digest), last 8 weeks. There is no AI and no server call, so it works offline and costs nothing.
 - **Shown**:
