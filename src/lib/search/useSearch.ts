@@ -13,12 +13,16 @@ export function useSearch(db: AirheadDb, query: string): SearchResult[] | undefi
     return idx;
   }, [db]);
   const data = useLiveQuery(
-    async () => ({ items: await db.items.toArray(), captures: await db.captures.toArray() }),
+    async () => ({
+      items: await db.items.toArray(),
+      captures: await db.captures.toArray(),
+      noteDocs: await db.note_docs.toArray(),
+    }),
     [db],
   );
   return useMemo(() => {
     if (!data) return undefined;
-    index.sync(data.items, data.captures);
+    index.sync(data.items, data.captures, data.noteDocs);
     return index.search(query);
   }, [data, index, query]);
 }

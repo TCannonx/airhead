@@ -6,13 +6,25 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { saveDoc } from '../../lib/db/notes';
 import { update } from '../../lib/db/repository';
+import { detectPlatform } from '../../lib/device';
 import { readInk } from '../../lib/ink/strokes';
+import { readSummary } from '../../lib/notes/summary';
 import InkCanvas from './InkCanvas';
+import InkView from './InkView';
 import MeetingDetails from './MeetingDetails';
 import NoteEditor from './NoteEditor';
 import SummarisePanel from './SummarisePanel';
 
-/** A note or meeting note (Task 6.3): its title and its document. */
+/** The iPad (with its Pencil) is where pages are written; elsewhere summarised pages are read. */
+const writesPages = () =>
+  typeof navigator !== 'undefined' &&
+  detectPlatform(navigator.userAgent, navigator.maxTouchPoints) === 'ipados';
+
+/**
+ * A note or meeting note (Task 6.3): its title and its document. Once
+ * summarised (Task 6.9) the summary sits above the original, and handwritten
+ * pages are view-only on phone and desktop (editable on the iPad, or on a tap).
+ */
 export default function NotePage() {
   const { id = '' } = useParams();
   const db = useDb();
@@ -22,6 +34,7 @@ export default function NotePage() {
     [db, id],
   );
   const [title, setTitle] = useState<string | null>(null);
+  const [editPages, setEditPages] = useState(false);
 
   if (!data) return <Page title="Note" />;
   const { item, doc } = data;
@@ -57,6 +70,17 @@ export default function NotePage() {
           html={typeof doc.doc.html === 'string' ? doc.doc.html : ''}
           onSave={(html) => void saveDoc(db, deviceId ?? '', doc.id, { ...doc.doc, html })}
         />
+      ) : readSummary(item) && !writesPages() && !editPages ? (
+        <>
+          <button
+            type="button"
+            className="mb-2 text-sm text-indigo-600 hover:underline dark:text-indigo-400"
+            onClick={() => setEditPages(true)}
+          >
+            Edit pages
+          </button>
+          <InkView doc={readInk(doc.doc)} />
+        </>
       ) : (
         <InkCanvas
           key={doc.id}
