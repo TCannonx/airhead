@@ -1,6 +1,6 @@
 import type { AirheadDb, OutboxEntry } from '../db/db';
 import { uploadPending } from '../files/upload';
-import { schemas, SYNC_TABLES, type SyncTable } from '../schemas/records';
+import { schemas, SYNC_TABLES, type NoteDoc, type SyncTable } from '../schemas/records';
 import type { PullKey, Remote, RemoteRow, SyncStatus } from './types';
 
 export const PUSH_BATCH = 100;
@@ -76,17 +76,85 @@ export async function pull(db: AirheadDb, remote: Remote): Promise<void> {
 
 async function applyPage(db: AirheadDb, table: SyncTable, page: RemoteRow[]) {
   const schema = schemas[table];
-  await db.transaction('rw', db.table(table), db.outbox, async () => {
+  const tables =
+    table === 'note_docs' ? [db.note_docs, db.items, db.outbox] : [db.table(table), db.outbox];
+  await db.transaction('rw', tables, async () => {
     for (const raw of page) {
       const parsed = schema.safeParse(raw);
       if (!parsed.success) continue; // never let one odd row block sync
       // A row with unpushed local edits is newer than the server's copy:
       // keep it; the next push makes it the server's version.
       const pending = await db.outbox.where('row_id').equals(raw.id).count();
-      if (pending > 0) continue;
+      if (pending > 0) {
+        if (table === 'note_docs') await keepBothNoteVersions(db, parsed.data as NoteDoc);
+        continue;
+      }
       await db.table(table).put(parsed.data);
     }
   });
+}
+
+/**
+ * A note document changed on the server while this device has unsent edits
+ * (Task 6.2). If another device wrote it after the version this edit started
+ * from, both versions are kept: the local text becomes a "conflicted copy"
+ * note and the server's version is applied. Writing is never thrown away.
+ * Otherwise (this device's own earlier push coming back) the local edit stays
+ * and simply learns the newer version number.
+ */
+async function keepBothNoteVersions(db: AirheadDb, remote: NoteDoc) {
+  const local = await db.note_docs.get(remote.id);
+  if (!local) return;
+  const ownEcho = remote.writer_device !== null && remote.writer_device === local.writer_device;
+  if (ownEcho || remote.version <= local.base_version) {
+    if (remote.version > local.version) {
+      await db.note_docs.put({
+        ...local,
+        version: remote.version,
+        base_version: ownEcho ? remote.version : local.base_version,
+      });
+    }
+    return;
+  }
+
+  const now = new Date();
+  const copyId = crypto.randomUUID();
+  const item = await db.items.get(local.id);
+  const time = now.toLocaleString('en-IE', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  if (item) {
+    await db.items.put({
+      ...item,
+      id: copyId,
+      title: `${item.title} (conflicted copy, ${time})`,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
+      server_updated_at: null,
+      deleted_at: null,
+    });
+    await db.outbox.add({ table: 'items', row_id: copyId, queued_at: now.toISOString() });
+  }
+  await db.note_docs.put({
+    ...local,
+    id: copyId,
+    version: 0,
+    base_version: 0,
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+    server_updated_at: null,
+  });
+  await db.outbox.add({ table: 'note_docs', row_id: copyId, queued_at: now.toISOString() });
+  // The original note now shows the other device's version.
+  await db.outbox
+    .where('row_id')
+    .equals(local.id)
+    .filter((e: OutboxEntry) => e.table === 'note_docs')
+    .delete();
+  await db.note_docs.put(remote);
 }
 
 async function countPending(db: AirheadDb): Promise<number> {

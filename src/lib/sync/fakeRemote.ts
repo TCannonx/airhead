@@ -45,9 +45,38 @@ export function createFakeRemote(startMs = Date.parse('2026-11-06T09:00:00Z')) {
       state.upsertCalls.push({ table, ids: rows.map((r) => String(r.id)) });
       for (const row of rows) {
         clock += 1;
+        const existing = tableOf(table).get(String(row.id));
+        let next: RemoteRow = row;
+        // Like the database triggers (0018, 0019): an older edit from another
+        // device becomes a conflicted copy, and every write gets the next version.
+        if (
+          table === 'note_docs' &&
+          existing &&
+          existing.writer_device !== row.writer_device &&
+          Number(row.base_version) < Number(existing.version) &&
+          JSON.stringify(row.doc) !== JSON.stringify(existing.doc)
+        ) {
+          const copyId = crypto.randomUUID();
+          const item = tableOf('items').get(String(row.id));
+          tableOf('items').set(copyId, {
+            ...(item ?? { user_id: row.user_id, type: 'note', data: {} }),
+            id: copyId,
+            title: `${String(item?.title ?? 'Note')} (conflicted copy)`,
+            server_updated_at: new Date(clock).toISOString(),
+          } as RemoteRow);
+          tableOf('note_docs').set(copyId, {
+            ...row,
+            id: copyId,
+            version: 1,
+            base_version: 0,
+            server_updated_at: new Date(clock).toISOString(),
+          });
+          next = existing;
+        }
         tableOf(table).set(String(row.id), {
-          ...row,
+          ...next,
           server_updated_at: new Date(clock).toISOString(),
+          ...(table === 'note_docs' ? { version: Number(existing?.version ?? 0) + 1 } : {}),
         });
       }
     },

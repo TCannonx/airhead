@@ -350,7 +350,7 @@ Goal: meeting notes in two styles, typed and handwritten (stage 1), saved instan
 
 - [x] **6.1 Note documents.** Migration: `note_docs` (id = the note item's id, `kind` typed or ink, `doc` jsonb, `version`, `base_version`, `summary` jsonb), synced both ways with own-rows RLS. A note or meeting item points at its document. A server trigger bumps `version` on each write.
     - Tests: pgTAP (RLS, version bump), Zod schema and Dexie table.
-- [ ] **6.2 Conflict copies.** When a pull brings a newer version of a document that also has unsynced local changes, keep both: the local text becomes a new note titled "… (conflicted copy, <device> <time>)" and the server version is applied. Writing is never silently discarded. Applies to note documents only; other tables stay newest-wins.
+- [x] **6.2 Conflict copies.** When a pull brings a newer version of a document that also has unsynced local changes, keep both: the local text becomes a new note titled "… (conflicted copy, <device> <time>)" and the server version is applied. Writing is never silently discarded. Applies to note documents only; other tables stay newest-wins.
     - Tests: sync engine unit tests (no conflict, conflict, a conflict while offline then two edits).
 - [ ] **6.3 Typed notes.** A keyboard-first editor (TipTap starter kit, MIT; verify the current version): headings, bullets, numbered lists, checkboxes, bold and italic, and Markdown-style shortcuts. Saved locally on each change (debounced); a whole-document push a few seconds after typing pauses. "New note" and "New meeting note" in the Library and Capture.
     - Tests: component tests (create, type, reopen, debounce saves).

@@ -2,6 +2,18 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 6.2 Conflict copies
+- **Two places, because sync pushes before it pulls**: a device coming back online sends its edit before it sees the other device's newer one. So the server keeps both too, not only the device.
+- **On the server** (migration `20261107000019_note_conflicts.sql`, trigger `a_note_conflict_copy`, which runs before the version bump):
+  - **When**: an update to a note document comes from a different device (`writer_device`), is based on an older version (`base_version < version`) and changes the text.
+  - **What happens**: the incoming text is saved as a new note, the same type with "… (conflicted copy, 07 Nov 14:05)" in the title (local time), and the server's version stays on the original.
+  - **Not conflicts**: the same device editing on, or an edit based on the latest version, applies as normal.
+- **On the device** (`applyPage` → `keepBothNoteVersions`): when a pull brings a document that has unsent local edits:
+  - If another device wrote it after the edit's base version, the local text becomes a conflicted-copy note (queued to sync), the original takes the server's version, and its stale queued push is dropped.
+  - If it is this device's own earlier push coming back, the local edit is kept and just learns the newer version number.
+- **Scope**: only note documents. Every other table stays newest-wins, as designed.
+- **Tests**: the fake server mirrors both triggers. Sync tests cover the plain hand-over, the device's own echo, an offline edit meeting a newer version (push-first) and a pull-first conflict.
+
 ## 2026-11-07 — Task 6.1 Note documents
 - **`note_docs`** (migration `20261107000018_note_docs.sql`): one document per note or meeting item, with the same id.
   - `kind` is typed (`{ html }`) or ink (`{ width, pages: [{ height, strokes, texts }] }`, a 1000-wide page starting 1400 tall).
