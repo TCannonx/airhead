@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- Task 3.2: sort-batch function (brain-dump splitting, topics, lists, review routing) applied atomically
 - Task 3.1: AI gateway (usage log, editable prices, monthly cap, structured output with one retry, prompt caching)
 
 ## Phase 2 — Capture core and sync (ready for device testing, not yet released)
