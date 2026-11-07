@@ -123,6 +123,34 @@ export interface BriefsService {
   regenerate(): Promise<{ ok: boolean; message: string }>;
 }
 
+/** What Summarise returns (Task 6.7); stored on the note as `data.summary` with `at`. */
+export interface NoteSummary {
+  /** Handwritten pages only: what is written, as text. */
+  transcription: string | null;
+  summary: string;
+  decisions: string[];
+  actions: { title: string; owner: string | null; due_text: string | null }[];
+}
+
+export interface SummariseRequest {
+  kind: 'typed' | 'ink';
+  title: string;
+  date: string | null;
+  attendees: string[];
+  html?: string;
+  /** PNG pages as base64, rendered on the device. */
+  images?: string[];
+}
+
+export type SummariseOutcome =
+  | { ok: true; error_code: null; message: string; result: NoteSummary; cost_eur: number }
+  | { ok: false; error_code: string; message: string };
+
+export interface NotesService {
+  /** One large-tier AI call (vision for handwritten pages). */
+  summarise(req: SummariseRequest): Promise<SummariseOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -136,4 +164,5 @@ export interface Services {
   imports?: ImportsService;
   push?: PushService;
   briefs?: BriefsService;
+  notes?: NotesService;
 }

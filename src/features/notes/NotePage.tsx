@@ -10,6 +10,7 @@ import { readInk } from '../../lib/ink/strokes';
 import InkCanvas from './InkCanvas';
 import MeetingDetails from './MeetingDetails';
 import NoteEditor from './NoteEditor';
+import SummarisePanel from './SummarisePanel';
 
 /** A note or meeting note (Task 6.3): its title and its document. */
 export default function NotePage() {
@@ -48,6 +49,7 @@ export default function NotePage() {
         }}
       />
       {item.type === 'meeting' && <MeetingDetails key={item.id} item={item} />}
+      <SummarisePanel item={item} doc={doc} />
       {doc.kind === 'typed' ? (
         // Keyed by id: switching notes starts a fresh editor.
         <NoteEditor
