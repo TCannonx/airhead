@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
 import { SyncIndicator } from '../features/sync/SyncIndicator';
+import LocationPicker from '../features/work/LocationPicker';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
 import { CALENDAR, SETTINGS, TABS, type NavItem } from './nav';
@@ -121,6 +122,8 @@ function DesktopLayout() {
         aria-label="Side panel"
         className="w-80 shrink-0 overflow-y-auto border-l border-slate-200 p-6 dark:border-slate-800"
       >
+        <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">Today</h2>
+        <LocationPicker />
         <p className="text-sm text-slate-500">Today at a glance appears here.</p>
       </aside>
     </div>

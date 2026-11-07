@@ -1,5 +1,6 @@
 import { Page } from '../../app/Page';
 import CheckupPanel from '../settings/CheckupPanel';
+import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
 import SuccessMeasures from './SuccessMeasures';
 
@@ -32,6 +33,15 @@ export default function InsightsPage() {
           Memory check-up
         </h2>
         <CheckupPanel auto />
+      </section>
+      <section aria-labelledby="location-heading" className="mb-10">
+        <h2
+          id="location-heading"
+          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
+        >
+          Where I worked
+        </h2>
+        <LocationInsights />
       </section>
     </Page>
   );
