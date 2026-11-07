@@ -258,6 +258,16 @@ export const workshopSessionSchema = z.object({
   pending: z.object({ text: z.string(), at: ts }).nullable(),
 });
 
+/** A weekly review (Task 8.3), written by the server, read-only on devices. */
+export const reviewSchema = z.object({
+  ...syncColumns,
+  week_start: date,
+  status: z.enum(['ok', 'fallback']),
+  content: z.record(z.string(), z.unknown()),
+  digest: z.string().nullable(),
+  cost_eur: z.coerce.number(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -279,6 +289,7 @@ export type NoteDoc = z.infer<typeof noteDocSchema>;
 export type DraftContent = z.infer<typeof draftContentSchema>;
 export type Draft = z.infer<typeof draftSchema>;
 export type WorkshopSession = z.infer<typeof workshopSessionSchema>;
+export type Review = z.infer<typeof reviewSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -301,6 +312,7 @@ export const SYNC_TABLES = [
   'note_docs',
   'drafts',
   'workshop_sessions',
+  'reviews',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -323,6 +335,7 @@ export const schemas = {
   note_docs: noteDocSchema,
   drafts: draftSchema,
   workshop_sessions: workshopSessionSchema,
+  reviews: reviewSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -344,4 +357,5 @@ export interface RowTypes {
   note_docs: NoteDoc;
   drafts: Draft;
   workshop_sessions: WorkshopSession;
+  reviews: Review;
 }

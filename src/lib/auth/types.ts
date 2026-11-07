@@ -196,6 +196,11 @@ export interface AskService {
   ask(question: string): Promise<AskOutcome>;
 }
 
+/** The weekly review on demand (Task 8.4); absent in local mode. */
+export interface ReviewsService {
+  run(): Promise<{ ok: boolean; message: string }>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -213,4 +218,5 @@ export interface Services {
   captureTokens?: CaptureTokensService;
   workshop?: WorkshopService;
   ask?: AskService;
+  reviews?: ReviewsService;
 }

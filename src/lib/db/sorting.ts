@@ -101,6 +101,8 @@ export function filterLibrary(items: Item[], f: LibraryFilter): Item[] {
   return (
     items
       .filter((i) => !i.deleted_at && i.status !== 'dropped' && i.status !== 'suggested')
+      // Archived by a Tidy-up (Task 8.4): still searchable, not listed.
+      .filter((i) => i.data.archived !== true)
       // List entries live on the Lists screen unless asked for explicitly.
       .filter((i) => (f.type ? i.type === f.type : i.type !== 'list_entry'))
       .filter((i) => !f.topicId || i.topic_ids.includes(f.topicId))
