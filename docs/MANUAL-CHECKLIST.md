@@ -136,6 +136,7 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] [ ] [ ] Summarise a typed note and a handwritten page: summary, decisions and action items appear
 - [ ] [ ] [ ] Ticked action items become tasks; unticked ones don't
 - [ ] [ ] [ ] Search finds words from a handwritten page after it was summarised
+- [ ] [ ] [ ] A summarised handwritten note is view-only on the phone and desktop ("Edit pages" unlocks it) and editable on the iPad
 
 ## v0.1 release
 

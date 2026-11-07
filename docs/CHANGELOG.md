@@ -2,6 +2,11 @@
 
 One line per merged PR, newest first.
 
+## Phase 6 — Notes (ready for device testing, not yet released)
+
+Typed notes (headings, lists, checklists) and handwritten pages: the Pencil draws, a finger scrolls, there are pens, a highlighter, an eraser, undo and redo, and text boxes, and the page grows as you write. Notes save while you type and sync as whole documents. If two devices edit the same note offline, a "conflicted copy" keeps both versions. Meetings get a date, attendees and Start notes from a calendar event. Done → Summarise makes one large-tier AI call that reads the typed text, or the pages as images, and returns a summary, decisions and action items. Ticked action items become tasks. Summaries, transcriptions and note text are searchable, and summarised pages are view-only on phone and desktop. Summarise needs BLOCKERS item 9 in dev. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 6.
+
+- release: phase 6
 - Task 6.9: notes in the Library: summary above the original, view-only pages on phone and desktop, search over typed text, text boxes, summaries and transcriptions
 - Task 6.8: action items from a summary become tasks (ticked ones only, linked to the note, due dates read by the free rules)
 - Task 6.7: Summarise notes (typed text or handwritten pages as images): summary, decisions and action items, stored on the note and searchable
