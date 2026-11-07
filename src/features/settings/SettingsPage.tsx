@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Page } from '../../app/Page';
 import AppLockSettings from '../applock/AppLockSettings';
+import ExportSettings from './ExportSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 
@@ -83,6 +84,10 @@ export default function SettingsPage() {
             ))}
           </ul>
         )}
+      </Section>
+
+      <Section title="Your data">
+        <ExportSettings />
       </Section>
     </Page>
   );

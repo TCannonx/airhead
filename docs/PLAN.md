@@ -206,7 +206,7 @@ Goal: capture anything offline, see links and clear dates handled instantly by f
 - [x] **2.6 Instant events and suggestions.** Confident dates create an `event` item on the Personal calendar with an 8-second undo toast; fuzzy ones create a suggestion card. Works fully offline.
 - [x] **2.7 Inbox and Library (basic).** Inbox: Unsorted and To flesh out sections. Library: tabs by type with filters by topic, date and type; item detail and edit; manual re-sort that records a `corrections` row; Trash view with restore for 30 days.
 - [x] **2.8 On-device search.** MiniSearch (MIT) index over item titles, bodies and capture text, rebuilt incrementally; a visible search box in Library (and `/` as a desktop shortcut to it).
-- [ ] **2.9 Export everything.** Settings → Export builds a zip (JSZip) with one Markdown file per item plus a full JSON dump of all tables.
+- [x] **2.9 Export everything.** Settings → Export builds a zip (JSZip) with one Markdown file per item plus a full JSON dump of all tables.
     - Test: export then parse the JSON back and compare row counts.
 - [ ] **2.10 Sync visibility.** Status icon (synced, "n waiting", offline) and last successful sync time in Settings.
 - Phase done when: the Phase 2 lines of the manual checklist pass on all three devices.

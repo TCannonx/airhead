@@ -6,6 +6,7 @@ One line per merged PR, newest first.
 
 Installable, signed-in app shell for iPhone, iPad and desktop Chrome: offline shell, responsive layouts, Google / email-code sign-in, device list, optional Face ID / Touch ID lock, Supabase schema with RLS, CI with database and function tests, dev deploy, live release, keep-alive and backup workflows. Device checks: `docs/MANUAL-CHECKLIST.md` → Phase 1.
 
+- Task 2.9: Settings → Export everything (zip with full JSON backup, one Markdown file per item, photos)
 - Task 2.8: on-device search (MiniSearch, incremental) in the Library, "/" shortcut on desktop
 - Task 2.7: Inbox (Unsorted with one-tap sorting, To flesh out), Library tabs and filters, item edit/re-sort/delete, Trash with restore
 - Task 2.6: confident dates become events instantly (8 s Undo toast), fuzzy ones become suggestion cards on Today; event chips
