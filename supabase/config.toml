@@ -455,3 +455,7 @@ verify_jwt = false
 # fetch-linked-calendars: the scheduler (service key) or the owner; checks the token itself.
 [functions.fetch-linked-calendars]
 verify_jwt = false
+
+# import-extract: checks the caller's own token itself.
+[functions.import-extract]
+verify_jwt = false

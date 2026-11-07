@@ -9,7 +9,7 @@ const NOW = new Date('2026-10-01T09:00:00Z');
 Deno.test('reads the calendar name and recognises iCalendar text', () => {
   assertEquals(parseCalendar(text, NOW).name, 'Her Us calendar');
   assert(isCalendarText(text));
-  assert(isCalendarText('﻿BEGIN:VCALENDAR\r\nEND:VCALENDAR'));
+  assert(isCalendarText('\uFEFFBEGIN:VCALENDAR\r\nEND:VCALENDAR'));
   assert(!isCalendarText('<html><body>Sign in</body></html>'));
 });
 

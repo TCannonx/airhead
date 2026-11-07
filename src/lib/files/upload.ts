@@ -42,3 +42,33 @@ export async function uploadPending(db: AirheadDb, remote: Remote): Promise<void
     await db.files.put({ ...file, uploaded: true });
   }
 }
+
+/** Keeps an import's original file with its series: <user>/series/<series>/<name>. */
+export async function queueSeriesFile(
+  db: AirheadDb,
+  userId: string,
+  seriesId: string,
+  file: Blob,
+  name: string,
+): Promise<FileRecord> {
+  const id = crypto.randomUUID();
+  const safe =
+    name
+      .replace(/[^\w.-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(-80) || 'import';
+  const record: FileRecord = {
+    id,
+    user_id: userId,
+    // The files table indexes this column; for series files it holds the series id.
+    capture_id: seriesId,
+    path: `${userId}/series/${seriesId}/${safe}`,
+    mime: file.type || 'application/octet-stream',
+    size: file.size,
+    data: await file.arrayBuffer(),
+    uploaded: false,
+    created_at: new Date().toISOString(),
+  };
+  await db.files.put(record);
+  return record;
+}

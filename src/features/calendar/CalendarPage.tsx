@@ -9,6 +9,7 @@ import '@fullcalendar/react/themes/classic/theme.css';
 import '@fullcalendar/react/themes/classic/palette.css';
 import './calendar.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { Page } from '../../app/Page';
 import { useLayout } from '../../app/layout';
 import {
@@ -350,6 +351,12 @@ export default function CalendarPage() {
         >
           Book leave
         </button>
+        <Link
+          to="/calendar/import"
+          className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+        >
+          Import
+        </Link>
       </div>
 
       <div role="group" aria-label="Calendars" className="mb-3 flex flex-wrap gap-2">

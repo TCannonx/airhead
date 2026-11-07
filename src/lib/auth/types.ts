@@ -79,6 +79,38 @@ export interface CalendarsService {
   refresh(feedId: string): Promise<CalendarOutcome>;
 }
 
+/** A proposed event from import-extract (the device turns these into review rows). */
+export interface ExtractedEvent {
+  title: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  end_date: string | null;
+  venue: string | null;
+  notes: string | null;
+}
+
+export type ImportOutcome =
+  | { ok: true; error_code: null; message: string; kind: 'events'; events: ExtractedEvent[] }
+  | { ok: true; error_code: null; message: string; kind: 'ics'; text: string }
+  | { ok: false; error_code: string; message: string };
+
+export interface ImportRequest {
+  kind: 'text' | 'image' | 'pdf' | 'link';
+  text?: string;
+  data?: string;
+  media_type?: string;
+  url?: string;
+  instruction: string;
+  today: string;
+  time_zone: string;
+}
+
+export interface ImportsService {
+  /** One AI call (or a server fetch for links) to read a schedule (Task 4.10). */
+  extract(req: ImportRequest): Promise<ImportOutcome>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -89,4 +121,5 @@ export interface Services {
   usage?: UsageService;
   memory?: MemoryService;
   calendars?: CalendarsService;
+  imports?: ImportsService;
 }

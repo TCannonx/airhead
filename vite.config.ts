@@ -43,6 +43,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webp,woff2}'],
+        // PDF reading is only used when importing a schedule (online, with AI): load on demand.
+        globIgnores: ['**/pdf*.js', '**/pdf*.mjs'],
       },
       devOptions: { enabled: false },
     }),

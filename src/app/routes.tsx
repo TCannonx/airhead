@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
 import CalendarPage from '../features/calendar/CalendarPage';
+import ImportPage from '../features/calendar/ImportPage';
 import CapturePage from '../features/capture/CapturePage';
 import InboxPage from '../features/inbox/InboxPage';
 import InsightsPage from '../features/insights/InsightsPage';
@@ -22,6 +23,7 @@ export const routes: RouteObject[] = [
       { path: 'capture', Component: CapturePage },
       { path: 'today', Component: TodayPage },
       { path: 'calendar', Component: CalendarPage },
+      { path: 'calendar/import', Component: ImportPage },
       { path: 'inbox', Component: InboxPage },
       { path: 'library', Component: LibraryPage },
       { path: 'library/item/:id', Component: ItemPage },

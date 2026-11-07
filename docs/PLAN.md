@@ -260,7 +260,7 @@ Goal: a full calendar on every device, shared with my girlfriend by feed, Irish 
 
 **Import schedule**
 
-- [ ] **4.10 Import flow.** Calendar → Import: file, paste or link, plus an instruction box. On device: .ics via ical.js; CSV and Excel via Papa Parse and SheetJS with a column-mapping step; PDF text via pdfjs-dist. Messy text, scanned PDFs and images go to `import-extract` (one AI call, vision for images) with the instruction. Review table of proposed events (ticked, editable), choose Personal or Us, name the series, save. Unconfirmed times become all-day "time TBC" with a check-nearer-the-date nudge; clashes are flagged; events on working days offer a leave booking; an .ics URL can be added as a linked calendar instead. The original file is stored with the series.
+- [x] **4.10 Import flow.** Calendar → Import: file, paste or link, plus an instruction box. On device: .ics via ical.js; CSV and Excel via Papa Parse and SheetJS with a column-mapping step; PDF text via pdfjs-dist. Messy text, scanned PDFs and images go to `import-extract` (one AI call, vision for images) with the instruction. Review table of proposed events (ticked, editable), choose Personal or Us, name the series, save. Unconfirmed times become all-day "time TBC" with a check-nearer-the-date nudge; clashes are flagged; events on working days offer a leave booking; an .ics URL can be added as a linked calendar instead. The original file is stored with the series.
     - Tests: fixtures for .ics, CSV, a text PDF and a screenshot (AI fixture), including an "only home games" instruction.
 
 **Notifications**
