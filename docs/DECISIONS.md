@@ -2,6 +2,31 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.5 Leave engine
+- `src/lib/leave/engine.ts`: pure functions over YYYY-MM-DD strings, with calendar arithmetic in UTC, so no time zone can move a day.
+- **Leave year**: from the configured MM-DD to the day before it, a year later.
+- **Counting**:
+  - A day costs leave when it is a working weekday and not a public holiday, a manual one-off or a closure day.
+  - Christmas Eve and New Year's Eve do cost leave, because they are not statutory days.
+  - Half days: `start_half` (from midday) and `end_half` (until midday). A one-day booking with either flag is half a day. A half flag on a non-working day costs nothing.
+  - A booking that crosses the leave-year boundary is split, each year counting only its own days.
+- **Buckets**:
+  - `taken` = status taken, or requested/approved with the last day passed. The nightly job also marks these Taken; this keeps the counter right before it runs.
+  - `booked` = requested or approved.
+  - `planned` = planned.
+  - Remaining = total − all three.
+- **Closure days**:
+  - Always skipped when counting a booking.
+  - When `closure_uses_leave` is on, each one on a working, non-holiday day is deducted once: taken if past, booked if not.
+- **Weekend holiday compensated with leave** (`extra_leave`): +1 to the year's total for each statutory holiday on a non-working day inside the leave year.
+- **Carry-over**:
+  - The hand-entered `opening_carry_over` for the year wins.
+  - Otherwise it is the previous year's remaining days, capped at `carry_over_max`, computed recursively (max 10 years). It is only counted when that year has bookings or an opening balance; with no history there is no carry-over.
+  - Carried days are used first. Any not used by the expiry date (year start + N months) are `carry_over_at_risk` before that date, then `carry_over_expired`, which leaves the total.
+- **Pace**: taken ÷ total vs days of the leave year gone, as whole percentages.
+- **`lose_at_year_end`**: remaining − carry-over allowance. The run-out reminders (4.13) use it.
+- The per-booking `days` cached on `leave_bookings` will be `countLeaveDays` over the whole booking (4.6).
+
 ## 2026-11-07 — Task 4.4 Work settings
 - **Where they live**: `settings.data.work`, so they sync with the settings row. Schema: `src/lib/work/settings.ts`.
 - **Every field has a default**. `readWorkSettings` falls back field by field, so one bad value never resets the rest.
