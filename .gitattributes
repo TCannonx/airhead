@@ -5,3 +5,5 @@
 *.ico binary
 *.pdf binary
 *.xlsx binary
+# iCalendar fixtures keep their CRLF line endings (RFC 5545).
+*.ics -text

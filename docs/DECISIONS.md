@@ -2,6 +2,27 @@
 
 Decisions and library versions, newest first.
 
+## 2026-11-07 — Task 4.9 Linked calendars
+- **Settings → Linked calendars**: paste a secret iCal link (`webcal://` or `https://`), then **Check link**. The server fetches and parses it and returns the event count and the calendar's own name (used as the default name). Then name it, pick one of six colours (kept away from the Personal, Us, tasks and leave colours) and add it.
+  - The row is pushed, the server is asked to read it straight away, then devices pull.
+  - Each row shows the **host only**, never the secret path, plus the last update or the last error. Rows can be switched off, refreshed or removed.
+  - Local mode says it needs a server.
+- **`fetch-linked-calendars`** (Edge Function, checks the token itself):
+  - `{ mode: 'validate', url }` for a signed-in user stores nothing.
+  - `{ mode: 'sync', feed_id? }` comes from the scheduler (service key) or from the owner for their own feed.
+- **Scheduler**: `dispatch_linked_calendars()` runs every 30 minutes (`pg_cron`). It makes one `pg_net` call per enabled, live linked feed, so one slow or broken calendar can't hold up the others. Without the Vault secrets it sends nothing.
+- **Safe fetch**: the link-reading `safeFetch` gained options. `ICS_OPTIONS` accepts `text/calendar`, `text/plain`, `application/octet-stream`/`ics` (servers label .ics loosely), with a 5 MB cap. The same private-address, redirect and timeout rules apply. The body must start with `BEGIN:VCALENDAR`, so a sign-in page is rejected with a plain message.
+- **Parsing** (ical.js 2.2.1):
+  - VTIMEZONEs are registered.
+  - Recurrences are expanded from 30 days back to 12 months ahead, with EXDATEs and moved instances (`RECURRENCE-ID`) applied. Cancelled events are skipped.
+  - At most 800 occurrences per event, so a runaway rule can't flood the table. Text fields are clipped to 2,000 characters.
+- **`occurrence_key`** = UID, or `UID|original start` for recurring events, so a moved instance keeps its row.
+- **All-day dates are stored at 12:00 UTC** with an exclusive end, so the date reads the same in any zone within ±11 hours.
+- **Keeping events in step**: rows are upserted by `(feed_id, occurrence_key)`, which revives soft-deleted rows. Keys no longer present are soft-deleted, so devices hear about removals.
+- **On failure** the old events stay and `last_error` is set; success clears it and stamps `last_fetched_at`.
+- **Calendar content is data only**: it is stored for display, never sent to AI and never learned from. The fixture includes an "ignore all previous instructions" description to show it is just stored text.
+- **Removing a linked calendar** soft-deletes the feed. Devices hide its events at once; the nightly purge later removes the feed and, by cascade, its events.
+
 ## 2026-11-07 — Task 4.8 Outgoing feeds
 - **Tokens are made on the device**: 32 random bytes, base64url (43 characters).
   - Only the hex SHA-256 goes into `feeds.token_hash`, so creating or renewing a link works offline and the link can never be read back from the server.

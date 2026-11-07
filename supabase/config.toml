@@ -451,3 +451,7 @@ verify_jwt = false
 # Calendar apps subscribe without signing in; the secret token in the URL is the key.
 [functions.calendar-feed]
 verify_jwt = false
+
+# fetch-linked-calendars: the scheduler (service key) or the owner; checks the token itself.
+[functions.fetch-linked-calendars]
+verify_jwt = false
