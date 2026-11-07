@@ -67,5 +67,10 @@ export function openUserDb(userId: string): AirheadDb {
   });
   // v2: files kept on the device and queued for upload (booleans can't be indexed).
   db.version(2).stores({ files: 'id, capture_id' });
+  // v3: memory (Task 3.9).
+  db.version(3).stores({
+    memory_facts: 'id, status, server_updated_at',
+    learned_rules: 'id, pattern, server_updated_at',
+  });
   return db;
 }

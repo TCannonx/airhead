@@ -27,6 +27,10 @@ export const SortResult = z.object({
       capture_id: z.string(),
       items: z.array(SortedItem),
       /** Only for saved web pages; null otherwise. */
+      /** Lasting facts about the person, only from what they typed. */
+      proposed_facts: z.array(
+        z.object({ text: z.string(), category: z.enum(['everyday', 'person', 'personal']) }),
+      ),
       link_summary: z
         .object({
           summary: z.string(),

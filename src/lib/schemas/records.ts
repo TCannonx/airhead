@@ -101,6 +101,28 @@ export const correctionSchema = z.object({
   to_value: z.record(z.string(), z.unknown()),
 });
 
+export const memoryFactSchema = z.object({
+  ...syncColumns,
+  text: z.string().min(1),
+  category: z.enum(['everyday', 'person', 'personal']),
+  status: z.enum(['active', 'pending_approval', 'archived']),
+  source_capture_id: id.nullable(),
+  last_used_at: ts.nullable(),
+});
+
+export const learnedRuleSchema = z.object({
+  ...syncColumns,
+  pattern: z.string().min(1),
+  match_kind: z.enum(['prefix', 'keyword']),
+  result: z.object({
+    type: z.enum(ITEM_TYPES),
+    list_id: id.nullish(),
+    calendar: z.enum(['personal', 'us']).nullish(),
+  }),
+  hits: z.number().int().min(0),
+  enabled: z.boolean(),
+});
+
 export type SettingsRow = z.infer<typeof settingsSchema>;
 export type DeviceRecord = z.infer<typeof deviceSchema>;
 export type Capture = z.infer<typeof captureSchema>;
@@ -109,6 +131,8 @@ export type ItemType = Item['type'];
 export type List = z.infer<typeof listSchema>;
 export type Topic = z.infer<typeof topicSchema>;
 export type Correction = z.infer<typeof correctionSchema>;
+export type MemoryFact = z.infer<typeof memoryFactSchema>;
+export type LearnedRule = z.infer<typeof learnedRuleSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
 export const SYNC_TABLES = [
@@ -119,6 +143,8 @@ export const SYNC_TABLES = [
   'lists',
   'topics',
   'corrections',
+  'memory_facts',
+  'learned_rules',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -130,6 +156,8 @@ export const schemas = {
   lists: listSchema,
   topics: topicSchema,
   corrections: correctionSchema,
+  memory_facts: memoryFactSchema,
+  learned_rules: learnedRuleSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -140,4 +168,6 @@ export interface RowTypes {
   lists: List;
   topics: Topic;
   corrections: Correction;
+  memory_facts: MemoryFact;
+  learned_rules: LearnedRule;
 }

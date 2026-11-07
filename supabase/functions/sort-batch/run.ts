@@ -1,6 +1,7 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v2.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v3.ts';
+import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort } from './plan.ts';
 
@@ -98,13 +99,22 @@ export async function runSortBatch(
     })),
   };
 
+  // Core memory profile: active facts, most recently used first, ~400 words.
+  const { data: factRows } = await db
+    .from('memory_facts')
+    .select('id, text, last_used_at, created_at')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .is('deleted_at', null);
+  const profile = buildProfile((factRows ?? []) as FactRow[]);
+
   const result = await callAI(
     { client: deps.ai, store: deps.store },
     {
       userId,
       task: 'sort_batch',
       tier: 'small',
-      system: SORT_BATCH_SYSTEM,
+      system: [SORT_BATCH_SYSTEM, profile.text],
       messages: [
         {
           role: 'user',
@@ -155,6 +165,16 @@ export async function runSortBatch(
     p_plan: plan,
   });
   if (applyError) throw new Error(`apply: ${applyError.message}`);
+
+  // Memory: record when facts were last sent, add proposed facts, learn rules.
+  // Best-effort: a failure here never undoes the sorting above.
+  if (profile.ids.length) {
+    await db.from('memory_facts').update({ last_used_at: now.toISOString() }).in('id', profile.ids);
+  }
+  if (plan.facts.length) {
+    await db.rpc('add_memory_facts', { p_user_id: userId, p_facts: plan.facts });
+  }
+  await db.rpc('learn_rules', { p_user_id: userId });
   const counts = applied as { items: number; captures: number; links: number };
   const parts = [`Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}`];
   if (counts.links) parts.push(`summarised ${counts.links} link${counts.links === 1 ? '' : 's'}`);

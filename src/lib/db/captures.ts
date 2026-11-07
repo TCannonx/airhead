@@ -2,7 +2,8 @@ import { queueFile } from '../files/upload';
 import { analyseCapture } from '../rules';
 import type { Capture, Item } from '../schemas/records';
 import type { AirheadDb } from './db';
-import { newCapture, newItem, save } from './repository';
+import { matchRule, ruleItemFor } from './memory';
+import { newCapture, newItem, save, update } from './repository';
 
 export interface CaptureInput {
   text?: string | null;
@@ -14,6 +15,8 @@ export interface CaptureResult {
   capture: Capture;
   /** Event the free rules created: confident (status open) or a suggestion. */
   event: Item | null;
+  /** Item a learned rule sorted the capture into (instant, offline, no AI). */
+  ruleItem: Item | null;
 }
 
 /**
@@ -35,6 +38,12 @@ export async function createCapture(
   const when = analysis?.when ?? null;
   const at = new Date().toISOString();
 
+  // Learned rules run after the free rules, before anything waits for AI.
+  const rule =
+    text && !url && !when && !input.photo
+      ? matchRule(await db.learned_rules.toArray(), text)
+      : undefined;
+
   const capture = newCapture(userId, {
     text,
     url,
@@ -46,7 +55,9 @@ export async function createCapture(
         ? { status: 'sorted' as const, sorted_at: at }
         : { status: 'needs_review' as const }
       : {}),
+    ...(rule ? { status: 'sorted' as const, sorted_at: at } : {}),
   });
+  if (rule) capture.payload = { ...capture.payload, rule_id: rule.id };
   if (input.photo) {
     const file = await queueFile(db, userId, capture.id, input.photo);
     capture.payload = {
@@ -87,12 +98,19 @@ export async function createCapture(
       }),
     );
   }
-  return { capture: saved, event };
+  let ruleItem: Item | null = null;
+  if (rule && text) {
+    ruleItem = await save(db, 'items', ruleItemFor(rule, userId, saved.id, text));
+    await update(db, 'learned_rules', rule.id, { hits: rule.hits + 1 });
+  }
+  return { capture: saved, event, ruleItem };
 }
 
 /** The status chip shown under a capture. */
 export function captureChip(c: Capture): string {
   if (c.kind === 'link') return 'Reading list';
+  if (c.status === 'sorted' && typeof c.payload.rule_id === 'string')
+    return 'Sorted (learned rule)';
   if (c.status === 'sorted') return 'Sorted';
   if (c.status === 'needs_review') return 'Needs a tap';
   if (c.status === 'failed') return "Couldn't sort";

@@ -5,6 +5,7 @@ import AppLockSettings from '../applock/AppLockSettings';
 import { lastSyncedText } from '../sync/labels';
 import { useSync } from '../../lib/sync/context';
 import ExportSettings from './ExportSettings';
+import MemorySettings from './MemorySettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 
@@ -113,6 +114,10 @@ export default function SettingsPage() {
             Not syncing: no server is configured, so everything stays on this device.
           </p>
         )}
+      </Section>
+
+      <Section title="Memory">
+        <MemorySettings />
       </Section>
 
       <Section title="Your data">

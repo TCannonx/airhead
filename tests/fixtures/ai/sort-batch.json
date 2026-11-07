@@ -83,7 +83,13 @@
             "related_idea_title": null
           }
         ],
-        "link_summary": null
+        "link_summary": null,
+        "proposed_facts": [
+          {
+            "text": "Sees Dr Byrne for dental care",
+            "category": "personal"
+          }
+        ]
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000002",
@@ -104,7 +110,8 @@
             "related_idea_title": null
           }
         ],
-        "link_summary": null
+        "link_summary": null,
+        "proposed_facts": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000003",
@@ -125,12 +132,19 @@
             "related_idea_title": "Vegetable patch"
           }
         ],
-        "link_summary": null
+        "link_summary": null,
+        "proposed_facts": [
+          {
+            "text": "Is planning raised beds in the garden",
+            "category": "everyday"
+          }
+        ]
       },
       {
         "capture_id": "c0000000-0000-4000-8000-0000000000ff",
         "items": [],
-        "link_summary": null
+        "link_summary": null,
+        "proposed_facts": []
       }
     ]
   }
