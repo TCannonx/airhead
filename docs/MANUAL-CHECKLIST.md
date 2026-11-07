@@ -62,6 +62,12 @@ Columns: iP · iPad · DC
 - [ ] [ ] [ ] Run check-up shows findings, and the one-tap fixes work
 - [ ] [ ] [ ] AI usage screen totals roughly match the Claude Console billing page
 - [ ] A low test monthly cap pauses background sorting; captures still save
+- [ ] [ ] [ ] Inbox → Needs a tap: "Create list?" makes the list and moves the entries into it
+- [ ] [ ] [ ] Insights → AI usage shows month to date, a projection and the daily chart; editing a price changes the figures
+- [ ] [ ] [ ] Insights → Success measures show captures a day, correction rate and AI cost a month
+- [ ] [ ] [ ] Re-sorting an item the learned rule sorted switches that rule off (Settings → Memory → Rules)
+- [ ] [ ] [ ] "Check for contradictions" (online) finds two conflicting facts; "Keep the first" moves the other to Trash
+- [ ] [ ] [ ] Insights shows "Last check-up: …" after the monthly automatic run
 
 ## Phase 4 — Calendar, sharing, work and leave, import, notifications
 

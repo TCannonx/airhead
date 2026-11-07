@@ -6,6 +6,10 @@
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
 
+### Phase 3 ready for device testing and release
+
+Phase 3 (AI sorting, link reading, lists, memory) is merged and deploys to dev. AI features need items 8 (Vault secrets) and 9 (Anthropic API key) in the dev project; without them captures still save and free rules still work. Then run the Phase 3 section of `docs/MANUAL-CHECKLIST.md`. Releasing to live is still your tag (live needs items 7–9 as well).
+
 ### Phase 2 ready for device testing and release
 
 Phase 2 (capture core and sync) is merged and deploys to dev on every merge. Run the Phase 1 and 2 sections of `docs/MANUAL-CHECKLIST.md` once Cloudflare Pages (item 5) is connected, so the app has a web address for your devices. Releasing to live is still your tag.
