@@ -1,6 +1,6 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { gteSmall } from '../_shared/embed.ts';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import type { FactRow } from '../_shared/memory.ts';
 import { relevantFacts } from '../_shared/relevant.ts';
@@ -16,7 +16,7 @@ const db = createClient(
 
 function depsFor(userId: string, apiKey: string): TurnDeps {
   return {
-    ai: new Anthropic({ apiKey }),
+    ai: anthropicClient(apiKey),
     store: supabaseUsageStore(db),
     async load(itemId) {
       const { data: item } = await db

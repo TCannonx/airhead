@@ -7,6 +7,16 @@ import type { AirheadDb } from './db';
 import { matchRule, ruleItemFor } from './memory';
 import { newCapture, newItem, save, update } from './repository';
 
+/**
+ * Notes that change something already there ("dentist moved to Thursday 4pm")
+ * or talk about time off ("off 22-24 Dec", "9.5 days annual leave left") are
+ * left for AI sorting, which can move the existing item or book the leave
+ * (Phase 10). The instant date rule would otherwise make a new event from the
+ * date in them and the AI would never see the note.
+ */
+export const FOR_AI =
+  /\b(?:moved|move it|reschedul\w*|postpon\w*|pushed (?:back|out|to)|brought forward|annual leave|on leave|days? off|off sick|sick (?:day|leave))\b|^\s*(?:off|took|taking|on holiday)\b|\b(?:day|morning|afternoon) off\b|\boff\s*$/i;
+
 export interface CaptureInput {
   text?: string | null;
   url?: string | null;
@@ -40,7 +50,7 @@ export async function createCapture(
     text && !input.url ? parseLeave(text, options.now ?? new Date(), DEFAULT_TIME_ZONE) : null;
   const analysis = text ? analyseCapture(text, { now: options.now }) : null;
   const url = input.url ?? analysis?.url ?? null;
-  const when = leave ? null : (analysis?.when ?? null);
+  const when = leave || (text && FOR_AI.test(text)) ? null : (analysis?.when ?? null);
   const at = new Date().toISOString();
 
   // Learned rules run after the free rules, before anything waits for AI.

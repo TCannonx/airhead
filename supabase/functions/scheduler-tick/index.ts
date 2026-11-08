@@ -1,8 +1,8 @@
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { json } from '../_shared/http.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { deliver, pusherFromEnv, type DeviceRow } from '../_shared/push.ts';
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runMorningBrief } from '../morning-brief/run.ts';
 import { supabaseBriefStore } from '../morning-brief/store.ts';
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
           at,
           {
             store: supabaseBriefStore(db),
-            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
             usage: supabaseUsageStore(db),
           },
           { roundUp: true },
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
           lastWeekStart(localDate),
           {
             store: supabaseReviewStore(db),
-            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
             usage: supabaseUsageStore(db),
           },
           { notify: true },
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         if (scout.enabled !== false)
           await runScout(userId, 'weekly', {
             store: supabaseScoutStore(db),
-            ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+            ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
             usage: supabaseUsageStore(db),
           }).catch(() => undefined);
       },
