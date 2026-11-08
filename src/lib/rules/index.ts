@@ -27,6 +27,8 @@ export interface Analysis {
 const FUZZY =
   /\b(?:sometime|some\s+time|maybe|possibly|probably|perhaps|around|roughly|approx(?:imately)?|at\s+some\s+point|soon|tbc|tbd|or\s+so)\b|\d(?::\d\d)?\s*(?:am|pm)?ish\b|-ish\b/i;
 const VAGUE_PERIOD = /\b(?:next|this)\s+(?:week|month)\b/i;
+const BARE_DURATION =
+  /^(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|few|couple(?:\s+of)?)\s*(?:mins?|minutes?|hrs?|hours?|days?|wks?|weeks?|months?|years?)$/i;
 const WEEKDAY_WORD = /\b(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/i;
 const ALL_DAY_WORDS =
   /\b(?:all[\s-]day|birthday|b'?day|anniversary|holidays?|day\s+off|bank\s+holiday)\b/i;
@@ -121,7 +123,18 @@ export function analyseCapture(
     { instant: now, timezone: timeZone },
     { forwardDate: true },
   );
-  const result = results[0] ?? null;
+  // A bare year or "this year"/"last year" says when, not on which day: no event.
+  // A bare amount of time ("9.5 days left", "2 weeks") is a quantity, not a date
+  // ("in 2 weeks" keeps its "in" and still counts).
+  const result =
+    results.find(
+      (r) =>
+        !BARE_DURATION.test(r.text) &&
+        (r.start.isCertain('day') ||
+          r.start.isCertain('weekday') ||
+          r.start.isCertain('month') ||
+          r.start.isCertain('hour')),
+    ) ?? null;
   if (result) spans.push([result.index, result.index + result.text.length]);
   // "4/3 dentist at 9am": the date and the time come back as two results.
   const timeOnly =
@@ -190,6 +203,8 @@ export function analyseCapture(
         localParts(now, timeZone).d,
       ).getTime()
     : start.getTime() > now.getTime();
+  // A one-off date already gone ("used leave on 3 March") is news, not a plan: let sorting decide.
+  if (!future && !rrule) return { ...base, when: null };
   const confident = hasDate && (hasTime || allDayWording) && future && !fuzzy;
 
   return {
