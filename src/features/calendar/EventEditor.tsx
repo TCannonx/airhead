@@ -1,5 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { localDate, localMidnight } from '../../lib/calendar/sources';
+import { beforeText, prepRulesFor, readWorkSettings } from '../../lib/work/settings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { newItem, save, softDelete, update } from '../../lib/db/repository';
@@ -83,6 +85,7 @@ export default function EventEditor({
 }) {
   const db = useDb();
   const { user } = useAuth();
+  const settings = useLiveQuery(() => db.settings.get(user?.id ?? ''), [db, user?.id]);
   const tz = deviceTimeZone();
   const [f, setF] = useState(() => initialState(draft, tz));
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -252,6 +255,13 @@ export default function EventEditor({
           </select>
         </label>
       )}
+      {!isTask &&
+        !f.rrule &&
+        prepRulesFor(f.title, readWorkSettings(settings).prep_rules).map((r) => (
+          <p key={r.id} className="text-sm text-slate-500">
+            Before this: {r.reminder} ({beforeText(r.minutes_before)})
+          </p>
+        ))}
       {!f.allDay && !isTask && (
         <label className="block text-sm">
           Reminder

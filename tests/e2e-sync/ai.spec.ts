@@ -117,7 +117,10 @@ test('the haircut note: a repeating reminder, and a cash reminder before every b
   // A barber booking made later shows the cash reminder.
   await capture(a, 'barber friday 5pm');
   await a.getByRole('link', { name: 'Library' }).first().click();
-  await a.getByRole('link', { name: 'Barber', exact: true }).first().click();
+  await a
+    .getByRole('link', { name: /^Barber/ })
+    .first()
+    .click();
   await expect(a.getByText('Before this: Bring €20 cash (12 h before)')).toBeVisible({
     timeout: 30_000,
   });
