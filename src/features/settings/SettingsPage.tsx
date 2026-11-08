@@ -15,6 +15,7 @@ import SharingSettings from './SharingSettings';
 import TodaySettings from './TodaySettings';
 import PrepRules from './PrepRules';
 import WorkSettings from './WorkSettings';
+import { loadLatestVersion } from '../../lib/pwa/loadLatest';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 
@@ -26,6 +27,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </section>
   );
 }
+
+const timeOf = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-IE', { hour: '2-digit', minute: '2-digit' });
 
 export default function SettingsPage() {
   const { user, services, deviceId } = useAuth();
@@ -105,26 +109,43 @@ export default function SettingsPage() {
 
       <Section title="Sync">
         {sync.status ? (
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-slate-500">Last successful sync</p>
-              <p className="font-medium">{lastSyncedText(sync.status.lastSyncedAt)}</p>
-              {sync.status.message && (
-                <p className="text-sm text-slate-500">{sync.status.message}</p>
-              )}
-              <p className="text-xs text-slate-400">Version {__APP_BUILD__}</p>
-              {sync.status.state === 'error' && sync.status.detail && (
-                <p className="text-xs break-words text-slate-400">{sync.status.detail}</p>
-              )}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm text-slate-500">Last successful sync</p>
+                <p className="font-medium">{lastSyncedText(sync.status.lastSyncedAt)}</p>
+                {sync.status.message && (
+                  <p className="text-sm text-slate-500">{sync.status.message}</p>
+                )}
+                {sync.status.state === 'syncing' && sync.status.since && (
+                  <p className="text-xs text-slate-400">
+                    Syncing since {timeOf(sync.status.since)}
+                    {sync.status.stage ? `: ${sync.status.stage}` : ''}
+                  </p>
+                )}
+                {sync.status.state === 'error' && sync.status.detail && (
+                  <p className="text-xs break-words text-slate-400">{sync.status.detail}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                // Never disabled: it restarts a run that is taking too long.
+                onClick={() => void sync.syncNow({ force: true })}
+                className="shrink-0 rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+              >
+                Sync now
+              </button>
             </div>
-            <button
-              type="button"
-              disabled={sync.status.state === 'syncing'}
-              onClick={() => void sync.syncNow()}
-              className="shrink-0 rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700"
-            >
-              Sync now
-            </button>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs text-slate-400">Version {__APP_BUILD__}</p>
+              <button
+                type="button"
+                onClick={() => void loadLatestVersion()}
+                className="shrink-0 text-xs text-indigo-600 underline dark:text-indigo-400"
+              >
+                Load latest version
+              </button>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-slate-500">

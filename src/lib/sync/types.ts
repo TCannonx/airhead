@@ -30,4 +30,7 @@ export interface SyncStatus {
   message: string | null;
   /** What failed last time, e.g. "push settings: permission denied" (shown small, for support). */
   detail?: string;
+  /** While syncing: the step it is on, and when the run started. */
+  stage?: string;
+  since?: string;
 }

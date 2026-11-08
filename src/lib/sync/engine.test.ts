@@ -272,6 +272,33 @@ describe('SyncEngine', () => {
     expect(engine.getStatus()).toMatchObject({ state: 'idle', pending: 0 });
   });
 
+  it('Sync now (forced) abandons a hung run and syncs at once; a plain request waits', async () => {
+    const db = device('a');
+    const remote = createFakeRemote();
+    const realUpsert = remote.upsert.bind(remote);
+    const hang = vi.spyOn(remote, 'upsert').mockImplementationOnce(() => new Promise(() => {}));
+    const engine = new SyncEngine(db, remote, {
+      online: () => true,
+      runLimitMs: 60_000,
+      forceAfterMs: 0,
+    });
+    await save(db, 'items', newItem(USER, { type: 'task', title: 'a' }));
+
+    const stuck = engine.syncNow();
+    await vi.waitFor(() => expect(engine.getStatus().stage).toBe('sending items'));
+    expect(engine.getStatus().state).toBe('syncing');
+    expect(engine.getStatus().since).toBeTruthy();
+
+    // A plain request just joins the stuck run.
+    expect(engine.syncNow()).toBe(stuck);
+
+    // The button forces a fresh run, which succeeds.
+    hang.mockImplementation(realUpsert);
+    await engine.syncNow({ force: true });
+    expect(engine.getStatus()).toMatchObject({ state: 'idle', pending: 0, stage: undefined });
+    expect(remote.rows('items').map((r) => r.title)).toEqual(['a']);
+  });
+
   it('syncs on start, when the connection returns, on Realtime nudges and after local writes', async () => {
     const db = device('a');
     const remote = createFakeRemote();

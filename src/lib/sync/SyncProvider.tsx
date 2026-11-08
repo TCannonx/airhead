@@ -26,7 +26,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [engine]);
 
   const value = useMemo<SyncApi>(
-    () => ({ status, syncNow: () => engine?.syncNow() ?? Promise.resolve() }),
+    () => ({ status, syncNow: (options) => engine?.syncNow(options) ?? Promise.resolve() }),
     [status, engine],
   );
   return <SyncContext value={value}>{children}</SyncContext>;
