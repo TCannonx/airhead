@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(sorting): the sorting model can return actions and sees your upcoming events and tasks (prompt v4; Task 10.3)
 - feat(sync): ai_actions table, synced to devices (Task 10.2)
 - feat(leave): "Used before Airhead" days count as taken, so the counter can match HR (Task 10.1)
 - fix(rules): "this year", a bare year, "9.5 days" or a one-off date already gone no longer become calendar events; such captures go to sorting instead
