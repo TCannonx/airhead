@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sorting): Sort now no longer waits forever on a slow sync, and always shows a message (it could silently do nothing)
 - release: phase 10 (AI actions) on dev
 - feat(sorting): the model is told your leave types and leave year; undoing or dismissing an AI action counts as a correction (Phase 10 follow-up)
 - feat(inbox): "Done by AI" with Undo and "Needs your OK" with Apply / pick one / Fix / Dismiss; capture chips say what AI did (Task 10.6)
