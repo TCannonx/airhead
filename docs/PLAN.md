@@ -513,7 +513,7 @@ Spec: `docs/superpowers/specs/2026-11-08-ai-actions-design.md`. Step-by-step pla
 - [x] **10.4 Action planner.** Pure `planActions`: confidence, dates, numbers, clashes, entitlement set, single match, repeats; applied / proposed / skipped with before and after. Link captures never yield actions.
 - [x] **10.5 Apply in the transaction.** `apply_sort_batch` v3 writes settings, bookings and item moves with freshness checks, and the `ai_actions` rows.
 - [x] **10.6 Inbox and Undo.** "Done by AI" (Undo) and "Needs your OK" (Apply / pick one / Fix / Dismiss); capture chip shows the action.
-- [ ] **10.7 Release to dev.** Checklist lines and BLOCKERS note; live waits for a tag.
+- [x] **10.7 Release to dev.** Checklist lines and BLOCKERS note; live waits for a tag.
 
 ## Phases 5–9 (outline)
 

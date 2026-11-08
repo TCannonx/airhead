@@ -2,6 +2,16 @@
 
 ## Waiting for the user
 
+### Phase 10 (AI actions) ready for device testing on dev
+
+AI sorting can now set your leave left or used, book leave, change five work settings, set reminders and move existing events and tasks. Clear ones are applied with Undo (Inbox → Done by AI); others wait under Needs your OK.
+
+1. Settings → Work: set your **entitlement** and **leave year start** (the AI won't set your leave balance until the entitlement is yours).
+2. Try the "Phase 10 — AI actions" lines in `docs/MANUAL-CHECKLIST.md` on the dev site.
+3. Insights → correction rate: undoing or dismissing an action counts as a correction. If it climbs, the 0.8 confidence bar may need raising.
+
+Live waits for a `v*` tag, as always.
+
 ### Update the live secrets (live project was recreated)
 
 The live project is now `qqobvcelbzhrcehqukrs` (Frankfurt). At https://github.com/TCannonx/airhead/settings/secrets/actions, update `SUPABASE_PROJECT_REF_LIVE` to `qqobvcelbzhrcehqukrs` and `SUPABASE_DB_PASSWORD_LIVE` to the new live database password. Until then, the live keep-alive and backup jobs fail (dev is unaffected).
