@@ -186,7 +186,7 @@ export async function dismissAction(db: AirheadDb, userId: string, a: AiAction) 
 
 /** Where to fix or check an action by hand. */
 export function fixLink(a: AiAction): string {
-  if (a.kind === 'update_work_setting') return '/settings';
+  if (a.kind === 'update_work_setting' || a.kind === 'add_prep_rule') return '/settings';
   if (a.kind === 'set_leave_remaining' || a.kind === 'set_leave_used' || a.kind === 'book_leave')
     return '/work';
   const id = a.target_id ?? (typeof a.payload.target_id === 'string' ? a.payload.target_id : null);

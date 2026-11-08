@@ -1273,3 +1273,11 @@ Decisions and library versions, newest first.
 - Notes starting "remind me …" now go to AI sorting (`FOR_AI`): the instant date rule would otherwise make a calendar suggestion from "every 2 weeks".
 - The task page shows "Due: … · repeats every 2 weeks" (it showed no date for tasks at all).
 - Recurrence is computed in UTC, so the reminder's local time can shift by an hour across a clock change; fine for reminders, noted for later.
+
+## Prep rules (2026-11-08)
+
+- Owner note: "I get a haircut every 2-3 weeks. Requires €20 cash. Remind me every 2-3 weeks to text barber for haircut and once booked, ensure I have cash for appointment." The cash part is a standing rule, not a one-off task.
+- `settings.data.work.prep_rules`: `{id, match (1-5 words), reminder, minutes_before (0-10080)}`. In both work-settings readers, so saving the Work screen keeps them.
+- Migration 0032: `refresh_prep_nudges(item)` gives every open, timed, one-off event whose title contains a match word a `prep` nudge `minutes_before` its start (key `prep:<rule>:<item>`), and cancels ones that no longer apply. Triggers on items (insert/update) and on settings (rules changed → every future event). Works for events from any source: typed, imported, AI.
+- AI action `add_prep_rule` (planner: words and reminder required; duplicates skipped; applied with Undo like other settings changes). Prompt v4 describes it.
+- Shown as "Before this: Bring €20 cash (12 h before)" on matching events, and listed with Remove in Settings → Prep reminders. Repeating events are left out for now (their reminders are made per occurrence by the scheduler).

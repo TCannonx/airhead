@@ -28,6 +28,7 @@ const ACTION_KINDS = [
   'update_work_setting',
   'set_reminder',
   'reschedule_item',
+  'add_prep_rule',
 ] as const;
 
 /**
@@ -66,6 +67,10 @@ export const SortAction = z.object({
   end_at: z.string().nullable(),
   all_day: z.boolean().nullable(),
   due_at: z.string().nullable(),
+  /** add_prep_rule: words that pick out the events, what to remind, and when. */
+  match: z.array(z.string()).nullable(),
+  reminder: z.string().nullable(),
+  minutes_before: z.number().int().nullable(),
 });
 
 /**

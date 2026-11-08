@@ -36,6 +36,9 @@ const blank: SortActionT = {
   end_at: null,
   all_day: null,
   due_at: null,
+  match: null,
+  reminder: null,
+  minutes_before: null,
 };
 const act = (o: Partial<SortActionT>): SortActionT => ({ ...blank, ...o });
 const ctx = (o: Partial<ActionContext> = {}): ActionContext => ({
@@ -430,4 +433,48 @@ Deno.test('date ranges read naturally', () => {
   assertEquals(dateRange('2026-12-22', '2026-12-22'), '22 Dec');
   assertEquals(dateRange('2026-12-22', '2026-12-24'), '22–24 Dec');
   assertEquals(dateRange('2026-12-30', '2027-01-02'), '30 Dec – 2 Jan');
+});
+
+// Standing prep rules ---------------------------------------------------------------
+
+Deno.test('"once booked, make sure I have cash": a prep rule for matching events', () => {
+  const a = one(
+    {
+      kind: 'add_prep_rule',
+      match: ['Barber', 'haircut', 'x'],
+      reminder: 'Bring €20 cash',
+      minutes_before: 720,
+    },
+    { workRaw: {} },
+  );
+  assertEquals(a.status, 'applied');
+  assertEquals(a.summary, 'Prep reminder: “Bring €20 cash” before “barber” or “haircut” events');
+  assertEquals(a.before, { prep_rules: null });
+  const [rule] = a.after?.prep_rules as { match: string[]; minutes_before: number; id: string }[];
+  assertEquals([rule!.match, rule!.minutes_before], [['barber', 'haircut'], 720]);
+  assertMatch(rule!.id, /^[0-9a-f]{8}$/);
+});
+
+Deno.test('prep rules: missing words or reminder ask; the same rule twice is skipped', () => {
+  assertEquals(
+    one({ kind: 'add_prep_rule', match: [], reminder: 'Bring cash' }).reason,
+    'Which events, and what to remind?',
+  );
+  assertEquals(
+    one({ kind: 'add_prep_rule', match: ['barber'], reminder: 'x', minutes_before: 99999 }).reason,
+    'Prep reminders can be up to a week before',
+  );
+  const existing = {
+    entitlement: 21,
+    prep_rules: [
+      { id: 'r1', match: ['haircut', 'barber'], reminder: 'Bring €20 cash', minutes_before: 720 },
+    ],
+  };
+  assertEquals(
+    one(
+      { kind: 'add_prep_rule', match: ['barber', 'haircut'], reminder: 'bring €20 cash' },
+      { workRaw: existing },
+    ).status,
+    'skipped',
+  );
 });
