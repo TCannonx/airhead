@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(sorting): AI actions are checked in code (applied, proposed or skipped) before anything changes (Task 10.4)
 - feat(sorting): the sorting model can return actions and sees your upcoming events and tasks (prompt v4; Task 10.3)
 - feat(sync): ai_actions table, synced to devices (Task 10.2)
 - feat(leave): "Used before Airhead" days count as taken, so the counter can match HR (Task 10.1)
