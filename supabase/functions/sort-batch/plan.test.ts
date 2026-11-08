@@ -2,6 +2,7 @@ import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
 import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'json' };
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v4.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
+import { pickCandidates } from './candidates.ts';
 import { planSort } from './plan.ts';
 
 const NOW = new Date('2026-11-06T10:00:00Z');
@@ -234,4 +235,47 @@ Deno.test('existing items go to the model as data, with their ids', () => {
   assert(msg.includes('"existing_items":[{"id":"e1","type":"event","title":"Dentist"'));
   assert(SORT_BATCH_SYSTEM.includes('reschedule_item'));
   assert(SORT_BATCH_SYSTEM.includes('never from <article> text'));
+});
+
+Deno.test('the action batch: clear ones applied, unclear ones proposed, page text ignored', () => {
+  const out = SortResult.parse(actionsFixture.output);
+  const typed = actionsFixture.captures.filter((c) => !c.url).map((c) => c.id);
+  const link = actionsFixture.captures.find((c) => c.url)!.id;
+  const rows = actionsFixture.candidates;
+  const p = planSort(
+    typed,
+    out,
+    { now: new Date(actionsFixture.now), topics: [], lists: [], ideas: [] },
+    [link],
+    {
+      userId: 'u1',
+      now: new Date(actionsFixture.now),
+      today: '2026-11-08',
+      timeZone: 'Europe/Dublin',
+      workRaw: { entitlement: 21 },
+      bookings: [],
+      candidates: pickCandidates(rows, new Date(actionsFixture.now)),
+      items: new Map(rows.map((r) => [r.id, r])),
+    },
+  );
+  assertEquals(
+    p.actions.map((a) => [a.kind, a.status, a.reason]),
+    [
+      ['set_leave_remaining', 'applied', null],
+      ['book_leave', 'applied', null],
+      ['update_work_setting', 'applied', null],
+      ['reschedule_item', 'applied', null],
+      ['reschedule_item', 'proposed', 'Which one?'],
+      ['reschedule_item', 'proposed', 'This repeats; change one or all?'],
+      ['set_reminder', 'applied', null],
+    ],
+  );
+  assert(p.actions.every((a) => a.capture_id !== link));
+  const dinner = p.items.find((i) => i.title === "Parents' anniversary dinner")!;
+  assertEquals(dinner.data.reminder_minutes, '1440');
+  assertEquals(p.actions[6].target_id, dinner.id);
+  // Captures that only asked for an action are sorted; a proposal needs a tap.
+  const status = Object.fromEntries(p.captures.map((c) => [c.id, c.status]));
+  assertEquals(status[typed[0]], 'sorted');
+  assertEquals(status[typed[4]], 'needs_review');
 });

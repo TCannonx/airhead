@@ -1,4 +1,5 @@
 import type { SortedItemT, SortResultT } from '../_shared/schemas/sort.ts';
+import { type ActionContext, type PlannedAction, planActions } from './actions.ts';
 
 /** An event is created straight away only from this confidence up (otherwise a suggestion). */
 export const EVENT_CONFIDENT = 0.8;
@@ -13,6 +14,8 @@ export interface PlanContext {
 }
 
 export interface PlannedItem {
+  /** Made here so actions (a reminder on a new event) can point at it. */
+  id: string;
   capture_id: string;
   type: SortedItemT['type'];
   title: string;
@@ -55,6 +58,8 @@ export interface SortPlan {
   link_captures: string[];
   /** Memory facts from typed captures only (never from web pages). */
   facts: ProposedFact[];
+  /** AI actions with their checks done (Phase 10). */
+  actions: PlannedAction[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -79,6 +84,7 @@ export function planSort(
   result: SortResultT,
   ctx: PlanContext,
   linkIds: string[] = [],
+  actx?: ActionContext,
 ): SortPlan {
   const unsorted = new Set(captureIds);
   const links = new Set(linkIds);
@@ -90,6 +96,7 @@ export function planSort(
   const status = new Map<string, SortPlan['captures'][number]['status']>();
   const readingUpdates: ReadingUpdate[] = [];
   const facts: ProposedFact[] = [];
+  const actions: PlannedAction[] = [];
   const seen = new Set<string>();
 
   const noteTopics = (topics: string[]) => {
@@ -100,7 +107,7 @@ export function planSort(
     const isLink = links.has(r.capture_id);
     if ((!unsorted.has(r.capture_id) && !isLink) || seen.has(r.capture_id)) continue;
     seen.add(r.capture_id);
-    let review = r.items.length === 0 && !isLink;
+    let review = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
 
     for (const it of r.items) {
       if (isLink && it.type === 'reading') continue; // the reading item already exists
@@ -138,6 +145,7 @@ export function planSort(
 
       if (itemStatus === 'suggested' && !isLink) review = true;
       items.push({
+        id: crypto.randomUUID(),
         capture_id: r.capture_id,
         type: it.type,
         title: it.title.trim().replace(/\.$/, '') || '(untitled)',
@@ -171,6 +179,13 @@ export function planSort(
         });
       }
     } else {
+      // Actions only ever come from what the person typed (never from page text).
+      if (actx && (r.actions ?? []).length) {
+        const mine = items.filter((p) => p.capture_id === r.capture_id);
+        const planned = planActions(r.capture_id, r.actions, mine, actx);
+        actions.push(...planned);
+        if (planned.some((p) => p.status === 'proposed')) review = true;
+      }
       status.set(r.capture_id, review ? 'needs_review' : 'sorted');
       // Facts are learned only from what the person typed, never from page text.
       for (const f of r.proposed_facts.slice(0, 3)) {
@@ -187,5 +202,6 @@ export function planSort(
     reading_updates: readingUpdates,
     link_captures: linkIds,
     facts,
+    actions,
   };
 }
