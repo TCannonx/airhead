@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
+import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
 import { linkInfoFor } from './extract.ts';
 import { safeFetch } from './safeFetch.ts';
 
@@ -34,7 +35,7 @@ Deno.serve(async (req) => {
   }
 
   let ownerFilter: string | null = null;
-  if (!(token && SERVICE_KEY && token === SERVICE_KEY)) {
+  if (!isServiceToken(token, SERVICE_KEYS)) {
     const { data } = await db.auth.getUser(token);
     if (!data.user)
       return json({ ok: false, error_code: 'unauthorized', message: 'Sign in again.' }, 401);

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
+import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
 import { syncFeed, validateLink, type LinkedFeed, type LinkedStore } from './sync.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, error_code: 'method_not_allowed', message: 'Use POST.' }, 405);
   }
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  const isService = !!SERVICE_KEY && token === SERVICE_KEY;
+  const isService = isServiceToken(token, SERVICE_KEYS);
   let userId: string | null = null;
   if (!isService) {
     const { data } = await db.auth.getUser(token);

@@ -1185,3 +1185,8 @@ Decisions and library versions, newest first.
 ## 2026-11-06 — Project location
 - Project lives in personal OneDrive: `C:\Users\Thomas_Cannon\OneDrive\GitHub\airhead` (user requirement: nothing stored on the local machine outside OneDrive).
 - `CLAUDE.md` at repo root; supplied `settings.json` placed at `.claude/settings.json` (project-level Claude Code settings).
+
+## Service calls accept the new secret keys (2026-11-08)
+
+- Functions that only the database or other functions may call compare the bearer token with `_shared/serviceAuth.ts`: it accepts `SUPABASE_SERVICE_ROLE_KEY` **or** any value of `SUPABASE_SECRET_KEYS` (the `sb_secret_…` keys Supabase injects as JSON), trimmed, never an empty token.
+- Why: on dev the legacy `service_role` key shown in the dashboard hashed differently from the injected `SUPABASE_SERVICE_ROLE_KEY`, so the Vault key was refused (401 "Service only") and nothing ran in the background. Vault now holds a `sb_secret_` key (BLOCKERS item 8).
