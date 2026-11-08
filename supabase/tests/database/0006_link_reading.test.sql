@@ -46,7 +46,7 @@ select is(
     ]
   }
   $json$::jsonb),
-  '{"items": 1, "captures": 0, "links": 1}'::jsonb,
+  '{"items": 1, "captures": 0, "links": 1, "actions": 0}'::jsonb,
   'applies only to pages still waiting for a summary');
 
 select is((select data ->> 'summary' from public.items where id = '10000000-0000-4000-8000-0000000000e1'),

@@ -4,6 +4,7 @@ import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-bat
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
+import { type ActionContext, type BookingRow, type ItemRow } from './actions.ts';
 import { type CandidateRow, pickCandidates } from './candidates.ts';
 import { planSort } from './plan.ts';
 
@@ -62,42 +63,68 @@ export async function runSortBatch(
     return { ok: true, error_code: null, message: 'Nothing to sort.', sorted: 0, items: 0 };
   }
 
-  const [settings, topics, lists, ideas, corrections, candidateRows] = await Promise.all([
-    db.from('settings').select('data').eq('user_id', userId).maybeSingle(),
-    db.from('topics').select('id, name').eq('user_id', userId).is('deleted_at', null),
-    db.from('lists').select('id, name').eq('user_id', userId).is('deleted_at', null),
-    db
-      .from('items')
-      .select('id, title')
-      .eq('user_id', userId)
-      .eq('type', 'idea')
-      .eq('status', 'open')
-      .is('deleted_at', null)
-      .order('updated_at', { ascending: false })
-      .limit(30),
-    db
-      .from('corrections')
-      .select('capture_id, from_value, to_value')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(5),
-    // Existing items a capture may move (Phase 10); picked and capped below.
-    db
-      .from('items')
-      .select(
-        'id, type, title, start_at, end_at, all_day, due_at, rrule, series_id, status, data, updated_at',
-      )
-      .eq('user_id', userId)
-      .in('type', ['event', 'task'])
-      .eq('status', 'open')
-      .is('deleted_at', null)
-      .limit(400),
-  ]);
+  const [settings, topics, lists, ideas, corrections, candidateRows, bookingRows] =
+    await Promise.all([
+      db.from('settings').select('data').eq('user_id', userId).maybeSingle(),
+      db.from('topics').select('id, name').eq('user_id', userId).is('deleted_at', null),
+      db.from('lists').select('id, name').eq('user_id', userId).is('deleted_at', null),
+      db
+        .from('items')
+        .select('id, title')
+        .eq('user_id', userId)
+        .eq('type', 'idea')
+        .eq('status', 'open')
+        .is('deleted_at', null)
+        .order('updated_at', { ascending: false })
+        .limit(30),
+      db
+        .from('corrections')
+        .select('capture_id, from_value, to_value')
+        .eq('user_id', userId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      // Existing items a capture may move (Phase 10); picked and capped below.
+      db
+        .from('items')
+        .select(
+          'id, type, title, start_at, end_at, all_day, due_at, rrule, series_id, status, data, updated_at',
+        )
+        .eq('user_id', userId)
+        .in('type', ['event', 'task'])
+        .eq('status', 'open')
+        .is('deleted_at', null)
+        .limit(400),
+      db
+        .from('leave_bookings')
+        .select('id, start_date, end_date, start_half, end_half, leave_type, status, deleted_at')
+        .eq('user_id', userId)
+        .is('deleted_at', null),
+    ]);
   const candidates = pickCandidates((candidateRows.data ?? []) as CandidateRow[], now);
   const timeZone =
     ((settings.data?.data as { time_zone?: string } | undefined)?.time_zone as string) ||
     'Europe/Dublin';
+  const settingsData = (settings.data?.data ?? {}) as Record<string, unknown>;
+  const workRaw =
+    settingsData.work && typeof settingsData.work === 'object' && !Array.isArray(settingsData.work)
+      ? (settingsData.work as Record<string, unknown>)
+      : {};
+  const actx: ActionContext = {
+    userId,
+    now,
+    today: new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now),
+    timeZone,
+    workRaw,
+    bookings: (bookingRows.data ?? []) as BookingRow[],
+    candidates,
+    items: new Map(((candidateRows.data ?? []) as ItemRow[]).map((r) => [r.id, r])),
+  };
 
   // Show each correction with the capture it was about, so the model can learn the habit.
   const corrRows = corrections.data ?? [];
@@ -202,6 +229,7 @@ export async function runSortBatch(
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),
     },
     links.map((c) => c.id),
+    actx,
   );
   const { data: applied, error: applyError } = await db.rpc('apply_sort_batch', {
     p_user_id: userId,
@@ -219,8 +247,9 @@ export async function runSortBatch(
     await db.rpc('add_memory_facts', { p_user_id: userId, p_facts: plan.facts });
   }
   await db.rpc('learn_rules', { p_user_id: userId });
-  const counts = applied as { items: number; captures: number; links: number };
+  const counts = applied as { items: number; captures: number; links: number; actions?: number };
   const parts = [`Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}`];
+  if (counts.actions) parts.push(`${counts.actions} action${counts.actions === 1 ? '' : 's'}`);
   if (counts.links) parts.push(`summarised ${counts.links} link${counts.links === 1 ? '' : 's'}`);
   return {
     ok: true,

@@ -38,7 +38,7 @@ select is(
     ]
   }
   $json$::jsonb),
-  '{"items": 2, "captures": 2, "links": 0}'::jsonb,
+  '{"items": 2, "captures": 2, "links": 0, "actions": 0}'::jsonb,
   'applies items for still-unsorted captures only');
 
 select results_eq($$ select title from public.items order by title $$,
