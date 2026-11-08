@@ -1293,3 +1293,9 @@ Decisions and library versions, newest first.
 - `syncNow({ force: true })` (the Settings button) abandons a run older than 3 s: a generation counter makes the old run's late results change nothing (no status, no lastSyncedAt, no retry timer) while a fresh run starts at once. Automatic triggers still fold into one follow-up run.
 - The button is never disabled. While syncing, Settings shows "Syncing since HH:MM: <step>".
 - "Load latest version" asks the service worker to check for a new build, waits up to 10 s for it to take over, then reloads; for iPhone Home Screen apps that keep running a cached copy.
+
+## Background sorting every 5 minutes (2026-11-08)
+
+- Owner: the AI should run over new notes in batches every 5 minutes, only when there is something new, as cheaply as possible.
+- Migration 0033: the 5-minute dispatcher now uses `users_due_now()` = due once the oldest waiting capture is 2 minutes old (so a burst shares one call) or 20 are waiting (a full batch). Before, it was 5 waiting or an hour. A person's own `batch_threshold_count` / `_minutes` settings still win. No unsorted capture → no call.
+- Cost: one small-tier batch is roughly €0.002–0.005 (cached system prompt); the monthly cap still stops everything.
