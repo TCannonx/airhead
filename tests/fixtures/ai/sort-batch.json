@@ -89,7 +89,8 @@
             "text": "Sees Dr Byrne for dental care",
             "category": "personal"
           }
-        ]
+        ],
+        "actions": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000002",
@@ -111,7 +112,8 @@
           }
         ],
         "link_summary": null,
-        "proposed_facts": []
+        "proposed_facts": [],
+        "actions": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000003",
@@ -138,13 +140,15 @@
             "text": "Is planning raised beds in the garden",
             "category": "everyday"
           }
-        ]
+        ],
+        "actions": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-0000000000ff",
         "items": [],
         "link_summary": null,
-        "proposed_facts": []
+        "proposed_facts": [],
+        "actions": []
       }
     ]
   }

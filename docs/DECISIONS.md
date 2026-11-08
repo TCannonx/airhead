@@ -1200,3 +1200,9 @@ Decisions and library versions, newest first.
 
 - `settings.data.work.opening_used` maps a leave-year start (YYYY-MM-DD) to days used before Airhead (0–366, half days allowed). Both leave engines add it to `taken` for that year; carry-over expiry ignores it (it is not tied to dates).
 - Editable on the Work and leave page ("Used before Airhead"); AI actions (Phase 10) set it from "N days left" or "N days used".
+
+## Sorting prompt v4: actions and existing items (Task 10.3, 2026-11-08)
+
+- `SortResult.results[].actions` (strict schema, every field present, nulls when unused). Kinds: set_leave_remaining, set_leave_used, book_leave, update_work_setting (entitlement, leave_year_start, working_days, location_pattern, carry_over_max), set_reminder, reschedule_item.
+- The model gets `existing_items`: the person's own open events and tasks from 7 days ago to 90 days ahead plus overdue tasks, nearest first, at most 60 (`pickCandidates`). Titles only (120 characters), no bodies. They are data; reschedule_item may only name one of their ids, and other_matches lists any other plausible ones.
+- The v3 file was renamed to v4 (only `run.ts` and its test imported it; history is in git). Until Task 10.4 the actions are ignored.

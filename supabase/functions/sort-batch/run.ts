@@ -1,9 +1,10 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v3.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v4.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
+import { type CandidateRow, pickCandidates } from './candidates.ts';
 import { planSort } from './plan.ts';
 
 export const BATCH_SIZE = 20;
@@ -61,7 +62,7 @@ export async function runSortBatch(
     return { ok: true, error_code: null, message: 'Nothing to sort.', sorted: 0, items: 0 };
   }
 
-  const [settings, topics, lists, ideas, corrections] = await Promise.all([
+  const [settings, topics, lists, ideas, corrections, candidateRows] = await Promise.all([
     db.from('settings').select('data').eq('user_id', userId).maybeSingle(),
     db.from('topics').select('id, name').eq('user_id', userId).is('deleted_at', null),
     db.from('lists').select('id, name').eq('user_id', userId).is('deleted_at', null),
@@ -81,7 +82,19 @@ export async function runSortBatch(
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(5),
+    // Existing items a capture may move (Phase 10); picked and capped below.
+    db
+      .from('items')
+      .select(
+        'id, type, title, start_at, end_at, all_day, due_at, rrule, series_id, status, data, updated_at',
+      )
+      .eq('user_id', userId)
+      .in('type', ['event', 'task'])
+      .eq('status', 'open')
+      .is('deleted_at', null)
+      .limit(400),
   ]);
+  const candidates = pickCandidates((candidateRows.data ?? []) as CandidateRow[], now);
   const timeZone =
     ((settings.data?.data as { time_zone?: string } | undefined)?.time_zone as string) ||
     'Europe/Dublin';
@@ -105,6 +118,7 @@ export async function runSortBatch(
       from: c.from_value,
       to: c.to_value,
     })),
+    candidates,
   };
 
   // Core memory profile: active facts, most recently used first, ~400 words.
