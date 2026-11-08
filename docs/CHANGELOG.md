@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(settings): the app version (commit and build time) shows under Sync, to check a phone runs the latest build
 - test: the e2e sync job now runs the real Edge Functions against a stand-in AI; new end-to-end tests for Sort now, AI actions on two devices, Undo, a stalled connection and a stuck sync; AI contract test; feature-to-test matrix and a release gate. Fixes found by them: "moved to …" and time-off notes now reach AI sorting instead of becoming a new event
 - fix(sync): every server request has a time limit, so a stalled one fails and is retried instead of freezing sync; the sync screen shows what failed
 - fix(sorting): AI sorting works again; the action fields had pushed the output schema past the API limit, so every sorting call was rejected ("The AI service is not available right now")

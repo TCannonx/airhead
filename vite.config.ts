@@ -5,8 +5,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export const THEME_COLOR = '#4f46e5';
 
+/** Shown in Settings so a device's running version can be checked against the latest build. */
+const BUILD = `${(process.env.WORKERS_CI_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local').slice(0, 7)} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: { __APP_BUILD__: JSON.stringify(BUILD) },
   plugins: [
     react(),
     tailwindcss(),
