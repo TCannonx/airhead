@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(sorting): new captures are sorted at the next 5-minute check once 2 minutes old (was: 5 waiting or an hour); still no AI call when nothing is new
 - fix(sync): Sync now always kicks sync (a run stuck for more than a few seconds is abandoned and a fresh one starts); the button is never disabled; Settings shows the step and start time while syncing, and a "Load latest version" button
 - fix(sync): a sync run that stops responding is abandoned after 90 s and retried, and Settings shows the step it was stuck on
 - feat(reminders): prep rules: "once booked, ensure I have cash" becomes a standing reminder before every matching event (e.g. barber/haircut → "Bring €20 cash", 12 h before), shown on the event and listed in Settings → Prep reminders
