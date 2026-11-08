@@ -1191,3 +1191,7 @@ Decisions and library versions, newest first.
 - Functions that only the database or other functions may call compare the bearer token with `_shared/serviceAuth.ts`: it accepts `SUPABASE_SERVICE_ROLE_KEY` **or** any value of `SUPABASE_SECRET_KEYS` (the `sb_secret_…` keys Supabase injects as JSON), trimmed, never an empty token.
 - Why: on dev the legacy `service_role` key shown in the dashboard hashed differently from the injected `SUPABASE_SERVICE_ROLE_KEY`, so the Vault key was refused (401 "Service only") and nothing ran in the background. Vault now holds a `sb_secret_` key (BLOCKERS item 8).
 - Follow-up: a token that matches no injected key but is a `sb_secret_` key or a JWT claiming `role: service_role` is shown to Supabase (`GET /auth/v1/admin/users?per_page=1`; only an admin key gets 200) and remembered once accepted. User tokens and junk are refused without that call, so user requests cost nothing extra. This makes the dashboard's legacy `service_role` key work too.
+
+## Free date rules skip years, amounts and past one-off dates (2026-11-08)
+
+- A capture like "I have used annual leave this year. I have 9.5 days left" became an event on 1 January (chrono reads "this year"), or with that fixed, an event "in 9.5 days". The rules now skip parser results that pin only a year, and bare amounts of time ("9.5 days", "2 weeks"; "in 2 weeks" still counts), and return no date for a one-off date already gone. Those captures wait for AI sorting instead of becoming calendar suggestions.

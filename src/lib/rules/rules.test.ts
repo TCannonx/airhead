@@ -104,7 +104,20 @@ const CASES: [string, Expect][] = [
   ['dinner at 8ish', { when: null }],
   ['lunch with Sam at 1pm', { when: { start: '2026-11-06 13:00', confident: false } }],
   ['probably drinks Friday 6pm', { when: { start: '2026-11-06 18:00', confident: false } }],
-  ["yesterday's meeting notes", { when: { start: '2026-11-05', allDay: true, confident: false } }],
+  // A one-off date already gone, or only a year, is not an event: sorting decides.
+  ["yesterday's meeting notes", { when: null }],
+  [
+    'I have used annual leave this year. I have 9.5 days left till the end of november',
+    { when: { start: '2026-11-30', allDay: true, confident: false } },
+  ],
+  ['I have used annual leave this year', { when: null }],
+  ['booked flights in 2027', { when: null }],
+  ['2 weeks of leave left', { when: null }],
+  ['dentist in 2 days', { when: { start: '2026-11-08', allDay: true, confident: false } }],
+  [
+    'paid the gas bill on 3 March',
+    { when: { start: '2027-03-03', allDay: true, confident: false } },
+  ],
   ['buy milk', { when: null, title: 'Buy milk' }],
   // Recurrence
   [
