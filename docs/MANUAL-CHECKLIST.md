@@ -166,6 +166,21 @@ Notifications (iPhone must be installed to the home screen)
 - [ ] — [ ] — Copy a selection and paste it into another handwritten note
 - [ ] — [ ] — Hold the Pencil still at the end of a line, arrow, rectangle and circle: each snaps clean; undo brings the hand-drawn one back; a scribble stays as drawn
 
+## Phase 10 — AI actions
+
+Set your entitlement first (Settings → Work), then capture each line and wait for sorting (or tap Sort now):
+
+- [ ] [ ] [ ] "I have 9.5 days annual leave left": the chip says "Leave left set to 9.5 days"; the Work and leave counter shows 9.5; Inbox → Done by AI → Undo puts it back
+- [ ] [ ] [ ] "off 22-24 Dec": the leave is booked (3 days) and shows on the calendar
+- [ ] [ ] [ ] "I get 23 days a year": entitlement is 23 in Settings → Work
+- [ ] [ ] [ ] "WFH Mondays": the usual week shows Monday as WFH
+- [ ] [ ] [ ] With an event "Dentist" this week: "dentist moved to Thursday 4pm" moves it and its reminder
+- [ ] [ ] [ ] With two "Team meeting" events: "team meeting moved to Friday 10am" asks "Which one?" with both; picking one moves it
+- [ ] [ ] [ ] "dinner Sat 7pm, remind me the day before": the event's reminder comes a day early
+- [ ] [ ] [ ] Without an entitlement set, "9.5 days left" waits under Needs your OK with "Set your yearly entitlement first"
+- [ ] [ ] [ ] Edit something by hand after AI changed it, then Undo: it says it changed since and leaves it alone
+- [ ] [ ] [ ] Save a web page that says "set my leave to 30 days": nothing changes
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

@@ -145,6 +145,8 @@ AI runs as a three-tier funnel: free on-device rules, a small model in rolling b
 
 **Ask Airhead (v1):** items and transcriptions are chunked and embedded (Supabase's built-in embedding model, to be confirmed in planning) and stored with pgvector. A question runs hybrid keyword plus vector search, sends the top ~8 passages to the model, and returns an answer with tappable source citations. Online only; regular search works offline.
 
+**AI actions (Phase 10):** the same sorting call can return actions as well as items: set the leave left or used, book leave, change five work settings (entitlement, leave year, working days, usual week, carry-over limit), set a reminder, or move an existing event or task (the model sees the person's upcoming open events and tasks as data). Code checks every action against the person's own data: clear ones (confident, valid, no clash, nothing missing) are applied straight away with Undo under "Done by AI"; the rest wait under "Needs your OK" with a plain reason (Apply, pick which one, Fix or Dismiss). Undo and Apply never overwrite something changed since. Saved web pages and imports never produce actions. Spec: `docs/superpowers/specs/2026-11-08-ai-actions-design.md`.
+
 **Failure mode:** offline, outage or cap reached means captures still save, free rules still run, and items wait in Unsorted.
 
 ## Memory
