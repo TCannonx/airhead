@@ -15,7 +15,11 @@ export const PULL_OVERLAP_MS = 60_000;
 const MIN_ID = '00000000-0000-0000-0000-000000000000';
 
 /** Sends every queued change to the server. Throws on network failure (queue is kept). */
-export async function push(db: AirheadDb, remote: Remote): Promise<void> {
+export async function push(
+  db: AirheadDb,
+  remote: Remote,
+  onStage: (stage: string) => void = () => {},
+): Promise<void> {
   const entries = await db.outbox.orderBy('seq').toArray();
   if (entries.length === 0) return;
 
@@ -35,7 +39,9 @@ export async function push(db: AirheadDb, remote: Remote): Promise<void> {
       const rows = (await db.table(table).bulkGet(batchIds)).filter(
         (r): r is RemoteRow => r !== undefined,
       );
+      onStage(`sending ${table}`);
       if (rows.length > 0) await remote.upsert(table, rows);
+      onStage(`clearing sent ${table}`);
       // Remove only the entries that were sent; anything queued meanwhile stays.
       await db.transaction('rw', db.outbox, async () => {
         for (const id of batchIds) {
@@ -52,8 +58,13 @@ export async function push(db: AirheadDb, remote: Remote): Promise<void> {
 }
 
 /** Fetches everything changed on the server since the last pull, table by table. */
-export async function pull(db: AirheadDb, remote: Remote): Promise<void> {
+export async function pull(
+  db: AirheadDb,
+  remote: Remote,
+  onStage: (stage: string) => void = () => {},
+): Promise<void> {
   for (const table of SYNC_TABLES) {
+    onStage(`receiving ${table}`);
     const state = await db.sync_state.get(table);
     let cursor = state?.cursor ?? null;
     let after: PullKey | null = cursor
@@ -63,7 +74,9 @@ export async function pull(db: AirheadDb, remote: Remote): Promise<void> {
     for (;;) {
       const page = await remote.pullPage(table, after, PULL_PAGE);
       if (page.length === 0) break;
+      onStage(`saving ${table}`);
       await applyPage(db, table, page);
+      onStage(`receiving ${table}`);
       const last = page[page.length - 1] as RemoteRow;
       after = { ts: String(last.server_updated_at), id: last.id };
       if (!cursor || Date.parse(after.ts) > Date.parse(cursor)) cursor = after.ts;
@@ -157,6 +170,12 @@ async function keepBothNoteVersions(db: AirheadDb, remote: NoteDoc) {
   await db.note_docs.put(remote);
 }
 
+/** `p`, or `fallback` if it has not settled after `ms` (never rejects for a stall). */
+function within<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+}
+const BOOKKEEPING_MS = 5_000;
+
 async function countPending(db: AirheadDb): Promise<number> {
   const keys = await db.outbox.orderBy('row_id').uniqueKeys();
   return keys.length;
@@ -167,9 +186,14 @@ export interface SyncEngineOptions {
   /** Delay after a local write before syncing (batches fast typing). */
   writeDebounceMs?: number;
   intervalMs?: number;
+  /** Tests shorten the watchdog. */
+  runLimitMs?: number;
 }
 
 const BACKOFF_MS = [5_000, 15_000, 60_000, 300_000];
+
+/** A run taking longer than this is abandoned and reported with the step it was on. */
+export const RUN_LIMIT_MS = 90_000;
 
 /**
  * Runs push + pull on the triggers from the plan: start (app open), the
@@ -187,6 +211,7 @@ export class SyncEngine {
   private readonly online: () => boolean;
   private readonly writeDebounceMs: number;
   private readonly intervalMs: number;
+  private readonly runLimitMs: number;
 
   private readonly db: AirheadDb;
   private readonly remote: Remote;
@@ -197,6 +222,7 @@ export class SyncEngine {
     this.online = options.online ?? (() => navigator.onLine);
     this.writeDebounceMs = options.writeDebounceMs ?? 1_000;
     this.intervalMs = options.intervalMs ?? 60_000;
+    this.runLimitMs = options.runLimitMs ?? RUN_LIMIT_MS;
   }
 
   getStatus(): SyncStatus {
@@ -238,27 +264,55 @@ export class SyncEngine {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.retryTimer = null;
     if (!this.status.lastSyncedAt) {
-      const saved = await this.db.meta.get('lastSyncedAt');
+      const saved = await within(this.db.meta.get('lastSyncedAt'), BOOKKEEPING_MS, undefined);
       if (typeof saved?.value === 'string') this.set({ lastSyncedAt: saved.value });
     }
-    this.set({ state: 'syncing', pending: await countPending(this.db), message: null });
+    let stage = 'reading this device';
+    const onStage = (s: string) => {
+      stage = s;
+    };
     try {
-      await push(this.db, this.remote);
-      await uploadPending(this.db, this.remote);
-      await pull(this.db, this.remote);
+      this.set({
+        state: 'syncing',
+        pending: await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending),
+        message: null,
+      });
+      // A step that never finishes (a stalled request, a stuck local database
+      // call) must not stall sync for good: give up after a while, say where,
+      // and let the retry start a fresh run.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const watchdog = new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`Sync stopped responding while ${stage}.`)),
+          this.runLimitMs,
+        );
+      });
+      try {
+        await Promise.race([
+          (async () => {
+            await push(this.db, this.remote, onStage);
+            onStage('uploading files');
+            await uploadPending(this.db, this.remote);
+            await pull(this.db, this.remote, onStage);
+          })(),
+          watchdog,
+        ]);
+      } finally {
+        clearTimeout(timer);
+      }
       const at = new Date().toISOString();
-      await this.db.meta.put({ key: 'lastSyncedAt', value: at });
+      await within(this.db.meta.put({ key: 'lastSyncedAt', value: at }), BOOKKEEPING_MS, undefined);
       this.failures = 0;
       this.set({
         state: 'idle',
         lastSyncedAt: at,
-        pending: await countPending(this.db),
+        pending: await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending),
         detail: undefined,
       });
     } catch (error) {
       const detail =
         error instanceof Error ? error.message.slice(0, 160) : String(error).slice(0, 160);
-      const pending = await countPending(this.db);
+      const pending = await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending);
       if (!this.online()) {
         this.set({
           state: 'offline',

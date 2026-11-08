@@ -1281,3 +1281,8 @@ Decisions and library versions, newest first.
 - Migration 0032: `refresh_prep_nudges(item)` gives every open, timed, one-off event whose title contains a match word a `prep` nudge `minutes_before` its start (key `prep:<rule>:<item>`), and cancels ones that no longer apply. Triggers on items (insert/update) and on settings (rules changed → every future event). Works for events from any source: typed, imported, AI.
 - AI action `add_prep_rule` (planner: words and reminder required; duplicates skipped; applied with Undo like other settings changes). Prompt v4 describes it.
 - Shown as "Before this: Bring €20 cash (12 h before)" on matching events, and listed with Remove in Settings → Prep reminders. Repeating events are left out for now (their reminders are made per occurrence by the scheduler).
+
+## Sync watchdog (2026-11-08)
+
+- On the owner's iPhone sync stopped at 20:36 and stayed stopped across restarts, on the latest build (which limits every request to 30 s) and with no error shown, so the hang is outside a network request. Nothing has reached the server from the phone since.
+- Each run now records its step ("sending captures", "receiving items", "saving items", "uploading files"). A run that takes over 90 s is abandoned with "Sync stopped responding while <step>.", shown under the sync time, and the usual back-off retry starts a fresh run. Bookkeeping reads and writes around the run (last sync time, pending count) give up after 5 s.
