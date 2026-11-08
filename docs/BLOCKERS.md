@@ -124,7 +124,7 @@ Add to https://github.com/TCannonx/airhead/settings/secrets/actions: `VITE_SUPAB
 
 ### 8. Background sorting: two Vault secrets (Task 3.3)
 
-The scheduler calls `sort-batch` every 5 minutes, but only once it knows the project address and service key. In **each** project: dashboard → **SQL Editor** → New query, paste and run (replace the two values). For the key use a **Secret key** (`sb_secret_…`) from **Project Settings → API Keys**, not the legacy `service_role` key: on dev the legacy key shown in the dashboard did not match the one Supabase gives the functions, so every background call got 401 "Service only".
+The scheduler calls `sort-batch` every 5 minutes, but only once it knows the project address and service key. In **each** project: dashboard → **SQL Editor** → New query, paste and run (replace the two values). For the key use either a **Secret key** (`sb_secret_…`) or the legacy **`service_role`** key, both under **Project Settings → API Keys**. The functions check any of them with Supabase, so a dashboard copy that differs from the injected one still works. An empty result after running the query means it worked.
 
 ```sql
 select vault.create_secret('https://tfxpbxmkvlwxybaysjxy.supabase.co', 'project_url');

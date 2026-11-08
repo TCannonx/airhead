@@ -2,7 +2,7 @@ import { gteSmall } from '../_shared/embed.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
-import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
+import { isService } from '../_shared/serviceAuth.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runSortBatch } from './run.ts';
 
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
   let userId: string | null = null;
   let background = false;
-  if (isServiceToken(token, SERVICE_KEYS)) {
+  if (await isService(token)) {
     const body = (await req.json().catch(() => ({}))) as { user_id?: string };
     userId = body.user_id ?? null;
     background = true;

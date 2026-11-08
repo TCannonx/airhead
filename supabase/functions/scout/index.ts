@@ -1,7 +1,7 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
-import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
+import { isService } from '../_shared/serviceAuth.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runScout } from './run.ts';
 import { supabaseScoutStore } from './store.ts';
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
   const body = (await req.json().catch(() => ({}))) as { mode?: string; user_id?: string };
   let userId: string;
   let trigger: 'weekly' | 'manual' = 'manual';
-  if (isServiceToken(token, SERVICE_KEYS) && body.user_id) {
+  if ((await isService(token)) && body.user_id) {
     userId = body.user_id;
     trigger = 'weekly';
   } else {
