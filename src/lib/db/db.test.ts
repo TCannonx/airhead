@@ -28,6 +28,7 @@ describe('local database', () => {
   it('has every synced table plus outbox, sync_state and meta', () => {
     expect(db.tables.map((t) => t.name).sort()).toEqual(
       [
+        'ai_actions',
         'captures',
         'corrections',
         'devices',
