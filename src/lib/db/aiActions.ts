@@ -35,6 +35,18 @@ const same = (a: unknown, b: unknown) => JSON.stringify(norm(a)) === JSON.string
 const setStatus = (db: AirheadDb, a: AiAction, status: AiAction['status']) =>
   update(db, 'ai_actions', a.id, { status });
 
+/**
+ * An undone or dismissed action counts as a correction: it shows in the
+ * correction rate (Insights) and the next sorting batch sees it as a habit.
+ */
+const recordCorrection = (db: AirheadDb, userId: string, a: AiAction, to: 'undone' | 'dismissed') =>
+  save(db, 'corrections', {
+    ...baseRecord(userId),
+    capture_id: a.capture_id,
+    from_value: { action: a.kind, summary: a.summary },
+    to_value: { action: to },
+  });
+
 /** Merges keys into work settings; null removes a key (back to its default). */
 function mergeWork(work: Record<string, unknown>, patch: Record<string, unknown>) {
   return Object.fromEntries(Object.entries({ ...work, ...patch }).filter(([, v]) => v !== null));
@@ -79,6 +91,7 @@ export async function undoAction(db: AirheadDb, userId: string, a: AiAction): Pr
     if (r !== 'ok') return r;
   }
   await setStatus(db, a, 'undone');
+  await recordCorrection(db, userId, a, 'undone');
   return 'undone';
 }
 
@@ -166,7 +179,10 @@ export async function applyProposal(
   return 'applied';
 }
 
-export const dismissAction = (db: AirheadDb, a: AiAction) => setStatus(db, a, 'dismissed');
+export async function dismissAction(db: AirheadDb, userId: string, a: AiAction) {
+  await setStatus(db, a, 'dismissed');
+  await recordCorrection(db, userId, a, 'dismissed');
+}
 
 /** Where to fix or check an action by hand. */
 export function fixLink(a: AiAction): string {

@@ -229,11 +229,19 @@ Deno.test('existing items go to the model as data, with their ids', () => {
       candidates: [
         { id: 'e1', type: 'event', title: 'Dentist', when: '2026-11-10T15:00:00Z', repeats: false },
       ],
+      leave: {
+        types: [{ key: 'sick', name: 'Sick leave' }],
+        year_start: '2025-12-01',
+        year_end: '2026-11-30',
+        entitlement_set: true,
+      },
     },
     [{ id: 'x', text: 'dentist moved to Thursday 4pm', url: null }],
   );
   assert(msg.includes('"existing_items":[{"id":"e1","type":"event","title":"Dentist"'));
+  assert(msg.includes('"leave":{"types":[{"key":"sick","name":"Sick leave"}]'));
   assert(SORT_BATCH_SYSTEM.includes('reschedule_item'));
+  assert(SORT_BATCH_SYSTEM.includes('leave.types'));
   assert(SORT_BATCH_SYSTEM.includes('never from <article> text'));
 });
 

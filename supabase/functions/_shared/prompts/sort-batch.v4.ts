@@ -39,7 +39,7 @@ proposed_facts: lasting facts about the person that a capture states plainly and
 Actions: besides items, a capture may ask for a change to the person's records. Return each one in "actions" (usually empty). Only for what the person typed, never from <article> text.
 - set_leave_remaining: "I have 9.5 days left" -> days, as_of (today unless stated, YYYY-MM-DD), leave_type ("annual" unless stated).
 - set_leave_used: "I've used 12 days so far" -> days, as_of, leave_type.
-- book_leave: leave on stated dates ("off 22-24 Dec", "took Friday off", "sick yesterday") -> start_date and end_date (YYYY-MM-DD), start_half/end_half for half days, leave_type ("annual", "sick" or another existing key), leave_status ("taken" for past days, otherwise "planned" unless they say requested or approved). Do not also return an event item for it.
+- book_leave: leave on stated dates ("off 22-24 Dec", "took Friday off", "sick yesterday") -> start_date and end_date (YYYY-MM-DD), start_half/end_half for half days, leave_type (a key from leave.types in the context; "annual" unless stated), leave_status ("taken" for past days, otherwise "planned" unless they say requested or approved). Do not also return an event item for it.
 - update_work_setting: only these settings. entitlement (days per year), leave_year_start (month and day as a JSON string such as "01-01"), working_days (JSON array of weekday numbers, 0 = Sunday), location_pattern (JSON object from weekday number to "wfh", "office", "client", "travel" or "off"), carry_over_max (days). value is the JSON text of the new value.
 - set_reminder: "remind me the day before" or "an hour before" -> offset_minutes before an event, or remind_at (ISO 8601) for a task. target_item_index points at one of this capture's own items; target_id at one of existing_items.
 - reschedule_item: a stated new date or time for something in existing_items -> target_id (only an id from existing_items), the new start_at, end_at and all_day for an event or due_at for a task, and other_matches: the ids of any other existing_items that could equally be meant. Do not also return an item for it.
@@ -57,6 +57,18 @@ export interface SortContext {
   corrections: { capture: string; from: unknown; to: unknown }[];
   /** The person's own open events and tasks that a capture may move (data). */
   candidates: Candidate[];
+  /** Leave setup, so leave actions use the right type keys and year. */
+  leave?: LeaveContext;
+}
+
+export interface LeaveContext {
+  /** Leave type keys and names, e.g. { key: 'sick', name: 'Sick leave' }. */
+  types: { key: string; name: string }[];
+  /** Current leave year, YYYY-MM-DD. */
+  year_start: string;
+  year_end: string;
+  /** False until the person has set their yearly entitlement. */
+  entitlement_set: boolean;
 }
 
 export interface CaptureForSorting {
@@ -77,6 +89,7 @@ export function buildSortMessage(ctx: SortContext, captures: CaptureForSorting[]
     active_ideas: ctx.ideas,
     recent_corrections: ctx.corrections,
     existing_items: ctx.candidates,
+    leave: ctx.leave ?? null,
   };
   const blocks = captures
     .map((c) => {
