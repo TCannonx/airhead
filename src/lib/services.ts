@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { configuredSupabaseUrl } from './supabaseUrl';
+import { timedFetch } from './timedFetch';
 import { webAuthnAppLock } from './applock/webauthn';
 import { localServices } from './auth/localAuth';
 import { supabaseAuth } from './auth/supabaseAuth';
@@ -27,6 +28,8 @@ export function createServices(): Services {
   if (!url || !key) return localServices();
 
   const supabase = createClient(url, key, {
+    // A stalled request must fail (and be retried), never hang sync or sorting.
+    global: { fetch: timedFetch() },
     auth: {
       flowType: 'pkce',
       persistSession: true,

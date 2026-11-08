@@ -252,6 +252,7 @@ describe('SyncEngine', () => {
 
     expect(engine.getStatus().state).toBe('error');
     expect(engine.getStatus().message).toMatch(/will retry/i);
+    expect(engine.getStatus().detail).toBe('boom');
   });
 
   it('syncs on start, when the connection returns, on Realtime nudges and after local writes', async () => {

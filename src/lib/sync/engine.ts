@@ -249,8 +249,15 @@ export class SyncEngine {
       const at = new Date().toISOString();
       await this.db.meta.put({ key: 'lastSyncedAt', value: at });
       this.failures = 0;
-      this.set({ state: 'idle', lastSyncedAt: at, pending: await countPending(this.db) });
-    } catch {
+      this.set({
+        state: 'idle',
+        lastSyncedAt: at,
+        pending: await countPending(this.db),
+        detail: undefined,
+      });
+    } catch (error) {
+      const detail =
+        error instanceof Error ? error.message.slice(0, 160) : String(error).slice(0, 160);
       const pending = await countPending(this.db);
       if (!this.online()) {
         this.set({
@@ -265,6 +272,7 @@ export class SyncEngine {
           state: 'error',
           pending,
           message: `Couldn't reach the server. Will retry in ${Math.round(delay / 1000)} s.`,
+          detail,
         });
         this.retryTimer = setTimeout(() => void this.syncNow(), delay);
       }

@@ -111,6 +111,9 @@ export default function SettingsPage() {
               {sync.status.message && (
                 <p className="text-sm text-slate-500">{sync.status.message}</p>
               )}
+              {sync.status.state === 'error' && sync.status.detail && (
+                <p className="text-xs break-words text-slate-400">{sync.status.detail}</p>
+              )}
             </div>
             <button
               type="button"
