@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sync): Sync now always kicks sync (a run stuck for more than a few seconds is abandoned and a fresh one starts); the button is never disabled; Settings shows the step and start time while syncing, and a "Load latest version" button
 - fix(sync): a sync run that stops responding is abandoned after 90 s and retried, and Settings shows the step it was stuck on
 - feat(reminders): prep rules: "once booked, ensure I have cash" becomes a standing reminder before every matching event (e.g. barber/haircut → "Bring €20 cash", 12 h before), shown on the event and listed in Settings → Prep reminders
 - feat(tasks): repeating tasks work: "remind me every 2 weeks to …" gets a first due time (tomorrow 09:00 unless stated) so its reminder fires; ticking it off moves it to the next date; the task page shows "Due … · repeats every 2 weeks"

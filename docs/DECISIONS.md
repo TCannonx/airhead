@@ -1286,3 +1286,10 @@ Decisions and library versions, newest first.
 
 - On the owner's iPhone sync stopped at 20:36 and stayed stopped across restarts, on the latest build (which limits every request to 30 s) and with no error shown, so the hang is outside a network request. Nothing has reached the server from the phone since.
 - Each run now records its step ("sending captures", "receiving items", "saving items", "uploading files"). A run that takes over 90 s is abandoned with "Sync stopped responding while <step>.", shown under the sync time, and the usual back-off retry starts a fresh run. Bookkeeping reads and writes around the run (last sync time, pending count) give up after 5 s.
+
+## Sync now always kicks (2026-11-08)
+
+- Owner: "Why doesn't the sync now button work and kick it into gear." Sync was single-flight: a tap during a run only asked for another run after it, so with a run hung the tap did nothing, and the button was disabled while the state said "syncing".
+- `syncNow({ force: true })` (the Settings button) abandons a run older than 3 s: a generation counter makes the old run's late results change nothing (no status, no lastSyncedAt, no retry timer) while a fresh run starts at once. Automatic triggers still fold into one follow-up run.
+- The button is never disabled. While syncing, Settings shows "Syncing since HH:MM: <step>".
+- "Load latest version" asks the service worker to check for a new build, waits up to 10 s for it to take over, then reloads; for iPhone Home Screen apps that keep running a cached copy.

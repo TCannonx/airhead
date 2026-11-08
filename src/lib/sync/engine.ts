@@ -188,6 +188,8 @@ export interface SyncEngineOptions {
   intervalMs?: number;
   /** Tests shorten the watchdog. */
   runLimitMs?: number;
+  /** A forced Sync now abandons a run older than this (tests shorten it). */
+  forceAfterMs?: number;
 }
 
 const BACKOFF_MS = [5_000, 15_000, 60_000, 300_000];
@@ -212,6 +214,10 @@ export class SyncEngine {
   private readonly writeDebounceMs: number;
   private readonly intervalMs: number;
   private readonly runLimitMs: number;
+  private readonly forceAfterMs: number;
+  /** Bumped when a run is abandoned; an abandoned run's late results change nothing. */
+  private generation = 0;
+  private runStartedAt = 0;
 
   private readonly db: AirheadDb;
   private readonly remote: Remote;
@@ -223,6 +229,7 @@ export class SyncEngine {
     this.writeDebounceMs = options.writeDebounceMs ?? 1_000;
     this.intervalMs = options.intervalMs ?? 60_000;
     this.runLimitMs = options.runLimitMs ?? RUN_LIMIT_MS;
+    this.forceAfterMs = options.forceAfterMs ?? 3_000;
   }
 
   getStatus(): SyncStatus {
@@ -244,36 +251,57 @@ export class SyncEngine {
     this.set({ pending: await countPending(this.db) });
   }
 
-  syncNow(): Promise<void> {
+  /**
+   * Syncs now. Requests during a run fold into one follow-up run. With
+   * `force` (the Sync now button), a run that has been going for more than a
+   * few seconds is abandoned and a fresh one starts at once, so a stuck run
+   * can always be kicked.
+   */
+  syncNow(options: { force?: boolean } = {}): Promise<void> {
     if (this.running) {
-      this.again = true;
-      return this.running;
+      if (!options.force || Date.now() - this.runStartedAt < this.forceAfterMs) {
+        this.again = true;
+        return this.running;
+      }
+      this.generation += 1;
+      this.running = null;
     }
-    this.running = (async () => {
+    const gen = this.generation;
+    const run: Promise<void> = (async () => {
       do {
         this.again = false;
-        await this.runOnce();
-      } while (this.again);
+        this.runStartedAt = Date.now();
+        await this.runOnce(gen);
+      } while (this.again && gen === this.generation);
     })().finally(() => {
-      this.running = null;
+      if (this.running === run) this.running = null;
     });
-    return this.running;
+    this.running = run;
+    return run;
   }
 
-  private async runOnce(): Promise<void> {
+  /** Status changes from an abandoned run are dropped. */
+  private setFor(gen: number, next: Partial<SyncStatus>) {
+    if (gen === this.generation) this.set(next);
+  }
+
+  private async runOnce(gen: number): Promise<void> {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.retryTimer = null;
     if (!this.status.lastSyncedAt) {
       const saved = await within(this.db.meta.get('lastSyncedAt'), BOOKKEEPING_MS, undefined);
-      if (typeof saved?.value === 'string') this.set({ lastSyncedAt: saved.value });
+      if (typeof saved?.value === 'string') this.setFor(gen, { lastSyncedAt: saved.value });
     }
     let stage = 'reading this device';
     const onStage = (s: string) => {
       stage = s;
+      this.setFor(gen, { stage: s });
     };
     try {
-      this.set({
+      this.setFor(gen, {
         state: 'syncing',
+        stage,
+        since: new Date().toISOString(),
         pending: await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending),
         message: null,
       });
@@ -301,20 +329,23 @@ export class SyncEngine {
         clearTimeout(timer);
       }
       const at = new Date().toISOString();
+      if (gen !== this.generation) return;
       await within(this.db.meta.put({ key: 'lastSyncedAt', value: at }), BOOKKEEPING_MS, undefined);
       this.failures = 0;
-      this.set({
+      this.setFor(gen, {
         state: 'idle',
         lastSyncedAt: at,
         pending: await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending),
         detail: undefined,
+        stage: undefined,
+        since: undefined,
       });
     } catch (error) {
       const detail =
         error instanceof Error ? error.message.slice(0, 160) : String(error).slice(0, 160);
       const pending = await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending);
       if (!this.online()) {
-        this.set({
+        this.setFor(gen, {
           state: 'offline',
           pending,
           message: 'Offline. Changes are saved on this device.',
@@ -322,13 +353,13 @@ export class SyncEngine {
       } else {
         const delay = BACKOFF_MS[Math.min(this.failures, BACKOFF_MS.length - 1)] ?? 300_000;
         this.failures += 1;
-        this.set({
+        this.setFor(gen, {
           state: 'error',
           pending,
           message: `Couldn't reach the server. Will retry in ${Math.round(delay / 1000)} s.`,
           detail,
         });
-        this.retryTimer = setTimeout(() => void this.syncNow(), delay);
+        if (gen === this.generation) this.retryTimer = setTimeout(() => void this.syncNow(), delay);
       }
     }
   }

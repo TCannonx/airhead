@@ -4,7 +4,8 @@ import type { SyncStatus } from './types';
 export interface SyncApi {
   /** null in local mode (no server). */
   status: SyncStatus | null;
-  syncNow(): Promise<void>;
+  /** `force` (the Sync now button) restarts a run that is taking too long. */
+  syncNow(options?: { force?: boolean }): Promise<void>;
 }
 
 export const SyncContext = createContext<SyncApi>({

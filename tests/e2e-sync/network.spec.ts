@@ -52,3 +52,31 @@ test('Sort now still answers when sync is stuck', async ({ browser }) => {
   await a.getByRole('button', { name: 'Sort now' }).click();
   await expect(a.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 90_000 });
 });
+
+test('Sync now in Settings kicks a stuck sync straight away', async ({ browser }) => {
+  const email = `e2e-kick-${Date.now()}@example.test`;
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await signIn(a, email);
+  const b = await (await browser.newContext()).newPage();
+  await signIn(b, email);
+
+  // Every push of captures hangs until we let go.
+  let release = false;
+  await ctxA.route('**/rest/v1/captures*', async (route) => {
+    if (!release && route.request().method() === 'POST') return; // never answered
+    await route.continue();
+  });
+  const box = a.getByLabel('Capture', { exact: true });
+  await box.fill('Kicked through by Sync now');
+  await box.press('Enter');
+  await a.waitForTimeout(4_000);
+
+  // The connection is fine again; the user taps Sync now well before any time limit.
+  release = true;
+  await a.getByRole('link', { name: 'Settings' }).first().click();
+  await a.getByRole('button', { name: 'Sync now' }).click();
+  await expect(
+    b.getByRole('list', { name: 'Recent captures' }).getByText('Kicked through by Sync now'),
+  ).toBeVisible({ timeout: 15_000 });
+});
