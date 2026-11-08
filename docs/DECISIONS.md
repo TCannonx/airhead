@@ -1195,3 +1195,8 @@ Decisions and library versions, newest first.
 ## Free date rules skip years, amounts and past one-off dates (2026-11-08)
 
 - A capture like "I have used annual leave this year. I have 9.5 days left" became an event on 1 January (chrono reads "this year"), or with that fixed, an event "in 9.5 days". The rules now skip parser results that pin only a year, and bare amounts of time ("9.5 days", "2 weeks"; "in 2 weeks" still counts), and return no date for a one-off date already gone. Those captures wait for AI sorting instead of becoming calendar suggestions.
+
+## Used before Airhead (Task 10.1, 2026-11-08)
+
+- `settings.data.work.opening_used` maps a leave-year start (YYYY-MM-DD) to days used before Airhead (0–366, half days allowed). Both leave engines add it to `taken` for that year; carry-over expiry ignores it (it is not tied to dates).
+- Editable on the Work and leave page ("Used before Airhead"); AI actions (Phase 10) set it from "N days left" or "N days used".

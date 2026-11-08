@@ -54,6 +54,8 @@ export const workSettingsSchema = z.object({
    * the previous year's bookings.
    */
   opening_carry_over: z.record(isoDate, z.number().min(0)).default({}),
+  /** Days used before Airhead, per leave-year start (counted as taken). */
+  opening_used: z.record(isoDate, z.number().min(0).max(366)).default({}),
   /** What the employer gives for a public holiday on a non-working day. */
   weekend_holiday: z.enum(WEEKEND_HOLIDAY_RULES).default('day_off'),
   /** Company closure days come out of annual leave. */

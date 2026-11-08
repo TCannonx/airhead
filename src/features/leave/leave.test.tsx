@@ -96,6 +96,24 @@ describe('leave on Today and the Work screen (Task 4.6)', () => {
     );
   });
 
+  it('days used before Airhead count against the balance', async () => {
+    const user = userEvent.setup();
+    renderAt('/work');
+    expect(await screen.findByLabelText('Leave balance')).toHaveTextContent(/^21 days left/);
+    const box = screen.getByLabelText('Days used before Airhead');
+    await user.type(box, '11.5');
+    await user.tab();
+    await waitFor(() =>
+      expect(screen.getByLabelText('Leave balance')).toHaveTextContent(/^9.5 days left/),
+    );
+    const x = db();
+    const row = await x.settings.get(U);
+    x.close();
+    expect((row?.data.work as { opening_used: unknown }).opening_used).toEqual({
+      '2025-12-01': 11.5,
+    });
+  });
+
   it('warns about days that would be lost at the end of the leave year', async () => {
     vi.setSystemTime(new Date('2026-09-15T09:00:00Z'));
     const d = db();

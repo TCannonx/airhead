@@ -204,6 +204,8 @@ export function balanceFor(
     if (b.deleted_at || !leaveTypeOf(settings, b.leave_type).deducts) continue;
     sums[bucketOf(b, today)] += countLeaveDays(b, settings, year.start, year.end);
   }
+  // Days used before Airhead (typed in, or set by an AI action) count as taken.
+  sums.taken += settings.opening_used[year.start] ?? 0;
   const closures = closureLeaveDays(year, settings);
   for (const d of closures) sums[d < today ? 'taken' : 'booked'] += 1;
 

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(leave): "Used before Airhead" days count as taken, so the counter can match HR (Task 10.1)
 - fix(rules): "this year", a bare year, "9.5 days" or a one-off date already gone no longer become calendar events; such captures go to sorting instead
 - fix(functions): service-only calls accept any real service key of the project (checked with Supabase), so the dashboard's service_role key works in Vault
 - fix(functions): background calls accept the new `sb_secret_` keys as well as the legacy service key, so the Vault key works on dev
