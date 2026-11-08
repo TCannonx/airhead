@@ -19,6 +19,7 @@ export interface WorkSettings {
   carry_over_max: number;
   carry_over_expiry_months: number | null;
   opening_carry_over: Record<string, number>;
+  opening_used: Record<string, number>;
   weekend_holiday: 'day_off' | 'extra_leave' | 'extra_pay';
   closure_uses_leave: boolean;
   closure_days: string[];
@@ -46,6 +47,7 @@ export const DEFAULT_WORK: WorkSettings = {
   carry_over_max: 5,
   carry_over_expiry_months: 3,
   opening_carry_over: {},
+  opening_used: {},
   weekend_holiday: 'day_off',
   closure_uses_leave: false,
   closure_days: [],
@@ -89,6 +91,10 @@ export function readWork(settingsData: Record<string, unknown> | null | undefine
   if (isObj(w.opening_carry_over))
     out.opening_carry_over = Object.fromEntries(
       Object.entries(w.opening_carry_over).filter(([k, v]) => DATE.test(k) && num(v, 0, 1000)),
+    ) as Record<string, number>;
+  if (isObj(w.opening_used))
+    out.opening_used = Object.fromEntries(
+      Object.entries(w.opening_used).filter(([k, v]) => DATE.test(k) && num(v, 0, 366)),
     ) as Record<string, number>;
   if (['day_off', 'extra_leave', 'extra_pay'].includes(w.weekend_holiday as string))
     out.weekend_holiday = w.weekend_holiday as WorkSettings['weekend_holiday'];

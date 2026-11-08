@@ -254,3 +254,14 @@ describe('pace and run-out', () => {
     expect(currentBalance([], S, '2026-12-15').year).toEqual(Y27);
   });
 });
+
+describe('opening_used (days used before Airhead)', () => {
+  const settings: WorkSettings = { ...S, opening_used: { '2025-12-01': 11.5 } };
+  it('counts as taken in its own leave year only', () => {
+    const b = balanceFor(leaveYearFor('2026-11-08', settings), [], settings, '2026-11-08');
+    expect(b.taken).toBe(11.5);
+    expect(b.remaining).toBe(9.5);
+    const next = balanceFor(leaveYearFor('2026-12-05', settings), [], settings, '2026-12-05');
+    expect(next.taken).toBe(0);
+  });
+});

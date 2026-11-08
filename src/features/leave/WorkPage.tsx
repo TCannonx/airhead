@@ -32,6 +32,7 @@ export default function WorkPage() {
   const inYear = bookings.filter((b) => b.end_date >= year.start && b.start_date <= year.end);
   const later = bookings.filter((b) => b.start_date > year.end);
   const opening = work.opening_carry_over[year.start];
+  const usedBefore = work.opening_used[year.start];
   const show = (o: {
     booking?: LeaveBooking;
     initial?: { start_date: string; end_date: string };
@@ -146,6 +147,32 @@ export default function WorkPage() {
           </Link>{' '}
           <span className="text-slate-500">(entitlement, leave year, holidays, locations)</span>
         </p>
+      </section>
+
+      <section className={section}>
+        <h2 className={h2}>Used before Airhead</h2>
+        <p className="mb-2 text-sm text-slate-500">
+          Leave you took this leave year before you started logging it here. It counts as taken.
+        </p>
+        <input
+          type="number"
+          min="0"
+          step="0.5"
+          aria-label="Days used before Airhead"
+          className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+          defaultValue={usedBefore ?? ''}
+          key={String(usedBefore)}
+          onBlur={(e) => {
+            const v = e.target.value.trim();
+            const next = Object.fromEntries(
+              Object.entries(work.opening_used).filter(([k]) => k !== year.start),
+            );
+            if (v !== '' && !Number.isNaN(Number(v))) next[year.start] = Math.max(0, Number(v));
+            void updateSettingsData(db, user?.id ?? '', {
+              work: { ...work, opening_used: next },
+            });
+          }}
+        />
       </section>
     </Page>
   );
