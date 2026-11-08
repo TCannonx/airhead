@@ -1,7 +1,8 @@
 import { queueFile } from '../files/upload';
 import { parseLeave } from '../leave/parse';
 import { analyseCapture, DEFAULT_TIME_ZONE } from '../rules';
-import type { Capture, Item } from '../schemas/records';
+import type { AiAction, Capture, Item } from '../schemas/records';
+import { chipFor } from './aiActions';
 import type { AirheadDb } from './db';
 import { matchRule, ruleItemFor } from './memory';
 import { newCapture, newItem, save, update } from './repository';
@@ -111,8 +112,10 @@ export async function createCapture(
   return { capture: saved, event, ruleItem };
 }
 
-/** The status chip shown under a capture. */
-export function captureChip(c: Capture): string {
+/** The status chip shown under a capture (what AI actions did comes first). */
+export function captureChip(c: Capture, actions: AiAction[] = []): string {
+  const acted = chipFor(actions.filter((a) => a.capture_id === c.id));
+  if (acted) return acted;
   if (c.kind === 'link') return 'Reading list';
   if (c.payload.leave_booking_id) return 'Leave booked';
   if (c.payload.leave_proposal) return 'Leave to book (Today)';

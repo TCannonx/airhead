@@ -5,7 +5,7 @@ import { useAuth } from '../../lib/auth/context';
 import { captureChip, createCapture, isUrl, type CaptureInput } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
 import { eventLabel, undoInstantEvent } from '../../lib/db/events';
-import type { Capture, Item } from '../../lib/schemas/records';
+import type { AiAction, Capture, Item } from '../../lib/schemas/records';
 import { TOAST_MS } from './toast';
 import { compressImage } from '../../lib/files/image';
 import NewNoteButtons from '../notes/NewNoteButtons';
@@ -13,11 +13,11 @@ import NewNoteButtons from '../notes/NewNoteButtons';
 const isTouch = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 
-function chipFor(c: Capture, items: Item[]): string {
+function chipFor(c: Capture, items: Item[], actions: AiAction[]): string {
   const event = items.find((i) => i.capture_id === c.id && i.type === 'event' && !i.deleted_at);
   if (event?.status === 'open') return `Event added: ${eventLabel(event)}`;
   if (event?.status === 'suggested') return `Suggestion: ${eventLabel(event)}`;
-  return captureChip(c);
+  return captureChip(c, actions);
 }
 
 const button =
@@ -48,6 +48,12 @@ export default function CapturePage() {
   const recentIds = recent?.map((c) => c.id).join(',') ?? '';
   const recentItems = useLiveQuery(
     () => (recentIds ? db.items.where('capture_id').anyOf(recentIds.split(',')).toArray() : []),
+    [db, recentIds],
+  );
+
+  const recentActions = useLiveQuery(
+    () =>
+      recentIds ? db.ai_actions.where('capture_id').anyOf(recentIds.split(',')).toArray() : [],
     [db, recentIds],
   );
 
@@ -199,7 +205,7 @@ export default function CapturePage() {
                   {c.text ?? c.url}
                 </span>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {chipFor(c, recentItems ?? [])}
+                  {chipFor(c, recentItems ?? [], recentActions ?? [])}
                 </span>
               </li>
             ))}

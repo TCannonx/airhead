@@ -14,6 +14,7 @@ import {
   TYPE_LABELS,
 } from '../../lib/db/sorting';
 import { useSort } from '../../lib/sort/context';
+import AiActions from './AiActions';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
 const WAITING = new Set(['unsorted', 'failed']);
@@ -44,6 +45,7 @@ export default function InboxPage() {
     () => db.memory_facts.filter((f) => f.status === 'pending_approval' && !f.deleted_at).toArray(),
     [db],
   );
+  const actions = useLiveQuery(() => db.ai_actions.toArray(), [db]);
   const workshop = useLiveQuery(
     () => db.items.filter((i) => !i.deleted_at && i.data.workshop === true).toArray(),
     [db],
@@ -51,6 +53,7 @@ export default function InboxPage() {
 
   return (
     <Page title="Inbox">
+      <AiActions />
       {((unsure && unsure.length > 0) || (pendingFacts && pendingFacts.length > 0)) && (
         <section className="mb-8">
           <SectionHeading>Needs a tap</SectionHeading>
@@ -157,7 +160,7 @@ export default function InboxPage() {
               <div className="flex items-start justify-between gap-3">
                 <p className="min-w-0 flex-1 break-words whitespace-pre-wrap">{c.text ?? c.url}</p>
                 <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {captureChip(c)}
+                  {captureChip(c, actions)}
                 </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Sort as">

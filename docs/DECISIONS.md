@@ -1211,3 +1211,10 @@ Decisions and library versions, newest first.
 - `SortResult.results[].actions` (strict schema, every field present, nulls when unused). Kinds: set_leave_remaining, set_leave_used, book_leave, update_work_setting (entitlement, leave_year_start, working_days, location_pattern, carry_over_max), set_reminder, reschedule_item.
 - The model gets `existing_items`: the person's own open events and tasks from 7 days ago to 90 days ahead plus overdue tasks, nearest first, at most 60 (`pickCandidates`). Titles only (120 characters), no bodies. They are data; reschedule_item may only name one of their ids, and other_matches lists any other plausible ones.
 - The v3 file was renamed to v4 (only `run.ts` and its test imported it; history is in git). Until Task 10.4 the actions are ignored.
+
+## AI actions on devices (Task 10.6, 2026-11-08)
+
+- Undo writes `before` back as an ordinary local edit (works offline, syncs like any change); a booking is soft-deleted. It refuses when the target no longer holds `after` (compared with timestamps normalised, since the server and devices write them differently) and offers a link to check by hand.
+- Apply on a proposal does not repeat the server checks (refinement 2 of the plan): it checks only that the target still holds `before` (and, for leave, that nothing overlaps now), then writes `after`. "Which one?" applies the payload times to the item picked (events keep their length). Proposals with nothing to apply show Fix, a link to the right screen, instead of a pre-filled sheet.
+- The Inbox shows proposals of any age and applied actions from the last 7 days (at most 10). The capture chip shows the action summary, or "N actions need your OK".
+- No Playwright test of AI sorting (refinement 3): the sync e2e stack cannot run the model; the planner, database and screens are covered by Deno, pgTAP and Vitest tests.
