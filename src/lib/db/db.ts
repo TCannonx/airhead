@@ -96,5 +96,7 @@ export function openUserDb(userId: string): AirheadDb {
     scout_runs: 'id, created_at, server_updated_at',
     suggestions: 'id, status, server_updated_at',
   });
+  // v10: AI actions (Task 10.2).
+  db.version(10).stores({ ai_actions: 'id, capture_id, status, server_updated_at' });
   return db;
 }

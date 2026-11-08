@@ -324,6 +324,32 @@ export type WorkshopSession = z.infer<typeof workshopSessionSchema>;
 export type Review = z.infer<typeof reviewSchema>;
 export type ScoutRun = z.infer<typeof scoutRunSchema>;
 export type Suggestion = z.infer<typeof suggestionSchema>;
+
+/** What AI sorting did, or proposes, beyond filing items (Phase 10). */
+export const AI_ACTION_KINDS = [
+  'set_leave_remaining',
+  'set_leave_used',
+  'book_leave',
+  'update_work_setting',
+  'set_reminder',
+  'reschedule_item',
+] as const;
+export const aiActionSchema = z.object({
+  ...syncColumns,
+  capture_id: id.nullable(),
+  kind: z.enum(AI_ACTION_KINDS),
+  status: z.enum(['applied', 'proposed', 'dismissed', 'undone', 'skipped']),
+  reason: z.string().nullable(),
+  summary: z.string(),
+  quote: z.string(),
+  confidence: z.number().nullable(),
+  payload: z.record(z.string(), z.unknown()),
+  target_table: z.enum(['settings', 'leave_bookings', 'items']).nullable(),
+  target_id: id.nullable(),
+  before: z.record(z.string(), z.unknown()).nullable(),
+  after: z.record(z.string(), z.unknown()).nullable(),
+});
+export type AiAction = z.infer<typeof aiActionSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -349,6 +375,7 @@ export const SYNC_TABLES = [
   'reviews',
   'scout_runs',
   'suggestions',
+  'ai_actions',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -374,6 +401,7 @@ export const schemas = {
   reviews: reviewSchema,
   scout_runs: scoutRunSchema,
   suggestions: suggestionSchema,
+  ai_actions: aiActionSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -398,4 +426,5 @@ export interface RowTypes {
   reviews: Review;
   scout_runs: ScoutRun;
   suggestions: Suggestion;
+  ai_actions: AiAction;
 }
