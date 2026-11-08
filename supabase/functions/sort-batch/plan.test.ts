@@ -76,7 +76,13 @@ Deno.test('events: past, undated or unsure ones become suggestions', () => {
       [C1],
       {
         results: [
-          { capture_id: C1, items: [{ ...base, ...over }], link_summary: null, proposed_facts: [], actions: [] },
+          {
+            capture_id: C1,
+            items: [{ ...base, ...over }],
+            link_summary: null,
+            proposed_facts: [],
+            actions: [],
+          },
         ],
       },
       ctx,
