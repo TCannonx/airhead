@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sync): a sync run that stops responding is abandoned after 90 s and retried, and Settings shows the step it was stuck on
 - feat(reminders): prep rules: "once booked, ensure I have cash" becomes a standing reminder before every matching event (e.g. barber/haircut → "Bring €20 cash", 12 h before), shown on the event and listed in Settings → Prep reminders
 - feat(tasks): repeating tasks work: "remind me every 2 weeks to …" gets a first due time (tomorrow 09:00 unless stated) so its reminder fires; ticking it off moves it to the next date; the task page shows "Due … · repeats every 2 weeks"
 - feat(settings): the app version (commit and build time) shows under Sync, to check a phone runs the latest build

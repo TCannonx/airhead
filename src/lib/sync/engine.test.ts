@@ -255,6 +255,23 @@ describe('SyncEngine', () => {
     expect(engine.getStatus().detail).toBe('boom');
   });
 
+  it('a step that never finishes is abandoned, named, and the next run works', async () => {
+    const db = device('a');
+    const remote = createFakeRemote();
+    const realUpsert = remote.upsert.bind(remote);
+    const hang = vi.spyOn(remote, 'upsert').mockImplementationOnce(() => new Promise(() => {}));
+    const engine = new SyncEngine(db, remote, { online: () => true, runLimitMs: 50 });
+    await save(db, 'items', newItem(USER, { type: 'task', title: 'a' }));
+
+    await engine.syncNow();
+    expect(engine.getStatus().state).toBe('error');
+    expect(engine.getStatus().detail).toBe('Sync stopped responding while sending items.');
+
+    hang.mockImplementation(realUpsert);
+    await engine.syncNow();
+    expect(engine.getStatus()).toMatchObject({ state: 'idle', pending: 0 });
+  });
+
   it('syncs on start, when the connection returns, on Realtime nudges and after local writes', async () => {
     const db = device('a');
     const remote = createFakeRemote();
