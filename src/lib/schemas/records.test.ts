@@ -5,6 +5,7 @@ import {
   leaveBookingSchema,
   schemas,
   SYNC_TABLES,
+  aiActionSchema,
   workDaySchema,
 } from './records';
 
@@ -77,5 +78,29 @@ describe('brief schema (Task 5.1)', () => {
     });
     expect(b.content).toEqual({ reflection: null, top3: [], also_today: [], prep: [] });
     expect(b.cost_eur).toBeCloseTo(0.0123);
+  });
+});
+
+describe('AI actions (Task 10.2)', () => {
+  const row = {
+    ...base,
+    capture_id: null,
+    kind: 'set_leave_remaining',
+    status: 'applied',
+    reason: null,
+    summary: 'Leave left set to 9.5 days',
+    quote: '9.5 days left',
+    confidence: 0.9,
+    payload: {},
+    target_table: 'settings',
+    target_id: base.user_id,
+    before: { opening_used: null },
+    after: { opening_used: { '2025-12-01': 11.5 } },
+  };
+  it('syncs, and checks kind and status', () => {
+    expect(SYNC_TABLES).toContain('ai_actions');
+    expect(aiActionSchema.parse(row).summary).toBe('Leave left set to 9.5 days');
+    expect(() => aiActionSchema.parse({ ...row, kind: 'nope' })).toThrow();
+    expect(() => aiActionSchema.parse({ ...row, status: 'maybe' })).toThrow();
   });
 });

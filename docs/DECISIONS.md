@@ -1200,3 +1200,8 @@ Decisions and library versions, newest first.
 
 - `settings.data.work.opening_used` maps a leave-year start (YYYY-MM-DD) to days used before Airhead (0–366, half days allowed). Both leave engines add it to `taken` for that year; carry-over expiry ignores it (it is not tied to dates).
 - Editable on the Work and leave page ("Used before Airhead"); AI actions (Phase 10) set it from "N days left" or "N days used".
+
+## ai_actions table (Task 10.2, 2026-11-08)
+
+- Migration 0030. Written by `apply_sort_batch` (service role). The owner can select, insert and update their own rows but not delete them: the sync push is an upsert, so insert is needed alongside update (same pattern as `suggestions`). Inserting one's own row gains nothing; the actions only describe changes already made.
+- Kinds: set_leave_remaining, set_leave_used, book_leave, update_work_setting, set_reminder, reschedule_item. Status: applied, proposed, dismissed, undone, skipped. `before`/`after` hold the exact values for Undo and Apply.
