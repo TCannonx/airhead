@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { json } from '../_shared/http.ts';
+import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
 import { deliver, pusherFromEnv, type DeviceRow } from '../_shared/push.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
@@ -142,7 +143,7 @@ const store: TickStore = {
  */
 Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!SERVICE_KEY || token !== SERVICE_KEY) {
+  if (!isServiceToken(token, SERVICE_KEYS)) {
     return json({ ok: false, error_code: 'unauthorized', message: 'Scheduler only.' }, 401);
   }
   const pusher = await pusherFromEnv().catch(() => null);

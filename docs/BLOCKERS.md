@@ -124,14 +124,14 @@ Add to https://github.com/TCannonx/airhead/settings/secrets/actions: `VITE_SUPAB
 
 ### 8. Background sorting: two Vault secrets (Task 3.3)
 
-The scheduler calls `sort-batch` every 5 minutes, but only once it knows the project address and service key. In **each** project: dashboard → **SQL Editor** → New query, paste and run (replace the two values; the key is under **Project Settings → API Keys → service_role / secret**):
+The scheduler calls `sort-batch` every 5 minutes, but only once it knows the project address and service key. In **each** project: dashboard → **SQL Editor** → New query, paste and run (replace the two values). For the key use a **Secret key** (`sb_secret_…`) from **Project Settings → API Keys**, not the legacy `service_role` key: on dev the legacy key shown in the dashboard did not match the one Supabase gives the functions, so every background call got 401 "Service only".
 
 ```sql
 select vault.create_secret('https://tfxpbxmkvlwxybaysjxy.supabase.co', 'project_url');
-select vault.create_secret('<the service role key>', 'service_role_key');
+select vault.create_secret('<the sb_secret_ key>', 'service_role_key');
 ```
 
-For live, use `https://qqobvcelbzhrcehqukrs.supabase.co` and the live key. Until then, sorting still runs when the app opens and from **Sort now** in the Inbox.
+To replace a key already stored: `select vault.update_secret((select id from vault.secrets where name = 'service_role_key'), '<the sb_secret_ key>');`. Delete the query afterwards (it contains the key). For live, use `https://qqobvcelbzhrcehqukrs.supabase.co` and the live key. Until then, sorting still runs when the app opens and from **Sort now** in the Inbox.
 
 ### 9. Anthropic API key with a spend limit (needed from Phase 3)
 

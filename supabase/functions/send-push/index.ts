@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { cors, json } from '../_shared/http.ts';
+import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
 import { deliver, pusherFromEnv, type DeviceRow } from '../_shared/push.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     payload?: { title?: string; body?: string; url?: string; tag?: string };
   };
 
-  if (SERVICE_KEY && token === SERVICE_KEY) {
+  if (isServiceToken(token, SERVICE_KEYS)) {
     if (!body.user_id || !body.payload?.title) {
       return json(
         {

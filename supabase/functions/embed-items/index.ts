@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { json } from '../_shared/http.ts';
+import { isServiceToken, SERVICE_KEYS } from '../_shared/serviceAuth.ts';
 import { runEmbed } from './run.ts';
 import { itemParts } from './text.ts';
 
@@ -28,7 +29,7 @@ async function embed(text: string): Promise<number[]> {
  */
 Deno.serve(async (req) => {
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!SERVICE_KEY || token !== SERVICE_KEY)
+  if (!isServiceToken(token, SERVICE_KEYS))
     return json({ ok: false, error_code: 'unauthorized', message: 'Service only.' }, 401);
   const stats = await runEmbed({
     async take(limit) {

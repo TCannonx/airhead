@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(functions): background calls accept the new `sb_secret_` keys as well as the legacy service key, so the Vault key works on dev
 - fix: the app tidies VITE_SUPABASE_URL (spaces, a pasted `/rest/v1/`), which made every sign-in on the dev site a 404
 - fix(auth): sign-in says when the server couldn't be reached, and shows the status for other unknown failures
 - feat(auth): email-and-password sign-in with instant, invite-only sign-up (no emails); Google button only when switched on
