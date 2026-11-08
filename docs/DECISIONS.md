@@ -1212,6 +1212,16 @@ Decisions and library versions, newest first.
 - The model gets `existing_items`: the person's own open events and tasks from 7 days ago to 90 days ahead plus overdue tasks, nearest first, at most 60 (`pickCandidates`). Titles only (120 characters), no bodies. They are data; reschedule_item may only name one of their ids, and other_matches lists any other plausible ones.
 - The v3 file was renamed to v4 (only `run.ts` and its test imported it; history is in git). Until Task 10.4 the actions are ignored.
 
+## AI action planner (Task 10.4, 2026-11-08)
+
+- `sort-batch/actions.ts` decides every action in code: `applied` only at confidence ≥ 0.8 and when every check passes; otherwise `proposed` with a plain reason; `skipped` when it would change nothing. Proposals still carry `after` whenever it can be computed, so Apply is one tap.
+- Leave balance: "N left" stores `opening_used = total − leave in Airhead up to as_of − N`; "N used" stores `N − leave in Airhead up to as_of`. Needs an entitlement the person has set (the key present in settings), never the default.
+- Bookings: this leave year or the next, at most 60 days, an existing leave type, no overlap, at least one working day; past dates are `taken`.
+- Settings: only entitlement, leave_year_start, working_days, location_pattern (merged into the usual week) and carry_over_max, each validated.
+- Reminders reuse the existing reminder trigger (refinement 1 of the plan): an event's `data.reminder_minutes` (up to a day), a task's `due_at`. Moving an item therefore moves its reminder.
+- Moving items: only a candidate id; ambiguous matches list the choices; repeating items always ask; the new time must be in the future; an event keeps its length. `before` carries `updated_at` for the freshness check.
+- Items now get their id in the plan (so a reminder can point at a new item). Captures with only actions are `sorted`; any proposal makes the capture `needs_review`.
+
 ## AI actions on devices (Task 10.6, 2026-11-08)
 
 - Undo writes `before` back as an ordinary local edit (works offline, syncs like any change); a booking is soft-deleted. It refuses when the target no longer holds `after` (compared with timestamps normalised, since the server and devices write them differently) and offers a link to check by hand.
