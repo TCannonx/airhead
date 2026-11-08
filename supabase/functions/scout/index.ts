@@ -1,5 +1,5 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   }
   const res = await runScout(userId, trigger, {
     store: supabaseScoutStore(db),
-    ai: new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'missing' }),
+    ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
     usage: supabaseUsageStore(db),
   });
   return json({

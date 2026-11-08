@@ -1,5 +1,5 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import type { ExtractRequest } from './extract.ts';
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, error_code: 'not_configured', message: 'AI is not set up yet.' }, 503);
   }
   const outcome = await runImport(body, auth.user.id, {
-    ai: new Anthropic({ apiKey: apiKey ?? 'missing' }),
+    ai: anthropicClient(apiKey ?? 'missing'),
     store: supabaseUsageStore(db),
     fetch: { fetch, resolve },
   });

@@ -1,5 +1,5 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runSummarise, type SummariseRequest } from './run.ts';
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     return json({ ok: false, error_code: 'not_configured', message: 'AI is not set up yet.' }, 503);
   const body = (await req.json().catch(() => ({}))) as SummariseRequest;
   const outcome = await runSummarise(body, auth.user.id, {
-    ai: new Anthropic({ apiKey }),
+    ai: anthropicClient(apiKey),
     store: supabaseUsageStore(db),
   });
   return json(outcome, outcome.ok || outcome.error_code !== 'bad_request' ? 200 : 400);

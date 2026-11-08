@@ -1,5 +1,5 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runAsk } from './run.ts';
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   });
   const body = (await req.json().catch(() => ({}))) as { question?: unknown };
   const outcome = await runAsk(typeof body.question === 'string' ? body.question : '', userId, {
-    ai: new Anthropic({ apiKey }),
+    ai: anthropicClient(apiKey),
     store: supabaseUsageStore(admin),
     async embed(text) {
       session ??= new Supabase.ai.Session('gte-small');

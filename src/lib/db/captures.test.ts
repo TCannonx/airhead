@@ -46,6 +46,32 @@ describe('createCapture + free rules', () => {
     });
   });
 
+  it.each([
+    'dentist moved to Thursday 4pm',
+    'meeting rescheduled to Friday 10am',
+    'off 22-24 Dec',
+    'took Friday off',
+    'I have 9.5 days annual leave left',
+  ])('"%s" waits for AI sorting instead of becoming a new event', async (text) => {
+    const { capture: c } = await createCapture(db, USER, { text });
+    expect(c.status).toBe('unsorted');
+    expect(await db.items.count()).toBe(0);
+  });
+
+  it('a plain dated note still becomes an event straight away', async () => {
+    const { capture: c, event } = await createCapture(
+      db,
+      USER,
+      {
+        text: 'dentist Tue 3pm',
+        // A fixed Friday, so "Tue 3pm" is in the future.
+      },
+      { now: new Date('2026-11-06T10:00:00Z') },
+    );
+    expect(event?.title).toBe('Dentist');
+    expect(c.status).toBe('sorted');
+  });
+
   it('plain text creates no item yet (it waits for sorting)', async () => {
     await createCapture(db, USER, { text: 'buy milk' });
     expect(await db.items.count()).toBe(0);

@@ -1,6 +1,6 @@
-import Anthropic from 'npm:@anthropic-ai/sdk@1.6.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { callAI } from '../_shared/ai.ts';
+import { anthropicClient } from '../_shared/anthropic.ts';
 import { cors, json } from '../_shared/http.ts';
 import {
   buildContradictionsMessage,
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
   }
 
   const result = await callAI(
-    { client: new Anthropic({ apiKey }), store: supabaseUsageStore(db) },
+    { client: anthropicClient(apiKey), store: supabaseUsageStore(db) },
     {
       userId,
       task: 'check_contradictions',

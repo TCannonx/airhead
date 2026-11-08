@@ -125,6 +125,16 @@ If every remaining task depends on blocked work, stop and print a short summary 
 
 ---
 
+## 4b. Release gate before user testing
+
+Nothing is marked "ready for device testing" (BLOCKERS, release PRs) until:
+
+- every CI job is green, including **e2e sync tests**, which run the real Edge Functions with `tests/mock-ai` standing in for the Anthropic API;
+- every feature the phase adds has a row in `docs/TEST-MATRIX.md` with an automated test that proves it end to end where the feature crosses device → server → device (sync, AI, push), or an explicit "manual only" reason;
+- any new AI output schema passes `_shared/schemas/limits.test.ts` and, if the app calls it, has a contract test against `tests/mock-ai` (add its saved answer there).
+
+The owner should never be the first to find that a simple sync, sort or save does not work.
+
 ## 5. Things that need the user (record them, don't ask mid-flow)
 
 Some steps need the user's own accounts or a browser. When you reach one, add it to `docs/BLOCKERS.md`
