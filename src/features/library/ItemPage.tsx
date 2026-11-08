@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { Page } from '../../app/Page';
 import { repeatText } from '../../lib/rules/repeatText';
+import { beforeText, prepRulesFor, readWorkSettings } from '../../lib/work/settings';
 import ReadingDetails from './ReadingDetails';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -54,6 +55,7 @@ function ItemForm({ item }: { item: Item }) {
   const db = useDb();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const settings = useLiveQuery(() => db.settings.get(user?.id ?? ''), [db, user?.id]);
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body ?? '');
   const [type, setType] = useState<ItemType>(item.type);
@@ -96,6 +98,13 @@ function ItemForm({ item }: { item: Item }) {
             {item.rrule && ' · repeats'}
           </p>
         )}
+        {item.type === 'event' &&
+          !item.rrule &&
+          prepRulesFor(item.title, readWorkSettings(settings).prep_rules).map((r) => (
+            <p key={r.id} className="text-sm text-slate-500">
+              Before this: {r.reminder} ({beforeText(r.minutes_before)})
+            </p>
+          ))}
         {item.type === 'task' && (item.due_at || item.rrule) && (
           <p className="text-sm text-slate-500">
             {item.due_at && `Due: ${dueLabel(item.due_at)}`}

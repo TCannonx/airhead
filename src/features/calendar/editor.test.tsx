@@ -7,6 +7,7 @@ import { LOCAL_USER_ID, localServices } from '../../lib/auth/localAuth';
 import { DataProvider } from '../../lib/db/DataProvider';
 import { openUserDb } from '../../lib/db/db';
 import { newItem, save } from '../../lib/db/repository';
+import { updateSettingsData } from '../../lib/db/settings';
 import type { Item } from '../../lib/schemas/records';
 import EventEditor from './EventEditor';
 
@@ -76,5 +77,34 @@ describe('event reminders in the editor (Task 4.12)', () => {
     await waitFor(async () =>
       expect((await items())[0]?.data).toEqual({ location: 'Smile Clinic', source: 'import' }),
     );
+  });
+});
+
+describe('prep reminders in the editor', () => {
+  it('a matching event shows its standing prep reminder, live as the title changes', async () => {
+    const d = db();
+    await updateSettingsData(d, U, {
+      work: {
+        prep_rules: [
+          {
+            id: 'r1',
+            match: ['barber', 'haircut'],
+            reminder: 'Bring €20 cash',
+            minutes_before: 720,
+          },
+        ],
+      },
+    });
+    d.close();
+    const user = userEvent.setup();
+    renderEditor();
+    const title = await screen.findByLabelText('Title');
+    await user.type(title, 'Dentist');
+    expect(screen.queryByText(/Before this:/)).not.toBeInTheDocument();
+    await user.clear(title);
+    await user.type(title, 'Barber');
+    expect(
+      await screen.findByText('Before this: Bring €20 cash (12 h before)'),
+    ).toBeInTheDocument();
   });
 });

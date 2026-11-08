@@ -13,6 +13,7 @@ import LinkedCalendars from './LinkedCalendars';
 import ScoutSettingsPanel from './ScoutSettings';
 import SharingSettings from './SharingSettings';
 import TodaySettings from './TodaySettings';
+import PrepRules from './PrepRules';
 import WorkSettings from './WorkSettings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -138,6 +139,10 @@ export default function SettingsPage() {
 
       <Section title="Work">
         <WorkSettings />
+      </Section>
+
+      <Section title="Prep reminders">
+        <PrepRules />
       </Section>
 
       <Section title="Sharing">

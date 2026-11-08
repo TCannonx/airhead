@@ -9,6 +9,31 @@ import { WORK_LOCATIONS, type SettingsRow, type WorkLocation } from '../schemas/
 const monthDay = z.string().regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/);
 const isoDate = z.iso.date();
 
+/** A standing prep reminder before matching events (the database makes the nudges). */
+export const prepRuleSchema = z.object({
+  id: z.string().min(1),
+  match: z.array(z.string().min(2).max(40)).min(1).max(5),
+  reminder: z.string().min(1).max(120),
+  minutes_before: z.number().int().min(0).max(10080),
+});
+export type PrepRule = z.infer<typeof prepRuleSchema>;
+
+/** The rules whose words appear in an event title (same test as the database). */
+export function prepRulesFor(title: string, rules: PrepRule[]): PrepRule[] {
+  const t = title.toLowerCase();
+  return rules.filter((r) =>
+    r.match.some((w) => w.trim().length >= 2 && t.includes(w.trim().toLowerCase())),
+  );
+}
+
+/** "12 h before", "1 day before", "30 min before". */
+export function beforeText(minutes: number): string {
+  if (minutes === 0) return 'at the start';
+  if (minutes % 1440 === 0) return `${minutes / 1440} day${minutes === 1440 ? '' : 's'} before`;
+  if (minutes % 60 === 0) return `${minutes / 60} h before`;
+  return `${minutes} min before`;
+}
+
 export const WEEKEND_HOLIDAY_RULES = ['day_off', 'extra_leave', 'extra_pay'] as const;
 export const LOCATION_SHARING = ['full', 'working', 'none'] as const;
 
@@ -56,6 +81,8 @@ export const workSettingsSchema = z.object({
   opening_carry_over: z.record(isoDate, z.number().min(0)).default({}),
   /** Days used before Airhead, per leave-year start (counted as taken). */
   opening_used: z.record(isoDate, z.number().min(0).max(366)).default({}),
+  /** "Before a barber appointment: bring €20 cash" (Phase 10 follow-up). */
+  prep_rules: z.array(prepRuleSchema).max(30).default([]),
   /** What the employer gives for a public holiday on a non-working day. */
   weekend_holiday: z.enum(WEEKEND_HOLIDAY_RULES).default('day_off'),
   /** Company closure days come out of annual leave. */

@@ -20,6 +20,7 @@ export interface WorkSettings {
   carry_over_expiry_months: number | null;
   opening_carry_over: Record<string, number>;
   opening_used: Record<string, number>;
+  prep_rules: PrepRule[];
   weekend_holiday: 'day_off' | 'extra_leave' | 'extra_pay';
   closure_uses_leave: boolean;
   closure_days: string[];
@@ -28,6 +29,13 @@ export interface WorkSettings {
   location_pattern: Partial<Record<'0' | '1' | '2' | '3' | '4' | '5' | '6', WorkLocation>>;
   checklists: Partial<Record<WorkLocation, string[]>>;
   location_sharing: 'full' | 'working' | 'none';
+}
+
+export interface PrepRule {
+  id: string;
+  match: string[];
+  reminder: string;
+  minutes_before: number;
 }
 
 export interface LeaveBooking {
@@ -48,6 +56,7 @@ export const DEFAULT_WORK: WorkSettings = {
   carry_over_expiry_months: 3,
   opening_carry_over: {},
   opening_used: {},
+  prep_rules: [],
   weekend_holiday: 'day_off',
   closure_uses_leave: false,
   closure_days: [],
@@ -96,6 +105,16 @@ export function readWork(settingsData: Record<string, unknown> | null | undefine
     out.opening_used = Object.fromEntries(
       Object.entries(w.opening_used).filter(([k, v]) => DATE.test(k) && num(v, 0, 366)),
     ) as Record<string, number>;
+  if (Array.isArray(w.prep_rules))
+    out.prep_rules = (w.prep_rules as unknown[]).filter(
+      (r): r is PrepRule =>
+        isObj(r) &&
+        typeof r.id === 'string' &&
+        Array.isArray(r.match) &&
+        r.match.every((m) => typeof m === 'string') &&
+        typeof r.reminder === 'string' &&
+        Number.isInteger(r.minutes_before),
+    );
   if (['day_off', 'extra_leave', 'extra_pay'].includes(w.weekend_holiday as string))
     out.weekend_holiday = w.weekend_holiday as WorkSettings['weekend_holiday'];
   if (typeof w.closure_uses_leave === 'boolean') out.closure_uses_leave = w.closure_uses_leave;

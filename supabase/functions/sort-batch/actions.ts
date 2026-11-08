@@ -456,6 +456,51 @@ function reschedule(b: Base, a: SortActionT, ctx: ActionContext) {
   return decide(b, summary, target);
 }
 
+// Standing prep rules -----------------------------------------------------------
+
+function prepRule(b: Base, a: SortActionT, ctx: ActionContext, work: WorkSettings) {
+  const words = [
+    ...new Set(
+      (a.match ?? [])
+        .map((w) => w.trim().toLowerCase())
+        .filter((w) => w.length >= 2 && w.length <= 40),
+    ),
+  ].slice(0, 5);
+  const reminder = (a.reminder ?? '').trim().slice(0, 120);
+  const minutes = a.minutes_before ?? 720;
+  const quoted = words.map((w) => `“${w}”`).join(' or ');
+  const summary = `Prep reminder: “${reminder}” before ${quoted || 'matching'} events`;
+  if (!words.length || !reminder)
+    return result(b, 'proposed', 'Which events, and what to remind?', summary);
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 10080)
+    return result(b, 'proposed', 'Prep reminders can be up to a week before', summary);
+  const current = Array.isArray(ctx.workRaw.prep_rules)
+    ? (ctx.workRaw.prep_rules as Record<string, unknown>[])
+    : null;
+  const rule = {
+    id: crypto.randomUUID().slice(0, 8),
+    match: words,
+    reminder,
+    minutes_before: minutes,
+  };
+  const target: Target = {
+    target_table: 'settings',
+    target_id: ctx.userId,
+    before: { prep_rules: current },
+    after: { prep_rules: [...(current ?? []), rule] },
+  };
+  const same = work.prep_rules.some(
+    (r) =>
+      r.reminder.toLowerCase() === reminder.toLowerCase() &&
+      [...r.match]
+        .map((w) => w.toLowerCase())
+        .sort()
+        .join('|') === [...words].sort().join('|'),
+  );
+  if (same) return result(b, 'skipped', null, summary, target);
+  return decide(b, summary, target);
+}
+
 // Entry point --------------------------------------------------------------------------------------
 
 /** Checks a capture's actions (at most 5). `newItems` are this capture's own new items. */
@@ -487,6 +532,8 @@ export function planActions(
         return reminder(b, a, ctx, newItems);
       case 'reschedule_item':
         return reschedule(b, a, ctx);
+      case 'add_prep_rule':
+        return prepRule(b, a, ctx, work);
     }
   });
 }

@@ -108,6 +108,26 @@ export function sortOne(id, text, ctx) {
     return result;
   }
 
+  // "I get a haircut every 2-3 weeks ... remind me ... once booked, ensure I have cash"
+  if (/once (?:it'?s |it is )?booked/.test(lower) && /(haircut|barber)/.test(lower)) {
+    const weeks = lower.match(/every (\d+)/)?.[1] ?? '2';
+    const euros = t.match(/€\s?(\d+)/)?.[1];
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: 'Text barber for haircut',
+      rrule: `FREQ=WEEKLY;INTERVAL=${weeks}`,
+    });
+    result.actions.push(
+      action('add_prep_rule', 'once booked, ensure I have cash', {
+        match: ['barber', 'haircut'],
+        reminder: euros ? `Bring €${euros} cash` : 'Bring cash',
+        minutes_before: 720,
+      }),
+    );
+    return result;
+  }
+
   const every = lower.match(/remind me every (\d+)(?:\s*-\s*\d+)? weeks? to (.+?)\.?$/);
   if (every) {
     const title = every[2].charAt(0).toUpperCase() + every[2].slice(1);

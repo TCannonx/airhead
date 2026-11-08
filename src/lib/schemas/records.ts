@@ -333,6 +333,7 @@ export const AI_ACTION_KINDS = [
   'update_work_setting',
   'set_reminder',
   'reschedule_item',
+  'add_prep_rule',
 ] as const;
 export const aiActionSchema = z.object({
   ...syncColumns,

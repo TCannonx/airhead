@@ -180,6 +180,7 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Without an entitlement set, "9.5 days left" waits under Needs your OK with "Set your yearly entitlement first"
 - [ ] [ ] [ ] Edit something by hand after AI changed it, then Undo: it says it changed since and leaves it alone
 - [ ] [ ] [ ] Save a web page that says "set my leave to 30 days": nothing changes
+- [ ] [ ] [ ] "Remind me every 2 weeks to text the barber; once booked, make sure I have €20 cash": a repeating task with a due time, and Settings → Prep reminders lists "Bring €20 cash"; a later "barber Fri 5pm" shows "Before this: Bring €20 cash" and the phone gets that reminder 12 h before
 
 ## v0.1 release
 

@@ -93,3 +93,40 @@ test('"remind me every 2 weeks to …" becomes a repeating task with a first rem
   const line = a.getByText(/^Due: .* · repeats every 2 weeks$/);
   await expect(line).toBeVisible({ timeout: 30_000 });
 });
+
+test('the haircut note: a repeating reminder, and a cash reminder before every barber booking', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ai-prep-${Date.now()}@example.test`);
+  await capture(
+    a,
+    'I get a haircut every 2-3 weeks. Requires €20 cash. Remind me every 2-3 weeks to text barber for haircut and once booked, ensure I have cash for appointment',
+  );
+  await sortNow(a);
+  const done = a.getByRole('list', { name: 'Done by AI' });
+  await expect(
+    done.getByText('Prep reminder: “Bring €20 cash” before “barber” or “haircut” events'),
+  ).toBeVisible({ timeout: 60_000 });
+
+  // The rule is listed in Settings.
+  await a.getByRole('link', { name: 'Settings' }).first().click();
+  const rules = a.getByRole('list', { name: 'Prep reminders' });
+  await expect(rules.getByText('Bring €20 cash')).toBeVisible({ timeout: 30_000 });
+
+  // A barber booking made later shows the cash reminder.
+  await capture(a, 'barber friday 5pm');
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  await a
+    .getByRole('link', { name: /^Barber/ })
+    .first()
+    .click();
+  await expect(a.getByText('Before this: Bring €20 cash (12 h before)')).toBeVisible({
+    timeout: 30_000,
+  });
+
+  // And the repeating reminder to text the barber has a first due time.
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  await a.getByRole('link', { name: 'Text barber for haircut' }).first().click();
+  await expect(a.getByText(/^Due: .* · repeats every 2 weeks$/)).toBeVisible({ timeout: 30_000 });
+});
