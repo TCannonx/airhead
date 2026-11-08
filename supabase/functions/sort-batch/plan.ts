@@ -8,6 +8,8 @@ export const REVIEW_BELOW = 0.6;
 
 export interface PlanContext {
   now: Date;
+  /** The person's time zone (default Europe/Dublin). */
+  timeZone?: string;
   topics: { id: string; name: string }[];
   lists: { id: string; name: string }[];
   ideas: { id: string; title: string }[];
@@ -65,6 +67,27 @@ export interface SortPlan {
 const norm = (s: string) => s.trim().toLowerCase();
 const cleanTopics = (topics: string[]) =>
   [...new Set(topics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
+
+/** 09:00 tomorrow in the time zone, as UTC ISO: the first reminder of a repeat with no date. */
+export function tomorrowMorning(now: Date, timeZone: string): string {
+  const local = (d: Date) =>
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .format(d)
+      .replace(', ', 'T');
+  const day = local(new Date(now.getTime() + 86_400_000)).slice(0, 10);
+  // Start from 09:00 UTC that day and correct by the zone's offset at that time.
+  const guess = Date.parse(`${day}T09:00:00Z`);
+  const offsetMs = Date.parse(`${local(new Date(guess))}:00Z`) - guess;
+  return new Date(guess - offsetMs).toISOString();
+}
 
 function iso(value: string | null): string | null {
   if (!value) return null;
@@ -154,7 +177,12 @@ export function planSort(
         start_at: start,
         end_at: iso(it.end_at),
         all_day: it.all_day,
-        due_at: iso(it.due_at),
+        // A repeating task needs a first due time, or its reminder never fires.
+        due_at:
+          iso(it.due_at) ??
+          (it.type === 'task' && it.rrule?.trim()
+            ? tomorrowMorning(ctx.now, ctx.timeZone ?? 'Europe/Dublin')
+            : null),
         rrule: it.rrule?.trim() || null,
         calendar: it.type === 'event' ? 'personal' : null,
         list_id: listId,

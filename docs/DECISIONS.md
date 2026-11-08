@@ -1264,3 +1264,12 @@ Decisions and library versions, newest first.
 - New end-to-end tests (`tests/e2e-sync/ai.spec.ts`, `network.spec.ts`): Sort now on a plain note; a leave balance proposal and a booking applied, seen on a second device, then undone; moving an existing event; a stalled push that must not stop sync; Sort now while every data request hangs. `_shared/ai.contract.test.ts` runs the real SDK, prompt and schema against the stand-in in the normal Deno tests.
 - Writing them found two real bugs: "dentist moved to Thursday 4pm" and "off 22-24 Dec" were turned into new events by the instant date rule, so the AI never saw them. Captures that change something existing or talk about time off (`FOR_AI` in `captures.ts`) now skip that rule and wait for sorting. The free "AL 14-18 July" leave proposal rule is unchanged.
 - `docs/TEST-MATRIX.md` maps every feature to its tests and ranks the remaining gaps; CLAUDE.md section 4b makes it a release gate.
+
+## Repeating tasks (2026-11-08)
+
+- Owner report: "remind me every 2-3 weeks to text the barber" became a task with `FREQ=WEEKLY;INTERVAL=2` but no due time, so no reminder ever fired, and ticking it off would have ended it for good. Repeating tasks were never handled.
+- The planner gives a repeating task with no due time its first one: 09:00 tomorrow in the person's time zone. The prompt asks for the stated first time if any, and the shorter interval for ranges ("every 2-3 weeks" → 2).
+- `completeTask` moves a repeating task to its next due time after now (missed ones are skipped), clears its Top 3 place and carry count, and records `data.last_done_at`; the existing reminder trigger re-times the nudge. A rule that has ended finishes the task.
+- Notes starting "remind me …" now go to AI sorting (`FOR_AI`): the instant date rule would otherwise make a calendar suggestion from "every 2 weeks".
+- The task page shows "Due: … · repeats every 2 weeks" (it showed no date for tasks at all).
+- Recurrence is computed in UTC, so the reminder's local time can shift by an hour across a clock change; fine for reminders, noted for later.
