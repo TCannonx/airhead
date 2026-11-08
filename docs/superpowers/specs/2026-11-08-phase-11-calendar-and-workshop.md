@@ -14,6 +14,20 @@ Date: 2026-11-08. Status: agreed with the owner (choices below).
 - Workshop: a Send to Workshop button on every capture, note and item, **and** AI routing of anything it cannot fully use.
 - Long notes: keep the instant event, **and** send the note to AI sorting, which tidies the event and adds what was missed.
 
+## 11.0 AI over every note, every 5 minutes, cheaply (owner, 2026-11-08)
+
+- Done (PR #138): new captures are due at the next 5-minute check once 2 minutes old (or 20 waiting); no call when nothing is new.
+- **Notes join the batch:** typed notes, meeting notes and ideas created or changed since the AI last saw them (`data.ai_seen_at` older than `updated_at`), at most 5 per batch. Only their text since the last look is sent, with a 1,500-character limit and the title. They are sent as `<note id=…>` blocks, as data, never instructions. The AI may return:
+  - items (tasks or events found in the note);
+  - actions (the same rules as for captures);
+  - `suggest_workshop`;
+  - facts.
+  
+  The note's own text is never changed. `ai_seen_at` is stamped whatever the result, so a note is looked at once per change.
+- **Memory digest:** each batch may return `digest`, one or two sentences on what it noticed ("Barber bookings need cash; Quiz is weekly on Thursdays"). It is stored as a `memory_facts` row with category `everyday` and source `digest`. The usual relevant-fact retrieval feeds it back to later runs, and the weekly review merges and retires digests like other facts.
+- **Cost guard:** notes are added only when the batch is running anyway or a note has waited 30 minutes, so editing a note does not trigger a call by itself every 5 minutes. The monthly cap applies.
+- **Tests:** a planner test for the note items; the stand-in AI answers a note with a task; e2e: write a note that says "need to send the report to Trevor by Friday", then within a batch a task appears and the note is unchanged.
+
 ## 11.1 Nothing lost: instant events are tidied by AI
 
 - **Simple note:** one sentence of at most 8 words, with no instruction words ("need", "remind", "and then", …). It becomes an instant event and is marked sorted, as now.

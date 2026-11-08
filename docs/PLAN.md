@@ -519,6 +519,7 @@ Spec: `docs/superpowers/specs/2026-11-08-ai-actions-design.md`. Step-by-step pla
 
 Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 
+- [ ] **11.0 AI over every note.** Sorting every 5 minutes when something is new (done, PR #138); notes, meeting notes and ideas changed since the AI last looked join the batch; each batch leaves a memory digest.
 - [ ] **11.1 Nothing lost.** Long notes keep their instant event and also go to AI sorting, which tidies that event (update, with Undo) and adds what was missed; time ranges set an end time.
 - [ ] **11.2 Workshop routing.** Send to Workshop on every capture, item and note; AI sends unmappable or leftover text to the Workshop.
 - [ ] **11.3 Easier viewing.** Event details sheet; month view with dots and day list; now line, Today, swipe, period title.
