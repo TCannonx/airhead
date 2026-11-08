@@ -28,4 +28,6 @@ export interface SyncStatus {
   pending: number;
   lastSyncedAt: string | null;
   message: string | null;
+  /** What failed last time, e.g. "push settings: permission denied" (shown small, for support). */
+  detail?: string;
 }

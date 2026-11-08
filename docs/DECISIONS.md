@@ -1250,3 +1250,9 @@ Decisions and library versions, newest first.
 - Every sorting call on dev failed with `api_error` after Phase 10: spelling out each action field as a nullable schema property took the sorting schema to 26 union-typed parameters, past the API limit of 16, so the API rejected the request (the weekly review, with its own small schema, kept working).
 - Actions now travel as `{kind, quote, confidence, details}` where `details` is a JSON object written as text; `readAction` keeps each field only if it is valid (else null), and the planner checks everything as before. The sorting schema is back to 8 union parameters.
 - `_shared/schemas/limits.test.ts` counts union parameters in every AI output schema in use and fails above 16. API rejections now log their status and the API's message (never the request) to the function logs.
+
+## Request time limits (2026-11-08)
+
+- On dev the phone stopped receiving changes (a sorted capture still showed "Sorting soon"; its device row had not changed for hours) while the server was fine. supabase-js has no request timeout, so one stalled request kept the sync run (and Sort now, which waited on it) pending forever.
+- The Supabase client now uses `timedFetch`: 30 s for data requests, 150 s for Edge Functions (AI batches), 120 s for storage uploads. A timeout is an ordinary failure, so the sync engine backs off and retries. The caller's own abort still works.
+- A failed sync keeps a short `detail` (e.g. "push settings: …"), shown in small text under the sync status in Settings, so the next report names the cause.
