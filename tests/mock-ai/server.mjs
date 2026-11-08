@@ -108,6 +108,18 @@ export function sortOne(id, text, ctx) {
     return result;
   }
 
+  const every = lower.match(/remind me every (\d+)(?:\s*-\s*\d+)? weeks? to (.+?)\.?$/);
+  if (every) {
+    const title = every[2].charAt(0).toUpperCase() + every[2].slice(1);
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title,
+      rrule: `FREQ=WEEKLY;INTERVAL=${every[1]}`,
+    });
+    return result;
+  }
+
   const moved = lower.match(/^(.+?) moved to (\w+) (\d{1,2})\s*(am|pm)$/);
   if (moved) {
     const name = moved[1].trim();

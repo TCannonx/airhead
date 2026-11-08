@@ -15,7 +15,7 @@ import { newCapture, newItem, save, update } from './repository';
  * date in them and the AI would never see the note.
  */
 export const FOR_AI =
-  /\b(?:moved|move it|reschedul\w*|postpon\w*|pushed (?:back|out|to)|brought forward|annual leave|on leave|days? off|off sick|sick (?:day|leave))\b|^\s*(?:off|took|taking|on holiday)\b|\b(?:day|morning|afternoon) off\b|\boff\s*$/i;
+  /\b(?:remind me|moved|move it|reschedul\w*|postpon\w*|pushed (?:back|out|to)|brought forward|annual leave|on leave|days? off|off sick|sick (?:day|leave))\b|^\s*(?:off|took|taking|on holiday)\b|\b(?:day|morning|afternoon) off\b|\boff\s*$/i;
 
 export interface CaptureInput {
   text?: string | null;

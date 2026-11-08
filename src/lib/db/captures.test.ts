@@ -48,6 +48,7 @@ describe('createCapture + free rules', () => {
 
   it.each([
     'dentist moved to Thursday 4pm',
+    'remind me every 2 weeks to text the barber',
     'meeting rescheduled to Friday 10am',
     'off 22-24 Dec',
     'took Friday off',

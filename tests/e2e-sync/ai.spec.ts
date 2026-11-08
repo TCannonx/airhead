@@ -78,3 +78,18 @@ test('"dentist moved to thursday 4pm" moves the existing event', async ({ browse
   const done = a.getByRole('list', { name: 'Done by AI' });
   await expect(done.getByText(/^Moved “Dentist” to Thu /)).toBeVisible({ timeout: 60_000 });
 });
+
+test('"remind me every 2 weeks to …" becomes a repeating task with a first reminder', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ai-repeat-${Date.now()}@example.test`);
+  await capture(a, 'remind me every 2 weeks to text the barber');
+  await sortNow(a);
+  await expect(a.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 60_000 });
+
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  await a.getByRole('link', { name: 'Text the barber' }).first().click();
+  const line = a.getByText(/^Due: .* · repeats every 2 weeks$/);
+  await expect(line).toBeVisible({ timeout: 30_000 });
+});

@@ -3,7 +3,7 @@ import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'j
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v4.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { pickCandidates } from './candidates.ts';
-import { planSort } from './plan.ts';
+import { planSort, tomorrowMorning } from './plan.ts';
 
 const NOW = new Date('2026-11-06T10:00:00Z');
 const [C1, C2, C3] = fixture.captures.map((c) => c.id);
@@ -286,4 +286,29 @@ Deno.test('the action batch: clear ones applied, unclear ones proposed, page tex
   const status = Object.fromEntries(p.captures.map((c) => [c.id, c.status]));
   assertEquals(status[typed[0]], 'sorted');
   assertEquals(status[typed[4]], 'needs_review');
+});
+
+Deno.test('a repeating task with no date gets its first reminder tomorrow at 09:00 local', () => {
+  const base = output.results[0]!.items[0]!;
+  const p = planSort(
+    ['c1'],
+    {
+      results: [
+        {
+          capture_id: 'c1',
+          items: [{ ...base, type: 'task', title: 'Text barber', rrule: 'FREQ=WEEKLY;INTERVAL=2' }],
+          actions: [],
+          link_summary: null,
+          proposed_facts: [],
+        },
+      ],
+    },
+    { ...ctx, now: new Date('2026-07-08T20:00:00Z'), timeZone: 'Europe/Dublin' },
+  );
+  // Dublin is UTC+1 in July: 09:00 local is 08:00 UTC.
+  assertEquals(p.items[0]!.due_at, '2026-07-09T08:00:00.000Z');
+  assertEquals(
+    tomorrowMorning(new Date('2026-11-08T20:00:00Z'), 'Europe/Dublin'),
+    '2026-11-09T09:00:00.000Z',
+  );
 });

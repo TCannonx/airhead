@@ -1,3 +1,4 @@
+import { RRule } from 'rrule';
 import { addDays } from '../holidays/easter';
 import { localDate, localMidnight } from '../calendar/sources';
 import type { Item } from '../schemas/records';
@@ -22,8 +23,44 @@ export function reviewTasks(items: Item[], today: string, tz: string): Item[] {
     );
 }
 
-export const completeTask = (db: AirheadDb, id: string) =>
-  update(db, 'items', id, { status: 'done', completed_at: new Date().toISOString() });
+/**
+ * The next due time of a repeating task after `now` (or after its current due
+ * time, if that is later). Null when the rule is unreadable or has ended.
+ */
+export function nextDue(rrule: string, dueAt: string, now: Date): string | null {
+  const start = new Date(dueAt);
+  if (Number.isNaN(start.getTime())) return null;
+  let options;
+  try {
+    options = RRule.parseString(rrule.replace(/^RRULE:/, ''));
+  } catch {
+    return null;
+  }
+  const rule = new RRule({ ...options, dtstart: start });
+  const from = new Date(Math.max(now.getTime(), start.getTime()));
+  return rule.after(from, false)?.toISOString() ?? null;
+}
+
+/**
+ * Ticks a task off. A repeating task ("text the barber every 2 weeks") moves
+ * on to its next due time instead of finishing, so its reminder fires again.
+ */
+export async function completeTask(db: AirheadDb, id: string) {
+  const now = new Date();
+  const item = await db.items.get(id);
+  if (item?.rrule && item.due_at) {
+    const next = nextDue(item.rrule, item.due_at, now);
+    if (next)
+      return update(db, 'items', id, {
+        due_at: next,
+        completed_at: now.toISOString(),
+        top3_date: null,
+        carry_count: 0,
+        data: { ...item.data, last_done_at: now.toISOString() },
+      });
+  }
+  return update(db, 'items', id, { status: 'done', completed_at: now.toISOString() });
+}
 
 export const dropTask = (db: AirheadDb, id: string) =>
   update(db, 'items', id, { status: 'dropped' });

@@ -236,6 +236,7 @@ export async function runSortBatch(
     result.data,
     {
       now,
+      timeZone,
       topics: topics.data ?? [],
       lists: lists.data ?? [],
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),

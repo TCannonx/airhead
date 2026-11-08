@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
 import { Page } from '../../app/Page';
+import { repeatText } from '../../lib/rules/repeatText';
 import ReadingDetails from './ReadingDetails';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -14,6 +15,17 @@ import { Top3Button } from '../today/Top3Controls';
 
 const field =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900';
+
+/** "Mon 23 Nov, 09:00" in the device's zone. */
+function dueLabel(at: string): string {
+  return new Date(at).toLocaleString('en-IE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 export default function ItemPage() {
   const { id = '' } = useParams();
@@ -82,6 +94,13 @@ function ItemForm({ item }: { item: Item }) {
           <p className="text-sm text-slate-500">
             When: {eventLabel(item)}
             {item.rrule && ' · repeats'}
+          </p>
+        )}
+        {item.type === 'task' && (item.due_at || item.rrule) && (
+          <p className="text-sm text-slate-500">
+            {item.due_at && `Due: ${dueLabel(item.due_at)}`}
+            {item.due_at && item.rrule && ' · '}
+            {item.rrule && `repeats ${repeatText(item.rrule)}`}
           </p>
         )}
         {typeof item.data.url === 'string' && (
