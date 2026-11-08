@@ -53,6 +53,7 @@ describe('undo', () => {
     expect(await undoAction(db, U, a)).toBe('undone');
     expect(await work()).toEqual({ entitlement: 21 });
     expect((await db.ai_actions.get(a.id))?.status).toBe('undone');
+    expect((await db.corrections.toArray()).map((c) => c.to_value)).toEqual([{ action: 'undone' }]);
   });
 
   it('refuses when the value was changed by hand since', async () => {
@@ -186,8 +187,13 @@ describe('proposals', () => {
 
   it('Dismiss just marks it', async () => {
     const a = await action({ status: 'proposed' });
-    await dismissAction(db, a);
+    await dismissAction(db, U, a);
     expect((await db.ai_actions.get(a.id))?.status).toBe('dismissed');
+    const [c] = await db.corrections.toArray();
+    expect([c?.from_value, c?.to_value]).toEqual([
+      { action: 'set_leave_remaining', summary: 'Leave left set to 9.5 days' },
+      { action: 'dismissed' },
+    ]);
   });
 });
 

@@ -4,6 +4,8 @@ import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-bat
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
+import { leaveYearFor } from '../_shared/leave/engine.ts';
+import { readWork } from '../_shared/leave/work.ts';
 import { type ActionContext, type BookingRow, type ItemRow } from './actions.ts';
 import { type CandidateRow, pickCandidates } from './candidates.ts';
 import { planSort } from './plan.ts';
@@ -146,6 +148,16 @@ export async function runSortBatch(
       to: c.to_value,
     })),
     candidates,
+    leave: (() => {
+      const work = readWork({ work: workRaw });
+      const year = leaveYearFor(actx.today, work);
+      return {
+        types: work.leave_types.map((t) => ({ key: t.key, name: t.name })),
+        year_start: year.start,
+        year_end: year.end,
+        entitlement_set: 'entitlement' in workRaw,
+      };
+    })(),
   };
 
   // Core memory profile: active facts, most recently used first, ~400 words.

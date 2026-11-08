@@ -128,7 +128,7 @@ export default function AiActions() {
                     <button
                       type="button"
                       className={chip}
-                      onClick={() => void dismissAction(db, a)}
+                      onClick={() => void dismissAction(db, uid, a)}
                     >
                       Dismiss
                     </button>

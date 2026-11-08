@@ -1234,3 +1234,8 @@ Decisions and library versions, newest first.
 - Apply on a proposal does not repeat the server checks (refinement 2 of the plan): it checks only that the target still holds `before` (and, for leave, that nothing overlaps now), then writes `after`. "Which one?" applies the payload times to the item picked (events keep their length). Proposals with nothing to apply show Fix, a link to the right screen, instead of a pre-filled sheet.
 - The Inbox shows proposals of any age and applied actions from the last 7 days (at most 10). The capture chip shows the action summary, or "N actions need your OK".
 - No Playwright test of AI sorting (refinement 3): the sync e2e stack cannot run the model; the planner, database and screens are covered by Deno, pgTAP and Vitest tests.
+
+## AI actions follow-ups (2026-11-08)
+
+- The sorting context now carries `leave`: the leave type keys and names, the current leave year and whether an entitlement has been set, so leave actions use real keys (the prompt used to say "an existing key" without listing them).
+- Undo and Dismiss of an AI action record a `corrections` row (`from_value: {action, summary}`, `to_value: {action: undone|dismissed}`). It counts in the correction rate in Insights, and the next sorting batch sees it among recent corrections. `learn_rules` reads items, not corrections, so learned rules are unaffected.
