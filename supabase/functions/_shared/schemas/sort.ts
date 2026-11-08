@@ -21,19 +21,22 @@ export const SortedItem = z.object({
   related_idea_title: z.string().nullable(),
 });
 
+const ACTION_KINDS = [
+  'set_leave_remaining',
+  'set_leave_used',
+  'book_leave',
+  'update_work_setting',
+  'set_reminder',
+  'reschedule_item',
+] as const;
+
 /**
- * A change to the person's records that a capture asks for (Phase 10). The
- * planner checks every field in code; the model only suggests.
+ * A change to the person's records that a capture asks for (Phase 10), as the
+ * planner sees it. The planner checks every field in code; the model only
+ * suggests. Not sent to the API as a schema (see ActionWire).
  */
 export const SortAction = z.object({
-  kind: z.enum([
-    'set_leave_remaining',
-    'set_leave_used',
-    'book_leave',
-    'update_work_setting',
-    'set_reminder',
-    'reschedule_item',
-  ]),
+  kind: z.enum(ACTION_KINDS),
   /** The words of the capture this action comes from. */
   quote: z.string(),
   confidence: z.number(),
@@ -65,13 +68,51 @@ export const SortAction = z.object({
   due_at: z.string().nullable(),
 });
 
+/**
+ * An action as the model returns it: the kind-specific fields travel as JSON
+ * text in `details`. Spelling them out as nullable schema fields pushed the
+ * sorting schema past the API's limit of 16 union-typed parameters, and every
+ * sorting request was rejected (2026-11-08). `readAction` turns this into a
+ * SortAction, keeping only valid fields.
+ */
+export const ActionWire = z.object({
+  kind: z.enum(ACTION_KINDS),
+  quote: z.string(),
+  confidence: z.number(),
+  /** A JSON object with this action's fields, e.g. {"days": 9.5, "as_of": "2026-11-08"}. */
+  details: z.string(),
+});
+export type ActionWireT = z.infer<typeof ActionWire>;
+
+const DETAIL_FIELDS = SortAction.omit({ kind: true, quote: true, confidence: true }).shape;
+
+/** Reads an action's details leniently: each field is kept only if valid, else null. */
+export function readAction(w: ActionWireT): SortActionT {
+  let d: Record<string, unknown> = {};
+  try {
+    const v: unknown = JSON.parse(w.details);
+    if (v && typeof v === 'object' && !Array.isArray(v)) d = v as Record<string, unknown>;
+  } catch {
+    // Unreadable details: every field null; the planner then proposes or drops it.
+  }
+  // `value` is JSON text; accept a plain JSON value too.
+  if (d.value !== undefined && d.value !== null && typeof d.value !== 'string')
+    d = { ...d, value: JSON.stringify(d.value) };
+  const out: Record<string, unknown> = { kind: w.kind, quote: w.quote, confidence: w.confidence };
+  for (const [key, field] of Object.entries(DETAIL_FIELDS)) {
+    const parsed = (field as z.ZodType).safeParse(d[key] ?? (key === 'other_matches' ? [] : null));
+    out[key] = parsed.success ? parsed.data : key === 'other_matches' ? [] : null;
+  }
+  return out as SortActionT;
+}
+
 export const SortResult = z.object({
   results: z.array(
     z.object({
       capture_id: z.string(),
       items: z.array(SortedItem),
       /** Changes to records the capture asks for; usually none (Phase 10). */
-      actions: z.array(SortAction),
+      actions: z.array(ActionWire),
       /** Only for saved web pages; null otherwise. */
       /** Lasting facts about the person, only from what they typed. */
       proposed_facts: z.array(

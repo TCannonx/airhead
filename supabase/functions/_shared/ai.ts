@@ -141,6 +141,13 @@ export async function callAI<T>(
     } catch (error) {
       // HTTP/API failures carry a status; anything else is the answer failing to parse.
       const isApi = typeof (error as { status?: unknown })?.status === 'number';
+      // The status and the API's own message (never the request) explain a rejection.
+      if (isApi)
+        console.error(
+          `AI ${req.task} rejected`,
+          (error as { status: number }).status,
+          String((error as { message?: unknown }).message ?? '').slice(0, 300),
+        );
       await deps.store.record({
         ...base,
         attempt,
