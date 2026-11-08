@@ -1222,6 +1222,12 @@ Decisions and library versions, newest first.
 - Moving items: only a candidate id; ambiguous matches list the choices; repeating items always ask; the new time must be in the future; an event keeps its length. `before` carries `updated_at` for the freshness check.
 - Items now get their id in the plan (so a reminder can point at a new item). Captures with only actions are `sorted`; any proposal makes the capture `needs_review`.
 
+## apply_sort_batch v3: actions (Task 10.5, 2026-11-08)
+
+- Migration 0031 replaces `apply_sort_batch`. Items keep the id the planner gave them. Actions for captures still being sorted are written to `ai_actions` in the same transaction.
+- Freshness checks: a settings change applies only if every key still has its `before` value; a booking only if no leave overlaps it now; an item move only if the item is open and its `updated_at` still equals `before.updated_at`. Otherwise the row is stored as a proposal ("Changed meanwhile; check before applying").
+- Moving an item updates its row, so the existing reminder trigger re-times its nudge. The function now returns `actions` (rows written) too.
+
 ## AI actions on devices (Task 10.6, 2026-11-08)
 
 - Undo writes `before` back as an ordinary local edit (works offline, syncs like any change); a booking is soft-deleted. It refuses when the target no longer holds `after` (compared with timestamps normalised, since the server and devices write them differently) and offers a link to check by hand.

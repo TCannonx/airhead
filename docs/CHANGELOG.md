@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(inbox): "Done by AI" with Undo and "Needs your OK" with Apply / pick one / Fix / Dismiss; capture chips say what AI did (Task 10.6)
+- feat(sorting): clear AI actions are applied in the sorting transaction (leave, settings, moves, reminders), with a check that nothing changed meanwhile (Task 10.5)
 - feat(sorting): AI actions are checked in code (applied, proposed or skipped) before anything changes (Task 10.4)
 - feat(sorting): the sorting model can return actions and sees your upcoming events and tasks (prompt v4; Task 10.3)
 - feat(sync): ai_actions table, synced to devices (Task 10.2)
