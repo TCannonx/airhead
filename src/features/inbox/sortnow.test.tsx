@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { routes } from '../../app/routes';
 import { AuthProvider } from '../../lib/auth/AuthProvider';
 import { LOCAL_USER_ID, localServices } from '../../lib/auth/localAuth';
@@ -17,15 +17,18 @@ import { AppLockProvider } from '../applock/AppLockProvider';
 const U = LOCAL_USER_ID;
 const db = () => openUserDb(U);
 
-function setup(sorting: SortingService | undefined, path = '/inbox') {
-  const syncNow = vi.fn(async () => {});
+function setup(
+  sorting: SortingService | undefined,
+  path = '/inbox',
+  syncNow: Mock<() => Promise<void>> = vi.fn(async () => {}),
+) {
   const services: Services = { ...localServices(), sorting };
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1440 });
   render(
     <AuthProvider services={services}>
       <DataProvider userId={U}>
         <SyncContext value={{ status: null, syncNow }}>
-          <SortProvider>
+          <SortProvider syncWaitMs={50}>
             <AppLockProvider>
               <RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} />
             </AppLockProvider>
@@ -96,6 +99,31 @@ describe('sorting triggers', () => {
     setup(sorting);
     await userEvent.click(await screen.findByRole('button', { name: 'Sort now' }));
     expect(await screen.findByText(/AI limit has been reached/)).toBeVisible();
+  });
+
+  it('a sync that never finishes does not stop sorting', async () => {
+    const d = db();
+    await createCapture(d, U, { text: 'ring the plumber' });
+    d.close();
+    const sorting = fakeSorting('Sorted 1 capture.');
+    setup(
+      sorting,
+      '/inbox',
+      vi.fn(() => new Promise<void>(() => {})),
+    );
+    await waitFor(() => expect(sorting.sortNow).toHaveBeenCalledOnce());
+    expect(await screen.findByText('Sorted 1 capture.')).toBeVisible();
+  });
+
+  it('an error on the device shows a message instead of doing nothing', async () => {
+    const d = db();
+    await createCapture(d, U, { text: 'x' });
+    d.close();
+    const sorting = { sortNow: vi.fn(() => Promise.reject(new Error('boom'))) };
+    setup(sorting);
+    expect(await screen.findByText(/Sorting could not start on this device/)).toBeVisible();
+    await userEvent.click(await screen.findByRole('button', { name: 'Sort now' }));
+    await waitFor(() => expect(sorting.sortNow).toHaveBeenCalledTimes(2));
   });
 
   it('local mode (no server): no Sort now button', async () => {

@@ -1239,3 +1239,8 @@ Decisions and library versions, newest first.
 
 - The sorting context now carries `leave`: the leave type keys and names, the current leave year and whether an entitlement has been set, so leave actions use real keys (the prompt used to say "an existing key" without listing them).
 - Undo and Dismiss of an AI action record a `corrections` row (`from_value: {action, summary}`, `to_value: {action: undone|dismissed}`). It counts in the correction rate in Insights, and the next sorting batch sees it among recent corrections. `learn_rules` reads items, not corrections, so learned rules are unaffected.
+
+## Sort now never waits forever (2026-11-08)
+
+- Reported on dev: tapping Sort now did nothing, and the server never received a sorting call (no `sort_batch` AI usage), though the function itself answered correctly. Sort now waited for a full sync with no time limit, and any error was swallowed, so a hung or failing first attempt (it also runs on app open) blocked every later tap silently.
+- Now: the sync before sorting is waited on for at most 15 s (the server sorts what it already has), an attempt older than a minute no longer blocks a new tap, the previous message is cleared at the start, and any device-side error shows "Sorting could not start on this device…". The sync after sorting runs in the background.
