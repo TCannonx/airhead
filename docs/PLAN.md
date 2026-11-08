@@ -515,6 +515,18 @@ Spec: `docs/superpowers/specs/2026-11-08-ai-actions-design.md`. Step-by-step pla
 - [x] **10.6 Inbox and Undo.** "Done by AI" (Undo) and "Needs your OK" (Apply / pick one / Fix / Dismiss); capture chip shows the action.
 - [x] **10.7 Release to dev.** Checklist lines and BLOCKERS note; live waits for a tag.
 
+## Phase 11: Calendar overhaul, nothing lost, Workshop routing
+
+Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
+
+- [ ] **11.1 Nothing lost.** Long notes keep their instant event and also go to AI sorting, which tidies that event (update, with Undo) and adds what was missed; time ranges set an end time.
+- [ ] **11.2 Workshop routing.** Send to Workshop on every capture, item and note; AI sends unmappable or leftover text to the Workshop.
+- [ ] **11.3 Easier viewing.** Event details sheet; month view with dots and day list; now line, Today, swipe, period title.
+- [ ] **11.4 Faster adding.** Quick add with preview; tap a slot to create; repeat/until/reminder/calendar in the form.
+- [ ] **11.5 Repeating events.** This one / this and following / all, for edit, delete and drag; repeat in words.
+- [ ] **11.6 Find and filter.** Event search; 30-day agenda; visible, remembered calendar toggles.
+- [ ] **11.7 Missing events.** Diagnose with the owner; e2e that events stay visible in every view across devices.
+
 ## Phases 5–9 (outline)
 
 These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 to 9 are planned above.
