@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sorting): AI sorting works again; the action fields had pushed the output schema past the API limit, so every sorting call was rejected ("The AI service is not available right now")
 - fix(sorting): Sort now no longer waits forever on a slow sync, and always shows a message (it could silently do nothing)
 - release: phase 10 (AI actions) on dev
 - feat(sorting): the model is told your leave types and leave year; undoing or dismissing an AI action counts as a correction (Phase 10 follow-up)

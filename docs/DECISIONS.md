@@ -1244,3 +1244,9 @@ Decisions and library versions, newest first.
 
 - Reported on dev: tapping Sort now did nothing, and the server never received a sorting call (no `sort_batch` AI usage), though the function itself answered correctly. Sort now waited for a full sync with no time limit, and any error was swallowed, so a hung or failing first attempt (it also runs on app open) blocked every later tap silently.
 - Now: the sync before sorting is waited on for at most 15 s (the server sorts what it already has), an attempt older than a minute no longer blocks a new tap, the previous message is cleared at the start, and any device-side error shows "Sorting could not start on this device…". The sync after sorting runs in the background.
+
+## Structured-output schema limit (2026-11-08)
+
+- Every sorting call on dev failed with `api_error` after Phase 10: spelling out each action field as a nullable schema property took the sorting schema to 26 union-typed parameters, past the API limit of 16, so the API rejected the request (the weekly review, with its own small schema, kept working).
+- Actions now travel as `{kind, quote, confidence, details}` where `details` is a JSON object written as text; `readAction` keeps each field only if it is valid (else null), and the planner checks everything as before. The sorting schema is back to 8 union parameters.
+- `_shared/schemas/limits.test.ts` counts union parameters in every AI output schema in use and fails above 16. API rejections now log their status and the API's message (never the request) to the function logs.

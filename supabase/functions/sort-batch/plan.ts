@@ -1,4 +1,4 @@
-import type { SortedItemT, SortResultT } from '../_shared/schemas/sort.ts';
+import { readAction, type SortedItemT, type SortResultT } from '../_shared/schemas/sort.ts';
 import { type ActionContext, type PlannedAction, planActions } from './actions.ts';
 
 /** An event is created straight away only from this confidence up (otherwise a suggestion). */
@@ -182,7 +182,7 @@ export function planSort(
       // Actions only ever come from what the person typed (never from page text).
       if (actx && (r.actions ?? []).length) {
         const mine = items.filter((p) => p.capture_id === r.capture_id);
-        const planned = planActions(r.capture_id, r.actions, mine, actx);
+        const planned = planActions(r.capture_id, r.actions.map(readAction), mine, actx);
         actions.push(...planned);
         if (planned.some((p) => p.status === 'proposed')) review = true;
       }
