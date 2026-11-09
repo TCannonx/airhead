@@ -193,6 +193,26 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] The view you pick is still picked after closing and opening the app
 - [ ] [ ] [ ] Search "quiz": past and future matches; tapping one opens its details
 - [ ] [ ] [ ] Make "Quiz" every Thursday 20:00–23:00, a yearly all-day birthday and an all-day "Training" on the phone: all three show in Day, Week, Month and Agenda on the phone and on the desktop after sync
+- [ ] [ ] [ ] Quick add "Quiz every Thursday 8pm-12pm": the preview says every Thursday 20:00–00:00; Add saves it, Undo removes it; More options opens the form filled in
+- [ ] [ ] [ ] Tap an empty slot in Day or Week: a one-hour event at that time; phone Month → Add event adds on the chosen day
+- [ ] [ ] [ ] Form: Repeats weekly on Mon and Wed, End repeat after 5 times: the summary reads it in words
+- [ ] [ ] — Drag one Thursday quiz to Friday: asked "This event / This and following / All events"; "This event" moves only that one, on the other device too
+- [ ] [ ] [ ] Delete one occurrence ("This event"): it's gone from every view and no reminder comes for it; the morning brief doesn't mention it
+
+## Phase 11 — AI everywhere and Send to Workshop
+
+- [ ] [ ] [ ] Write "need to send the report to Trevor by Friday" in a typed note: within about 5 minutes a task "Send report to Trevor" appears; the note itself is unchanged
+- [ ] [ ] [ ] "Training on Tuesday. Need a reminder to send report to Trevor": the event shows at once, then AI sorting tidies it and adds the task
+- [ ] [ ] [ ] "Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder": a weekly Friday event plus a Workshop note
+- [ ] [ ] [ ] Send to Workshop from a capture (Capture and Inbox), an item and a note: it opens in the Workshop with the text word for word
+- [ ] [ ] [ ] Nothing new captured for an hour: Insights → AI usage shows no new sorting calls
+
+## Phase 11 — Look and feel
+
+- [ ] [ ] [ ] Every tab (Capture, Today, Inbox, Library, Insights, Calendar, Settings) looks consistent: grouped lists, the same buttons and switches, large title that moves into the top bar on scroll
+- [ ] [ ] [ ] Dark mode: every page, sheets and the sign-in screen are readable
+- [ ] [ ] [ ] Buttons are easy to hit with a thumb; nothing scrolls sideways on the phone
+- [ ] [ ] — Notes on iPad: the ink toolbar stays on one row and the page doesn't jump when lasso Copy/Delete appear
 
 ## v0.1 release
 

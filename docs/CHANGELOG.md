@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- release: phase 11 (calendar, AI everywhere, Send to Workshop, new look) on dev
 - feat(ui): Settings panels (Work, Memory, Today, linked calendars, capture tokens, sharing, notifications, Scout, app lock), sign-in, lock screen, loading screen and Share page on the shared components; on/off settings are switches, working days are chips, small fields are 44 px on phones; e2e at phone and desktop with axe, sign-in and signed-in Settings checked against the real server (Task 11.U4)
 - feat(ui): Library (items, search, item page, lists, trash, Ask), Insights, notes (a paper-like note surface, a calmer ink toolbar with 44 px tools), the Workshop and Work and leave on the shared components; the leave form opens in the shared sheet on the Work page too; e2e at phone and desktop with axe (Task 11.U3)
 - test(e2e-sync): a row in every synced table goes from device A through real PostgREST to device B (taken from the sync engine's table list, so a new table without coverage fails), and a capture token made in Settings saves a capture through the real ingest-capture until it is revoked, then gets 401 (TEST-MATRIX gaps 12 and 16)

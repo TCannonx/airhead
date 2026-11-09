@@ -2,6 +2,16 @@
 
 ## Waiting for the user
 
+### Phase 11 ready for device testing on dev
+
+The calendar overhaul (views, details, search, quick add, tap to create, repeating events with "this / following / all"), AI sorting over notes every 5 minutes with Send to Workshop, and the new look on every page are on the dev site.
+
+1. Open the dev site on the iPhone, Settings → Sync → **Load latest version** (check the Version line changed).
+2. Work through the three "Phase 11" sections of `docs/MANUAL-CHECKLIST.md`.
+3. The owner's example requests are checked against the real AI model on dev by the `ai-eval` job (14/14 passing on 2026-11-09, about €0.03 a run, only when the prompt changes or once a day). New example requests can be added as cases.
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 10 (AI actions) ready for device testing on dev
 
 AI sorting can now set your leave left or used, book leave, change five work settings, set reminders and move existing events and tasks. Clear ones are applied with Undo (Inbox → Done by AI); others wait under Needs your OK.
