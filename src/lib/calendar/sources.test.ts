@@ -196,7 +196,7 @@ describe('linked calendars, holidays and leave', () => {
         title: 'Her match',
         color: '#7c3aed',
         editable: false,
-        extendedProps: { source: `feed:${feed.id}` },
+        extendedProps: { source: `feed:${feed.id}`, externalId: expect.any(String) },
       }),
     ]);
   });

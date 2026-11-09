@@ -52,7 +52,15 @@ export interface CalEvent {
   editable: boolean;
   /** Drag start and resize; false for recurring and read-only events. */
   className?: string;
-  extendedProps: { source: SourceKey; itemId?: string; occurrence?: string };
+  extendedProps: {
+    source: SourceKey;
+    itemId?: string;
+    occurrence?: string;
+    /** external_events id, for a linked calendar's event. */
+    externalId?: string;
+    /** leave_bookings id. */
+    leaveId?: string;
+  };
 }
 
 export interface CalendarData {
@@ -134,7 +142,8 @@ export function expandOccurrences(item: Item, range: Range, timeZone: string): s
     });
 }
 
-function itemEvent(
+/** One item (or one occurrence of a repeating item) as a calendar event. */
+export function eventForItem(
   item: Item,
   start: string,
   timeZone: string,
@@ -167,6 +176,25 @@ function overlaps(startIso: string, endIso: string | null, range: Range): boolea
   return s < range.end.getTime() && e >= range.start.getTime();
 }
 
+/** A linked calendar's event (read-only). */
+export function eventForExternal(e: ExternalEvent, feed: Feed, timeZone: string): CalEvent {
+  const base = {
+    id: `ext:${e.id}`,
+    title: e.title || '(busy)',
+    color: feed.colour ?? SOURCE_COLOURS.linked,
+    editable: false,
+    extendedProps: { source: `feed:${feed.id}` as SourceKey, externalId: e.id },
+  };
+  return e.all_day
+    ? {
+        ...base,
+        allDay: true,
+        start: localDate(e.start_at, timeZone),
+        end: e.end_at ? localDate(e.end_at, timeZone) : addDays(localDate(e.start_at, timeZone), 1),
+      }
+    : { ...base, allDay: false, start: e.start_at, ...(e.end_at ? { end: e.end_at } : {}) };
+}
+
 /** Every calendar event in a range, for the sources that are not hidden. */
 export function buildEvents(
   data: CalendarData,
@@ -187,10 +215,10 @@ export function buildEvents(
     if (!isCalendarItem(item) || !show(sourceOfItem(item)) || !item.start_at) continue;
     if (item.rrule) {
       for (const occ of expandOccurrences(item, range, timeZone)) {
-        out.push(itemEvent(item, occ, timeZone, occ, colourOf(item)));
+        out.push(eventForItem(item, occ, timeZone, occ, colourOf(item)));
       }
     } else if (overlaps(item.start_at, item.end_at, range)) {
-      out.push(itemEvent(item, item.start_at, timeZone, undefined, colourOf(item)));
+      out.push(eventForItem(item, item.start_at, timeZone, undefined, colourOf(item)));
     }
   }
 
@@ -198,27 +226,8 @@ export function buildEvents(
   for (const e of data.external) {
     const feed = feeds.get(e.feed_id);
     if (e.deleted_at || !feed || feed.deleted_at || !feed.enabled) continue;
-    const key: SourceKey = `feed:${feed.id}`;
-    if (!show(key) || !overlaps(e.start_at, e.end_at, range)) continue;
-    const base = {
-      id: `ext:${e.id}`,
-      title: e.title || '(busy)',
-      color: feed.colour ?? SOURCE_COLOURS.linked,
-      editable: false,
-      extendedProps: { source: key },
-    };
-    out.push(
-      e.all_day
-        ? {
-            ...base,
-            allDay: true,
-            start: localDate(e.start_at, timeZone),
-            end: e.end_at
-              ? localDate(e.end_at, timeZone)
-              : addDays(localDate(e.start_at, timeZone), 1),
-          }
-        : { ...base, allDay: false, start: e.start_at, ...(e.end_at ? { end: e.end_at } : {}) },
-    );
+    if (!show(`feed:${feed.id}`) || !overlaps(e.start_at, e.end_at, range)) continue;
+    out.push(eventForExternal(e, feed, timeZone));
   }
 
   if (show('holidays')) {
@@ -250,7 +259,7 @@ export function buildEvents(
         allDay: true,
         color: SOURCE_COLOURS.leave,
         editable: false,
-        extendedProps: { source: 'leave' },
+        extendedProps: { source: 'leave', leaveId: b.id },
       });
     }
   }

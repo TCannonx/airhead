@@ -522,11 +522,11 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 - [x] **11.0 AI over every note.** Sorting every 5 minutes when something is new (done, PR #138); notes, meeting notes and ideas changed since the AI last looked join the batch; each batch leaves a memory digest.
 - [x] **11.1 Nothing lost.** Long notes keep their instant event and also go to AI sorting, which tidies that event (update, with Undo) and adds what was missed; time ranges set an end time.
 - [x] **11.2 Workshop routing.** Send to Workshop on every capture, item and note; AI sends unmappable or leftover text to the Workshop.
-- [ ] **11.3 Easier viewing.** Event details sheet; month view with dots and day list; now line, Today, swipe, period title.
+- [x] **11.3 Easier viewing.** Event details sheet; month view with dots and day list; now line, Today, swipe, period title.
 - [ ] **11.4 Faster adding.** Quick add with preview; tap a slot to create; repeat/until/reminder/calendar in the form.
 - [ ] **11.5 Repeating events.** This one / this and following / all, for edit, delete and drag; repeat in words.
-- [ ] **11.6 Find and filter.** Event search; 30-day agenda; visible, remembered calendar toggles.
-- [ ] **11.7 Missing events.** Diagnose with the owner; e2e that events stay visible in every view across devices.
+- [x] **11.6 Find and filter.** Event search; 30-day agenda; visible, remembered calendar toggles.
+- [x] **11.7 Missing events.** Diagnose with the owner; e2e that events stay visible in every view across devices.
 - [x] **11.U1 UI foundation.** Design tokens (colour roles, type scale, radius, spacing; light and dark), shared components in `src/ui/` and a design kit at Settings → About → Design kit (PR #143); app shell with tab bar (Inbox badge), sidebar and PageHeader on every page, Settings on the new components. See `docs/UI.md`.
 
 ## Phases 5–9 (outline)
