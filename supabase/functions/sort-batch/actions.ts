@@ -66,7 +66,9 @@ export type TargetTable = 'settings' | 'leave_bookings' | 'items';
 
 export interface PlannedAction {
   id: string;
-  capture_id: string;
+  /** Null for an action found in a note (then note_id is set; Task 11.0). */
+  capture_id: string | null;
+  note_id?: string;
   kind: SortActionT['kind'];
   status: 'applied' | 'proposed' | 'skipped';
   reason: string | null;
@@ -332,7 +334,12 @@ function workSetting(b: Base, a: SortActionT, ctx: ActionContext, work: WorkSett
 
 // Reminders ----------------------------------------------------------------------------------
 
-function reminder(b: Base, a: SortActionT, ctx: ActionContext, newItems: NewItemRef[]) {
+function reminder(
+  b: Base,
+  a: SortActionT,
+  ctx: ActionContext,
+  newItems: (NewItemRef | undefined)[],
+) {
   const fresh =
     a.target_item_index !== null && a.target_item_index >= 0
       ? newItems[a.target_item_index]
@@ -503,11 +510,15 @@ function prepRule(b: Base, a: SortActionT, ctx: ActionContext, work: WorkSetting
 
 // Entry point --------------------------------------------------------------------------------------
 
-/** Checks a capture's actions (at most 5). `newItems` are this capture's own new items. */
+/**
+ * Checks a capture's actions (at most 5). `newItems` are this capture's own items in
+ * the model's order (undefined where an item was not kept), so target_item_index
+ * points at the right one; a tidied instant event is its existing item (Task 11.0).
+ */
 export function planActions(
   captureId: string,
   actions: SortActionT[],
-  newItems: NewItemRef[],
+  newItems: (NewItemRef | undefined)[],
   ctx: ActionContext,
 ): PlannedAction[] {
   const work = readWork({ work: ctx.workRaw });

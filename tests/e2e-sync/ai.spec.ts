@@ -167,3 +167,34 @@ test('"Quiz every Thursday 8pm-12pm" keeps its end time', async ({ browser }) =>
   await a.getByRole('list', { name: 'Items' }).getByText('Quiz', { exact: true }).click();
   await expect(a.getByText(/20:00\s*[–-]\s*00:00/)).toBeVisible({ timeout: 30_000 });
 });
+
+test('a typed note is read by AI: the task it asks for appears, the note is unchanged', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ai-notes-${Date.now()}@example.test`);
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  await a.getByRole('button', { name: 'New note' }).click();
+  await expect(a).toHaveURL(/\/notes\//);
+  const noteUrl = a.url();
+  const text = 'need to send the report to Trevor by Friday';
+  const editor = a.getByLabel('Note', { exact: true });
+  await editor.click();
+  await a.keyboard.type(text);
+  // Saved after a short pause; Sort now syncs it first.
+  await a.waitForTimeout(1500);
+
+  // Only a note is waiting (no capture): Sort now still looks at it.
+  await sortNow(a);
+  await expect(a.getByText(/^Looked at 1 note/)).toBeVisible({ timeout: 60_000 });
+
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  const items = a.getByRole('list', { name: 'Items' });
+  await expect(items.getByText('Send the report to Trevor', { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+
+  // The note itself is exactly as written.
+  await a.goto(noteUrl);
+  await expect(a.getByLabel('Note', { exact: true })).toHaveText(text, { timeout: 30_000 });
+});

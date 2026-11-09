@@ -1,5 +1,10 @@
-import { readAction, type SortedItemT, type SortResultT } from '../_shared/schemas/sort.ts';
-import { type ActionContext, type PlannedAction, planActions } from './actions.ts';
+import {
+  NOTE_PREFIX,
+  readAction,
+  type SortAnswer,
+  type SortedItemT,
+} from '../_shared/schemas/sort.ts';
+import { type ActionContext, type NewItemRef, type PlannedAction, planActions } from './actions.ts';
 
 /** An event is created straight away only from this confidence up (otherwise a suggestion). */
 export const EVENT_CONFIDENT = 0.8;
@@ -18,6 +23,17 @@ export interface PlanContext {
    * by capture id, as the server holds it now (Task 11.1).
    */
   instant?: Map<string, InstantRow>;
+  /** Notes sent in this batch (Task 11.0): stamped as seen whatever the answer. */
+  notes?: NoteSeen[];
+}
+
+/** A note looked at by this batch, and what it looked like (Task 11.0). */
+export interface NoteSeen {
+  id: string;
+  /** Length of the note's text at this look; the next look sends what follows. */
+  seen_len: number;
+  /** Hash of that text, to tell an addition from an edit next time. */
+  seen_hash: string;
 }
 
 export interface InstantRow {
@@ -30,6 +46,8 @@ export interface InstantRow {
   rrule: string | null;
   updated_at: string;
   deleted_at: string | null;
+  /** Its data, so a reminder set by the same capture keeps the rest (Task 11.0). */
+  data?: Record<string, unknown>;
 }
 
 /** Columns sorting may tidy on an instant event. */
@@ -56,7 +74,10 @@ export interface ItemUpdate {
 export interface PlannedItem {
   /** Made here so actions (a reminder on a new event) can point at it. */
   id: string;
-  capture_id: string;
+  /** Null for items found in a note (then note_id is set). */
+  capture_id: string | null;
+  /** The note this item was found in (Task 11.0). */
+  note_id?: string;
   type: SortedItemT['type'];
   title: string;
   body: string | null;
@@ -83,7 +104,9 @@ export interface ReadingUpdate {
 export interface ProposedFact {
   text: string;
   category: 'everyday' | 'person' | 'personal';
-  source_capture_id: string;
+  source_capture_id: string | null;
+  /** 'digest' for the batch's digest (Task 11.0); otherwise absent. */
+  source?: 'digest';
 }
 
 export interface SortPlan {
@@ -102,6 +125,8 @@ export interface SortPlan {
   actions: PlannedAction[];
   /** Instant events tidied by this batch instead of new ones (Task 11.1). */
   item_updates: ItemUpdate[];
+  /** Notes to stamp with ai_seen_at (Task 11.0), whatever the answer said. */
+  notes: NoteSeen[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -174,13 +199,14 @@ function tidyOf(row: InstantRow, planned: PlannedItem): Record<string, unknown> 
  */
 export function planSort(
   captureIds: string[],
-  result: SortResultT,
+  result: SortAnswer,
   ctx: PlanContext,
   linkIds: string[] = [],
   actx?: ActionContext,
 ): SortPlan {
   const unsorted = new Set(captureIds);
   const links = new Set(linkIds);
+  const noteIds = new Set((ctx.notes ?? []).map((n) => n.id));
   const listByName = new Map(ctx.lists.map((l) => [norm(l.name), l.id]));
   const topicNames = new Set(ctx.topics.map((t) => norm(t.name)));
   const ideaByTitle = new Map(ctx.ideas.map((i) => [norm(i.title), i.id]));
@@ -197,80 +223,144 @@ export function planSort(
     for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
   };
 
+  /** One item from the model, with Airhead's rules applied. */
+  const toPlanned = (it: SortedItemT, captureId: string | null, isLink: boolean): PlannedItem => {
+    const confidence = Math.min(1, Math.max(0, it.confidence));
+    const data: Record<string, unknown> = {};
+    let itemStatus: PlannedItem['status'] = confidence < REVIEW_BELOW ? 'suggested' : 'open';
+    let listId: string | null = null;
+
+    const start = iso(it.start_at);
+    if (it.type === 'event') {
+      const future =
+        start !== null && Date.parse(start) >= ctx.now.getTime() - (it.all_day ? 86_400_000 : 0);
+      if (!future || confidence < EVENT_CONFIDENT) itemStatus = 'suggested';
+    }
+    if (it.type === 'list_entry') {
+      listId = it.list_name ? (listByName.get(norm(it.list_name)) ?? null) : null;
+      if (!listId) {
+        itemStatus = 'suggested';
+        if (it.list_name) data.proposed_list = it.list_name.trim();
+      }
+    }
+    if (isLink) {
+      // Untrusted content: never acted on automatically.
+      itemStatus = 'suggested';
+      data.from_link = true;
+    }
+    if (it.suggest_workshop) data.workshop = true;
+    const ideaId = it.related_idea_title ? ideaByTitle.get(norm(it.related_idea_title)) : undefined;
+    if (ideaId) data.related_idea_id = ideaId;
+
+    const topics = cleanTopics(it.topics);
+    noteTopics(topics);
+
+    return {
+      id: crypto.randomUUID(),
+      capture_id: captureId,
+      type: it.type,
+      title: it.title.trim().replace(/\.$/, '') || '(untitled)',
+      body: it.body?.trim() || null,
+      status: itemStatus,
+      start_at: start,
+      end_at: iso(it.end_at),
+      all_day: it.all_day,
+      // A repeating task needs a first due time, or its reminder never fires.
+      due_at:
+        iso(it.due_at) ??
+        (it.type === 'task' && it.rrule?.trim()
+          ? tomorrowMorning(ctx.now, ctx.timeZone ?? 'Europe/Dublin')
+          : null),
+      rrule: it.rrule?.trim() || null,
+      calendar: it.type === 'event' ? 'personal' : null,
+      list_id: listId,
+      topic_names: topics,
+      confidence,
+      data,
+    };
+  };
+
+  const keepFacts = (r: SortAnswer['results'][number], captureId: string | null) => {
+    for (const f of r.proposed_facts.slice(0, 3)) {
+      const text = f.text.trim().slice(0, 200);
+      if (text) facts.push({ text, category: f.category, source_capture_id: captureId });
+    }
+  };
+
   for (const r of result.results) {
+    if (seen.has(r.capture_id)) continue;
+
+    // A note the person wrote (Task 11.0): new items and actions only; the note stays as it is.
+    if (r.capture_id.startsWith(NOTE_PREFIX)) {
+      const noteId = r.capture_id.slice(NOTE_PREFIX.length);
+      if (!noteIds.has(noteId)) continue;
+      seen.add(r.capture_id);
+      // Aligned with r.items, so target_item_index points at the right one.
+      const refs: (NewItemRef | undefined)[] = [];
+      for (const it of r.items) {
+        if (it.type === 'note' || it.type === 'meeting') {
+          refs.push(undefined); // the note itself already exists
+          continue;
+        }
+        const planned = toPlanned(it, null, false);
+        planned.note_id = noteId;
+        planned.data.from_note_id = noteId;
+        items.push(planned);
+        refs.push(planned);
+      }
+      if (actx && (r.actions ?? []).length) {
+        const planned = planActions(r.capture_id, r.actions.map(readAction), refs, actx);
+        actions.push(
+          ...planned.map((a) => ({
+            ...a,
+            capture_id: null,
+            note_id: noteId,
+            payload: { ...a.payload, note_id: noteId },
+          })),
+        );
+      }
+      keepFacts(r, null);
+      continue;
+    }
+
     const isLink = links.has(r.capture_id);
-    if ((!unsorted.has(r.capture_id) && !isLink) || seen.has(r.capture_id)) continue;
+    if (!unsorted.has(r.capture_id) && !isLink) continue;
     seen.add(r.capture_id);
     let review = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
     const instantRow = isLink ? undefined : ctx.instant?.get(r.capture_id);
     let tidyDone = false;
     let tidy: ItemUpdate | null = null;
+    /** This capture's items in the model's order (a reminder's target_item_index counts these). */
+    const refs: (NewItemRef | undefined)[] = [];
+    let instantRef: NewItemRef | undefined;
 
     for (const it of r.items) {
-      if (isLink && it.type === 'reading') continue; // the reading item already exists
-      const confidence = Math.min(1, Math.max(0, it.confidence));
-      const data: Record<string, unknown> = {};
-      let itemStatus: PlannedItem['status'] = confidence < REVIEW_BELOW ? 'suggested' : 'open';
-      let listId: string | null = null;
-
-      const start = iso(it.start_at);
-      if (it.type === 'event') {
-        const future =
-          start !== null && Date.parse(start) >= ctx.now.getTime() - (it.all_day ? 86_400_000 : 0);
-        if (!future || confidence < EVENT_CONFIDENT) itemStatus = 'suggested';
+      if (isLink && it.type === 'reading') {
+        refs.push(undefined); // the reading item already exists
+        continue;
       }
-      if (it.type === 'list_entry') {
-        listId = it.list_name ? (listByName.get(norm(it.list_name)) ?? null) : null;
-        if (!listId) {
-          itemStatus = 'suggested';
-          if (it.list_name) data.proposed_list = it.list_name.trim();
-        }
-      }
-      if (isLink) {
-        // Untrusted content: never acted on automatically.
-        itemStatus = 'suggested';
-        data.from_link = true;
-      }
-      if (it.suggest_workshop) data.workshop = true;
-      const ideaId = it.related_idea_title
-        ? ideaByTitle.get(norm(it.related_idea_title))
-        : undefined;
-      if (ideaId) data.related_idea_id = ideaId;
-
-      const topics = cleanTopics(it.topics);
-      noteTopics(topics);
-
-      const planned: PlannedItem = {
-        id: crypto.randomUUID(),
-        capture_id: r.capture_id,
-        type: it.type,
-        title: it.title.trim().replace(/\.$/, '') || '(untitled)',
-        body: it.body?.trim() || null,
-        status: itemStatus,
-        start_at: start,
-        end_at: iso(it.end_at),
-        all_day: it.all_day,
-        // A repeating task needs a first due time, or its reminder never fires.
-        due_at:
-          iso(it.due_at) ??
-          (it.type === 'task' && it.rrule?.trim()
-            ? tomorrowMorning(ctx.now, ctx.timeZone ?? 'Europe/Dublin')
-            : null),
-        rrule: it.rrule?.trim() || null,
-        calendar: it.type === 'event' ? 'personal' : null,
-        list_id: listId,
-        topic_names: topics,
-        confidence,
-        data,
-      };
+      const planned = toPlanned(it, r.capture_id, isLink);
 
       // The first event of a longer note is the instant event, tidied (Task 11.1).
       if (instantRow && !tidyDone && it.type === 'event') {
         tidyDone = true;
-        if (instantRow.deleted_at) continue; // the person removed it: do not bring it back
+        if (instantRow.deleted_at) {
+          refs.push(undefined); // the person removed it: do not bring it back
+          continue;
+        }
         const after = tidyOf(instantRow, planned);
         if (((after.status as string | undefined) ?? instantRow.status) === 'suggested')
           review = true;
+        // A reminder on this event points at the existing item, not a new one.
+        instantRef = {
+          id: instantRow.id,
+          type: 'event',
+          start_at: planned.start_at ?? instantRow.start_at,
+          all_day: planned.all_day,
+          due_at: null,
+          data: { ...(instantRow.data ?? {}) },
+        };
+        refs.push(instantRef);
         if (Object.keys(after).length) {
           tidy = {
             id: crypto.randomUUID(),
@@ -278,7 +368,7 @@ export function planSort(
             item_id: instantRow.id,
             summary: '',
             quote: instantRow.title,
-            confidence,
+            confidence: planned.confidence,
             before: {
               ...Object.fromEntries(
                 Object.keys(after).map((k) => [k, instantRow[k as keyof InstantRow]]),
@@ -291,8 +381,9 @@ export function planSort(
         continue;
       }
 
-      if (itemStatus === 'suggested' && !isLink) review = true;
+      if (planned.status === 'suggested' && !isLink) review = true;
       items.push(planned);
+      refs.push(planned);
     }
 
     if (tidy) {
@@ -320,19 +411,34 @@ export function planSort(
     } else {
       // Actions only ever come from what the person typed (never from page text).
       if (actx && (r.actions ?? []).length) {
-        const mine = items.filter((p) => p.capture_id === r.capture_id);
-        const planned = planActions(r.capture_id, r.actions.map(readAction), mine, actx);
+        const planned = planActions(r.capture_id, r.actions.map(readAction), refs, actx);
+        if (instantRow && instantRef) {
+          for (const a of planned) {
+            if (a.status !== 'applied' || a.target_table !== 'items') continue;
+            if (a.target_id !== instantRow.id) continue;
+            if (tidy) {
+              // Applied with the tidy-up (one freshness check), so Undo restores both.
+              tidy.after.data = a.after?.data;
+              tidy.before.data = instantRow.data ?? {};
+            } else {
+              // No tidy-up: an ordinary change to an existing item, checked for freshness.
+              a.before = { ...(a.before ?? {}), updated_at: instantRow.updated_at };
+            }
+          }
+        }
         actions.push(...planned);
         if (planned.some((p) => p.status === 'proposed')) review = true;
       }
       status.set(r.capture_id, review ? 'needs_review' : 'sorted');
       // Facts are learned only from what the person typed, never from page text.
-      for (const f of r.proposed_facts.slice(0, 3)) {
-        const text = f.text.trim().slice(0, 200);
-        if (text) facts.push({ text, category: f.category, source_capture_id: r.capture_id });
-      }
+      keepFacts(r, r.capture_id);
     }
   }
+
+  // The batch's digest becomes an everyday fact, so later batches see it (Task 11.0).
+  const digest = (result.digest ?? '').replace(/\s+/g, ' ').trim().slice(0, 300);
+  if (digest && !facts.some((f) => norm(f.text) === norm(digest)))
+    facts.push({ text: digest, category: 'everyday', source_capture_id: null, source: 'digest' });
 
   return {
     items,
@@ -343,5 +449,6 @@ export function planSort(
     facts,
     actions,
     item_updates: itemUpdates,
+    notes: ctx.notes ?? [],
   };
 }

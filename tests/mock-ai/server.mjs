@@ -215,7 +215,33 @@ export function sortOne(id, text, ctx, instant = null) {
   return result;
 }
 
-/** Answers a sorting request from the captures in its user message. */
+/**
+ * What the model would plausibly return for one of the person's notes (Task 11.0):
+ * only what the new text asks for; the note itself is never returned.
+ */
+export function sortNote(id, text) {
+  const result = {
+    capture_id: `note:${id}`,
+    items: [],
+    actions: [],
+    proposed_facts: [],
+    link_summary: null,
+  };
+  // "need to send the report to Trevor by Friday": a task due that day.
+  const need = text.match(/need to (.+?) by (\w+day)\b/i);
+  if (need) {
+    const day = WEEKDAYS.indexOf(need[2].toLowerCase());
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: cap(need[1].trim()),
+      due_at: day >= 0 ? nextWeekday(day, 17) : null,
+    });
+  }
+  return result;
+}
+
+/** Answers a sorting request from the captures and notes in its user message. */
 export function sortAnswer(userText) {
   const ctxMatch = userText.match(/Context:\n(\{.*\})\n/);
   const ctx = ctxMatch ? JSON.parse(ctxMatch[1]) : {};
@@ -229,7 +255,12 @@ export function sortAnswer(userText) {
     const instant = inst ? { title: inst[1], start: inst[2], allDay: !!inst[3] } : null;
     results.push(sortOne(m[1], text, ctx, instant));
   }
-  return { results };
+  const notes = /<note id="([^"]+)" title="[^"]*">\n([\s\S]*?)\n<\/note>/g;
+  for (const m of userText.matchAll(notes)) results.push(sortNote(m[1], m[2]));
+  // A digest when a note asked for something (stored as a memory fact).
+  const found = results.find((r) => r.capture_id.startsWith('note:') && r.items.length);
+  const digest = found ? `Noted from their notes: ${found.items[0].title}.` : null;
+  return { results, digest };
 }
 
 function reply(res, status, body) {
@@ -278,7 +309,7 @@ export function createMockServer() {
         console.log('mock-ai: no saved answer for this task');
         return apiError(res, 400, 'mock: no saved answer for this task');
       }
-      console.log(`mock-ai: sorted ${answer.results.length} capture(s)`);
+      console.log(`mock-ai: sorted ${answer.results.length} capture(s) and note(s)`);
       reply(res, 200, {
         id: `msg_mock_${Date.now()}`,
         type: 'message',
