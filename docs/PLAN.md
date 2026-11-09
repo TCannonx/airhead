@@ -532,6 +532,16 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 - [x] **11.U3 Pages on the shared components: Library, Insights, Notes, Workshop, Work and leave.** Item page, Lists, Trash, Ask, Reading; Insights; notes and the ink toolbar; Workshop; Work page and the leave form in the shared Sheet.
 - [x] **11.U4 Pages on the shared components: Settings panels, sign-in, lock, share.** Work, Memory, Check-up, Today, Linked calendars, Capture tokens, Sharing, Notifications, Scout and App lock panels (switches as Toggle); Sign in, Lock, AuthGate, Share page.
 
+## Phase 12: Trust — every note counts
+
+Spec: `docs/superpowers/specs/2026-11-09-trust-every-note-counts.md`. Principle for all future work: nothing is silent, show your work, move it forward, ask little and well, same AI cost.
+
+- [ ] **12.1 Follow-ups from sorting.** Up to 3 specific questions with quick answers per note that implies more work; a planning task with checklist steps due before the first occurrence; `follow_ups` table written by the sorting batch.
+- [ ] **12.2 Answering.** Inbox "Questions for you" with quick answers, on the related item and a Today card; an answer is a linked capture the next batch acts on (one more round at most); Dismiss counts as a correction.
+- [ ] **12.3 Receipts.** "What Airhead did" on every capture: one line per outcome with the words it came from, including "kept as written, not acted on".
+- [ ] **12.4 Completeness checks.** Real-model evaluator checks nothing is dropped, questions where work is implied and none on clear notes; new owner-style cases; e2e-sync for ask, answer on another device, new task.
+- [ ] **12.5 Trust in Insights.** Notes handled, questions open, answered and dismissed, correction rate.
+
 ## Phases 5–9 (outline)
 
 These phases get their own detailed task plan before they are built (by the user's instruction, they are planned and built in order after Phase 4; see DECISIONS). Phases 5 to 9 are planned above.
