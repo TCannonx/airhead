@@ -1431,6 +1431,8 @@ Decisions and library versions, newest first.
 - **Database access from Playwright** goes through `psql` and `SUPABASE_DB_URL` (`tests/e2e-sync/db.ts`); the runner image has the PostgreSQL client. Waits on `sort-batch` print `net._http_response` on time-out, so a failing call says why.
 - No PLAN.md task covers the TEST-MATRIX gaps, so nothing is ticked there.
 
+
+
 ## Every synced table and capture tokens, end to end (TEST-MATRIX gaps 12 and 16, 2026-11-09)
 
 - **The table list is the sync engine's own** (`SYNC_TABLES` from `src/lib/schemas/records.ts`). The test's rows are a `Record<SyncTable, …>`, so a new synced table without a row fails `tsc`, and the test also checks the keys match at run time. Each row is checked against the app's Zod schema first, so the test cannot pass on a row the app would never make.
