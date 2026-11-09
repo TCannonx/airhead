@@ -28,7 +28,15 @@ export interface EvalReport {
 }
 
 const noStore: UsageStore = {
-  price: async () => ({ input: 1, output: 5, cache_read: 0.1, cache_write: 1.25 }) as never,
+  // Small-tier list prices (USD per million tokens); an estimate for the report only.
+  price: async (_user, model) => ({
+    model,
+    input_per_mtok: 1,
+    output_per_mtok: 5,
+    cache_read_per_mtok: 0.1,
+    cache_write_per_mtok: 1.25,
+    eur_rate: 0.92,
+  }),
   monthlyCapEur: async () => null,
   monthToDateEur: async () => 0,
   record: async () => {},
@@ -194,7 +202,7 @@ export async function runEval(
     error: null,
     passed,
     total: reports.length,
-    cost_eur: result.costEur,
+    cost_eur: Number.isFinite(result.costEur) ? result.costEur : 0,
     cases: reports,
   };
 }
