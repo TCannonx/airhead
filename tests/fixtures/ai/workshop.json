@@ -9,5 +9,14 @@
     ],
     "open_questions": ["How big should it be?", " "],
     "next_steps": ["Measure the back wall", "Price timber at the builders' merchant", ""]
+  },
+  "turn": {
+    "questions": ["How big should it be?", "  ", "Timber or metal?", "Budget?", "A fourth one"],
+    "draft": {
+      "summary": "  A 2 x 3 m timber shed for bikes and tools.  ",
+      "sections": [{ "heading": "Size", "body": "2 x 3 m fits the back wall." }],
+      "open_questions": ["Does it need power?"],
+      "next_steps": ["Measure the back wall"]
+    }
   }
 }
