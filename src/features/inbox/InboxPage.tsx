@@ -22,6 +22,7 @@ import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { ListRow } from '../../ui/ListRow';
 import AiActions from './AiActions';
 import { FollowUpList } from './FollowUps';
+import { Receipt } from '../capture/Receipt';
 import { INBOX_WAITING } from './useInboxCount';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
@@ -184,6 +185,7 @@ export default function InboxPage() {
                     Send to Workshop
                   </Button>
                 </div>
+                <Receipt capture={c} />
               </GroupedListItem>
             ))}
           </GroupedList>

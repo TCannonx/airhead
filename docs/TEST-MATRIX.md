@@ -317,6 +317,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | `follow_ups` syncs between devices | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `db/0039` | `sync/tables.spec.ts` (every synced table) | |
 | Questions for you in the Inbox (question, the note it came from, quick answers, text box, Dismiss), on the item page, and a Today card | `features/inbox/followups.test.tsx` | — | `sync/ai.spec.ts` "a question asked on A is answered on B…" | |
 | An answer is a capture linked to its question; the next batch adds it to the item (Undo) and acts on it; one more round at most; Dismiss is a correction | `features/inbox/followups.test.tsx` (linked capture, correction, Undo of the details) | `fn/sort-batch/followups.test.ts` (answers), `_shared/ai.contract.test.ts` (answer block), `db/0039` (body update) | `sync/ai.spec.ts` "a question asked on A is answered on B; the new task and details reach A; Dismiss is a correction" | |
+| "What Airhead did" on every capture (Capture → Recent, Inbox, item page "From your note"): one line per outcome with its words; Undo from the receipt; "Kept as written, not acted on"; waiting with the next check time | `lib/db/receipts.test.ts`, `features/capture/receipt.test.tsx` | — | `sync/ai.spec.ts` "What Airhead did: waiting before sorting, then every outcome with its words, on both devices" | |
 
 ## Cross-cutting
 

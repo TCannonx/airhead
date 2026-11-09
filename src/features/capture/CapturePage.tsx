@@ -22,6 +22,7 @@ import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { TextArea } from '../../ui/TextArea';
 import { compressImage } from '../../lib/files/image';
 import NewNoteButtons from '../notes/NewNoteButtons';
+import { Receipt } from './Receipt';
 
 const isTouch = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
@@ -209,6 +210,7 @@ export default function CapturePage() {
                     </Button>
                   )}
                 </div>
+                <Receipt capture={c} />
               </GroupedListItem>
             ))}
           </GroupedList>
