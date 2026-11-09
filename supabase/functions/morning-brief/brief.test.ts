@@ -66,6 +66,18 @@ Deno.test('enriching the digest: location, holidays, recurring occurrences', () 
       ['2026-07-22', '19:00', '20:30'],
     ],
   );
+  // A deleted or changed occurrence (Task 11.5) is left out of the series.
+  const skipped = enrichDigest(
+    {
+      ...digest,
+      recurring: digest.recurring.map((r) => ({ ...r, exdates: ['2026-07-15T18:00:00.000Z'] })),
+    },
+    {},
+  );
+  assertEquals(
+    skipped.recurring_events.map((r) => r.date),
+    ['2026-07-22'],
+  );
   // The August bank holiday shows up when it's in the week.
   const aug = enrichDigest({ ...digest, date: '2026-07-30' }, {});
   assertEquals(
