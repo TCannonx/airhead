@@ -1,5 +1,4 @@
 import { TZDate } from '@date-fns/tz';
-import { RRule } from 'rrule';
 import { addDays, weekday } from '../holidays/easter';
 import type { Layout } from '../../app/layout';
 import {
@@ -258,16 +257,8 @@ export function agendaGroups(
     }));
 }
 
-/** "Every week on Thursday" from an RRULE. */
-export function repeatWords(rrule: string): string {
-  let text: string;
-  try {
-    text = RRule.fromString(rrule.replace(/^RRULE:/, '')).toText();
-  } catch {
-    text = rrule;
-  }
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+/** A repeat rule in words ("Every Thursday until 31 Dec"). */
+export { repeatWords } from './repeat';
 
 export interface SearchHit {
   event: CalEvent;

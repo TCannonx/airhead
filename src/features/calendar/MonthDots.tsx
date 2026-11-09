@@ -7,6 +7,7 @@ import {
   type CalendarData,
 } from '../../lib/calendar/sources';
 import { agendaGroups, dayLabel, dayTitle, locationOf, periodRange } from '../../lib/calendar/view';
+import { Button } from '../../ui/Button';
 import { cx, FOCUS_RING } from '../../ui/cx';
 import EventRow from './EventRow';
 
@@ -24,6 +25,7 @@ export default function MonthDots({
   today,
   onSelect,
   onOpen,
+  onAdd,
 }: {
   data: CalendarData;
   hidden: ReadonlySet<string>;
@@ -33,6 +35,8 @@ export default function MonthDots({
   today: string;
   onSelect: (day: string) => void;
   onOpen: (event: CalEvent) => void;
+  /** Add an event on the selected day. */
+  onAdd?: (day: string) => void;
 }) {
   const { from, to } = periodRange('month', selected);
   const month = selected.slice(0, 7);
@@ -129,9 +133,14 @@ export default function MonthDots({
       </div>
 
       <section aria-label={`Events on ${dayTitle(selected)}`} className="mt-4">
-        <h3 className="mb-1.5 text-footnote font-semibold text-fg-muted">
-          {dayLabel(selected, today)}
-        </h3>
+        <div className="mb-1.5 flex items-center justify-between">
+          <h3 className="text-footnote font-semibold text-fg-muted">{dayLabel(selected, today)}</h3>
+          {onAdd && (
+            <Button size="sm" variant="plain" onClick={() => onAdd(selected)}>
+              Add event
+            </Button>
+          )}
+        </div>
         {entries.length === 0 ? (
           <p className="rounded-card bg-surface px-4 py-3 text-footnote text-fg-muted">
             No events.

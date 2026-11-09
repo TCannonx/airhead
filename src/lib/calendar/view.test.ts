@@ -149,7 +149,7 @@ describe('when and repeat in words', () => {
       TZ,
     );
     expect(span && whenText(span, TZ)).toBe('Tue 10 Nov 2026 – Thu 12 Nov 2026 · All day');
-    expect(repeatWords('FREQ=WEEKLY;BYDAY=TH')).toBe('Every week on Thursday');
+    expect(repeatWords('FREQ=WEEKLY;BYDAY=TH')).toBe('Every Thursday');
     expect(repeatWords('RRULE:FREQ=YEARLY')).toBe('Every year');
   });
 });

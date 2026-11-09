@@ -32,7 +32,8 @@ import {
   type CalView,
 } from '../../lib/calendar/view';
 import { useDb } from '../../lib/db/context';
-import { update } from '../../lib/db/repository';
+import { softDelete, update } from '../../lib/db/repository';
+import { defaultSlot } from '../../lib/calendar/quickAdd';
 import { LOCATION_LABELS } from '../../lib/work/settings';
 import type { LeaveFields } from '../../lib/db/leave';
 import type { Item, LeaveBooking } from '../../lib/schemas/records';
@@ -41,12 +42,14 @@ import { IconButton } from '../../ui/IconButton';
 import { SegmentedControl } from '../../ui/SegmentedControl';
 import { Sheet } from '../../ui/Sheet';
 import { TextField } from '../../ui/TextField';
+import { Toast } from '../../ui/Toast';
 import LeaveSheet from '../leave/LeaveSheet';
 import AgendaList from './AgendaList';
 import CalendarsPanel from './CalendarsPanel';
 import EventDetails from './EventDetails';
 import EventEditor, { type EventDraft } from './EventEditor';
 import MonthDots from './MonthDots';
+import QuickAdd from './QuickAdd';
 import SearchResults from './SearchResults';
 import { deviceTimeZone, useCalendarData } from './useCalendarData';
 
@@ -139,6 +142,7 @@ export default function CalendarPage() {
     initial?: Partial<LeaveFields>;
   } | null>(null);
   const [draftKey, setDraftKey] = useState(0);
+  const [added, setAdded] = useState<Item | null>(null);
   // Week and day open at the hour before now, like Apple and Google.
   const [scrollTime] = useState(() => `${pad(Math.max(0, new Date().getHours() - 1))}:00:00`);
 
@@ -300,14 +304,23 @@ export default function CalendarPage() {
             {arg.timeText && <span className="ml-1 opacity-80">{arg.timeText}</span>}
           </span>
         )}
+        dateClick={(info) => {
+          // One tap or click on an empty slot (or a month day) creates an event there, an hour long.
+          open(
+            info.allDay
+              ? { start: info.date, end: new Date(info.date.getTime() + 86_400_000), allDay: true }
+              : {
+                  start: info.date,
+                  end: new Date(info.date.getTime() + 3_600_000),
+                  allDay: false,
+                },
+          );
+        }}
         select={(info) => {
-          // A single tapped slot becomes an hour, like most calendars.
-          const short = !info.allDay && info.end.getTime() - info.start.getTime() <= 30 * 60_000;
-          open({
-            start: info.start,
-            end: short ? new Date(info.start.getTime() + 3_600_000) : info.end,
-            allDay: info.allDay,
-          });
+          // A drag across slots or days is a span; a single slot is left to dateClick.
+          const span = info.end.getTime() - info.start.getTime();
+          if (span <= (info.allDay ? 86_400_000 : 30 * 60_000)) return;
+          open({ start: info.start, end: info.end, allDay: info.allDay });
           api()?.unselect();
         }}
         eventClick={(info) => {
@@ -361,6 +374,10 @@ export default function CalendarPage() {
       today={today}
       onSelect={setAnchor}
       onOpen={setDetails}
+      onAdd={(day) => {
+        const start = defaultSlot(day, new Date(), tz);
+        open({ start, end: new Date(start.getTime() + 3_600_000), allDay: false });
+      }}
     />
   );
 
@@ -390,6 +407,12 @@ export default function CalendarPage() {
     >
       <div className={wide ? 'flex gap-6' : ''}>
         <div className="min-w-0 flex-1">
+          <QuickAdd
+            timeZone={tz}
+            day={view === 'day' || view === 'month' ? anchor : today}
+            onMore={open}
+            onAdded={setAdded}
+          />
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <SegmentedControl
               label="View"
@@ -490,6 +513,13 @@ export default function CalendarPage() {
           />
         )}
       </Sheet>
+      {added && (
+        <Toast
+          message={`Added “${added.title}”`}
+          action={{ label: 'Undo', onClick: () => void softDelete(db, 'items', added.id) }}
+          onDismiss={() => setAdded(null)}
+        />
+      )}
       <Sheet
         open={!!leave && !!data}
         onClose={close}

@@ -523,7 +523,7 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 - [x] **11.1 Nothing lost.** Long notes keep their instant event and also go to AI sorting, which tidies that event (update, with Undo) and adds what was missed; time ranges set an end time.
 - [x] **11.2 Workshop routing.** Send to Workshop on every capture, item and note; AI sends unmappable or leftover text to the Workshop.
 - [x] **11.3 Easier viewing.** Event details sheet; month view with dots and day list; now line, Today, swipe, period title.
-- [ ] **11.4 Faster adding.** Quick add with preview; tap a slot to create; repeat/until/reminder/calendar in the form.
+- [x] **11.4 Faster adding.** Quick add with preview; tap a slot to create; repeat/until/reminder/calendar in the form.
 - [ ] **11.5 Repeating events.** This one / this and following / all, for edit, delete and drag; repeat in words.
 - [x] **11.6 Find and filter.** Event search; 30-day agenda; visible, remembered calendar toggles.
 - [x] **11.7 Missing events.** Diagnose with the owner; e2e that events stay visible in every view across devices.
