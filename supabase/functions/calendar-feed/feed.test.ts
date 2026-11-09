@@ -110,6 +110,25 @@ Deno.test('recurring events keep their local time across the clock change', () =
   ]);
 });
 
+Deno.test('an occurrence deleted on its own is an EXDATE in the feed (Task 11.5)', () => {
+  const training = item({
+    title: 'Training',
+    calendar: 'us',
+    start_at: '2026-10-13T18:00:00Z', // Tue 19:00 IST
+    end_at: '2026-10-13T19:30:00Z',
+    rrule: 'FREQ=WEEKLY;BYDAY=TU',
+    data: { exdates: ['2026-10-20T18:00:00.000Z'] },
+  });
+  const text = buildFeed(
+    input({ items: [training], settings: { work: { location_sharing: 'none' } } }),
+  );
+  assertStringIncludes(text, 'EXDATE;TZID=Europe/Dublin:20261020T190000');
+  const [e] = parse(text);
+  const it = e.iterator();
+  const starts = [it.next(), it.next()].map((t: ICAL.Time) => t.toJSDate().toISOString());
+  assertEquals(starts, ['2026-10-13T18:00:00.000Z', '2026-10-27T19:00:00.000Z']);
+});
+
 Deno.test('work location on the Us feed: full, "Working" only, or nothing', () => {
   const settings = (location_sharing: string) => ({ work: { location_sharing } });
   const now = new Date('2026-07-15T08:00:00Z');

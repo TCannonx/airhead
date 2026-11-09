@@ -50,7 +50,7 @@ export interface CalEvent {
   allDay: boolean;
   color: string;
   editable: boolean;
-  /** Drag start and resize; false for recurring and read-only events. */
+  /** Drag start and resize; false for read-only events (a repeating one asks which). */
   className?: string;
   extendedProps: {
     source: SourceKey;
@@ -106,7 +106,7 @@ export function isCalendarItem(item: Item): boolean {
   return false;
 }
 
-/** Occurrence starts (ISO instants) of a recurring item inside a range. */
+/** Occurrence starts (ISO instants) of a recurring item inside a range, without its exceptions. */
 export function expandOccurrences(item: Item, range: Range, timeZone: string): string[] {
   if (!item.start_at || !item.rrule) return [];
   const s = new TZDate(new Date(item.start_at).getTime(), timeZone);
@@ -120,6 +120,11 @@ export function expandOccurrences(item: Item, range: Range, timeZone: string): s
     return [];
   }
   const rule = new RRule({ ...options, dtstart: floating(s) });
+  // Exceptions (Task 11.5): occurrences deleted or changed one at a time.
+  const raw = item.data.exdates;
+  const skip = new Set(
+    (Array.isArray(raw) ? raw : []).map((x) => (typeof x === 'string' ? Date.parse(x) : NaN)),
+  );
   const from = floating(new TZDate(range.start.getTime() - 86_400_000, timeZone));
   const to = floating(new TZDate(range.end.getTime() + 86_400_000, timeZone));
   return rule
@@ -138,7 +143,7 @@ export function expandOccurrences(item: Item, range: Range, timeZone: string): s
     )
     .filter((iso) => {
       const t = Date.parse(iso);
-      return t < range.end.getTime() && t >= range.start.getTime() - 86_400_000;
+      return t < range.end.getTime() && t >= range.start.getTime() - 86_400_000 && !skip.has(t);
     });
 }
 
@@ -158,7 +163,7 @@ export function eventForItem(
     id: occurrence ? `${item.id}|${occurrence}` : item.id,
     title: item.type === 'task' && item.status === 'done' ? `✓ ${item.title}` : item.title,
     color: colour ?? SOURCE_COLOURS[source as 'personal'],
-    editable: !item.rrule,
+    editable: true,
     extendedProps: { source, itemId: item.id, ...(occurrence ? { occurrence } : {}) },
   };
   if (item.all_day) {

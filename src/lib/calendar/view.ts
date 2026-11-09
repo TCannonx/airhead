@@ -1,5 +1,6 @@
 import { TZDate } from '@date-fns/tz';
 import { addDays, weekday } from '../holidays/easter';
+import { repeatWords } from './repeat';
 import type { Layout } from '../../app/layout';
 import {
   eventForExternal,
@@ -258,7 +259,7 @@ export function agendaGroups(
 }
 
 /** A repeat rule in words ("Every Thursday until 31 Dec"). */
-export { repeatWords } from './repeat';
+export { repeatWords };
 
 export interface SearchHit {
   event: CalEvent;
@@ -351,6 +352,18 @@ export function locationOf(ev: CalEvent, data: CalendarData): string | null {
   }
   if (externalId) return data.external.find((e) => e.id === externalId)?.location || null;
   return null;
+}
+
+/** A repeating event's rule in words ("Every Thursday"), for list rows. */
+export function repeatOf(ev: CalEvent, data: CalendarData, timeZone: string): string | null {
+  const { itemId } = ev.extendedProps;
+  const item = itemId ? data.items.find((i) => i.id === itemId) : undefined;
+  if (!item?.rrule) return null;
+  return repeatWords(
+    item.rrule,
+    item.start_at ? localDate(item.start_at, timeZone) : null,
+    localDate(new Date(), timeZone),
+  );
 }
 
 /** Every calendar a person can show or hide: built-in ones, then linked calendars. */

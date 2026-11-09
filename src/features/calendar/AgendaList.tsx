@@ -5,7 +5,7 @@ import {
   type CalEvent,
   type CalendarData,
 } from '../../lib/calendar/sources';
-import { agendaGroups, dayLabel, locationOf, periodRange } from '../../lib/calendar/view';
+import { agendaGroups, dayLabel, locationOf, periodRange, repeatOf } from '../../lib/calendar/view';
 import { Button } from '../../ui/Button';
 import { EmptyState } from '../../ui/EmptyState';
 import EventRow from './EventRow';
@@ -84,6 +84,7 @@ export default function AgendaList({
                 time={e.time}
                 endTime={e.endTime}
                 subtitle={locationOf(e.event, data)}
+                repeat={repeatOf(e.event, data, timeZone)}
                 onOpen={onOpen}
               />
             ))}

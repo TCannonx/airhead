@@ -155,10 +155,20 @@ function itemEvent(item: FeedItem, tz: string, withNotes: boolean): IcsEvent | n
     description: withNotes ? item.body : null,
     rrule: item.rrule,
   };
+  // Occurrences deleted or changed one at a time (Task 11.5).
+  const exdates = (Array.isArray(item.data.exdates) ? item.data.exdates : []).filter(
+    (x): x is string => typeof x === 'string' && !Number.isNaN(Date.parse(x)),
+  );
   if (item.all_day) {
     const first = localParts(item.start_at, tz).date;
     const last = item.end_at ? localParts(item.end_at, tz).date : first;
-    return { ...base, allDay: true, start: first, end: addDays(last < first ? first : last, 1) };
+    return {
+      ...base,
+      allDay: true,
+      start: first,
+      end: addDays(last < first ? first : last, 1),
+      exdates: exdates.map((x) => localParts(x, tz).date.replace(/-/g, '')),
+    };
   }
   const end = item.end_at ?? new Date(Date.parse(item.start_at) + 3_600_000).toISOString();
   return {
@@ -172,6 +182,7 @@ function itemEvent(item: FeedItem, tz: string, withNotes: boolean): IcsEvent | n
           tzid: tz,
           localStart: localParts(item.start_at, tz).stamp,
           localEnd: localParts(end, tz).stamp,
+          exdates: exdates.map((x) => localParts(x, tz).stamp),
         }
       : {}),
   };

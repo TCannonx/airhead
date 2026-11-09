@@ -6,7 +6,14 @@ import {
   type CalEvent,
   type CalendarData,
 } from '../../lib/calendar/sources';
-import { agendaGroups, dayLabel, dayTitle, locationOf, periodRange } from '../../lib/calendar/view';
+import {
+  agendaGroups,
+  dayLabel,
+  dayTitle,
+  locationOf,
+  periodRange,
+  repeatOf,
+} from '../../lib/calendar/view';
 import { Button } from '../../ui/Button';
 import { cx, FOCUS_RING } from '../../ui/cx';
 import EventRow from './EventRow';
@@ -154,6 +161,7 @@ export default function MonthDots({
                 time={e.time}
                 endTime={e.endTime}
                 subtitle={locationOf(e.event, data)}
+                repeat={repeatOf(e.event, data, timeZone)}
                 onOpen={onOpen}
               />
             ))}

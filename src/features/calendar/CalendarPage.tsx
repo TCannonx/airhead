@@ -50,6 +50,8 @@ import EventDetails from './EventDetails';
 import EventEditor, { type EventDraft } from './EventEditor';
 import MonthDots from './MonthDots';
 import QuickAdd from './QuickAdd';
+import RepeatChoice from './RepeatChoice';
+import { editOccurrence } from '../../lib/db/recurring';
 import SearchResults from './SearchResults';
 import { deviceTimeZone, useCalendarData } from './useCalendarData';
 
@@ -143,6 +145,12 @@ export default function CalendarPage() {
   } | null>(null);
   const [draftKey, setDraftKey] = useState(0);
   const [added, setAdded] = useState<Item | null>(null);
+  const [moving, setMoving] = useState<{
+    item: Item;
+    occurrence: string;
+    times: Pick<Item, 'start_at' | 'end_at' | 'all_day'>;
+    revert: () => void;
+  } | null>(null);
   // Week and day open at the hour before now, like Apple and Google.
   const [scrollTime] = useState(() => `${pad(Math.max(0, new Date().getHours() - 1))}:00:00`);
 
@@ -258,8 +266,8 @@ export default function CalendarPage() {
       go(dx < 0 ? 1 : -1);
   };
 
-  const editItem = (item: Item, start: Date) =>
-    open({ item, start, end: null, allDay: item.all_day });
+  const editItem = (item: Item, start: Date, occurrence?: string) =>
+    open({ item, start, end: null, allDay: item.all_day, occurrence });
 
   const calendar = fcView && (
     <div data-color-scheme={dark ? 'dark' : 'light'} className="ah-calendar">
@@ -330,8 +338,19 @@ export default function CalendarPage() {
         eventChange={(info) => {
           const id = info.event.extendedProps.itemId as string | undefined;
           const item = id ? itemsById.get(id) : undefined;
-          if (!item || item.rrule || !info.event.start) {
+          if (!item || !info.event.start) {
             info.revert();
+            return;
+          }
+          const occurrence = info.oldEvent.extendedProps.occurrence as string | undefined;
+          if (item.rrule && occurrence) {
+            // One occurrence of a repeating event moved: ask which events move.
+            setMoving({
+              item,
+              occurrence,
+              times: movedTimes(info.event.start, info.event.end, info.event.allDay, tz),
+              revert: info.revert,
+            });
             return;
           }
           void update(
@@ -510,6 +529,40 @@ export default function CalendarPage() {
             draft={draft}
             onClose={close}
             onBookLeave={(start_date, end_date) => openLeave({ initial: { start_date, end_date } })}
+          />
+        )}
+      </Sheet>
+      <Sheet
+        open={!!moving}
+        title="Move repeating event"
+        onClose={() => {
+          moving?.revert();
+          setMoving(null);
+        }}
+      >
+        {moving && (
+          <RepeatChoice
+            question="Move which events?"
+            onCancel={() => {
+              moving.revert();
+              setMoving(null);
+            }}
+            onChoose={(scope) => {
+              const { item, occurrence, times } = moving;
+              setMoving(null);
+              void editOccurrence(
+                db,
+                item,
+                occurrence,
+                scope,
+                {
+                  start_at: times.start_at ?? occurrence,
+                  end_at: times.end_at,
+                  all_day: times.all_day,
+                },
+                tz,
+              );
+            }}
           />
         )}
       </Sheet>
