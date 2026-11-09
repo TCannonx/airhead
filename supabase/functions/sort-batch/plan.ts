@@ -191,7 +191,9 @@ export function tomorrowMorning(now: Date, timeZone: string, daysAhead = 1): str
 
 /** Birthdays and anniversaries repeat every year even when the model leaves rrule out. */
 export function yearlyByNature(type: string, title: string): string | null {
-  return type === 'event' && /\b(?:birthday|b-?day|anniversary)\b/i.test(title) ? 'FREQ=YEARLY' : null;
+  return type === 'event' && /\b(?:birthday|b-?day|anniversary)\b/i.test(title)
+    ? 'FREQ=YEARLY'
+    : null;
 }
 
 const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
