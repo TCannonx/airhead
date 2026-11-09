@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- test(functions): handler tests for every Edge Function: request handling moved from each `index.ts` into a tested `handler.ts` (behaviour unchanged), covering CORS preflight, methods, missing tokens, service-only refusal of user tokens, other users' ids and bad JSON (TEST-MATRIX gap 8)
+
 - test(ai): contract test for every AI call: ask, workshop flesh-out and turn, morning brief, weekly review, import, summarise (typed and handwritten), suggest-leave, check-contradictions and Scout's web search now go through the real SDK to the stand-in AI, which answers each from the saved fixtures and refuses a saved answer that no longer fits the schema (TEST-MATRIX gap 2)
 
 - fix(brief): the morning brief no longer mentions an occurrence of a repeating event that was deleted or changed on its own (migration 0038 passes the series' exceptions)
