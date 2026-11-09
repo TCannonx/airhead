@@ -9,7 +9,7 @@ import { readWork } from '../_shared/leave/work.ts';
 import { type ActionContext, type BookingRow, type ItemRow } from './actions.ts';
 import { type CandidateRow, pickCandidates } from './candidates.ts';
 import { type NoteRow, noteForSorting, NOTES_PER_BATCH } from './notes.ts';
-import { type InstantRow, planSort } from './plan.ts';
+import { type AnswerContext, type InstantRow, MAX_ROUNDS, planSort } from './plan.ts';
 
 export const BATCH_SIZE = 20;
 
@@ -145,6 +145,10 @@ export async function runSortBatch(
       .map((r) => [r.capture_id as string, r]),
   );
 
+  // Answers to Airhead's questions (Task 12.2): the question and the item it was
+  // about come from the server's own rows, never from the capture's payload.
+  const answers = await loadAnswers(db, userId, batch);
+
   const candidates = pickCandidates((candidateRows.data ?? []) as CandidateRow[], now);
   const timeZone =
     ((settings.data?.data as { time_zone?: string } | undefined)?.time_zone as string) ||
@@ -249,10 +253,18 @@ export async function runSortBatch(
             [
               ...batch.map((c) => {
                 const row = instant.get(c.id);
+                const answer = answers.get(c.id);
                 return {
                   id: c.id,
                   text: c.text ?? '',
                   url: c.url,
+                  answer: answer
+                    ? {
+                        question: answer.question,
+                        about: answer.about,
+                        final: answer.round >= MAX_ROUNDS,
+                      }
+                    : null,
                   instant:
                     row && !row.deleted_at && row.start_at
                       ? { title: row.title, start: row.start_at, all_day: row.all_day }
@@ -303,6 +315,7 @@ export async function runSortBatch(
       notes: notesSeen,
       // What the batch cannot place is kept as a Workshop note (Task 11.2).
       texts: new Map(batch.map((c) => [c.id, c.text ?? c.url ?? ''])),
+      answers,
     },
     links.map((c) => c.id),
     actx,
@@ -349,4 +362,74 @@ export async function runSortBatch(
     sorted: counts.captures,
     items: counts.items,
   };
+}
+
+/** An answer as the batch sees it: the plan's context plus the item in words for the prompt. */
+type LoadedAnswer = AnswerContext & { about: string };
+
+/**
+ * The captures in this batch that answer a question (payload.follow_up_id),
+ * with the question, its round and the item it was about, read from the
+ * person's own follow_ups and items rows.
+ */
+async function loadAnswers(
+  db: SupabaseClient,
+  userId: string,
+  batch: { id: string; payload: unknown }[],
+): Promise<Map<string, LoadedAnswer>> {
+  const byCapture = new Map<string, string>();
+  for (const c of batch) {
+    const id = (c.payload as { follow_up_id?: unknown } | null)?.follow_up_id;
+    if (typeof id === 'string') byCapture.set(c.id, id);
+  }
+  const out = new Map<string, LoadedAnswer>();
+  if (!byCapture.size) return out;
+  const { data: rows } = await db
+    .from('follow_ups')
+    .select('id, question, round, item_id')
+    .eq('user_id', userId)
+    .in('id', [...new Set(byCapture.values())]);
+  const fus = new Map(
+    ((rows ?? []) as { id: string; question: string; round: number; item_id: string | null }[]).map(
+      (r) => [r.id, r],
+    ),
+  );
+  const itemIds = [...fus.values()].flatMap((f) => (f.item_id ? [f.item_id] : []));
+  const { data: itemRows } = itemIds.length
+    ? await db
+        .from('items')
+        .select('id, title, type, body, start_at, due_at, updated_at, deleted_at')
+        .eq('user_id', userId)
+        .in('id', itemIds)
+    : { data: [] };
+  const items = new Map(
+    (
+      (itemRows ?? []) as {
+        id: string;
+        title: string;
+        type: string;
+        body: string | null;
+        start_at: string | null;
+        due_at: string | null;
+        updated_at: string;
+        deleted_at: string | null;
+      }[]
+    ).map((r) => [r.id, r]),
+  );
+  for (const [captureId, fuId] of byCapture) {
+    const f = fus.get(fuId);
+    if (!f) continue;
+    const it = f.item_id ? items.get(f.item_id) : undefined;
+    const live = it && !it.deleted_at ? it : undefined;
+    out.set(captureId, {
+      follow_up_id: f.id,
+      question: f.question,
+      round: f.round,
+      item: live
+        ? { id: live.id, title: live.title, body: live.body, updated_at: live.updated_at }
+        : null,
+      about: live ? `${live.title} | ${live.type} | ${live.start_at ?? live.due_at ?? ''}` : '',
+    });
+  }
+  return out;
 }

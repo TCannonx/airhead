@@ -54,6 +54,8 @@ function mergeWork(work: Record<string, unknown>, patch: Record<string, unknown>
 
 const ITEM_COLUMNS = [
   'title',
+  // An answer added to the item's details (Task 12.2).
+  'body',
   'status',
   'start_at',
   'end_at',

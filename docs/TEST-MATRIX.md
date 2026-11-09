@@ -315,6 +315,8 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | --- | --- | --- | --- | --- |
 | A note that implies more work gets a planning task with checklist steps, due before the first occurrence (or in 3 days), and up to 3 specific questions with quick answers; generic questions dropped; clear notes get none | — | `fn/sort-batch/followups.test.ts`, `_shared/ai.contract.test.ts` (placeholder → event, planning task, 3 questions), `_shared/schemas/limits.test.ts` (10 union params), `db/0039` (inserted with the batch, owner-only RLS, none for a capture sorted meanwhile) | `sync/ai.spec.ts` "Sort now on a placeholder note: the event, a planning task with steps, and questions" (server rows checked) | Whether the real model asks well: `ai-eval` on dev |
 | `follow_ups` syncs between devices | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `db/0039` | `sync/tables.spec.ts` (every synced table) | |
+| Questions for you in the Inbox (question, the note it came from, quick answers, text box, Dismiss), on the item page, and a Today card | `features/inbox/followups.test.tsx` | — | `sync/ai.spec.ts` "a question asked on A is answered on B…" | |
+| An answer is a capture linked to its question; the next batch adds it to the item (Undo) and acts on it; one more round at most; Dismiss is a correction | `features/inbox/followups.test.tsx` (linked capture, correction, Undo of the details) | `fn/sort-batch/followups.test.ts` (answers), `_shared/ai.contract.test.ts` (answer block), `db/0039` (body update) | `sync/ai.spec.ts` "a question asked on A is answered on B; the new task and details reach A; Dismiss is a correction" | |
 
 ## Cross-cutting
 

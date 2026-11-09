@@ -21,6 +21,7 @@ import { EmptyState } from '../../ui/EmptyState';
 import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { ListRow } from '../../ui/ListRow';
 import AiActions from './AiActions';
+import { FollowUpList } from './FollowUps';
 import { INBOX_WAITING } from './useInboxCount';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
@@ -58,6 +59,7 @@ export default function InboxPage() {
 
   return (
     <Page title="Inbox">
+      <FollowUpList />
       <AiActions />
       {((unsure && unsure.length > 0) || (pendingFacts && pendingFacts.length > 0)) && (
         <Section title="Needs a tap">

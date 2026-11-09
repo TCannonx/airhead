@@ -537,7 +537,7 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 Spec: `docs/superpowers/specs/2026-11-09-trust-every-note-counts.md`. Principle for all future work: nothing is silent, show your work, move it forward, ask little and well, same AI cost.
 
 - [x] **12.1 Follow-ups from sorting.** Up to 3 specific questions with quick answers per note that implies more work; a planning task with checklist steps due before the first occurrence; `follow_ups` table written by the sorting batch.
-- [ ] **12.2 Answering.** Inbox "Questions for you" with quick answers, on the related item and a Today card; an answer is a linked capture the next batch acts on (one more round at most); Dismiss counts as a correction.
+- [x] **12.2 Answering.** Inbox "Questions for you" with quick answers, on the related item and a Today card; an answer is a linked capture the next batch acts on (one more round at most); Dismiss counts as a correction.
 - [ ] **12.3 Receipts.** "What Airhead did" on every capture: one line per outcome with the words it came from, including "kept as written, not acted on".
 - [ ] **12.4 Completeness checks.** Real-model evaluator checks nothing is dropped, questions where work is implied and none on clear notes; new owner-style cases; e2e-sync for ask, answer on another device, new task.
 - [ ] **12.5 Trust in Insights.** Notes handled, questions open, answered and dismissed, correction rate.
