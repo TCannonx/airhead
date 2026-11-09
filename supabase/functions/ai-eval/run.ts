@@ -5,6 +5,7 @@ import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
 import { leaveYearFor } from '../_shared/leave/engine.ts';
 import { readWork } from '../_shared/leave/work.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
+import { SORT_MAX_TOKENS } from '../sort-batch/run.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort, type InstantRow } from '../sort-batch/plan.ts';
 import { evalActionContext, evalCases, type CaseView } from './cases.ts';
@@ -126,7 +127,8 @@ export async function runEval(
       system: [SORT_BATCH_SYSTEM],
       messages: [{ role: 'user', content: message }],
       schema: SortResult,
-      maxTokens: 8000,
+      // Room for steps, quotes and questions on a full batch (Phase 12); only used tokens cost.
+      maxTokens: SORT_MAX_TOKENS,
       effort: 'low',
       background: false,
     },

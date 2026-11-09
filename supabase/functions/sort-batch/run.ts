@@ -12,6 +12,8 @@ import { type NoteRow, noteForSorting, NOTES_PER_BATCH } from './notes.ts';
 import { type AnswerContext, type InstantRow, MAX_ROUNDS, planSort } from './plan.ts';
 
 export const BATCH_SIZE = 20;
+/** A full batch with steps, quotes and questions can pass 8,000 output tokens (seen 2026-11-09). */
+export const SORT_MAX_TOKENS = 16_000;
 
 export interface SortBatchOutcome extends Record<string, unknown> {
   ok: boolean;
@@ -286,7 +288,8 @@ export async function runSortBatch(
         },
       ],
       schema: SortResult,
-      maxTokens: 8000,
+      // Room for steps, quotes and questions on a full batch (Phase 12); only used tokens cost.
+      maxTokens: SORT_MAX_TOKENS,
       effort: 'low',
       background,
     },

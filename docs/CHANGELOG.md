@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sorting): a full batch now has room for its answer (16,000 output tokens, was 8,000); with Phase 12's steps, quotes and questions a big batch could be cut off and fail every time, leaving captures unsorted; an unreadable answer is now logged with its reason
 - test(ai-eval): a new owner-style case for the real-model check ("Need to get Mam a birthday present before the 20th, not sure what yet" needs a planning task due before the 20th and a question)
 - fix(sorting): a planning task always comes with a question; a placeholder on stated days is a confident event; an unclear move is still a move with choices, never a question; the evaluator counts a suggestion as not dropped (Phase 12 tuning)
 - feat(insights): "Notes handled": notes acted on of all captured in 30 days, questions open, answered and dismissed, the correction rate, and "Not acted on: N" that opens into the list with Send to Workshop (Task 12.5)
