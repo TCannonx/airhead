@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- test: dev-only `ai-eval` function runs the owner's example requests through the real sorting model and planner and reports pass/fail per request (writes nothing)
 - feat(workshop): Send to Workshop on every capture (Capture and Inbox), item and note; a capture becomes a Workshop note with its text kept word for word; AI sorting sends what it cannot place to the Workshop instead of dropping it, e.g. "Planning Christmas sandwiches every week on a Friday. Still need to plan…" → a weekly event plus a Workshop note "Still need to plan"; chip "Sent to Workshop" (Task 11.2)
 - feat(sorting): AI sorting now reads your notes too: typed notes, meeting notes and ideas changed since it last looked (new text only, up to 5 per batch) can add tasks, events and actions, e.g. "need to send the report to Trevor by Friday" becomes a task; the note itself is never changed; Sort now offers itself for a changed note; each batch can leave a short memory digest; a reminder set on a tidied instant event now lands on that event (Task 11.0)
 - feat(sorting): nothing lost from longer dated notes: the event still shows at once, then AI sorting tidies it (clean title, end time, repeat; Undo in the Inbox) and adds what else the note asked for, e.g. "Training on Tuesday. Need a reminder to send report to Trevor" → event "Training" + task "Send report to Trevor"; time ranges ("8pm-12pm", "20:00-23:00") set the end time (Task 11.1)
