@@ -1,4 +1,4 @@
-import { NOTE_TEXT_MAX, type NoteForSorting } from '../_shared/prompts/sort-batch.v5.ts';
+import { NOTE_TEXT_MAX, type NoteForSorting } from '../_shared/prompts/sort-batch.v6.ts';
 import { noteText } from '../summarise-note/run.ts';
 import type { NoteSeen } from './plan.ts';
 

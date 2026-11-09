@@ -157,7 +157,7 @@ function ItemForm({ item }: { item: Item }) {
               void (inWorkshop(item) ? leaveWorkshop(db, item) : sendToWorkshop(db, item))
             }
           >
-            {inWorkshop(item) ? 'Take out of the Workshop' : 'Send to the Workshop'}
+            {inWorkshop(item) ? 'Take out of Workshop' : 'Send to Workshop'}
           </button>
         </div>
         {inWorkshop(item) && (

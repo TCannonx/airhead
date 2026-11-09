@@ -1,6 +1,6 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v5.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
@@ -301,6 +301,8 @@ export async function runSortBatch(
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),
       instant,
       notes: notesSeen,
+      // What the batch cannot place is kept as a Workshop note (Task 11.2).
+      texts: new Map(batch.map((c) => [c.id, c.text ?? c.url ?? ''])),
     },
     links.map((c) => c.id),
     actx,

@@ -7,7 +7,7 @@ import { z } from 'npm:zod@4.6.7';
 import { createMockServer } from '../../../tests/mock-ai/server.mjs';
 import { type CallAIRequest, callAI, type UsageStore } from './ai.ts';
 import { anthropicClient } from './anthropic.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v5.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v6.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
 
 const rows: { ok: boolean; error_code: string | null }[] = [];
@@ -177,3 +177,47 @@ Deno.test('sorting: a note block comes back as a task for that note, with a dige
     }
   });
 });
+
+Deno.test(
+  'sorting: a placeholder comes back as an event plus leftover words; vague words map to nothing',
+  async () => {
+    await withMock(async (url) => {
+      Deno.env.set('ANTHROPIC_BASE_URL', url);
+      try {
+        const message = buildSortMessage(
+          {
+            now: new Date().toISOString(),
+            timeZone: 'Europe/Dublin',
+            topics: [],
+            lists: [],
+            ideas: [],
+            corrections: [],
+            candidates: [],
+          },
+          [
+            {
+              id: 'c1',
+              text: 'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
+              url: null,
+            },
+            { id: 'c2', text: 'hmm the thing with the stuff', url: null },
+          ],
+        );
+        const r = await callAI(
+          { client: anthropicClient('test-key'), store },
+          request(SortResult, SORT_BATCH_SYSTEM, message),
+        );
+        assert(r.ok, `sorting call failed: ${JSON.stringify(r)}`);
+        const [plan, vague] = r.data.results;
+        assertEquals(
+          plan!.items.map((i) => [i.type, i.title, i.rrule]),
+          [['event', 'Christmas sandwiches', 'FREQ=WEEKLY;BYDAY=FR']],
+        );
+        assertEquals(plan!.leftover, 'Still need to plan');
+        assertEquals([vague!.items, vague!.actions, vague!.leftover], [[], [], null]);
+      } finally {
+        Deno.env.delete('ANTHROPIC_BASE_URL');
+      }
+    });
+  },
+);

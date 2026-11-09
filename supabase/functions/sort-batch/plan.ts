@@ -25,6 +25,11 @@ export interface PlanContext {
   instant?: Map<string, InstantRow>;
   /** Notes sent in this batch (Task 11.0): stamped as seen whatever the answer. */
   notes?: NoteSeen[];
+  /**
+   * Each capture's text, by id (Task 11.2): what the batch could not place is
+   * kept as a Workshop note. Without it, an unplaced capture fails as before.
+   */
+  texts?: Map<string, string>;
 }
 
 /** A note looked at by this batch, and what it looked like (Task 11.0). */
@@ -34,6 +39,19 @@ export interface NoteSeen {
   seen_len: number;
   /** Hash of that text, to tell an addition from an edit next time. */
   seen_hash: string;
+  /** Set when the note had words to plan that fit no item: it goes to the Workshop (Task 11.2). */
+  workshop?: true;
+}
+
+/**
+ * A capture whose words went to the Workshop (Task 11.2): apply_sort_batch
+ * stores the note's id and the reason in the capture's payload, for its chip.
+ */
+export interface WorkshopRoute {
+  capture_id: string;
+  item_id: string;
+  /** 'unmapped': nothing in it could be placed; 'leftover': only part of it. */
+  reason: 'unmapped' | 'leftover';
 }
 
 export interface InstantRow {
@@ -127,9 +145,26 @@ export interface SortPlan {
   item_updates: ItemUpdate[];
   /** Notes to stamp with ai_seen_at (Task 11.0), whatever the answer said. */
   notes: NoteSeen[];
+  /** Captures whose words went to the Workshop (Task 11.2). */
+  workshop: WorkshopRoute[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
+
+/**
+ * A Workshop note's title from captured words: the first line, capitalised,
+ * at most 80 characters. Same as the app's workshopTitle.
+ */
+export function workshopTitle(text: string): string {
+  const line =
+    text
+      .trim()
+      .split('\n')[0]
+      ?.trim()
+      .replace(/[.\s]+$/, '') ?? '';
+  const short = line.length > 80 ? `${line.slice(0, 79).trimEnd()}…` : line;
+  return short ? short.charAt(0).toUpperCase() + short.slice(1) : 'Untitled';
+}
 const cleanTopics = (topics: string[]) =>
   [...new Set(topics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
 
@@ -218,6 +253,35 @@ export function planSort(
   const actions: PlannedAction[] = [];
   const seen = new Set<string>();
   const itemUpdates: ItemUpdate[] = [];
+  const workshop: WorkshopRoute[] = [];
+  const notesToWorkshop = new Set<string>();
+
+  /**
+   * Keeps captured words as a Workshop note linked to the capture (Task 11.2):
+   * the title from the words, the capture's text word for word in the body.
+   */
+  const toWorkshop = (captureId: string, words: string, reason: WorkshopRoute['reason']) => {
+    const id = crypto.randomUUID();
+    items.push({
+      id,
+      capture_id: captureId,
+      type: 'note',
+      title: workshopTitle(words),
+      body: ctx.texts?.get(captureId) ?? words,
+      status: 'open',
+      start_at: null,
+      end_at: null,
+      all_day: false,
+      due_at: null,
+      rrule: null,
+      calendar: null,
+      list_id: null,
+      topic_names: [],
+      confidence: 1,
+      data: { workshop: true, workshop_from: reason },
+    });
+    workshop.push({ capture_id: captureId, item_id: id, reason });
+  };
 
   const noteTopics = (topics: string[]) => {
     for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
@@ -320,13 +384,16 @@ export function planSort(
         );
       }
       keepFacts(r, null);
+      // Words to plan that fit no item: the note itself goes to the Workshop (Task 11.2).
+      if ((r.leftover ?? '').trim()) notesToWorkshop.add(noteId);
       continue;
     }
 
     const isLink = links.has(r.capture_id);
     if (!unsorted.has(r.capture_id) && !isLink) continue;
     seen.add(r.capture_id);
-    let review = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
+    const unmapped = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
+    let review = unmapped;
     const instantRow = isLink ? undefined : ctx.instant?.get(r.capture_id);
     let tidyDone = false;
     let tidy: ItemUpdate | null = null;
@@ -429,6 +496,19 @@ export function planSort(
         actions.push(...planned);
         if (planned.some((p) => p.status === 'proposed')) review = true;
       }
+      // Nothing silently dropped (Task 11.2): an unplaced capture, or the words
+      // no item covers, are kept as a Workshop note.
+      const text = (ctx.texts?.get(r.capture_id) ?? '').trim();
+      const leftover = (r.leftover ?? '').trim();
+      if (unmapped && text) {
+        toWorkshop(r.capture_id, text, 'unmapped');
+        review = false;
+      } else if (
+        leftover &&
+        !items.some((p) => p.capture_id === r.capture_id && norm(p.title) === norm(leftover))
+      ) {
+        toWorkshop(r.capture_id, leftover, 'leftover');
+      }
       status.set(r.capture_id, review ? 'needs_review' : 'sorted');
       // Facts are learned only from what the person typed, never from page text.
       keepFacts(r, r.capture_id);
@@ -440,6 +520,14 @@ export function planSort(
   if (digest && !facts.some((f) => norm(f.text) === norm(digest)))
     facts.push({ text: digest, category: 'everyday', source_capture_id: null, source: 'digest' });
 
+  // A capture the model skipped altogether is kept in the Workshop too.
+  for (const id of captureIds) {
+    const text = (ctx.texts?.get(id) ?? '').trim();
+    if (status.has(id) || !text) continue;
+    toWorkshop(id, text, 'unmapped');
+    status.set(id, 'sorted');
+  }
+
   return {
     items,
     captures: captureIds.map((id) => ({ id, status: status.get(id) ?? 'failed' })),
@@ -449,6 +537,9 @@ export function planSort(
     facts,
     actions,
     item_updates: itemUpdates,
-    notes: ctx.notes ?? [],
+    notes: (ctx.notes ?? []).map((n) =>
+      notesToWorkshop.has(n.id) ? { ...n, workshop: true as const } : n,
+    ),
+    workshop,
   };
 }

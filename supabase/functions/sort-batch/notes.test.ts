@@ -3,7 +3,7 @@ import {
   buildSortMessage,
   NOTE_TEXT_MAX,
   SORT_BATCH_SYSTEM,
-} from '../_shared/prompts/sort-batch.v5.ts';
+} from '../_shared/prompts/sort-batch.v6.ts';
 import type { SortAnswer, SortedItemT } from '../_shared/schemas/sort.ts';
 import type { ActionContext } from './actions.ts';
 import { noteForSorting, type NoteRow, textHash } from './notes.ts';

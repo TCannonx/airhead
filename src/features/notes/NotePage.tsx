@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { saveDoc } from '../../lib/db/notes';
 import { update } from '../../lib/db/repository';
+import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop';
 import { detectPlatform } from '../../lib/device';
 import { readInk } from '../../lib/ink/strokes';
 import { readSummary } from '../../lib/notes/summary';
@@ -61,6 +62,26 @@ export default function NotePage() {
             void update(db, 'items', item.id, { title: title.trim() });
         }}
       />
+      <div
+        className="mb-4 flex flex-wrap items-center gap-3 text-sm"
+        aria-label="Note menu"
+        role="group"
+      >
+        <button
+          type="button"
+          className="rounded-lg px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          onClick={() =>
+            void (inWorkshop(item) ? leaveWorkshop(db, item) : sendToWorkshop(db, item))
+          }
+        >
+          {inWorkshop(item) ? 'Take out of Workshop' : 'Send to Workshop'}
+        </button>
+        {inWorkshop(item) && (
+          <Link to={`/workshop/${item.id}`} className="text-indigo-600 hover:underline">
+            Open in the Workshop
+          </Link>
+        )}
+      </div>
       {item.type === 'meeting' && <MeetingDetails key={item.id} item={item} />}
       <SummarisePanel item={item} doc={doc} />
       {doc.kind === 'typed' ? (
