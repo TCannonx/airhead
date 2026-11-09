@@ -1,13 +1,144 @@
 @import 'tailwindcss';
 
-:root {
-  color-scheme: light dark;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+/*
+ * Design tokens (Task 11.U1). See docs/UI.md.
+ * Colour roles are plain CSS variables so a subtree can switch scheme with
+ * data-theme="dark" | "light" (the design kit shows both side by side).
+ * The page itself follows prefers-color-scheme, like the dark: variant.
+ */
+@theme static {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  /* Colour roles (light values; dark values below). */
+  --color-canvas: #f2f2f7;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-fill: #e9e9ef;
+  --color-border: #d8d8de;
+  --color-fg: #0f172a;
+  --color-fg-muted: #5f6472;
+  --color-fg-subtle: #8a8f9c;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-soft: #eef2ff;
+  --color-accent-fg: #ffffff;
+  --color-on-accent-soft: #4338ca;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
+
+  /* Radius scale. */
+  --radius-control: 0.625rem;
+  --radius-card: 0.875rem;
+  --radius-sheet: 1.25rem;
+
+  /* Spacing rhythm: Tailwind's 4 px grid, plus named page gutters. */
+  --spacing-gutter: 1rem;
+  --spacing-gutter-wide: 2rem;
+  --spacing-touch: 2.75rem;
+
+  /* Type scale (iOS-like: large title, headline, body, footnote, caption). */
+  --text-title: 1.875rem;
+  --text-title--line-height: 2.25rem;
+  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 700;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.5rem;
+  --text-headline--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.125rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Dark values: unlayered so they win over the @theme defaults. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-canvas: #000000;
+    --color-surface: #1c1c1e;
+    --color-surface-raised: #2c2c2e;
+    --color-fill: #2c2c2e;
+    --color-border: #38383a;
+    --color-fg: #f2f2f7;
+    --color-fg-muted: #a1a1aa;
+    --color-fg-subtle: #71717a;
+    --color-accent: #818cf8;
+    --color-accent-hover: #a5b4fc;
+    --color-accent-soft: #1e1b4b;
+    --color-accent-fg: #0b0b1a;
+    --color-on-accent-soft: #c7d2fe;
+    --color-danger: #f87171;
+    --color-danger-soft: #3b0d0d;
+    --color-success: #34d399;
+    --color-success-soft: #052e22;
+    --color-warning: #fbbf24;
+    --color-warning-soft: #3a2504;
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #000000;
+  --color-surface: #1c1c1e;
+  --color-surface-raised: #2c2c2e;
+  --color-fill: #2c2c2e;
+  --color-border: #38383a;
+  --color-fg: #f2f2f7;
+  --color-fg-muted: #a1a1aa;
+  --color-fg-subtle: #71717a;
+  --color-accent: #818cf8;
+  --color-accent-hover: #a5b4fc;
+  --color-accent-soft: #1e1b4b;
+  --color-accent-fg: #0b0b1a;
+  --color-on-accent-soft: #c7d2fe;
+  --color-danger: #f87171;
+  --color-danger-soft: #3b0d0d;
+  --color-success: #34d399;
+  --color-success-soft: #052e22;
+  --color-warning: #fbbf24;
+  --color-warning-soft: #3a2504;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --color-canvas: #f2f2f7;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-fill: #e9e9ef;
+  --color-border: #d8d8de;
+  --color-fg: #0f172a;
+  --color-fg-muted: #5f6472;
+  --color-fg-subtle: #8a8f9c;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-soft: #eef2ff;
+  --color-accent-fg: #ffffff;
+  --color-on-accent-soft: #4338ca;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
 }
 
 /* Typed notes (Task 6.3): Tailwind's reset removes heading and list styles. */

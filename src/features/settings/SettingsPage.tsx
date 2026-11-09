@@ -18,6 +18,8 @@ import WorkSettings from './WorkSettings';
 import { loadLatestVersion } from '../../lib/pwa/loadLatest';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
+import { GroupedList, Section as UiSection } from '../../ui/GroupedList';
+import { ListRow } from '../../ui/ListRow';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -193,6 +195,12 @@ export default function SettingsPage() {
       <Section title="Your data">
         <ExportSettings />
       </Section>
+
+      <UiSection title="About">
+        <GroupedList>
+          <ListRow title="Design kit" subtitle="Every shared component, light and dark" to="/ui" />
+        </GroupedList>
+      </UiSection>
     </Page>
   );
 }

@@ -14,6 +14,7 @@ import { eventLabel, undoInstantEvent } from '../../lib/db/events';
 import { sendCaptureToWorkshop } from '../../lib/db/workshop';
 import type { AiAction, Capture, Item } from '../../lib/schemas/records';
 import { TOAST_MS } from './toast';
+import { Toast } from '../../ui/Toast';
 import { compressImage } from '../../lib/files/image';
 import NewNoteButtons from '../notes/NewNoteButtons';
 
@@ -69,12 +70,6 @@ export default function CapturePage() {
   useEffect(() => {
     boxRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
 
   const canSave = text.trim().length > 0 || photo !== null;
 
@@ -234,23 +229,16 @@ export default function CapturePage() {
       )}
 
       {toast && (
-        <div
-          role="status"
-          className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg md:bottom-8 dark:bg-slate-100 dark:text-slate-900"
-        >
-          <span>{toast.label}</span>
-          <button
-            type="button"
-            className="rounded-md px-2 py-1 font-semibold text-indigo-300 hover:bg-white/10 dark:text-indigo-700 dark:hover:bg-slate-900/10"
-            onClick={() => {
-              const { itemId } = toast;
-              setToast(null);
-              void undoInstantEvent(db, itemId);
-            }}
-          >
-            Undo
-          </button>
-        </div>
+        <Toast
+          key={toast.itemId}
+          message={toast.label}
+          duration={TOAST_MS}
+          onDismiss={() => setToast(null)}
+          action={{
+            label: 'Undo',
+            onClick: () => void undoInstantEvent(db, toast.itemId),
+          }}
+        />
       )}
       <div className="mt-8">
         <NewNoteButtons />

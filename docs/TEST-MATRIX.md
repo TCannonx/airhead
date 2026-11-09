@@ -287,6 +287,9 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Time ranges ("8pm-12pm", "8-11pm", "20:00-23:00") set the end time | `lib/rules/rules.test.ts`, `lib/db/captures.test.ts` | — | `sync/ai.spec.ts` "Quiz every Thursday 8pm-12pm keeps its end time" | |
 | Send to Workshop on every capture (Capture recent list, Inbox Unsorted), item and note; a capture without an item becomes a note (text word for word, linked by capture_id); idempotent; chip "Sent to Workshop" | `features/workshop/routing.test.tsx` | — | `sync/ai.spec.ts` "Send to Workshop on a fresh capture…" (seen on the second device) | |
 | AI routing: unplaced captures (or skipped ones) and `leftover` words become Workshop notes; `suggest_workshop` on placeholders; a note's leftover marks the note | `features/workshop/routing.test.tsx` (chips) | `fn/sort-batch/workshop.test.ts`, `_shared/ai.contract.test.ts` (placeholder + vague), `_shared/schemas/limits.test.ts` (10 union params), `db/0036` | `sync/ai.spec.ts` "Sort now on a placeholder note…", "a note sorting cannot place…" | A typed note's leftover has no e2e check |
+| UI foundation: tokens follow the system scheme; a subtree can force light or dark | `ui/ui.test.tsx` (design kit panels) | — | `e2e/ui.spec.ts` (dark and light canvas, forced panels) | Device only: real iPhone safe areas and SF Pro rendering (manual checklist) |
+| Shared components: Button loading, Sheet focus trap / Esc / backdrop / focus return, SegmentedControl keys, ListRow link vs button, fields labelled and described, Toggle switch, Toast timeout and action | `ui/ui.test.tsx` | — | `e2e/ui.spec.ts` (sheet, segmented control in a real browser) | |
+| Design kit reachable from Settings → About, every component in light and dark | `ui/ui.test.tsx` | — | `e2e/ui.spec.ts` | |
 
 ## Cross-cutting
 
