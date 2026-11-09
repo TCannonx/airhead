@@ -7,9 +7,8 @@ import type { Item } from '../../lib/schemas/records';
 import { addDays } from '../../lib/holidays/easter';
 import { deviceTimeZone } from '../calendar/useCalendarData';
 import { todayKey } from '../leave/useWork';
-
-const btn =
-  'rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800';
+import { Button } from '../../ui/Button';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 
 /** "Add to today's Top 3" on a task, with a swap choice when three are already picked (Task 5.8). */
 export function Top3Button({ item }: { item: Item }) {
@@ -19,45 +18,43 @@ export function Top3Button({ item }: { item: Item }) {
   if (item.type !== 'task' || item.status !== 'open') return null;
   if (item.top3_date === today) {
     return (
-      <button type="button" className={btn} onClick={() => void removeFromTop3(db, item.id)}>
+      <Button size="sm" onClick={() => void removeFromTop3(db, item.id)}>
         Remove from today’s Top 3
-      </button>
+      </Button>
     );
   }
   return (
     <div>
-      <button
-        type="button"
-        className={btn}
+      <Button
+        size="sm"
         onClick={() =>
           void addToTop3(db, item.id, today).then((r) => setFull(r.added ? null : r.full))
         }
       >
         Add to today’s Top 3
-      </button>
+      </Button>
       {full && (
         <div
           role="group"
           aria-label="Swap with"
-          className="mt-2 rounded-lg border border-slate-200 p-2 dark:border-slate-800"
+          className="mt-2 rounded-card border border-border bg-surface p-3"
         >
-          <p className="mb-1 text-sm">Today’s Top 3 is full. Swap with:</p>
-          <div className="flex flex-wrap gap-1">
+          <p className="mb-2 text-footnote text-fg-muted">Today’s Top 3 is full. Swap with:</p>
+          <div className="flex flex-wrap gap-2">
             {full.map((f) => (
-              <button
+              <Button
                 key={f.id}
-                type="button"
-                className={btn}
+                size="sm"
                 onClick={() =>
                   void swapIntoTop3(db, f.id, item.id, today).then(() => setFull(null))
                 }
               >
                 {f.title}
-              </button>
+              </Button>
             ))}
-            <button type="button" className={`${btn} text-slate-500`} onClick={() => setFull(null)}>
+            <Button variant="plain" size="sm" onClick={() => setFull(null)}>
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -78,48 +75,41 @@ export function CarryOverCards() {
   if (!items?.length) return null;
   const yesterday = addDays(today, -1);
   return (
-    <section className="mb-8">
-      <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-        From yesterday
-      </h2>
-      <ul aria-label="From yesterday" className="space-y-2">
+    <Section title="From yesterday">
+      <GroupedList label="From yesterday">
         {items.map((i) => (
-          <li
-            key={i.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
-          >
-            <span className="font-medium">{i.title}</span>
-            <span className="flex gap-1">
-              <button
-                type="button"
+          <GroupedListItem key={i.id} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="min-w-0 flex-1 text-body font-medium break-words">{i.title}</span>
+            <span className="flex gap-2">
+              <Button
+                size="sm"
                 aria-label={`Done: ${i.title}`}
-                className={btn}
                 onClick={() => void completeTask(db, i.id)}
               >
                 Done
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
                 aria-label={`Today: ${i.title}`}
-                className={btn}
                 onClick={() =>
                   void carryOver(db, i, yesterday, tz).then(() => addToTop3(db, i.id, today))
                 }
               >
                 Today
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                size="sm"
+                variant="plain"
                 aria-label={`Drop: ${i.title}`}
-                className={btn}
                 onClick={() => void dropTask(db, i.id)}
               >
                 Drop
-              </button>
+              </Button>
             </span>
-          </li>
+          </GroupedListItem>
         ))}
-      </ul>
-    </section>
+      </GroupedList>
+    </Section>
   );
 }

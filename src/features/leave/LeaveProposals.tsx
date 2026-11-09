@@ -7,6 +7,8 @@ import { countLeaveDays } from '../../lib/leave/engine';
 import type { LeaveProposal } from '../../lib/leave/parse';
 import { leaveTypeOf } from '../../lib/work/settings';
 import { useWork } from './useWork';
+import { Button } from '../../ui/Button';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 
 /** Today cards for captures like "AL 14–18 July": book as planned leave, or dismiss. */
 export default function LeaveProposals() {
@@ -31,29 +33,23 @@ export default function LeaveProposals() {
   if (!data || !captures?.length) return null;
 
   return (
-    <section className="mb-8">
-      <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-        Leave to book
-      </h2>
-      <ul aria-label="Leave to book" className="space-y-2">
+    <Section title="Leave to book">
+      <GroupedList label="Leave to book">
         {captures.map((c) => {
           const p = c.payload.leave_proposal as LeaveProposal;
           const cost = countLeaveDays(p, data.work);
           return (
-            <li
-              key={c.id}
-              className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/40"
-            >
-              <p className="font-medium">
+            <GroupedListItem key={c.id}>
+              <p className="text-body font-medium">
                 {leaveTypeOf(data.work, p.leave_type).name}: {leaveRangeText(p)}
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-footnote text-fg-muted">
                 “{c.text}” · {cost} working day{cost === 1 ? '' : 's'}
               </p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  className="rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600"
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="primary"
                   onClick={() =>
                     void saveLeave(
                       db,
@@ -68,10 +64,10 @@ export default function LeaveProposals() {
                   }
                 >
                   Book as planned
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                </Button>
+                <Button
+                  size="sm"
+                  variant="plain"
                   onClick={() =>
                     void update(db, 'captures', c.id, {
                       payload: { ...c.payload, leave_dismissed: true },
@@ -79,12 +75,12 @@ export default function LeaveProposals() {
                   }
                 >
                   Dismiss
-                </button>
+                </Button>
               </div>
-            </li>
+            </GroupedListItem>
           );
         })}
-      </ul>
-    </section>
+      </GroupedList>
+    </Section>
   );
 }

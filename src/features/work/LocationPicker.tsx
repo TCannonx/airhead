@@ -7,6 +7,9 @@ import { WORK_LOCATIONS, type WorkLocation } from '../../lib/schemas/records';
 import { LOCATION_LABELS } from '../../lib/work/settings';
 import { useCalendarData } from '../calendar/useCalendarData';
 import { todayKey } from '../leave/useWork';
+import { Icon } from '../../app/Icon';
+import { Chip } from '../../ui/Chip';
+import { cx, FOCUS_RING } from '../../ui/cx';
 
 /**
  * Today's work location (Task 4.7): a chip that opens one-tap choices. Used on
@@ -40,28 +43,32 @@ export default function LocationPicker({ date = todayKey() }: { date?: string })
         aria-label={`Work location: ${LOCATION_LABELS[current]}. Change`}
         onClick={() => setOpen((o) => !o)}
         disabled={onLeave}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-sm font-medium hover:bg-slate-50 disabled:opacity-70 dark:border-slate-800 dark:hover:bg-slate-900"
+        className={cx(
+          'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border/60 bg-surface px-3 text-footnote font-medium text-fg transition hover:bg-fill/60 disabled:opacity-70 pointer-coarse:min-h-11',
+          FOCUS_RING,
+        )}
       >
-        <span className="text-slate-500">Today:</span> {LOCATION_LABELS[current]}
-        {onLeave && <span className="text-xs text-slate-500">(on leave)</span>}
+        <span className="text-fg-muted">Today:</span> {LOCATION_LABELS[current]}
+        {onLeave && <span className="text-caption text-fg-muted">(on leave)</span>}
+        {!onLeave && (
+          <Icon
+            name="chevron-right"
+            className={cx('size-3.5 text-fg-subtle transition-transform', open && 'rotate-90')}
+          />
+        )}
       </button>
       {open && (
         <div role="group" aria-label="Where are you working?" className="mt-2 flex flex-wrap gap-2">
           {WORK_LOCATIONS.map((l) => (
-            <button
+            <Chip
               key={l}
-              type="button"
-              aria-pressed={l === current}
+              selected={l === current}
               onClick={() => choose(l)}
-              className={`rounded-full px-3 py-1 text-sm font-medium ${
-                l === current
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
-              }`}
+              className="pointer-coarse:min-h-11"
             >
               {LOCATION_LABELS[l]}
               {l === usual && l !== current ? ' (usual)' : ''}
-            </button>
+            </Chip>
           ))}
         </div>
       )}

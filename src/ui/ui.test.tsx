@@ -7,7 +7,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 import { Badge, Chip } from './Chip';
 import { EmptyState } from './EmptyState';
-import { GroupedList } from './GroupedList';
+import { GroupedList, Section } from './GroupedList';
+import { buttonClasses } from './buttonClasses';
 import { IconButton } from './IconButton';
 import { ListRow } from './ListRow';
 import { PageHeader } from './PageHeader';
@@ -42,6 +43,32 @@ describe('Button', () => {
     expect(button).toBeDisabled();
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+});
+
+describe('buttonClasses (Task 11.U2)', () => {
+  it('a small button is a 44 px target on touch screens', () => {
+    render(<Button size="sm">Undo</Button>);
+    expect(screen.getByRole('button', { name: 'Undo' }).className).toContain(
+      'pointer-coarse:min-h-11',
+    );
+  });
+
+  it('gives a link the same look as a Button', () => {
+    render(<button className={buttonClasses('primary', 'md')}>Same</button>);
+    render(<Button variant="primary">Real</Button>);
+    expect(screen.getByRole('button', { name: 'Same' }).className).toBe(
+      screen.getByRole('button', { name: 'Real' }).className,
+    );
+  });
+
+  it('a Section can be named for screen readers', () => {
+    render(
+      <Section title="Ideas" label="Ideas from Scout">
+        <p>x</p>
+      </Section>,
+    );
+    expect(screen.getByRole('region', { name: 'Ideas from Scout' })).toBeInTheDocument();
   });
 });
 
