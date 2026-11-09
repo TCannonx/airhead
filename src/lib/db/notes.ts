@@ -87,3 +87,34 @@ export async function startNotesFor(
   });
   return item;
 }
+
+/**
+ * How many of the person's own notes, meeting notes and ideas changed since AI
+ * sorting last looked at them (Task 11.0), as this device sees it. Sort now is
+ * offered for these even when no capture is waiting. Mirrors the server's
+ * notes_waiting_for_ai (migration 0035) closely enough to show a button.
+ */
+export async function notesWaitingForAi(db: AirheadDb): Promise<number> {
+  const items = (await db.items.where('type').anyOf('note', 'meeting', 'idea').toArray()).filter(
+    (i) =>
+      !i.deleted_at &&
+      !i.capture_id &&
+      (i.status === 'open' || i.status === 'done') &&
+      (i.data.doc_kind ?? 'typed') === 'typed' &&
+      !('from_note_id' in i.data) &&
+      !('condensed_from' in i.data) &&
+      i.data.archived !== true,
+  );
+  const docs = await db.note_docs.bulkGet(items.map((i) => i.id));
+  return items.filter((item, n) => {
+    const doc = docs[n];
+    const html = doc && typeof doc.doc.html === 'string' ? doc.doc.html : null;
+    const hasText = doc
+      ? html !== null && /\S/.test(html.replace(/<[^>]*>/g, ''))
+      : !!item.body?.trim() || item.type === 'idea';
+    if (!hasText) return false;
+    const seen = typeof item.data.ai_seen_at === 'string' ? Date.parse(item.data.ai_seen_at) : 0;
+    const changed = Math.max(Date.parse(item.updated_at), doc ? Date.parse(doc.updated_at) : 0);
+    return !(changed <= seen);
+  }).length;
+}

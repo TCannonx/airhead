@@ -280,6 +280,10 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Longer dated note: instant event at once, capture still sorted by AI, event tidied (title, end, repeat) and the lost task added; Undo | `lib/db/captures.test.ts`, `lib/db/aiActions.test.ts`, `lib/db/events.test.ts` | `fn/sort-batch/plan.test.ts`, `_shared/ai.contract.test.ts`, `db/0034` (applied, stale → proposal, ai_actions row) | `sync/ai.spec.ts` "a longer dated note…" | |
+| Notes join AI sorting: a typed note's new text (≤ 1,500 characters, ≤ 5 notes) becomes tasks, events and actions; the note text is unchanged; stamped `ai_seen_at` whatever the answer | `lib/db/notes.test.ts`, `features/inbox/sortnow.test.tsx` (Sort now for a waiting note) | `fn/sort-batch/notes.test.ts`, `_shared/ai.contract.test.ts` (note block), `db/0035` (applied, stamped, deleted note skipped) | `sync/ai.spec.ts` "a typed note is read by AI…" | |
+| Cost guard: a changed note alone is due only after 30 minutes; it rides along with any batch | — | `db/0035` (`users_due_now`, `notes_waiting_for_ai`) | — | **Partial**: the cron → function chain never runs end to end (gap 6) |
+| Memory digest stored as an everyday fact (source `digest`), duplicates skipped | — | `fn/sort-batch/notes.test.ts`, `_shared/ai.contract.test.ts`, `db/0035` | — | **Partial**: no e2e check of the fact row |
+| A reminder on a tidied instant event lands on that event (target index 0) | — | `fn/sort-batch/notes.test.ts`, `db/0035` (tidy carries data) | — | |
 | Time ranges ("8pm-12pm", "8-11pm", "20:00-23:00") set the end time | `lib/rules/rules.test.ts`, `lib/db/captures.test.ts` | — | `sync/ai.spec.ts` "Quiz every Thursday 8pm-12pm keeps its end time" | |
 
 ## Cross-cutting

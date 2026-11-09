@@ -111,9 +111,13 @@ export function readAction(w: ActionWireT): SortActionT {
   return out as SortActionT;
 }
 
+/** Results for notes (Task 11.0) carry capture_id "note:<item id>"; no extra schema field. */
+export const NOTE_PREFIX = 'note:';
+
 export const SortResult = z.object({
   results: z.array(
     z.object({
+      /** A capture's id, or "note:<id>" for a <note> block. */
       capture_id: z.string(),
       items: z.array(SortedItem),
       /** Changes to records the capture asks for; usually none (Phase 10). */
@@ -132,8 +136,12 @@ export const SortResult = z.object({
         .nullable(),
     }),
   ),
+  /** One or two sentences on what this batch noticed (Task 11.0), or null. */
+  digest: z.string().nullable(),
 });
 
 export type SortedItemT = z.infer<typeof SortedItem>;
 export type SortResultT = z.infer<typeof SortResult>;
+/** What the planner accepts: a sorting answer, digest optional (older saved answers lack it). */
+export type SortAnswer = Omit<SortResultT, 'digest'> & { digest?: string | null };
 export type SortActionT = z.infer<typeof SortAction>;

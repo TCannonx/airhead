@@ -8,6 +8,7 @@ import { AuthProvider } from '../../lib/auth/AuthProvider';
 import { LOCAL_USER_ID, localServices } from '../../lib/auth/localAuth';
 import type { Services, SortingService } from '../../lib/auth/types';
 import { createCapture } from '../../lib/db/captures';
+import { createNote, saveDoc } from '../../lib/db/notes';
 import { DataProvider } from '../../lib/db/DataProvider';
 import { openUserDb } from '../../lib/db/db';
 import { SortProvider } from '../../lib/sort/SortProvider';
@@ -124,6 +125,25 @@ describe('sorting triggers', () => {
     expect(await screen.findByText(/Sorting could not start on this device/)).toBeVisible();
     await userEvent.click(await screen.findByRole('button', { name: 'Sort now' }));
     await waitFor(() => expect(sorting.sortNow).toHaveBeenCalledTimes(2));
+  });
+
+  it('"Sort now" is offered for a changed note even with no capture waiting (Task 11.0)', async () => {
+    const d = db();
+    const { item } = await createNote(d, U, '22222222-2222-4222-8222-222222222222', {
+      type: 'note',
+      kind: 'typed',
+      title: '',
+    });
+    await saveDoc(d, '22222222-2222-4222-8222-222222222222', item.id, {
+      html: '<p>need to send the report to Trevor by Friday</p>',
+    });
+    d.close();
+    const sorting = fakeSorting('Looked at 1 note.');
+    setup(sorting);
+    await userEvent.click(await screen.findByRole('button', { name: 'Sort now' }));
+    expect(await screen.findByText('Looked at 1 note.')).toBeVisible();
+    // Opening the app with only a note waiting does not sort by itself.
+    expect(sorting.sortNow).toHaveBeenCalledOnce();
   });
 
   it('local mode (no server): no Sort now button', async () => {

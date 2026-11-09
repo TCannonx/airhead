@@ -150,6 +150,7 @@
         "proposed_facts": [],
         "actions": []
       }
-    ]
+    ],
+    "digest": null
   }
 }

@@ -6,6 +6,7 @@ import { captureChip } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
 import { createListFromSuggestion } from '../../lib/db/lists';
 import { approveFact, rejectFact } from '../../lib/db/memory';
+import { notesWaitingForAi } from '../../lib/db/notes';
 import {
   isInboxSuggestion,
   resolveSuggestion,
@@ -41,6 +42,8 @@ export default function InboxPage() {
     [db],
   );
   const unsure = useLiveQuery(() => db.items.filter(isInboxSuggestion).sortBy('created_at'), [db]);
+  // Notes changed since AI sorting last looked (Task 11.0): Sort now looks at them too.
+  const notesWaiting = useLiveQuery(() => notesWaitingForAi(db), [db]);
   const pendingFacts = useLiveQuery(
     () => db.memory_facts.filter((f) => f.status === 'pending_approval' && !f.deleted_at).toArray(),
     [db],
@@ -135,16 +138,17 @@ export default function InboxPage() {
       <section className="mb-8">
         <div className="flex items-start justify-between gap-3">
           <SectionHeading>Unsorted</SectionHeading>
-          {sort.available && unsorted && unsorted.some((c) => c.status === 'unsorted') && (
-            <button
-              type="button"
-              disabled={sort.running}
-              onClick={() => void sort.sortNow()}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {sort.running ? 'Sorting…' : 'Sort now'}
-            </button>
-          )}
+          {sort.available &&
+            ((unsorted && unsorted.some((c) => c.status === 'unsorted')) || !!notesWaiting) && (
+              <button
+                type="button"
+                disabled={sort.running}
+                onClick={() => void sort.sortNow()}
+                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {sort.running ? 'Sorting…' : 'Sort now'}
+              </button>
+            )}
         </div>
         {sort.last && (
           <p className="mb-2 text-sm text-slate-500" aria-live="polite">

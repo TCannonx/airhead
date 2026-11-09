@@ -7,7 +7,7 @@ import { z } from 'npm:zod@4.6.7';
 import { createMockServer } from '../../../tests/mock-ai/server.mjs';
 import { type CallAIRequest, callAI, type UsageStore } from './ai.ts';
 import { anthropicClient } from './anthropic.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v4.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v5.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
 
 const rows: { ok: boolean; error_code: string | null }[] = [];
@@ -141,3 +141,39 @@ Deno.test(
     });
   },
 );
+
+Deno.test('sorting: a note block comes back as a task for that note, with a digest', async () => {
+  await withMock(async (url) => {
+    Deno.env.set('ANTHROPIC_BASE_URL', url);
+    try {
+      const message = buildSortMessage(
+        {
+          now: new Date().toISOString(),
+          timeZone: 'Europe/Dublin',
+          topics: [],
+          lists: [],
+          ideas: [],
+          corrections: [],
+          candidates: [],
+        },
+        [],
+        [{ id: 'n1', title: 'Note', text: 'need to send the report to Trevor by Friday' }],
+      );
+      const r = await callAI(
+        { client: anthropicClient('test-key'), store },
+        request(SortResult, SORT_BATCH_SYSTEM, message),
+      );
+      assert(r.ok, `sorting call failed: ${JSON.stringify(r)}`);
+      const [note] = r.data.results;
+      assertEquals(note!.capture_id, 'note:n1');
+      assertEquals(
+        note!.items.map((i) => [i.type, i.title]),
+        [['task', 'Send the report to Trevor']],
+      );
+      assert(note!.items[0]!.due_at);
+      assertEquals(r.data.digest, 'Noted from their notes: Send the report to Trevor.');
+    } finally {
+      Deno.env.delete('ANTHROPIC_BASE_URL');
+    }
+  });
+});

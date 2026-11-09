@@ -1,6 +1,6 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v4.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v5.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
@@ -8,6 +8,7 @@ import { leaveYearFor } from '../_shared/leave/engine.ts';
 import { readWork } from '../_shared/leave/work.ts';
 import { type ActionContext, type BookingRow, type ItemRow } from './actions.ts';
 import { type CandidateRow, pickCandidates } from './candidates.ts';
+import { type NoteRow, noteForSorting, NOTES_PER_BATCH } from './notes.ts';
 import { type InstantRow, planSort } from './plan.ts';
 
 export const BATCH_SIZE = 20;
@@ -61,7 +62,27 @@ export async function runSortBatch(
     (c) => typeof (c.payload as { article_text?: unknown })?.article_text === 'string',
   );
 
-  if (batch.length === 0 && links.length === 0) {
+  // Notes changed since the AI last looked (Task 11.0). They ride along with a
+  // batch that runs anyway; the 5-minute check also runs one for a note that has
+  // waited 30 minutes (users_due_now), and Sort now always looks.
+  const { data: noteRows, error: noteError } = await db.rpc('notes_for_sorting', {
+    p_user: userId,
+    p_limit: NOTES_PER_BATCH,
+  });
+  if (noteError) throw new Error(`load notes: ${noteError.message}`);
+  const looked = ((noteRows ?? []) as NoteRow[]).map(noteForSorting);
+  const notesSeen = looked.map((n) => n.seen);
+  const notes = looked.flatMap((n) => (n.send ? [n.send] : []));
+
+  if (batch.length === 0 && links.length === 0 && notes.length === 0) {
+    if (notesSeen.length) {
+      // Changed, but nothing new to read (e.g. only the title): stamp them, no AI call.
+      const { error: stampError } = await db.rpc('apply_sort_batch', {
+        p_user_id: userId,
+        p_plan: { captures: [], notes: notesSeen },
+      });
+      if (stampError) throw new Error(`apply: ${stampError.message}`);
+    }
     return { ok: true, error_code: null, message: 'Nothing to sort.', sorted: 0, items: 0 };
   }
 
@@ -112,7 +133,7 @@ export async function runSortBatch(
         await db
           .from('items')
           .select(
-            'id, capture_id, title, status, start_at, end_at, all_day, rrule, updated_at, deleted_at',
+            'id, capture_id, title, status, start_at, end_at, all_day, rrule, data, updated_at, deleted_at',
           )
           .eq('user_id', userId)
           .in('id', instantIds)
@@ -204,9 +225,11 @@ export async function runSortBatch(
         return (data ?? []) as FactRow[];
       },
     },
-    [...batch.map((c) => c.text ?? c.url ?? ''), ...links.map((c) => c.text ?? c.url ?? '')].join(
-      '\n',
-    ),
+    [
+      ...batch.map((c) => c.text ?? c.url ?? ''),
+      ...links.map((c) => c.text ?? c.url ?? ''),
+      ...notes.map((n) => `${n.title}\n${n.text}`),
+    ].join('\n'),
     (factRows ?? []) as FactRow[],
     profile.ids,
   );
@@ -221,29 +244,33 @@ export async function runSortBatch(
       messages: [
         {
           role: 'user',
-          content: buildSortMessage(ctx, [
-            ...batch.map((c) => {
-              const row = instant.get(c.id);
-              return {
-                id: c.id,
-                text: c.text ?? '',
-                url: c.url,
-                instant:
-                  row && !row.deleted_at && row.start_at
-                    ? { title: row.title, start: row.start_at, all_day: row.all_day }
-                    : null,
-              };
-            }),
-            ...links.map((c) => {
-              const p = c.payload as { article_text: string; link?: { title?: string | null } };
-              return {
-                id: c.id,
-                text: c.text ?? '',
-                url: c.url,
-                article: { title: p.link?.title ?? null, text: p.article_text },
-              };
-            }),
-          ]),
+          content: buildSortMessage(
+            ctx,
+            [
+              ...batch.map((c) => {
+                const row = instant.get(c.id);
+                return {
+                  id: c.id,
+                  text: c.text ?? '',
+                  url: c.url,
+                  instant:
+                    row && !row.deleted_at && row.start_at
+                      ? { title: row.title, start: row.start_at, all_day: row.all_day }
+                      : null,
+                };
+              }),
+              ...links.map((c) => {
+                const p = c.payload as { article_text: string; link?: { title?: string | null } };
+                return {
+                  id: c.id,
+                  text: c.text ?? '',
+                  url: c.url,
+                  article: { title: p.link?.title ?? null, text: p.article_text },
+                };
+              }),
+            ],
+            notes,
+          ),
         },
       ],
       schema: SortResult,
@@ -273,6 +300,7 @@ export async function runSortBatch(
       lists: lists.data ?? [],
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),
       instant,
+      notes: notesSeen,
     },
     links.map((c) => c.id),
     actx,
@@ -293,8 +321,20 @@ export async function runSortBatch(
     await db.rpc('add_memory_facts', { p_user_id: userId, p_facts: plan.facts });
   }
   await db.rpc('learn_rules', { p_user_id: userId });
-  const counts = applied as { items: number; captures: number; links: number; actions?: number };
-  const parts = [`Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}`];
+  const counts = applied as {
+    items: number;
+    captures: number;
+    links: number;
+    actions?: number;
+    notes?: number;
+  };
+  const parts: string[] = [];
+  if (counts.captures || !counts.notes)
+    parts.push(`Sorted ${counts.captures} capture${counts.captures === 1 ? '' : 's'}`);
+  if (counts.notes) {
+    const looked = `looked at ${counts.notes} note${counts.notes === 1 ? '' : 's'}`;
+    parts.push(parts.length ? looked : looked.charAt(0).toUpperCase() + looked.slice(1));
+  }
   if (counts.actions) parts.push(`${counts.actions} action${counts.actions === 1 ? '' : 's'}`);
   if (counts.links) parts.push(`summarised ${counts.links} link${counts.links === 1 ? '' : 's'}`);
   return {
