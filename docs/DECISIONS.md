@@ -1403,6 +1403,14 @@ Decisions and library versions, newest first.
 - The e2e-sync job uses the same stand-in, so Ask, Workshop, summaries and the rest now get answers there too instead of a 400. No e2e test relied on the 400.
 - No PLAN.md task covers the TEST-MATRIX gaps, so nothing is ticked there.
 
+## Handler tests for every Edge Function (TEST-MATRIX gap 8, 2026-11-09)
+
+- **Refactor, not import tricks**: each `index.ts` called `Deno.serve` at import time with a module-level Supabase client, so its handler could not be imported in a test. The request handling moved, unchanged, into `<function>/handler.ts` as `handleX(req, deps)`; `index.ts` keeps the client and the Supabase-backed deps and calls `Deno.serve((req) => handleX(req, deps))`. `health` and `calendar-feed` already worked this way.
+- **Shared seams**: `_shared/caller.ts` (a `Caller` with `userId(token)` and `isService(token)`, `bearer(req)`, and `supabaseCaller(db, isService?)`; user-only functions leave `isService` out, so they never probe as before) and `_shared/userOrService.ts` (the start shared by morning-brief, weekly-review and scout: service key + `user_id`, or a user with the right `mode`). `_shared/testing.ts` has the fake caller (two users and a service key), request builders and fake AI and usage stores.
+- **Deps are narrow**: a handler gets the run function's own deps (ask, workshop, import, summarise, suggest-leave) so bad JSON goes through the real validation, or a closure for the heavy work (sorting, brief, review, scout, tick, embedding, evaluation), plus the lookups that decide ownership (read-link capture, send-push device, linked feeds). The fakes mirror the real queries' owner filters, so "another user's id is not found" is the handler passing the token's user, never the body's.
+- **Behaviour kept as it was**, including two oddities now written down by tests: sort-batch with the service key and no (or unreadable) body answers 401, not 400; a user token posting a service-style send to send-push gets 400 (bad request), not 401. Not changed here to keep this PR behaviour-free.
+- check-contradictions' AI call now lives in its handler, so its contract test could call the handler; it still calls `callAI` with the same prompt and schema.
+
 ## Pages on the shared components: Capture, Today, Inbox, Evening review (Task 11.U2, 2026-11-09)
 
 - The owner asked for every page to be overhauled. Three PRs, in order: 11.U2 (Capture, Today, Inbox, Evening review), 11.U3 (Library, Insights, Notes, Workshop, Work and leave), 11.U4 (Settings panels, sign-in, lock, share). Behaviour and accessible names stay the same; only the look moves onto `src/ui`.

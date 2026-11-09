@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
-import { json } from '../_shared/http.ts';
+import { supabaseCaller } from '../_shared/caller.ts';
 import { isService } from '../_shared/serviceAuth.ts';
+import { handleEmbed } from './handler.ts';
 import { runEmbed } from './run.ts';
 import { itemParts } from './text.ts';
 
@@ -23,15 +24,16 @@ async function embed(text: string): Promise<number[]> {
   return (await session.run(text, { mean_pool: true, normalize: true })) as number[];
 }
 
-/**
- * POST /embed-items (service role only; called every 5 minutes by
- * dispatch_embed_items while anything is queued).
- */
-Deno.serve(async (req) => {
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!(await isService(token)))
-    return json({ ok: false, error_code: 'unauthorized', message: 'Service only.' }, 401);
-  const stats = await runEmbed({
+/** POST /embed-items (service only): see handler.ts. */
+Deno.serve((req) =>
+  handleEmbed(req, {
+    caller: supabaseCaller(db, isService),
+    embed: () => runEmbedNow(),
+  }),
+);
+
+function runEmbedNow() {
+  return runEmbed({
     async take(limit) {
       const { data, error } = await db.rpc('take_embed_queue', { p_limit: limit });
       if (error) throw new Error(error.message);
@@ -107,5 +109,4 @@ Deno.serve(async (req) => {
       if (error) throw new Error(error.message);
     },
   });
-  return json({ ok: true, error_code: null, message: 'Embedded.', ...stats });
-});
+}
