@@ -1382,6 +1382,8 @@ Decisions and library versions, newest first.
 - **Event form** repeat fields: Repeats (Does not repeat, Every day/week/month/year: the select keeps its `FREQ=…` values), Every N, weekday chips for weekly (the start's weekday chosen to start with), End repeat (Never, On a date, After a number of times) and the rule in words under it. Rules live in `src/lib/calendar/repeat.ts`; UNTIL is written as the end of the local day in floating time (`YYYYMMDDT235959Z`), the same wall-clock encoding the calendar and the reminder job use to expand rules. A rule the form cannot show (say `FREQ=HOURLY`) shows as "Custom (…)" and is saved unchanged unless the repeat is changed. Parts the form does not edit (BYMONTHDAY) are kept.
 - **Repeat in words** (`repeatWords`) is now our own British wording ("Every Thursday", "Every 2 weeks on Mon and Thu", "Every weekday", "Every month on the 1st", "Every year on 11 Nov", "… until 31 Dec", ", 5 times"); anything it cannot word falls back to rrule's English. The library's lower-case `repeatText` is unchanged.
 
+
+
 ## Calendar: repeating events done right (Task 11.5, 2026-11-09)
 
 - **No migration.** The spec's model fits the existing row: `items.data` is free JSON that already syncs whole through the outbox and pull, so no new columns, no Dexie version bump and no pgTAP change. An exception is the occurrence's original start (plain UTC ISO, as `expandOccurrences` makes it) in the series' `data.exdates`. A changed occurrence is that exception plus a one-off item with `data.parent_id` (the series) and `data.recurrence_id` (the original start). This mirrors RFC 5545 EXDATE and RECURRENCE-ID without a second UID. Last write wins per row, as for every other edit.

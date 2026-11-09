@@ -169,7 +169,7 @@ const cleanTopics = (topics: string[]) =>
   [...new Set(topics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
 
 /** 09:00 tomorrow in the time zone, as UTC ISO: the first reminder of a repeat with no date. */
-export function tomorrowMorning(now: Date, timeZone: string): string {
+export function tomorrowMorning(now: Date, timeZone: string, daysAhead = 1): string {
   const local = (d: Date) =>
     new Intl.DateTimeFormat('en-CA', {
       timeZone,
@@ -182,11 +182,40 @@ export function tomorrowMorning(now: Date, timeZone: string): string {
     })
       .format(d)
       .replace(', ', 'T');
-  const day = local(new Date(now.getTime() + 86_400_000)).slice(0, 10);
+  const day = local(new Date(now.getTime() + daysAhead * 86_400_000)).slice(0, 10);
   // Start from 09:00 UTC that day and correct by the zone's offset at that time.
   const guess = Date.parse(`${day}T09:00:00Z`);
   const offsetMs = Date.parse(`${local(new Date(guess))}:00Z`) - guess;
   return new Date(guess - offsetMs).toISOString();
+}
+
+/** Birthdays and anniversaries repeat every year even when the model leaves rrule out. */
+export function yearlyByNature(type: string, title: string): string | null {
+  return type === 'event' && /\b(?:birthday|b-?day|anniversary)\b/i.test(title)
+    ? 'FREQ=YEARLY'
+    : null;
+}
+
+const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+/**
+ * First due time of a repeating task with no date: 09:00 on the next day the
+ * rule allows ("every Friday" starts on a Friday), from tomorrow on.
+ */
+export function firstDue(rrule: string, now: Date, timeZone: string): string {
+  const byday = /BYDAY=([A-Z0-9,+-]+)/i.exec(rrule)?.[1];
+  const days = byday ? new Set(byday.split(',').map((d) => d.slice(-2).toUpperCase())) : null;
+  if (days) {
+    for (let ahead = 1; ahead <= 7; ahead++) {
+      const at = tomorrowMorning(now, timeZone, ahead);
+      const name = new Intl.DateTimeFormat('en-GB', { timeZone, weekday: 'short' })
+        .format(new Date(at))
+        .slice(0, 2)
+        .toUpperCase();
+      if (days.has(name) && WEEKDAYS.includes(name)) return at;
+    }
+  }
+  return tomorrowMorning(now, timeZone);
 }
 
 function iso(value: string | null): string | null {
@@ -333,9 +362,9 @@ export function planSort(
       due_at:
         iso(it.due_at) ??
         (it.type === 'task' && it.rrule?.trim()
-          ? tomorrowMorning(ctx.now, ctx.timeZone ?? 'Europe/Dublin')
+          ? firstDue(it.rrule, ctx.now, ctx.timeZone ?? 'Europe/Dublin')
           : null),
-      rrule: it.rrule?.trim() || null,
+      rrule: it.rrule?.trim() || yearlyByNature(it.type, it.title),
       calendar: it.type === 'event' ? 'personal' : null,
       list_id: listId,
       topic_names: topics,

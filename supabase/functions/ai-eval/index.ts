@@ -57,13 +57,15 @@ Deno.serve(async (req) => {
 
   try {
     const report = await runEval(anthropicClient(apiKey));
-    await db.from('ai_eval_runs').insert({
+    const { error: saveError } = await db.from('ai_eval_runs').insert({
       prompt_hash: hash,
       passed: report.passed,
       total: report.total,
-      cost_eur: report.cost_eur,
+      cost_eur: Number.isFinite(report.cost_eur) ? report.cost_eur : 0,
       report,
     });
+    // Without a saved row the next half-hour would call the model again.
+    if (saveError) throw new Error(`could not save the report: ${saveError.message}`);
     return json({ ...report, message: `${report.passed}/${report.total} passed.` });
   } catch (error) {
     console.error('ai-eval failed', error);

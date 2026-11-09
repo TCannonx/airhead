@@ -216,6 +216,10 @@ export function evalCases(now: Date): {
         const ev = r.items.find((i) => i.type === 'event');
         return [
           ...has(!!ev && /christmas sandwich/i.test(ev.title), 'no Christmas sandwiches event'),
+          ...has(
+            !ev?.start_at || local(ev.start_at, r.timeZone).day === 5,
+            'first date is not a Friday',
+          ),
           ...has(!!ev?.rrule && /BYDAY=FR/.test(ev.rrule), 'does not repeat on Fridays'),
           ...has(
             r.workshop.length > 0 || r.items.some((i) => i.data.workshop === true),
