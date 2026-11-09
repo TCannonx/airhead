@@ -4,6 +4,7 @@ import { newItem, save, softDelete } from '../db/repository';
 import { SYNC_TABLES } from '../schemas/records';
 import { PULL_OVERLAP_MS, pull, push, SyncEngine } from './engine';
 import { createFakeRemote } from './fakeRemote';
+import { readSyncLog, resetSyncLog } from './syncLog';
 
 const USER = '11111111-1111-4111-8111-111111111111';
 let dbs: AirheadDb[] = [];
@@ -270,6 +271,54 @@ describe('SyncEngine', () => {
     hang.mockImplementation(realUpsert);
     await engine.syncNow();
     expect(engine.getStatus()).toMatchObject({ state: 'idle', pending: 0 });
+  });
+
+  it('any trigger abandons a run far past its time limit, even if its watchdog never fired', async () => {
+    resetSyncLog();
+    const db = device('a');
+    const remote = createFakeRemote();
+    const realUpsert = remote.upsert.bind(remote);
+    const hang = vi.spyOn(remote, 'upsert').mockImplementationOnce(() => new Promise(() => {}));
+    // The watchdog is set far out (as if its timer never ran); a plain trigger must still recover.
+    const engine = new SyncEngine(db, remote, {
+      online: () => true,
+      runLimitMs: 600_000,
+      staleAfterMs: 30,
+    });
+    await save(db, 'items', newItem(USER, { type: 'task', title: 'a' }));
+
+    const stuck = engine.syncNow();
+    await vi.waitFor(() => expect(engine.getStatus().stage).toBe('sending items'));
+    await new Promise((r) => setTimeout(r, 40));
+
+    hang.mockImplementation(realUpsert);
+    const fresh = engine.syncNow(); // a plain trigger, e.g. the minute timer
+    expect(fresh).not.toBe(stuck);
+    await fresh;
+    expect(engine.getStatus()).toMatchObject({ state: 'idle', pending: 0, stage: undefined });
+    expect(remote.rows('items').map((r) => r.title)).toEqual(['a']);
+    expect(readSyncLog().map((x) => x.e)).toEqual(
+      expect.arrayContaining(['engine created', 'run start', 'abandon stale run', 'run ok']),
+    );
+  });
+
+  it('sends its sync diary to the server after a run', async () => {
+    resetSyncLog();
+    const db = device('a');
+    const remote = createFakeRemote();
+    const sent: { e: string }[][] = [];
+    remote.sendLog = async (entries) => {
+      sent.push(entries);
+    };
+    const engine = new SyncEngine(db, remote, { online: () => true });
+
+    await engine.syncNow();
+
+    await vi.waitFor(() => expect(sent.length).toBe(1));
+    expect(sent[0]?.map((x) => x.e)).toEqual(['engine created', 'run start', 'run ok']);
+    await engine.syncNow();
+    await vi.waitFor(() => expect(sent.length).toBe(2));
+    expect(sent[1]?.map((x) => x.e)).toEqual(['run start', 'run ok']);
   });
 
   it('Sync now (forced) abandons a hung run and syncs at once; a plain request waits', async () => {

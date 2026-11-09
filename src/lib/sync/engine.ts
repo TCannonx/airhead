@@ -1,6 +1,7 @@
 import type { AirheadDb, OutboxEntry } from '../db/db';
 import { uploadPending } from '../files/upload';
 import { schemas, SYNC_TABLES, type NoteDoc, type SyncTable } from '../schemas/records';
+import { logSync, takeUnsent } from './syncLog';
 import type { PullKey, Remote, RemoteRow, SyncStatus } from './types';
 
 export const PUSH_BATCH = 100;
@@ -186,6 +187,12 @@ export interface SyncEngineOptions {
   /** Delay after a local write before syncing (batches fast typing). */
   writeDebounceMs?: number;
   intervalMs?: number;
+  /**
+   * A run older than this is abandoned by the next trigger of any kind (app
+   * open, the minute timer, Realtime, a write), not only by Sync now. Guards
+   * against a run whose watchdog never fires (seen on an iPhone, 2026-11-09).
+   */
+  staleAfterMs?: number;
   /** Tests shorten the watchdog. */
   runLimitMs?: number;
   /** A forced Sync now abandons a run older than this (tests shorten it). */
@@ -215,6 +222,9 @@ export class SyncEngine {
   private readonly intervalMs: number;
   private readonly runLimitMs: number;
   private readonly forceAfterMs: number;
+  private readonly staleAfterMs: number;
+  private runCount = 0;
+  private sendingLog = false;
   /** Bumped when a run is abandoned; an abandoned run's late results change nothing. */
   private generation = 0;
   private runStartedAt = 0;
@@ -230,6 +240,23 @@ export class SyncEngine {
     this.intervalMs = options.intervalMs ?? 60_000;
     this.runLimitMs = options.runLimitMs ?? RUN_LIMIT_MS;
     this.forceAfterMs = options.forceAfterMs ?? 3_000;
+    this.staleAfterMs = options.staleAfterMs ?? this.runLimitMs + 15_000;
+    logSync('engine created');
+  }
+
+  /** Sends the sync diary to the server, at most one send at a time; never throws. */
+  private sendLog(): void {
+    if (!this.remote.sendLog || this.sendingLog || !this.online()) return;
+    const { entries, markSent } = takeUnsent();
+    if (entries.length === 0) return;
+    this.sendingLog = true;
+    void within(
+      this.remote.sendLog(entries).then(markSent, () => {}),
+      10_000,
+      undefined,
+    ).finally(() => {
+      this.sendingLog = false;
+    });
   }
 
   getStatus(): SyncStatus {
@@ -259,10 +286,16 @@ export class SyncEngine {
    */
   syncNow(options: { force?: boolean } = {}): Promise<void> {
     if (this.running) {
-      if (!options.force || Date.now() - this.runStartedAt < this.forceAfterMs) {
+      const age = Date.now() - this.runStartedAt;
+      const stale = age > this.staleAfterMs;
+      if (!stale && (!options.force || age < this.forceAfterMs)) {
         this.again = true;
         return this.running;
       }
+      logSync(
+        stale ? 'abandon stale run' : 'abandon run (Sync now)',
+        `after ${Math.round(age / 1000)} s at ${this.status.stage ?? '?'}`,
+      );
       this.generation += 1;
       this.running = null;
     }
@@ -272,6 +305,7 @@ export class SyncEngine {
         this.again = false;
         this.runStartedAt = Date.now();
         await this.runOnce(gen);
+        this.sendLog();
       } while (this.again && gen === this.generation);
     })().finally(() => {
       if (this.running === run) this.running = null;
@@ -288,6 +322,8 @@ export class SyncEngine {
   private async runOnce(gen: number): Promise<void> {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.retryTimer = null;
+    const run = ++this.runCount;
+    logSync('run start', `#${run} gen ${gen}`);
     if (!this.status.lastSyncedAt) {
       const saved = await within(this.db.meta.get('lastSyncedAt'), BOOKKEEPING_MS, undefined);
       if (typeof saved?.value === 'string') this.setFor(gen, { lastSyncedAt: saved.value });
@@ -310,10 +346,10 @@ export class SyncEngine {
       // and let the retry start a fresh run.
       let timer: ReturnType<typeof setTimeout> | undefined;
       const watchdog = new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(
-          () => reject(new Error(`Sync stopped responding while ${stage}.`)),
-          this.runLimitMs,
-        );
+        timer = setTimeout(() => {
+          logSync('watchdog', `#${run} at ${stage}`);
+          reject(new Error(`Sync stopped responding while ${stage}.`));
+        }, this.runLimitMs);
       });
       try {
         await Promise.race([
@@ -329,7 +365,11 @@ export class SyncEngine {
         clearTimeout(timer);
       }
       const at = new Date().toISOString();
-      if (gen !== this.generation) return;
+      if (gen !== this.generation) {
+        logSync('run done but abandoned', `#${run}`);
+        return;
+      }
+      logSync('run ok', `#${run}`);
       await within(this.db.meta.put({ key: 'lastSyncedAt', value: at }), BOOKKEEPING_MS, undefined);
       this.failures = 0;
       this.setFor(gen, {
@@ -343,6 +383,7 @@ export class SyncEngine {
     } catch (error) {
       const detail =
         error instanceof Error ? error.message.slice(0, 160) : String(error).slice(0, 160);
+      logSync('run error', `#${run} at ${stage}: ${detail}`);
       const pending = await within(countPending(this.db), BOOKKEEPING_MS, this.status.pending);
       if (!this.online()) {
         this.setFor(gen, {
@@ -388,9 +429,12 @@ export class SyncEngine {
 
     window.addEventListener('online', onOnline);
     document.addEventListener('visibilitychange', onVisible);
+    logSync('engine start');
+    this.sendLog();
     void this.syncNow();
 
     return () => {
+      logSync('engine stop');
       window.removeEventListener('online', onOnline);
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(interval);

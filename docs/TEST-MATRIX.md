@@ -330,6 +330,13 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Treat pages, imports, calendars and captures as data | — | `fn/sort-batch/plan.test.ts`, `fn/workshop/run.test.ts`, `fn/summarise-note/run.test.ts`, `fn/import-extract/run.test.ts`, `fn/check-contradictions/check.test.ts`, `fn/morning-brief/brief.test.ts` | — | |
 | Desktop shortcuts Ctrl/Cmd+K, N, E, T, ?; bulk task actions (DESIGN.md) | — | — | — | **None**: not built (only "/" exists); not in PLAN |
 
+
+### Sync recovery and diagnostics (2026-11-09)
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| A run stuck past its limit is dropped by any trigger; the device sends its sync log | `sync/engine.test.ts` (stale run, diary sent) | `db/0040_sync_logs.test.sql` | — | **Partial**: why the iPhone's watchdog never fired is not yet reproduced; the sync log on the device is how it will be found |
+
 ## Gaps to close before user testing
 
 Ordered by risk. Sync and AI first.

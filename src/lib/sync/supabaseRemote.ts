@@ -36,6 +36,19 @@ export function supabaseRemote(supabase: SupabaseClient): Remote {
       if (error) throw new Error(`upload ${path}: ${error.message}`);
     },
 
+    async sendLog(entries) {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user.id;
+      if (!user) return;
+      const { error } = await supabase.from('sync_logs').insert({
+        user_id: user,
+        user_agent: globalThis.navigator?.userAgent.slice(0, 200) ?? null,
+        build: typeof __APP_BUILD__ === 'string' ? __APP_BUILD__ : null,
+        entries,
+      });
+      if (error) throw new Error(`sync log: ${error.message}`);
+    },
+
     subscribe(onChange) {
       // Realtime applies RLS: only this user's changes arrive.
       const channel = supabase
