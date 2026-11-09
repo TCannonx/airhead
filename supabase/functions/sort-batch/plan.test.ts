@@ -3,7 +3,7 @@ import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'j
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
 import { type SortAnswer, SortResult } from '../_shared/schemas/sort.ts';
 import { pickCandidates } from './candidates.ts';
-import { firstDue, type InstantRow, planSort, tomorrowMorning } from './plan.ts';
+import { firstDue, type InstantRow, planSort, tomorrowMorning, yearlyByNature } from './plan.ts';
 
 const NOW = new Date('2026-11-06T10:00:00Z');
 const [C1, C2, C3] = fixture.captures.map((c) => c.id);
@@ -483,4 +483,11 @@ Deno.test('the prompt tells the model which instant event already exists', () =>
       `<capture id="c-train" instant_event="Say 'hi' | 2026-11-10T00:00:00.000Z (all day)">`,
     ),
   );
+});
+
+Deno.test('birthdays and anniversaries repeat yearly even when the model leaves rrule out', () => {
+  assertEquals(yearlyByNature('event', 'Niamh’s Birthday'), 'FREQ=YEARLY');
+  assertEquals(yearlyByNature('event', 'Wedding anniversary'), 'FREQ=YEARLY');
+  assertEquals(yearlyByNature('task', 'Buy birthday card'), null);
+  assertEquals(yearlyByNature('event', 'Dentist'), null);
 });

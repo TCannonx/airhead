@@ -189,6 +189,11 @@ export function tomorrowMorning(now: Date, timeZone: string, daysAhead = 1): str
   return new Date(guess - offsetMs).toISOString();
 }
 
+/** Birthdays and anniversaries repeat every year even when the model leaves rrule out. */
+export function yearlyByNature(type: string, title: string): string | null {
+  return type === 'event' && /\b(?:birthday|b-?day|anniversary)\b/i.test(title) ? 'FREQ=YEARLY' : null;
+}
+
 const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 
 /**
@@ -357,7 +362,7 @@ export function planSort(
         (it.type === 'task' && it.rrule?.trim()
           ? firstDue(it.rrule, ctx.now, ctx.timeZone ?? 'Europe/Dublin')
           : null),
-      rrule: it.rrule?.trim() || null,
+      rrule: it.rrule?.trim() || yearlyByNature(it.type, it.title),
       calendar: it.type === 'event' ? 'personal' : null,
       list_id: listId,
       topic_names: topics,
