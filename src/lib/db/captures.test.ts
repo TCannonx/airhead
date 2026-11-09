@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createCapture } from './captures';
+import { createCapture, isSimpleCapture } from './captures';
+import { undoInstantEvent } from './events';
 import { openUserDb, type AirheadDb } from './db';
 
 const USER = '11111111-1111-4111-8111-111111111111';
@@ -71,6 +72,64 @@ describe('createCapture + free rules', () => {
     );
     expect(event?.title).toBe('Dentist');
     expect(c.status).toBe('sorted');
+  });
+
+  it.each(['dentist Tue 3pm', 'Quiz every Thursday 8pm-12pm'])(
+    '"%s" is simple: its instant event is all there is',
+    (text) => expect(isSimpleCapture(text)).toBe(true),
+  );
+
+  it.each([
+    'Training on Tuesday. Need a reminder to send report to Trevor',
+    'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
+    'dinner with Anna and Tom at the new place in town on Friday 8pm',
+    'Gym Tuesday 7pm and then call mum',
+  ])('"%s" is not simple', (text) => expect(isSimpleCapture(text)).toBe(false));
+
+  it('a simple dated note keeps its time range and is done', async () => {
+    const { capture: c, event } = await createCapture(
+      db,
+      USER,
+      { text: 'Quiz every Thursday 8pm-12pm' },
+      { now: new Date('2026-11-06T10:00:00Z') },
+    );
+    expect(c.status).toBe('sorted');
+    expect(c.payload.instant_item_id).toBeUndefined();
+    expect(event).toMatchObject({
+      title: 'Quiz',
+      start_at: '2026-11-12T20:00:00.000Z',
+      end_at: '2026-11-13T00:00:00.000Z',
+      rrule: 'FREQ=WEEKLY;BYDAY=TH',
+    });
+  });
+
+  it('a longer dated note shows its event at once but still goes to sorting', async () => {
+    const { capture: c, event } = await createCapture(
+      db,
+      USER,
+      { text: 'Training on Tuesday. Need a reminder to send report to Trevor' },
+      { now: new Date('2026-11-06T10:00:00Z') },
+    );
+    expect(event?.type).toBe('event');
+    expect(event?.capture_id).toBe(c.id);
+    expect(c.status).toBe('unsorted');
+    expect(c.sorted_at).toBeNull();
+    expect(c.payload.instant_item_id).toBe(event?.id);
+    expect(await db.items.count()).toBe(1);
+    expect((await db.captures.get(c.id))?.payload.instant_item_id).toBe(event?.id);
+  });
+
+  it('undoing the instant event of a longer note forgets it', async () => {
+    const { capture: c, event } = await createCapture(
+      db,
+      USER,
+      { text: 'Training on Tuesday. Need a reminder to send report to Trevor' },
+      { now: new Date('2026-11-06T10:00:00Z') },
+    );
+    await undoInstantEvent(db, event?.id ?? '');
+    const after = await db.captures.get(c.id);
+    expect(after?.status).toBe('unsorted');
+    expect(after?.payload.instant_item_id).toBeUndefined();
   });
 
   it('plain text creates no item yet (it waits for sorting)', async () => {

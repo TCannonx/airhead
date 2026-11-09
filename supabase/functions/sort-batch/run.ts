@@ -8,7 +8,7 @@ import { leaveYearFor } from '../_shared/leave/engine.ts';
 import { readWork } from '../_shared/leave/work.ts';
 import { type ActionContext, type BookingRow, type ItemRow } from './actions.ts';
 import { type CandidateRow, pickCandidates } from './candidates.ts';
-import { planSort } from './plan.ts';
+import { type InstantRow, planSort } from './plan.ts';
 
 export const BATCH_SIZE = 20;
 
@@ -38,7 +38,7 @@ export async function runSortBatch(
 
   const { data: captures, error } = await db
     .from('captures')
-    .select('id, text, url')
+    .select('id, text, url, payload')
     .eq('user_id', userId)
     .eq('status', 'unsorted')
     .is('deleted_at', null)
@@ -103,6 +103,27 @@ export async function runSortBatch(
         .eq('user_id', userId)
         .is('deleted_at', null),
     ]);
+  // Longer notes whose instant event already exists: sorting tidies that event (Task 11.1).
+  const instantIds = batch
+    .map((c) => (c.payload as { instant_item_id?: unknown } | null)?.instant_item_id)
+    .filter((v): v is string => typeof v === 'string');
+  const instantRows = instantIds.length
+    ? ((
+        await db
+          .from('items')
+          .select(
+            'id, capture_id, title, status, start_at, end_at, all_day, rrule, updated_at, deleted_at',
+          )
+          .eq('user_id', userId)
+          .in('id', instantIds)
+      ).data ?? [])
+    : [];
+  const instant = new Map<string, InstantRow>(
+    (instantRows as (InstantRow & { capture_id: string | null })[])
+      .filter((r) => r.capture_id)
+      .map((r) => [r.capture_id as string, r]),
+  );
+
   const candidates = pickCandidates((candidateRows.data ?? []) as CandidateRow[], now);
   const timeZone =
     ((settings.data?.data as { time_zone?: string } | undefined)?.time_zone as string) ||
@@ -201,7 +222,18 @@ export async function runSortBatch(
         {
           role: 'user',
           content: buildSortMessage(ctx, [
-            ...batch.map((c) => ({ id: c.id, text: c.text ?? '', url: c.url })),
+            ...batch.map((c) => {
+              const row = instant.get(c.id);
+              return {
+                id: c.id,
+                text: c.text ?? '',
+                url: c.url,
+                instant:
+                  row && !row.deleted_at && row.start_at
+                    ? { title: row.title, start: row.start_at, all_day: row.all_day }
+                    : null,
+              };
+            }),
             ...links.map((c) => {
               const p = c.payload as { article_text: string; link?: { title?: string | null } };
               return {
@@ -240,6 +272,7 @@ export async function runSortBatch(
       topics: topics.data ?? [],
       lists: lists.data ?? [],
       ideas: (ideas.data ?? []).map((i) => ({ id: i.id, title: i.title })),
+      instant,
     },
     links.map((c) => c.id),
     actx,

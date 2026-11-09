@@ -13,6 +13,44 @@ export interface PlanContext {
   topics: { id: string; name: string }[];
   lists: { id: string; name: string }[];
   ideas: { id: string; title: string }[];
+  /**
+   * The event the instant rule made for a longer capture (payload.instant_item_id),
+   * by capture id, as the server holds it now (Task 11.1).
+   */
+  instant?: Map<string, InstantRow>;
+}
+
+export interface InstantRow {
+  id: string;
+  title: string;
+  status: string;
+  start_at: string | null;
+  end_at: string | null;
+  all_day: boolean;
+  rrule: string | null;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+/** Columns sorting may tidy on an instant event. */
+const TIDY_COLUMNS = ['title', 'status', 'start_at', 'end_at', 'all_day', 'rrule'] as const;
+
+/**
+ * Sorting's tidy-up of an instant event (Task 11.1): applied by apply_sort_batch
+ * only if the item's updated_at still equals before.updated_at, and logged as an
+ * ai_actions row of kind tidy_item (so the Inbox can Undo it).
+ */
+export interface ItemUpdate {
+  /** The ai_actions row id. */
+  id: string;
+  capture_id: string;
+  item_id: string;
+  summary: string;
+  quote: string;
+  confidence: number;
+  /** The changed columns as they were, plus updated_at for the freshness check. */
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
 }
 
 export interface PlannedItem {
@@ -62,6 +100,8 @@ export interface SortPlan {
   facts: ProposedFact[];
   /** AI actions with their checks done (Phase 10). */
   actions: PlannedAction[];
+  /** Instant events tidied by this batch instead of new ones (Task 11.1). */
+  item_updates: ItemUpdate[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -95,6 +135,36 @@ function iso(value: string | null): string | null {
   return Number.isNaN(t) ? null : new Date(t).toISOString();
 }
 
+/** Same instant or value (timestamps compared as times; the database writes them differently). */
+function same(a: unknown, b: unknown): boolean {
+  if (typeof a === 'string' && typeof b === 'string') {
+    const ta = Date.parse(a);
+    const tb = Date.parse(b);
+    if (!Number.isNaN(ta) && !Number.isNaN(tb) && /^\d{4}-/.test(a) && /^\d{4}-/.test(b))
+      return ta === tb;
+  }
+  return (a ?? null) === (b ?? null);
+}
+
+/**
+ * The tidy-up of an instant event from the model's first event item for that
+ * capture: only the columns that change. A suggestion becomes a confirmed event
+ * when the model is sure; a confirmed one is never demoted.
+ */
+function tidyOf(row: InstantRow, planned: PlannedItem): Record<string, unknown> {
+  const want: Record<(typeof TIDY_COLUMNS)[number], unknown> = {
+    title: planned.title,
+    status: row.status === 'suggested' && planned.status === 'open' ? 'open' : row.status,
+    start_at: planned.start_at ?? row.start_at,
+    end_at: planned.end_at,
+    all_day: planned.all_day,
+    rrule: planned.rrule,
+  };
+  return Object.fromEntries(
+    TIDY_COLUMNS.filter((k) => !same(want[k], row[k])).map((k) => [k, want[k]]),
+  );
+}
+
 /**
  * Turns the model's answer into rows, applying Airhead's own rules (the model
  * suggests, the rules decide): confident future events are created, anything
@@ -121,6 +191,7 @@ export function planSort(
   const facts: ProposedFact[] = [];
   const actions: PlannedAction[] = [];
   const seen = new Set<string>();
+  const itemUpdates: ItemUpdate[] = [];
 
   const noteTopics = (topics: string[]) => {
     for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
@@ -131,6 +202,9 @@ export function planSort(
     if ((!unsorted.has(r.capture_id) && !isLink) || seen.has(r.capture_id)) continue;
     seen.add(r.capture_id);
     let review = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
+    const instantRow = isLink ? undefined : ctx.instant?.get(r.capture_id);
+    let tidyDone = false;
+    let tidy: ItemUpdate | null = null;
 
     for (const it of r.items) {
       if (isLink && it.type === 'reading') continue; // the reading item already exists
@@ -166,8 +240,7 @@ export function planSort(
       const topics = cleanTopics(it.topics);
       noteTopics(topics);
 
-      if (itemStatus === 'suggested' && !isLink) review = true;
-      items.push({
+      const planned: PlannedItem = {
         id: crypto.randomUUID(),
         capture_id: r.capture_id,
         type: it.type,
@@ -189,7 +262,45 @@ export function planSort(
         topic_names: topics,
         confidence,
         data,
-      });
+      };
+
+      // The first event of a longer note is the instant event, tidied (Task 11.1).
+      if (instantRow && !tidyDone && it.type === 'event') {
+        tidyDone = true;
+        if (instantRow.deleted_at) continue; // the person removed it: do not bring it back
+        const after = tidyOf(instantRow, planned);
+        if (((after.status as string | undefined) ?? instantRow.status) === 'suggested')
+          review = true;
+        if (Object.keys(after).length) {
+          tidy = {
+            id: crypto.randomUUID(),
+            capture_id: r.capture_id,
+            item_id: instantRow.id,
+            summary: '',
+            quote: instantRow.title,
+            confidence,
+            before: {
+              ...Object.fromEntries(
+                Object.keys(after).map((k) => [k, instantRow[k as keyof InstantRow]]),
+              ),
+              updated_at: instantRow.updated_at,
+            },
+            after,
+          };
+        }
+        continue;
+      }
+
+      if (itemStatus === 'suggested' && !isLink) review = true;
+      items.push(planned);
+    }
+
+    if (tidy) {
+      const added = items.filter((p) => p.capture_id === r.capture_id).length;
+      const title = (tidy.after.title as string | undefined) ?? instantRow?.title ?? '';
+      tidy.summary =
+        `Tidied “${title}”` + (added ? ` and added ${added} item${added === 1 ? '' : 's'}` : '');
+      itemUpdates.push(tidy);
     }
 
     if (isLink) {
@@ -231,5 +342,6 @@ export function planSort(
     link_captures: linkIds,
     facts,
     actions,
+    item_updates: itemUpdates,
   };
 }

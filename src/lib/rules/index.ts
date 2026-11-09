@@ -8,7 +8,10 @@ export const DEFAULT_TIME_ZONE = 'Europe/Dublin';
 export interface When {
   /** ISO instant. For all-day items: local midnight of the (first) day. */
   start: string;
-  /** All-day ranges: local midnight of the LAST day (inclusive). Timed: null for now. */
+  /**
+   * All-day ranges: local midnight of the LAST day (inclusive). Timed: the end
+   * of a stated time range ("8pm-12pm", "20:00-23:00"), else null.
+   */
   end: string | null;
   allDay: boolean;
   rrule: string | null;
@@ -191,6 +194,17 @@ export function analyseCapture(
     }
     if (rec) rrule = toRRule(rec);
     else if (YEARLY_WORDS.test(text) && !time) rrule = 'FREQ=YEARLY';
+  }
+
+  // A stated time range: the end keeps the same distance from the start on
+  // every repeat. "8pm-12pm" means until midnight; "10pm-2am" runs past it.
+  const endSource = timeSource?.end?.isCertain('hour') ? timeSource.end : null;
+  if (time && endSource) {
+    const from = time.h * 60 + time.m;
+    let to = (endSource.get('hour') ?? 0) * 60 + (endSource.get('minute') ?? 0);
+    if (to <= from && to >= 720) to -= 720;
+    if (to <= from) to += 1440;
+    end = new Date(start.getTime() + (to - from) * 60_000);
   }
 
   const allDay = !time;

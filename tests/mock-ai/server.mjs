@@ -71,11 +71,63 @@ function nextWeekday(weekday, hour) {
   return d.toISOString();
 }
 
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** The next `weekday` after today at local hh:mm in Dublin (GMT in winter, so UTC is close enough). */
+function nextWeekdayAt(weekday, hour, minute = 0) {
+  const d = new Date(nextWeekday(weekday, hour));
+  d.setUTCMinutes(minute);
+  return d.toISOString();
+}
+
 /** What the model would plausibly return for one capture. */
-export function sortOne(id, text, ctx) {
+export function sortOne(id, text, ctx, instant = null) {
   const t = text.trim();
   const lower = t.toLowerCase();
   const result = { capture_id: id, items: [], actions: [], proposed_facts: [], link_summary: null };
+
+  // "Training on Tuesday. Need a reminder to send report to Trevor" (Task 11.1):
+  // the instant event comes back first with a clean title, then the task it lost.
+  const reminder = t.match(/^(.+?)\s+(?:on\s+)?(\w+day)\.\s*need a reminder to (.+?)\.?$/i);
+  if (reminder) {
+    const day = WEEKDAYS.indexOf(reminder[2].toLowerCase());
+    result.items.push(
+      {
+        ...blankItem,
+        type: 'event',
+        title: cap(reminder[1].replace(/\s+on$/i, '')),
+        start_at: instant?.start ?? nextWeekday(day < 0 ? 2 : day, 0),
+        all_day: instant ? instant.allDay : true,
+      },
+      { ...blankItem, type: 'task', title: cap(reminder[3]) },
+    );
+    return result;
+  }
+
+  // "Quiz every Thursday 8pm-12pm": a weekly event with its end time.
+  const range = lower.match(
+    /^(.+?) every (\w+day) (\d{1,2})(?::(\d\d))?\s*(am|pm)?\s*-\s*(\d{1,2})(?::(\d\d))?\s*(am|pm)\b(.*)$/,
+  );
+  if (range && WEEKDAYS.includes(range[2])) {
+    const h = (n, ap) => (Number(n) % 12) + (ap === 'pm' ? 12 : 0);
+    const day = WEEKDAYS.indexOf(range[2]);
+    const from = h(range[3], range[5] ?? range[8]) * 60 + Number(range[4] ?? 0);
+    let to = h(range[6], range[8]) * 60 + Number(range[7] ?? 0);
+    if (to <= from && to >= 720) to -= 720; // "8pm-12pm": until midnight
+    if (to <= from) to += 1440;
+    const start = instant?.start ?? nextWeekdayAt(day, Math.floor(from / 60), from % 60);
+    result.items.push({
+      ...blankItem,
+      type: 'event',
+      title: cap(range[1]),
+      start_at: start,
+      end_at: new Date(Date.parse(start) + (to - from) * 60_000).toISOString(),
+      rrule: `FREQ=WEEKLY;BYDAY=${range[2].slice(0, 2).toUpperCase()}`,
+    });
+    const rest = range[9].replace(/^[.\s]+/, '').trim();
+    if (rest) result.items.push({ ...blankItem, type: 'task', title: cap(rest) });
+    return result;
+  }
 
   const left = lower.match(/(\d+(?:\.\d+)?) days?(?: of)?(?: annual)?(?: leave)? left/);
   if (left) {
@@ -168,10 +220,14 @@ export function sortAnswer(userText) {
   const ctxMatch = userText.match(/Context:\n(\{.*\})\n/);
   const ctx = ctxMatch ? JSON.parse(ctxMatch[1]) : {};
   const results = [];
-  const re = /<capture id="([^"]+)">\n(?:url: [^\n]*\n)?([\s\S]*?)\n<\/capture>/g;
+  const re =
+    /<capture id="([^"]+)"(?: instant_event="([^"]*)")?>\n(?:url: [^\n]*\n)?([\s\S]*?)\n<\/capture>/g;
   for (const m of userText.matchAll(re)) {
-    const text = m[2].replace(/\n<article[\s\S]*<\/article>$/, '');
-    results.push(sortOne(m[1], text, ctx));
+    const text = m[3].replace(/\n<article[\s\S]*<\/article>$/, '');
+    // instant_event="title | start (all day)": the event Airhead already made.
+    const inst = m[2]?.match(/^(.*) \| (\S+)( \(all day\))?$/);
+    const instant = inst ? { title: inst[1], start: inst[2], allDay: !!inst[3] } : null;
+    results.push(sortOne(m[1], text, ctx, instant));
   }
   return { results };
 }

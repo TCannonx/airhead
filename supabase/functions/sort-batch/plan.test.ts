@@ -1,9 +1,9 @@
 import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
 import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'json' };
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v4.ts';
-import { SortResult } from '../_shared/schemas/sort.ts';
+import { SortResult, type SortResultT } from '../_shared/schemas/sort.ts';
 import { pickCandidates } from './candidates.ts';
-import { planSort, tomorrowMorning } from './plan.ts';
+import { type InstantRow, planSort, tomorrowMorning } from './plan.ts';
 
 const NOW = new Date('2026-11-06T10:00:00Z');
 const [C1, C2, C3] = fixture.captures.map((c) => c.id);
@@ -310,5 +310,163 @@ Deno.test('a repeating task with no date gets its first reminder tomorrow at 09:
   assertEquals(
     tomorrowMorning(new Date('2026-11-08T20:00:00Z'), 'Europe/Dublin'),
     '2026-11-09T09:00:00.000Z',
+  );
+});
+
+// Instant events of longer notes (Task 11.1) ----------------------------------------
+
+const instantRow = (over: Partial<InstantRow> = {}): InstantRow => ({
+  id: 'e-instant',
+  title: 'Training . Need a reminder to send report to Trevor',
+  status: 'suggested',
+  start_at: '2026-11-10T00:00:00.000Z',
+  end_at: null,
+  all_day: true,
+  rrule: null,
+  updated_at: '2026-11-06T09:00:00+00:00',
+  deleted_at: null,
+  ...over,
+});
+
+const trainingAnswer = (): SortResultT => {
+  const base = output.results[0]!.items[0]!;
+  return {
+    results: [
+      {
+        capture_id: 'c-train',
+        items: [
+          {
+            ...base,
+            type: 'event' as const,
+            title: 'Training',
+            start_at: '2026-11-10T00:00:00Z',
+            end_at: null,
+            all_day: true,
+            rrule: null,
+            list_name: null,
+            confidence: 0.9,
+          },
+          {
+            ...base,
+            type: 'task' as const,
+            title: 'Send report to Trevor',
+            list_name: null,
+            start_at: null,
+            all_day: false,
+          },
+        ],
+        actions: [],
+        link_summary: null,
+        proposed_facts: [],
+      },
+    ],
+  };
+};
+
+Deno.test('the first event of a longer note tidies its instant event instead of a new one', () => {
+  const p = planSort(['c-train'], trainingAnswer(), {
+    ...ctx,
+    instant: new Map([['c-train', instantRow()]]),
+  });
+  assertEquals(
+    p.items.map((i) => [i.type, i.title]),
+    [['task', 'Send report to Trevor']],
+  );
+  assertEquals(p.item_updates.length, 1);
+  const u = p.item_updates[0]!;
+  assertEquals(u.item_id, 'e-instant');
+  assertEquals(u.capture_id, 'c-train');
+  // Only what changes: the title, and a sure, future event is no longer a suggestion.
+  assertEquals(u.after, { title: 'Training', status: 'open' });
+  assertEquals(u.before, {
+    title: 'Training . Need a reminder to send report to Trevor',
+    status: 'suggested',
+    updated_at: '2026-11-06T09:00:00+00:00',
+  });
+  assertEquals(u.summary, 'Tidied “Training” and added 1 item');
+  assertEquals(p.captures[0]?.status, 'sorted');
+});
+
+Deno.test('a tidy-up sets the stated end and repeat; a confirmed event stays confirmed', () => {
+  const answer = trainingAnswer();
+  answer.results[0]!.items = [
+    {
+      ...answer.results[0]!.items[0]!,
+      title: 'Quiz',
+      start_at: '2026-11-12T20:00:00Z',
+      end_at: '2026-11-13T00:00:00Z',
+      all_day: false,
+      rrule: 'FREQ=WEEKLY;BYDAY=TH',
+      confidence: 0.5,
+    },
+  ];
+  const row = instantRow({
+    title: 'Quiz . Bring a pen',
+    status: 'open',
+    start_at: '2026-11-12T20:00:00+00:00',
+    all_day: false,
+  });
+  const p = planSort(['c-train'], answer, { ...ctx, instant: new Map([['c-train', row]]) });
+  assertEquals(p.items, []);
+  assertEquals(p.item_updates[0]!.after, {
+    title: 'Quiz',
+    end_at: '2026-11-13T00:00:00.000Z',
+    rrule: 'FREQ=WEEKLY;BYDAY=TH',
+  });
+  assertEquals(p.item_updates[0]!.summary, 'Tidied “Quiz”');
+});
+
+Deno.test('a deleted instant event is not brought back; a missing one is added as usual', () => {
+  const gone = planSort(['c-train'], trainingAnswer(), {
+    ...ctx,
+    instant: new Map([['c-train', instantRow({ deleted_at: '2026-11-06T09:30:00Z' })]]),
+  });
+  assertEquals(
+    gone.items.map((i) => i.type),
+    ['task'],
+  );
+  assertEquals(gone.item_updates, []);
+  const plain = planSort(['c-train'], trainingAnswer(), ctx);
+  assertEquals(
+    plain.items.map((i) => i.type),
+    ['event', 'task'],
+  );
+  assertEquals(plain.item_updates, []);
+});
+
+Deno.test('nothing to tidy when the model returns the event as it already is', () => {
+  const p = planSort(['c-train'], trainingAnswer(), {
+    ...ctx,
+    instant: new Map([['c-train', instantRow({ title: 'Training', status: 'open' })]]),
+  });
+  assertEquals(p.item_updates, []);
+  assertEquals(p.items.length, 1);
+});
+
+Deno.test('the prompt tells the model which instant event already exists', () => {
+  assert(SORT_BATCH_SYSTEM.includes('instant_event="title | start"'));
+  const msg = buildSortMessage(
+    {
+      now: NOW.toISOString(),
+      timeZone: 'Europe/Dublin',
+      topics: [],
+      lists: [],
+      ideas: [],
+      corrections: [],
+      candidates: [],
+    },
+    [
+      {
+        id: 'c-train',
+        text: 'Training on Tuesday. Need a reminder to send report to Trevor',
+        url: null,
+        instant: { title: 'Say "hi"', start: '2026-11-10T00:00:00.000Z', all_day: true },
+      },
+    ],
+  );
+  assert(
+    msg.includes(
+      `<capture id="c-train" instant_event="Say 'hi' | 2026-11-10T00:00:00.000Z (all day)">`,
+    ),
   );
 });

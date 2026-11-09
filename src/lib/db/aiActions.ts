@@ -52,7 +52,16 @@ function mergeWork(work: Record<string, unknown>, patch: Record<string, unknown>
   return Object.fromEntries(Object.entries({ ...work, ...patch }).filter(([, v]) => v !== null));
 }
 
-const ITEM_COLUMNS = ['start_at', 'end_at', 'all_day', 'due_at', 'data'] as const;
+const ITEM_COLUMNS = [
+  'title',
+  'status',
+  'start_at',
+  'end_at',
+  'all_day',
+  'due_at',
+  'rrule',
+  'data',
+] as const;
 
 /** Writes `to` over the target if it still holds `from`. */
 async function writeTarget(

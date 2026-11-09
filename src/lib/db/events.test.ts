@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createCapture } from './captures';
 import { openUserDb, type AirheadDb } from './db';
-import { acceptSuggestion, dismissSuggestion, eventLabel, undoInstantEvent } from './events';
+import {
+  acceptSuggestion,
+  dismissSuggestion,
+  endLabel,
+  eventLabel,
+  undoInstantEvent,
+} from './events';
 
 const USER = '11111111-1111-4111-8111-111111111111';
 const NOW = new Date('2026-11-06T10:00:00Z'); // Friday 10:00 Dublin
@@ -106,5 +112,13 @@ describe('eventLabel', () => {
     expect(eventLabel({ start_at: '2027-03-14T00:00:00.000Z', all_day: true }, NOW)).toBe(
       'Sun 14 Mar',
     );
+  });
+});
+
+describe('endLabel', () => {
+  it('shows the end of a timed event, local time', () => {
+    expect(endLabel({ end_at: '2026-11-13T00:00:00.000Z', all_day: false })).toBe('–00:00');
+    expect(endLabel({ end_at: null, all_day: false })).toBe('');
+    expect(endLabel({ end_at: '2026-11-13T00:00:00.000Z', all_day: true })).toBe('');
   });
 });

@@ -93,3 +93,51 @@ Deno.test('a schema the real API would refuse fails here too', async () => {
     }
   });
 });
+
+Deno.test(
+  'sorting: a longer note with an instant event comes back tidied, plus what it lost',
+  async () => {
+    await withMock(async (url) => {
+      Deno.env.set('ANTHROPIC_BASE_URL', url);
+      try {
+        const message = buildSortMessage(
+          {
+            now: new Date().toISOString(),
+            timeZone: 'Europe/Dublin',
+            topics: [],
+            lists: [],
+            ideas: [],
+            corrections: [],
+            candidates: [],
+          },
+          [
+            {
+              id: 'c1',
+              text: 'Training on Tuesday. Need a reminder to send report to Trevor',
+              url: null,
+              instant: {
+                title: 'Training . Need a reminder to send report to Trevor',
+                start: '2030-11-12T00:00:00.000Z',
+                all_day: true,
+              },
+            },
+          ],
+        );
+        const r = await callAI(
+          { client: anthropicClient('test-key'), store },
+          request(SortResult, SORT_BATCH_SYSTEM, message),
+        );
+        assert(r.ok, `sorting call failed: ${JSON.stringify(r)}`);
+        assertEquals(
+          r.data.results[0]!.items.map((i) => [i.type, i.title, i.start_at]),
+          [
+            ['event', 'Training', '2030-11-12T00:00:00.000Z'],
+            ['task', 'Send report to Trevor', null],
+          ],
+        );
+      } finally {
+        Deno.env.delete('ANTHROPIC_BASE_URL');
+      }
+    });
+  },
+);

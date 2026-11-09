@@ -111,6 +111,31 @@ describe('undo', () => {
     expect((await db.items.get(item.id))?.start_at).toBe('2026-11-10T15:00:00.000Z');
   });
 
+  it('undoes a tidied instant event: title, end and repeat go back (Task 11.1)', async () => {
+    const item = await save(db, 'items', {
+      ...newItem(U, { type: 'event', title: 'Training' }),
+      start_at: '2026-11-10T00:00:00.000Z',
+      all_day: true,
+    });
+    const a = await action({
+      kind: 'tidy_item',
+      summary: 'Tidied “Training” and added 1 item',
+      target_table: 'items',
+      target_id: item.id,
+      before: {
+        title: 'Training . Need a reminder to send report to Trevor',
+        rrule: null,
+        updated_at: 'x',
+      },
+      after: { title: 'Training', rrule: null },
+    });
+    expect(chipFor([a])).toBe('Tidied “Training” and added 1 item');
+    expect(await undoAction(db, U, a)).toBe('undone');
+    expect((await db.items.get(item.id))?.title).toBe(
+      'Training . Need a reminder to send report to Trevor',
+    );
+  });
+
   it('leaves an item alone if it was moved again by hand', async () => {
     const item = await save(db, 'items', {
       ...newItem(U, { type: 'event', title: 'Dentist' }),

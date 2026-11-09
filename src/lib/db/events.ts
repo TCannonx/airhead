@@ -24,12 +24,24 @@ export function eventLabel(
 }
 
 /** Undo an event the free rules added: soft delete it, send the capture back to sorting. */
+/** "–23:00" after a timed event's start when it has an end (else empty). */
+export function endLabel(
+  item: Pick<Item, 'end_at' | 'all_day'>,
+  timeZone = DEFAULT_TIME_ZONE,
+): string {
+  if (item.all_day || !item.end_at) return '';
+  return `–${format(new TZDate(item.end_at, timeZone), 'HH:mm')}`;
+}
+
 export async function undoInstantEvent(db: AirheadDb, itemId: string): Promise<void> {
   const item = await db.items.get(itemId);
   if (!item) return;
   await softDelete(db, 'items', itemId);
   if (item.capture_id) {
-    await update(db, 'captures', item.capture_id, { status: 'unsorted', sorted_at: null });
+    // Sorting then treats the note afresh (no instant event left to tidy).
+    const capture = await db.captures.get(item.capture_id);
+    const { instant_item_id: _gone, ...payload } = capture?.payload ?? {};
+    await update(db, 'captures', item.capture_id, { status: 'unsorted', sorted_at: null, payload });
   }
 }
 
