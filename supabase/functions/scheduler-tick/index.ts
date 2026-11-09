@@ -1,8 +1,9 @@
 import { anthropicClient } from '../_shared/anthropic.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
-import { json } from '../_shared/http.ts';
+import { supabaseCaller } from '../_shared/caller.ts';
 import { isService } from '../_shared/serviceAuth.ts';
-import { deliver, pusherFromEnv, type DeviceRow } from '../_shared/push.ts';
+import { deliver, pusherFromEnv, type DeviceRow, type Pusher } from '../_shared/push.ts';
+import { handleTick } from './handler.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
 import { runMorningBrief } from '../morning-brief/run.ts';
 import { supabaseBriefStore } from '../morning-brief/store.ts';
@@ -137,20 +138,17 @@ const store: TickStore = {
   },
 };
 
-/**
- * POST /scheduler-tick (service key only; pg_cron calls it every minute).
- * Plans recurring reminders, runs local-time jobs once a day, sends due nudges.
- */
-Deno.serve(async (req) => {
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!(await isService(token))) {
-    return json({ ok: false, error_code: 'unauthorized', message: 'Scheduler only.' }, 401);
-  }
-  const pusher = await pusherFromEnv().catch(() => null);
-  if (!pusher) {
-    return json({ ok: false, error_code: 'not_configured', message: 'Push is not set up.' }, 200);
-  }
-  const report = await runTick(
+/** POST /scheduler-tick (service key only): see handler.ts. */
+Deno.serve((req) =>
+  handleTick(req, {
+    caller: supabaseCaller(db, isService),
+    pusher: () => pusherFromEnv(),
+    tick: (pusher) => tickNow(pusher),
+  }),
+);
+
+function tickNow(pusher: Pusher) {
+  return runTick(
     new Date(),
     store,
     async (userId, payload) => {
@@ -204,5 +202,4 @@ Deno.serve(async (req) => {
       },
     },
   );
-  return json({ ok: true, error_code: null, message: 'ok', ...report });
-});
+}

@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
-import { runIngest, type IngestBody } from './run.ts';
+import { handleIngest } from './handler.ts';
 
 const db = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -7,22 +7,9 @@ const db = createClient(
   { auth: { persistSession: false } },
 );
 
-const text = (message: string, status: number) =>
-  new Response(message, {
-    status,
-    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
-  });
-
-/**
- * POST /ingest-capture  Authorization: Bearer <capture token>
- * { text?, url?, image? (base64), image_type? }  →  plain-text reply.
- * Called by iOS Shortcuts only (no browser CORS: the bookmarklet uses /share).
- */
-Deno.serve(async (req) => {
-  if (req.method !== 'POST') return text('Use POST.', 405);
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
-  const body = (await req.json().catch(() => ({}))) as IngestBody;
-  const res = await runIngest(token, body, {
+/** POST /ingest-capture with a capture token: see handler.ts. */
+Deno.serve((req) =>
+  handleIngest(req, {
     async lookup(hash) {
       const { data, error } = await db.rpc('use_capture_token', { p_hash: hash });
       if (error) throw new Error(error.message);
@@ -39,6 +26,5 @@ Deno.serve(async (req) => {
         .upload(path, bytes, { contentType: mime });
       if (error) throw new Error(error.message);
     },
-  }).catch(() => ({ status: 500, message: 'Airhead couldn’t save that. Try again.' }));
-  return text(res.message, res.status);
-});
+  }),
+);
