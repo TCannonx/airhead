@@ -1,22 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { cx, FOCUS_RING } from './cx';
+import { buttonClasses, type ButtonSize, type ButtonVariant } from './buttonClasses';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'plain' | 'destructive';
-export type ButtonSize = 'sm' | 'md' | 'lg';
-
-const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-accent-fg hover:bg-accent-hover',
-  secondary: 'bg-fill text-fg hover:brightness-95 dark:hover:brightness-125',
-  plain: 'text-accent hover:bg-accent-soft',
-  destructive: 'bg-danger-soft text-danger hover:brightness-95 dark:hover:brightness-125',
-};
-
-const SIZE: Record<ButtonSize, string> = {
-  sm: 'min-h-8 px-3 text-footnote',
-  md: 'min-h-11 px-4 text-body',
-  lg: 'min-h-12 w-full px-5 text-headline',
-};
+export type { ButtonSize, ButtonVariant } from './buttonClasses';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -48,14 +34,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cx(
-        'inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold transition select-none',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        VARIANT[variant],
-        SIZE[size],
-        FOCUS_RING,
-        className,
-      )}
+      className={buttonClasses(variant, size, className)}
       {...rest}
     >
       {loading ? <Spinner /> : icon}

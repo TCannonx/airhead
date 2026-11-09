@@ -2,9 +2,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { createNote } from '../../lib/db/notes';
-
-const btn =
-  'rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700';
+import { Button } from '../../ui/Button';
 
 /** "New note" and "New meeting note" (Task 6.3), in the Library and on Capture. */
 export default function NewNoteButtons() {
@@ -17,15 +15,9 @@ export default function NewNoteButtons() {
     );
   return (
     <div className="flex flex-wrap gap-2">
-      <button type="button" className={btn} onClick={() => make('note')}>
-        New note
-      </button>
-      <button type="button" className={btn} onClick={() => make('meeting')}>
-        New meeting note
-      </button>
-      <button type="button" className={btn} onClick={() => make('note', 'ink')}>
-        New handwritten note
-      </button>
+      <Button onClick={() => make('note')}>New note</Button>
+      <Button onClick={() => make('meeting')}>New meeting note</Button>
+      <Button onClick={() => make('note', 'ink')}>New handwritten note</Button>
     </div>
   );
 }

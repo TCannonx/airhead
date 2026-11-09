@@ -8,7 +8,7 @@ export default function TodayGlance() {
   return (
     <div aria-label="Today at a glance">
       <Top3 view={view} compact />
-      <TodayEvents view={view} />
+      <TodayEvents view={view} compact />
     </div>
   );
 }

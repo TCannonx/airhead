@@ -1,8 +1,8 @@
-import type { TextareaHTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { Field } from './Field';
 import { CONTROL, describedBy, useFieldIds, type FieldChrome } from './fieldParts';
 
-export type TextAreaProps = FieldChrome & TextareaHTMLAttributes<HTMLTextAreaElement>;
+export type TextAreaProps = FieldChrome & ComponentPropsWithRef<'textarea'>;
 
 /** A labelled multi-line input. */
 export function TextArea({ label, hideLabel, hint, error, id, className, ...rest }: TextAreaProps) {

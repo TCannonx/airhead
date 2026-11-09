@@ -5,8 +5,8 @@ import { useDb } from '../../lib/db/context';
 import { acceptCard, dismissCard } from '../../lib/scout/cards';
 import { useOnline } from '../../lib/useOnline';
 import { deviceTimeZone } from '../calendar/useCalendarData';
-
-const btn = 'rounded-lg px-2.5 py-1 text-xs font-semibold disabled:opacity-50';
+import { Button } from '../../ui/Button';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 
 /**
  * Scout's ideas (Task 8.12), on Today and Insights: each card waits for
@@ -40,14 +40,17 @@ export default function ScoutCards() {
 
   if (!cards || (cards.length === 0 && !scout)) return null;
   return (
-    <section aria-label="Ideas from Scout" className="mt-6 space-y-2">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase">Ideas</h2>
-        {scout && (
-          <button
-            type="button"
-            className={`${btn} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800`}
-            disabled={busy || !online}
+    <Section
+      title="Ideas"
+      label="Ideas from Scout"
+      action={
+        scout && (
+          <Button
+            size="sm"
+            variant="plain"
+            className="-mr-3"
+            loading={busy}
+            disabled={!online}
             title={
               online
                 ? 'At most one AI call with up to 3 web searches (≈ €0.04)'
@@ -56,56 +59,54 @@ export default function ScoutCards() {
             onClick={() => void act(async () => setMessage((await scout.run()).message))}
           >
             {busy ? 'Scouting…' : 'Scout now'}
-          </button>
+          </Button>
+        )
+      }
+      footer={message ? <p role="status">{message}</p> : undefined}
+    >
+      <GroupedList>
+        {cards.length === 0 && (
+          <GroupedListItem>
+            <p className="text-body text-fg-muted">No ideas waiting.</p>
+          </GroupedListItem>
         )}
-      </div>
-      {cards.length === 0 && <p className="text-sm text-slate-500">No ideas waiting.</p>}
-      <ul className="space-y-2">
         {cards.slice(0, 5).map((s) => (
-          <li
-            key={s.id}
-            className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800"
-          >
-            <p className="font-medium">{s.title}</p>
-            {s.body && <p className="text-slate-600 dark:text-slate-400">{s.body}</p>}
+          <GroupedListItem key={s.id}>
+            <p className="text-body font-medium break-words">{s.title}</p>
+            {s.body && <p className="text-footnote text-fg-muted">{s.body}</p>}
             {s.source_url && (
               <a
                 href={s.source_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-indigo-600 underline"
+                className="text-footnote text-accent underline"
               >
                 Source
               </a>
             )}
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {s.proposed && (
-                <button
-                  type="button"
-                  className={`${btn} bg-indigo-600 text-white`}
+                <Button
+                  size="sm"
+                  variant="primary"
                   disabled={busy}
                   onClick={() => void act(() => acceptCard(db, userId, s, deviceTimeZone()))}
                 >
                   Accept {s.title}
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                className={`${btn} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800`}
+              <Button
+                size="sm"
+                variant="plain"
                 disabled={busy}
                 onClick={() => void act(() => dismissCard(db, userId, s))}
               >
                 Dismiss {s.title}
-              </button>
+              </Button>
             </div>
-          </li>
+          </GroupedListItem>
         ))}
-      </ul>
-      {message && (
-        <p role="status" className="text-sm text-slate-600">
-          {message}
-        </p>
-      )}
-    </section>
+      </GroupedList>
+    </Section>
   );
 }

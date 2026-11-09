@@ -1,8 +1,8 @@
-import type { InputHTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { Field } from './Field';
 import { CONTROL, describedBy, useFieldIds, type FieldChrome } from './fieldParts';
 
-export type TextFieldProps = FieldChrome & InputHTMLAttributes<HTMLInputElement>;
+export type TextFieldProps = FieldChrome & ComponentPropsWithRef<'input'>;
 
 /** A labelled single-line input (text, email, number, date, time…). */
 export function TextField({

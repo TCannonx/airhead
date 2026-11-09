@@ -15,6 +15,11 @@ import { sendCaptureToWorkshop } from '../../lib/db/workshop';
 import type { AiAction, Capture, Item } from '../../lib/schemas/records';
 import { TOAST_MS } from './toast';
 import { Toast } from '../../ui/Toast';
+import { Button } from '../../ui/Button';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { Chip } from '../../ui/Chip';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
+import { TextArea } from '../../ui/TextArea';
 import { compressImage } from '../../lib/files/image';
 import NewNoteButtons from '../notes/NewNoteButtons';
 
@@ -29,9 +34,6 @@ function chipFor(c: Capture, items: Item[], actions: AiAction[]): string {
   if (event?.status === 'suggested') return withWorkshop(c, `Suggestion: ${eventLabel(event)}`);
   return captureChip(c, actions);
 }
-
-const button =
-  'rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
 
 export default function CapturePage() {
   const db = useDb();
@@ -145,35 +147,23 @@ export default function CapturePage() {
   return (
     <Page title="Capture">
       <div className="space-y-3">
-        <textarea
+        <TextArea
           ref={boxRef}
-          aria-label="Capture"
+          label="Capture"
+          hideLabel
           placeholder="Anything on your mind?"
           rows={4}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
-          className="w-full resize-y rounded-xl border border-slate-300 bg-white p-4 text-base shadow-sm focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+          className="[&_textarea]:rounded-card [&_textarea]:p-4 [&_textarea]:shadow-xs"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
-            disabled={!canSave}
-            onClick={() => void submit()}
-          >
+          <Button variant="primary" disabled={!canSave} onClick={() => void submit()}>
             Save
-          </button>
-          <button
-            type="button"
-            className={`${button} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700`}
-            onClick={() => void pasteLink()}
-          >
-            Paste link
-          </button>
-          <label
-            className={`${button} cursor-pointer bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700`}
-          >
+          </Button>
+          <Button onClick={() => void pasteLink()}>Paste link</Button>
+          <label className={buttonClasses('secondary', 'md', 'cursor-pointer')}>
             {photoName ? 'Change photo' : 'Add photo'}
             <input
               ref={fileRef}
@@ -184,48 +174,45 @@ export default function CapturePage() {
               onChange={(e) => void onPhoto(e.target.files?.[0])}
             />
           </label>
-          {photoName && <span className="text-sm text-slate-500">📷 {photoName}</span>}
+          {photoName && (
+            <Chip className="max-w-full">
+              <span className="truncate">📷 {photoName}</span>
+            </Chip>
+          )}
         </div>
         {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-footnote text-danger">
             {error}
           </p>
         )}
       </div>
 
       {recent && recent.length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-            Recent
-          </h2>
-          <ul aria-label="Recent captures" className="space-y-2">
+        <Section title="Recent" className="mt-8">
+          <GroupedList label="Recent captures">
             {recent.map((c) => (
-              <li
-                key={c.id}
-                className="flex items-start justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"
-              >
-                <span className="min-w-0 flex-1 break-words">
+              <GroupedListItem key={c.id} className="py-2.5">
+                <p className="text-body break-words">
                   {c.kind === 'image' && <span aria-hidden="true">📷 </span>}
                   {c.text ?? c.url}
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                    {chipFor(c, recentItems ?? [], recentActions ?? [])}
-                  </span>
+                </p>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3">
+                  <Chip>{chipFor(c, recentItems ?? [], recentActions ?? [])}</Chip>
                   {typeof c.payload.workshop_item_id !== 'string' && (
-                    <button
-                      type="button"
-                      className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                    <Button
+                      variant="plain"
+                      size="sm"
+                      className="-mr-3"
                       onClick={() => void sendCaptureToWorkshop(db, userId, c.id)}
                     >
                       Send to Workshop
-                    </button>
+                    </Button>
                   )}
-                </span>
-              </li>
+                </div>
+              </GroupedListItem>
             ))}
-          </ul>
-        </section>
+          </GroupedList>
+        </Section>
       )}
 
       {toast && (
@@ -240,9 +227,9 @@ export default function CapturePage() {
           }}
         />
       )}
-      <div className="mt-8">
+      <Section title="Notes" className="mt-8">
         <NewNoteButtons />
-      </div>
+      </Section>
     </Page>
   );
 }

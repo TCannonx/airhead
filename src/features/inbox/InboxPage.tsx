@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Link } from 'react-router';
 import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { captureChip } from '../../lib/db/captures';
@@ -16,19 +15,16 @@ import {
 } from '../../lib/db/sorting';
 import { useSort } from '../../lib/sort/context';
 import { sendCaptureToWorkshop } from '../../lib/db/workshop';
+import { Button } from '../../ui/Button';
+import { Chip } from '../../ui/Chip';
+import { EmptyState } from '../../ui/EmptyState';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
+import { ListRow } from '../../ui/ListRow';
 import AiActions from './AiActions';
 import { INBOX_WAITING } from './useInboxCount';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
 const WAITING = INBOX_WAITING;
-
-function SectionHeading({ children }: { children: string }) {
-  return (
-    <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-      {children}
-    </h2>
-  );
-}
 
 export default function InboxPage() {
   const db = useDb();
@@ -56,165 +52,159 @@ export default function InboxPage() {
     [db],
   );
 
+  const canSort =
+    sort.available &&
+    ((unsorted && unsorted.some((c) => c.status === 'unsorted')) || !!notesWaiting);
+
   return (
     <Page title="Inbox">
       <AiActions />
       {((unsure && unsure.length > 0) || (pendingFacts && pendingFacts.length > 0)) && (
-        <section className="mb-8">
-          <SectionHeading>Needs a tap</SectionHeading>
-          <ul aria-label="Needs a tap" className="space-y-2">
+        <Section title="Needs a tap">
+          <GroupedList label="Needs a tap">
             {pendingFacts?.map((f) => (
-              <li
-                key={f.id}
-                className="rounded-xl border border-sky-200 bg-sky-50 p-3 dark:border-sky-900 dark:bg-sky-950/40"
-              >
-                <p className="font-medium">{f.text}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+              <GroupedListItem key={f.id}>
+                <p className="text-body font-medium break-words">{f.text}</p>
+                <p className="text-footnote text-fg-muted">
                   Should Airhead remember this? It&apos;s about{' '}
                   {f.category === 'person' ? 'a person' : 'something personal'}, so it asks first.
                 </p>
-                <div className="mt-2 flex gap-1.5">
-                  <button
-                    type="button"
-                    className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
-                    onClick={() => void approveFact(db, f.id)}
-                  >
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button size="sm" variant="primary" onClick={() => void approveFact(db, f.id)}>
                     Remember
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
-                    onClick={() => void rejectFact(db, f.id)}
-                  >
+                  </Button>
+                  <Button size="sm" onClick={() => void rejectFact(db, f.id)}>
                     Don’t remember
-                  </button>
+                  </Button>
                 </div>
-              </li>
+              </GroupedListItem>
             ))}
             {(unsure ?? []).map((i) => (
-              <li
-                key={i.id}
-                className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
-              >
-                <p className="font-medium">{i.title}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
+              <GroupedListItem key={i.id}>
+                <p className="text-body font-medium break-words">{i.title}</p>
+                <p className="text-footnote text-fg-muted">
                   {typeof i.data.proposed_list === 'string'
                     ? `For a list called “${i.data.proposed_list}”, which doesn’t exist yet.`
                     : `Sorted as ${TYPE_LABELS[i.type].toLowerCase()}, but not sure. Is that right?`}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {typeof i.data.proposed_list === 'string' ? (
-                    <button
-                      type="button"
-                      className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                    <Button
+                      size="sm"
+                      variant="primary"
                       onClick={() => void createListFromSuggestion(db, user?.id ?? '', i.id)}
                     >
                       Create list &apos;{i.data.proposed_list}&apos;
-                    </button>
+                    </Button>
                   ) : (
-                    <button
-                      type="button"
-                      className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                    <Button
+                      size="sm"
+                      variant="primary"
                       onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, i.type)}
                     >
                       Keep as {TYPE_LABELS[i.type]}
-                    </button>
+                    </Button>
                   )}
                   {SORTABLE_TYPES.filter((t) => t !== i.type).map((t) => (
-                    <button
+                    <Button
                       key={t}
-                      type="button"
-                      className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                      size="sm"
                       onClick={() => void resolveSuggestion(db, user?.id ?? '', i.id, t)}
                     >
                       {TYPE_LABELS[t]}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-              </li>
+              </GroupedListItem>
             ))}
-          </ul>
-        </section>
+          </GroupedList>
+        </Section>
       )}
 
-      <section className="mb-8">
-        <div className="flex items-start justify-between gap-3">
-          <SectionHeading>Unsorted</SectionHeading>
-          {sort.available &&
-            ((unsorted && unsorted.some((c) => c.status === 'unsorted')) || !!notesWaiting) && (
-              <button
-                type="button"
-                disabled={sort.running}
-                onClick={() => void sort.sortNow()}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {sort.running ? 'Sorting…' : 'Sort now'}
-              </button>
-            )}
-        </div>
+      <Section
+        title="Unsorted"
+        action={
+          canSort && (
+            <Button
+              size="sm"
+              variant="primary"
+              loading={sort.running}
+              onClick={() => void sort.sortNow()}
+            >
+              {sort.running ? 'Sorting…' : 'Sort now'}
+            </Button>
+          )
+        }
+      >
         {sort.last && (
-          <p className="mb-2 text-sm text-slate-500" aria-live="polite">
+          <p className="mb-2 px-4 text-footnote text-fg-muted" aria-live="polite">
             {sort.last.message}
           </p>
         )}
         {unsorted && unsorted.length === 0 && (
-          <p className="text-sm text-slate-500">Nothing waiting. Everything is sorted.</p>
-        )}
-        <ul aria-label="Unsorted" className="space-y-2">
-          {unsorted?.map((c) => (
-            <li key={c.id} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
-              <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 flex-1 break-words whitespace-pre-wrap">{c.text ?? c.url}</p>
-                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {captureChip(c, actions)}
-                </span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Sort as">
-                {SORTABLE_TYPES.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    aria-label={`Sort as ${TYPE_LABELS[type]}`}
-                    className="rounded-full border border-slate-300 px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                    onClick={() => void sortCaptureAs(db, user?.id ?? '', c.id, type)}
-                  >
-                    {TYPE_LABELS[type]}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className="rounded-full border border-indigo-300 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950"
-                  onClick={() => void sendCaptureToWorkshop(db, user?.id ?? '', c.id)}
-                >
-                  Send to Workshop
-                </button>
-              </div>
+          <GroupedList>
+            <li>
+              <EmptyState
+                icon="check"
+                title="All clear"
+                message="Nothing waiting. Everything is sorted."
+                className="py-6"
+              />
             </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <SectionHeading>To flesh out</SectionHeading>
-        {workshop && workshop.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Ideas you send to the Workshop to flesh out appear here.
-          </p>
-        ) : (
-          <ul aria-label="To flesh out" className="space-y-2">
-            {workshop?.map((i) => (
-              <li
-                key={i.id}
-                className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
-              >
-                <Link to={`/workshop/${i.id}`} className="hover:underline">
-                  {i.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          </GroupedList>
         )}
-      </section>
+        {unsorted && unsorted.length > 0 && (
+          <GroupedList label="Unsorted">
+            {unsorted.map((c) => (
+              <GroupedListItem key={c.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 text-body break-words whitespace-pre-wrap">
+                    {c.text ?? c.url}
+                  </p>
+                  <Chip className="max-w-[45%] shrink-0">{captureChip(c, actions)}</Chip>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Sort as">
+                  {SORTABLE_TYPES.map((type) => (
+                    <Button
+                      key={type}
+                      size="sm"
+                      aria-label={`Sort as ${TYPE_LABELS[type]}`}
+                      onClick={() => void sortCaptureAs(db, user?.id ?? '', c.id, type)}
+                    >
+                      {TYPE_LABELS[type]}
+                    </Button>
+                  ))}
+                  <Button
+                    size="sm"
+                    variant="plain"
+                    onClick={() => void sendCaptureToWorkshop(db, user?.id ?? '', c.id)}
+                  >
+                    Send to Workshop
+                  </Button>
+                </div>
+              </GroupedListItem>
+            ))}
+          </GroupedList>
+        )}
+      </Section>
+
+      <Section title="To flesh out">
+        {workshop && workshop.length === 0 ? (
+          <GroupedList>
+            <GroupedListItem>
+              <p className="text-footnote text-fg-muted">
+                Ideas you send to the Workshop to flesh out appear here.
+              </p>
+            </GroupedListItem>
+          </GroupedList>
+        ) : (
+          <GroupedList label="To flesh out">
+            {workshop?.map((i) => (
+              <ListRow key={i.id} title={i.title} to={`/workshop/${i.id}`} />
+            ))}
+          </GroupedList>
+        )}
+      </Section>
     </Page>
   );
 }
