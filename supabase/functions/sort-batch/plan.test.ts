@@ -3,7 +3,7 @@ import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'j
 import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
 import { type SortAnswer, SortResult } from '../_shared/schemas/sort.ts';
 import { pickCandidates } from './candidates.ts';
-import { type InstantRow, planSort, tomorrowMorning } from './plan.ts';
+import { firstDue, type InstantRow, planSort, tomorrowMorning } from './plan.ts';
 
 const NOW = new Date('2026-11-06T10:00:00Z');
 const [C1, C2, C3] = fixture.captures.map((c) => c.id);
@@ -310,6 +310,20 @@ Deno.test('a repeating task with no date gets its first reminder tomorrow at 09:
   assertEquals(
     tomorrowMorning(new Date('2026-11-08T20:00:00Z'), 'Europe/Dublin'),
     '2026-11-09T09:00:00.000Z',
+  );
+});
+
+Deno.test('a repeating task on set days is first due on one of those days', () => {
+  // Monday 9 Nov 2026 20:00: "every Friday" is first due Friday 13th, not Tuesday.
+  const now = new Date('2026-11-09T20:00:00Z');
+  assertEquals(firstDue('FREQ=WEEKLY;BYDAY=FR', now, 'Europe/Dublin'), '2026-11-13T09:00:00.000Z');
+  assertEquals(
+    firstDue('FREQ=WEEKLY;BYDAY=TU,TH', now, 'Europe/Dublin'),
+    '2026-11-10T09:00:00.000Z',
+  );
+  assertEquals(
+    firstDue('FREQ=WEEKLY;INTERVAL=2', now, 'Europe/Dublin'),
+    '2026-11-10T09:00:00.000Z',
   );
 });
 
