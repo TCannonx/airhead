@@ -14,3 +14,12 @@ export async function signIn(
     timeout: 15_000,
   });
 }
+
+/** Captures text on the Capture screen and waits for it in Recent captures. */
+export async function capture(page: Page, text: string): Promise<void> {
+  await page.getByRole('link', { name: 'Capture' }).first().click();
+  const box = page.getByLabel('Capture', { exact: true });
+  await box.fill(text);
+  await box.press('Enter');
+  await expect(page.getByRole('list', { name: 'Recent captures' }).getByText(text)).toBeVisible();
+}
