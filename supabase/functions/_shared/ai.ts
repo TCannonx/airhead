@@ -142,6 +142,12 @@ export async function callAI<T>(
       // HTTP/API failures carry a status; anything else is the answer failing to parse.
       const isApi = typeof (error as { status?: unknown })?.status === 'number';
       // The status and the API's own message (never the request) explain a rejection.
+      // A non-API failure is the answer not parsing (often cut off at max_tokens): say so.
+      if (!isApi)
+        console.error(
+          `AI ${req.task} answer unreadable (attempt ${attempt})`,
+          String((error as { message?: unknown })?.message ?? error).slice(0, 300),
+        );
       if (isApi)
         console.error(
           `AI ${req.task} rejected`,

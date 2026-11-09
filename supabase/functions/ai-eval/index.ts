@@ -18,6 +18,7 @@ import { runEval } from './run.ts';
  */
 const LIVE_REF = 'qqobvcelbzhrcehqukrs';
 const DAY = 86_400_000;
+const RETRY_FAILED = 2 * 3_600_000;
 
 const db = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -39,11 +40,17 @@ async function evaluate(force: boolean, apiKey: string): Promise<Response> {
   const hash = promptHash();
   const { data: last } = await db
     .from('ai_eval_runs')
-    .select('prompt_hash, created_at')
+    .select('prompt_hash, created_at, total, report->ok')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  const fresh = last && last.prompt_hash === hash && Date.now() - Date.parse(last.created_at) < DAY;
+  // A run whose AI call failed (e.g. a cut-off answer) is tried again after 2 hours,
+  // not the next day, so a fix is checked soon without calling every 30 minutes.
+  const failed = !!last && (last as { ok?: unknown }).ok === false;
+  const fresh =
+    !!last &&
+    last.prompt_hash === hash &&
+    Date.now() - Date.parse(last.created_at) < (failed ? RETRY_FAILED : DAY);
   if (fresh && !force)
     return json({ ok: true, error_code: null, message: 'Nothing changed since the last run.' });
 
