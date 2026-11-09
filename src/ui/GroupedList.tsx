@@ -10,15 +10,17 @@ export interface SectionProps {
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Accessible name for the section when it has no visible title, or needs a longer one. */
+  label?: string;
 }
 
 /**
  * A titled block of the page (iOS "inset grouped" section). Put a GroupedList
  * in it for rows, or a Card / free content for anything else.
  */
-export function Section({ title, footer, action, children, className }: SectionProps) {
+export function Section({ title, footer, action, children, className, label }: SectionProps) {
   return (
-    <section className={cx('mb-8', className)}>
+    <section aria-label={label} className={cx('mb-8', className)}>
       {(title || action) && (
         <div className="mb-1.5 flex min-h-6 items-end justify-between gap-2 px-4">
           {title && (

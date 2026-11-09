@@ -67,7 +67,7 @@ System font: SF Pro on Apple devices (`-apple-system`), Segoe UI on Windows.
 | `Section` | A titled block of a page ("Account") | Holds a `GroupedList`, a `Card` or free content |
 | `GroupedList` + `ListRow` | Settings, menus, lists of things to open | Row: leading icon, title, subtitle, trailing value or control, chevron. `to` = link, `onClick` = button. `GroupedListItem` holds free content (a form) |
 | `Card` | Free-form content on a surface | `flush` removes padding |
-| `Button` | Every text button | `primary` (one main action per view), `secondary`, `plain`, `destructive`; sizes `sm`, `md`, `lg` (full width); `loading` |
+| `Button` | Every text button | `primary` (one main action per view), `secondary`, `plain`, `destructive`; sizes `sm` (32 px with a mouse, 44 px on touch screens), `md`, `lg` (full width); `loading`. `buttonClasses()` gives a `Link` or a file-input label the same look |
 | `IconButton` | Icon-only actions (close, more, back) | `label` is required and becomes the accessible name |
 | `Chip` / `Badge` | Status labels, filter toggles; count bubbles | A chip with `onClick` is a toggle with `aria-pressed`. Badges are hidden from screen readers |
 | `SegmentedControl` | Two to five exclusive choices (Day / Week / Month) | A radio group; arrows, Home, End |
@@ -85,3 +85,4 @@ System font: SF Pro on Apple devices (`-apple-system`), Segoe UI on Windows.
 - Something to fill in without leaving the page → `Sheet`.
 - Confirmation after an action → `Toast`; an error the person must read → inline text with `role="alert"`.
 - Nothing to show → `EmptyState`, never a blank page.
+- A list of things to act on (captures, suggestions, tasks) → one `GroupedList` under a `Section`, each row with its title, a footnote line and a row of `sm` buttons; not a stack of tinted cards.

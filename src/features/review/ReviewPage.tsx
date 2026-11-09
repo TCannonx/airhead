@@ -5,9 +5,11 @@ import { useDb } from '../../lib/db/context';
 import { carryOver, completeTask, dropTask, reviewTasks } from '../../lib/db/review';
 import { deviceTimeZone } from '../calendar/useCalendarData';
 import { todayKey } from '../leave/useWork';
-
-const btn =
-  'rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800';
+import { Button } from '../../ui/Button';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { Chip } from '../../ui/Chip';
+import { EmptyState } from '../../ui/EmptyState';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 
 /** The evening review (Task 4.14): opened from the 21:00 notification or from Today. */
 export default function ReviewPage() {
@@ -21,73 +23,79 @@ export default function ReviewPage() {
   if (!tasks) return null;
 
   return (
-    <Page title="Evening review">
+    <Page title="Evening review" back={{ to: '/today', label: 'Today' }}>
       {tasks.length === 0 ? (
-        <div className="space-y-2">
-          <p className="text-lg">All done for today.</p>
-          <Link to="/today" className="text-indigo-600 hover:underline dark:text-indigo-400">
-            Back to Today
-          </Link>
-        </div>
+        <EmptyState
+          icon="check"
+          title="All done for today."
+          message="Nothing left open. Enjoy the evening."
+          action={
+            <Link to="/today" className={buttonClasses('secondary', 'md')}>
+              Back to Today
+            </Link>
+          }
+        />
       ) : (
-        <>
-          <p className="mb-4 text-sm text-slate-500">
+        <Section
+          footer={
+            tasks.length > 1 ? (
+              <Button
+                className="mt-2 -ml-1"
+                onClick={() => void Promise.all(tasks.map((t) => carryOver(db, t, today, tz)))}
+              >
+                Carry all to tomorrow
+              </Button>
+            ) : undefined
+          }
+        >
+          <p className="mb-3 px-4 text-footnote text-fg-muted">
             {tasks.length} open task{tasks.length === 1 ? '' : 's'} from today. Tick off what’s
             done, carry the rest to tomorrow, or let it go.
           </p>
-          <ul aria-label="Today's open tasks" className="space-y-2">
+          <GroupedList label="Today's open tasks">
             {tasks.map((t) => (
-              <li
+              <GroupedListItem
                 key={t.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-800"
+                className="flex flex-wrap items-center justify-between gap-2"
               >
-                <span className="min-w-0">
-                  <span className="font-medium">{t.title}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="text-body font-medium break-words">{t.title}</span>
                   {t.carry_count > 0 && (
-                    <span className="ml-2 text-xs text-amber-700 dark:text-amber-400">
+                    <Chip tone="warning" className="ml-2">
                       carried over {t.carry_count}×
-                    </span>
+                    </Chip>
                   )}
                 </span>
-                <span className="flex gap-1">
-                  <button
-                    type="button"
+                <span className="flex gap-2">
+                  <Button
+                    size="sm"
                     aria-label={`Done: ${t.title}`}
-                    className={`${btn} text-emerald-700 dark:text-emerald-400`}
+                    className="text-success"
                     onClick={() => void completeTask(db, t.id)}
                   >
                     Done
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="primary"
                     aria-label={`Carry over: ${t.title}`}
-                    className={btn}
                     onClick={() => void carryOver(db, t, today, tz)}
                   >
                     Tomorrow
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="plain"
                     aria-label={`Drop: ${t.title}`}
-                    className={`${btn} text-slate-500`}
                     onClick={() => void dropTask(db, t.id)}
                   >
                     Drop
-                  </button>
+                  </Button>
                 </span>
-              </li>
+              </GroupedListItem>
             ))}
-          </ul>
-          {tasks.length > 1 && (
-            <button
-              type="button"
-              className={`${btn} mt-4`}
-              onClick={() => void Promise.all(tasks.map((t) => carryOver(db, t, today, tz)))}
-            >
-              Carry all to tomorrow
-            </button>
-          )}
-        </>
+          </GroupedList>
+        </Section>
       )}
     </Page>
   );
