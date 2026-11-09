@@ -1331,6 +1331,11 @@ Decisions and library versions, newest first.
 - **Chip.** "Sent to Workshop" for a capture sent whole (by hand or unplaced); for a leftover it is added after what sorting did, e.g. "Tidied “Christmas sandwiches” · Sent to Workshop" or "Sorted · Sent to Workshop".
 - The stand-in AI answers the placeholder note with a weekly event plus `leftover` "Still need to plan", and "hmm …" with nothing.
 
+## Real-model evaluation on dev (2026-11-09)
+
+- The owner asked that requests like theirs be tested in their environment, not only against the stand-in AI. `supabase/functions/ai-eval` sends 14 of the owner's own requests (leave balance, haircut and cash, training plus report, quiz with times, birthday, Christmas placeholder, dentist moved, two team meetings, off 22-24 Dec, entitlement, WFH Mondays, shopping, a note about Trevor, a vague note) through the real prompt, schema, model and planner in one small-tier call (about a cent), and reports per request what it became and what is wrong. It writes nothing: no database access, no usage rows.
+- Dev only, no new secrets: the cron job `ai-eval` (migration 0037, twice an hour) calls the function with the service key from Vault only when the Vault project URL is the dev project; the function also refuses on live. The model is called only when the prompt or the cases changed since the last saved run, or once a day, so a quiet half-hour costs nothing. Reports go to `ai_eval_runs` (no app access; read with read-only queries). An earlier version used an `EVAL_TOKEN` secret; setting secrets needs the owner, so this design replaced it.
+
 ## UI foundation (Task 11.U1, 2026-11-09)
 
 - Owner: every page should feel like a polished personal organiser (Apple Reminders/Calendar, Things, Todoist): calm, legible, consistent, phone first, light and dark. This task builds the foundation and the shell; later steps move each page onto it, calendar first.
