@@ -289,6 +289,9 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | AI routing: unplaced captures (or skipped ones) and `leftover` words become Workshop notes; `suggest_workshop` on placeholders; a note's leftover marks the note | `features/workshop/routing.test.tsx` (chips) | `fn/sort-batch/workshop.test.ts`, `_shared/ai.contract.test.ts` (placeholder + vague), `_shared/schemas/limits.test.ts` (10 union params), `db/0036` | `sync/ai.spec.ts` "Sort now on a placeholder note…", "a note sorting cannot place…" | A typed note's leftover has no e2e check |
 | UI foundation: tokens follow the system scheme; a subtree can force light or dark | `ui/ui.test.tsx` (design kit panels) | — | `e2e/ui.spec.ts` (dark and light canvas, forced panels) | Device only: real iPhone safe areas and SF Pro rendering (manual checklist) |
 | Shared components: Button loading, Sheet focus trap / Esc / backdrop / focus return, SegmentedControl keys, ListRow link vs button, fields labelled and described, Toggle switch, Toast timeout and action | `ui/ui.test.tsx` | — | `e2e/ui.spec.ts` (sheet, segmented control in a real browser) | |
+| App shell: phone tab bar navigates (390 × 844), tabs at least 44 px, Calendar and Settings in the top bar; sidebar on desktop in the same order; current page marked | `app/AppLayout.test.tsx` | — | `e2e/shell.spec.ts` | Device only: iPhone Home Screen safe areas (manual checklist) |
+| Inbox badge counts captures waiting, and keeps the link's name | `app/AppLayout.test.tsx` | — | — | |
+| Large title moves into the phone top bar once scrolled; dark mode reaches shell and pages | — | — | `e2e/shell.spec.ts` | |
 | Design kit reachable from Settings → About, every component in light and dark | `ui/ui.test.tsx` | — | `e2e/ui.spec.ts` | |
 
 ## Cross-cutting

@@ -17,9 +17,10 @@ import {
 import { useSort } from '../../lib/sort/context';
 import { sendCaptureToWorkshop } from '../../lib/db/workshop';
 import AiActions from './AiActions';
+import { INBOX_WAITING } from './useInboxCount';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
-const WAITING = new Set(['unsorted', 'failed']);
+const WAITING = INBOX_WAITING;
 
 function SectionHeading({ children }: { children: string }) {
   return (

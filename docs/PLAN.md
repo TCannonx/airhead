@@ -527,7 +527,7 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 - [ ] **11.5 Repeating events.** This one / this and following / all, for edit, delete and drag; repeat in words.
 - [ ] **11.6 Find and filter.** Event search; 30-day agenda; visible, remembered calendar toggles.
 - [ ] **11.7 Missing events.** Diagnose with the owner; e2e that events stay visible in every view across devices.
-- [ ] **11.U1 UI foundation.** Design tokens (colour roles, type scale, radius, spacing; light and dark), shared components in `src/ui/` and a design kit at Settings → About → Design kit (done); app shell with tab bar, sidebar and PageHeader on every page, Settings on the new components (next). See `docs/UI.md`.
+- [x] **11.U1 UI foundation.** Design tokens (colour roles, type scale, radius, spacing; light and dark), shared components in `src/ui/` and a design kit at Settings → About → Design kit (PR #143); app shell with tab bar (Inbox badge), sidebar and PageHeader on every page, Settings on the new components. See `docs/UI.md`.
 
 ## Phases 5–9 (outline)
 

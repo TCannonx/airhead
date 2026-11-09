@@ -53,6 +53,12 @@ System font: SF Pro on Apple devices (`-apple-system`), Segoe UI on Windows.
 - `rounded-control` (10 px) for buttons and fields, `rounded-card` (14 px) for cards and grouped lists, `rounded-sheet` (20 px) for sheets.
 - Spacing follows Tailwind's 4 px grid. Page gutters: `p-gutter` (16 px, phone) and `p-gutter-wide` (32 px, desktop). `size-touch` / `min-h-touch` is the 44 px touch target.
 
+## App shell
+
+- **Phone** (< 768 px): top bar with the brand (or the page title once scrolled), sync status, Calendar and Settings; bottom tab bar Capture, Today, Inbox, Library, Insights with an Inbox count badge.
+- **iPad** (768–1279 px): sidebar plus one pane. **Desktop** (≥ 1280 px): sidebar, pane and the Today side panel.
+- Every page is a `Page` (from `src/app/Page.tsx`): a 768 px reading column (`wide` for the calendar) topped by a `PageHeader`. Page gutters come from the shell's `<main>`; pages add no outer padding.
+
 ## Components (`src/ui/`)
 
 | Component | Use it for | Notes |

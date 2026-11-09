@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(ui): UI foundation, part 2: new app shell (iOS-style tab bar with an Inbox count badge, sidebar on iPad and desktop, grey canvas and white panels in light and dark), every page title uses the shared header and moves into the phone's top bar once scrolled, Settings rebuilt on the shared components (Task 11.U1)
 - feat(ui): UI foundation, part 1: design tokens for light and dark (grey canvas, white surfaces, indigo accent, SF Pro type scale), shared components (buttons, grouped lists and rows, sheets, segmented control, fields, switches, chips, toast, empty state, page header) and a design kit in Settings → About; the Capture Undo toast uses the shared toast (Task 11.U1)
 - test: dev-only `ai-eval` function runs the owner's example requests through the real sorting model and planner and reports pass/fail per request (writes nothing)
 - feat(workshop): Send to Workshop on every capture (Capture and Inbox), item and note; a capture becomes a Workshop note with its text kept word for word; AI sorting sends what it cannot place to the Workshop instead of dropping it, e.g. "Planning Christmas sandwiches every week on a Friday. Still need to plan…" → a weekly event plus a Workshop note "Still need to plan"; chip "Sent to Workshop" (Task 11.2)

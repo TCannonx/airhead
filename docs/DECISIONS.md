@@ -1347,3 +1347,13 @@ Decisions and library versions, newest first.
 - **Design kit** at `/ui`, linked from Settings → About. Not dev-only: it is one small page, and it lets the owner check both schemes on the phone.
 - PageHeader reports its title through `CompactTitleContext` once the large title has scrolled out of view (IntersectionObserver, clipped by the scrolling `main`); the phone shell shows it small in the top bar. Without a shell it does nothing.
 - **Bundle split.** With this PR the main bundle passed Workbox's 2 MiB precache limit in a server build (2.1 MB; local-mode builds are smaller, so it only showed in CI and Cloudflare). `vite.config.ts` now puts libraries in their own chunks (`editor`, `calendar`, `files`, `vendor`; largest about 0.8 MB). They are still loaded up front and precached, so offline use is unchanged; pdfjs stays on demand. Route-level lazy loading is left for later.
+
+### App shell (Task 11.U1, part 2)
+
+- Same routes, tab order and places as before: phone tabs Capture, Today, Inbox, Library, Insights; Calendar and Settings as icon links in the phone top bar; sidebar on iPad and desktop with Calendar after Today and Settings at the bottom; the desktop side panel stays.
+- Tab bar: 49 px tall (iOS), translucent surface with blur, accent colour for the current tab, safe-area padding on bottom and sides. Sidebar: surface panel, current item on `accent-soft`.
+- **Inbox badge** (`useInboxCount`): captures waiting (`unsorted`, `failed`), unsure items waiting for a tap, memory facts waiting for approval: the same three things the Inbox shows first. It is `aria-hidden`, so the link's accessible name stays "Inbox" and tests and screen readers find it as before. AI action proposals and Workshop items are not counted (they are not urgent).
+- **Compact title**: the phone top bar shows the brand; once the page's large title has scrolled out of view, it shows the title instead (the PageHeader reports it through `CompactTitleContext`). The small copy is `aria-hidden`; the page's h1 stays the only heading.
+- `Page` now renders `PageHeader` (title, and optional `actions` and `back` for the page-by-page steps). No page content changed except Settings.
+- **Settings** is the worked example: Account, Devices, Sync and About are grouped lists with rows, chips and shared buttons; the panels whose insides are not yet rebuilt (Security, Notifications, Today, Work, …) sit in a `Card` under a `Section`. Accessible names are unchanged (Sign out, Sync now, Load latest version, the Devices list).
+- The sync indicator keeps its text and sits in the phone top bar and under the sidebar brand, as before.
