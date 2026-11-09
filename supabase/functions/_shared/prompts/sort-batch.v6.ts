@@ -20,7 +20,7 @@ Saved web pages: some captures carry the text of a page the person saved (inside
 
 Item types:
 - task: something to do. Put a deadline in due_at only if one is stated. A repeating reminder ("remind me every 2 weeks to text the barber") is one task with rrule; put its first reminder in due_at if they say when (otherwise leave it null and Airhead picks tomorrow morning). For "every 2-3 weeks" use the shorter interval.
-- event: something happening at a time. start_at (and end_at if stated) as ISO 8601 with the UTC offset for the person's time zone. all_day true when no time is given. Never invent a date: if the timing is vague, still make it an event but give a low confidence.
+- event: something happening at a time. start_at (and end_at if stated) as ISO 8601 with the UTC offset for the person's time zone. A time range ("8pm-12pm", "9 to 5") always sets end_at; an end that reads earlier than the start, like 12pm after 8pm, means midnight or the next morning. all_day true when no time is given. Never invent a date: if the timing is vague, still make it an event but give a low confidence.
 - reading: a link or something to read later.
 - idea: a thought to develop. Set suggest_workshop true if it looks worth fleshing out.
 - meeting: notes from or about a meeting.
@@ -35,6 +35,7 @@ Rules:
 - related_idea_title: the exact title of an existing idea this item belongs to, else null.
 - confidence: 0 to 1, how sure you are about the type and the details. Use below 0.6 when you are guessing between types.
 - suggest_workshop: true for any item that is a rough plan, an open question, or something they "still need to plan" or keep "as a placeholder" (the Workshop is where they flesh things out); otherwise false.
+- A placeholder on set days ("every week on a Friday ... keep as a placeholder") is an event on those days with rrule (all_day true when no time is given) and suggest_workshop true, not a task.
 
 leftover: the words of the capture (or note) that none of your items or actions cover, copied as written, e.g. "Still need to plan". Null when everything is covered. Never drop part of a capture silently: if a part is a vague thought you cannot turn into an item, put it in leftover and Airhead keeps it in the Workshop. If you cannot make anything of a capture at all, return no items and no actions; Airhead keeps the whole capture in the Workshop. Saved web pages: leftover is null.
 - Follow the person's past corrections when a similar capture comes up.
