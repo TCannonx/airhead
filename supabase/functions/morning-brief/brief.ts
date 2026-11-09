@@ -40,6 +40,8 @@ export interface Digest {
     all_day: boolean;
     rrule: string;
     calendar: string;
+    /** Occurrences deleted or changed one at a time (Task 11.5). */
+    exdates?: string[];
   }[];
   linked: {
     title: string;
@@ -134,7 +136,13 @@ export function enrichDigest(d: Digest, settings: Record<string, unknown>) {
   const to = new Date(localMidnightIso(addDays(d.date, 8), d.time_zone));
   const recurring = d.recurring.flatMap((r) =>
     occurrencesBetween(
-      { id: r.id, title: r.title, start_at: r.start_at, rrule: r.rrule, data: {} },
+      {
+        id: r.id,
+        title: r.title,
+        start_at: r.start_at,
+        rrule: r.rrule,
+        data: { exdates: r.exdates ?? [] },
+      },
       new Date(from.getTime() - 1),
       to,
       d.time_zone,

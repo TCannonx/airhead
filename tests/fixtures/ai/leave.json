@@ -1,0 +1,11 @@
+{
+  "note": "Model output for suggest-leave over three bridge candidates. Includes a pick that is not a candidate and a repeat, which the code must drop. Used by the contract test and tests/mock-ai; the paid API is never called.",
+  "output": {
+    "picks": [
+      { "n": 2, "why": "  Lines up with the birthday weekend.  " },
+      { "n": 9, "why": "Not a candidate" },
+      { "n": 2, "why": "Duplicate" },
+      { "n": 1, "why": "Before the busy week in May." }
+    ]
+  }
+}

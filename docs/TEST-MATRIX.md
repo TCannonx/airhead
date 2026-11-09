@@ -26,7 +26,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 **New in the working tree (8 November, after the two bugs):**
 
 - `supabase/functions/_shared/schemas/limits.test.ts`: counts union parameters in every AI output schema against the limit of 16. Runs in the existing Deno CI step.
-- `supabase/functions/_shared/ai.contract.test.ts`: the real SDK, sorting prompt and schema against `tests/mock-ai/server.mjs`, which refuses what the real API would refuse. Runs in the existing Deno CI step.
+- `supabase/functions/_shared/ai.contract.test.ts`: the real SDK, each function's real prompt and schema (sorting and, since 9 November, every other AI call and Scout's web search) against `tests/mock-ai/server.mjs`, which refuses what the real API would refuse and answers from `tests/fixtures/ai`. Runs in the existing Deno CI step.
 - `tests/e2e-sync/network.spec.ts`: a stalled push does not stop sync (needs no function, so it works today); "Sort now still answers when sync is stuck" (needs `sort-batch`).
 - `tests/e2e-sync/ai.spec.ts`: Sort now through the real `sort-batch` function with `mock-ai`, then a second device and Undo.
 - **Not wired yet:** `ci.yml` still excludes `edge-runtime`, does not serve functions and does not start `mock-ai` with `ANTHROPIC_BASE_URL`. Until it does, `ai.spec.ts` and the second `network.spec.ts` test cannot pass in CI. Rows below mark these as "(new, not wired)".
@@ -94,7 +94,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | AI gateway: cost, one retry, usage rows, cap, refusal, caching | — | `fn/_shared/ai.test.ts`, `db/0003` | — | |
-| Every AI request is one the real API accepts (schema limits) | — | `fn/_shared/schemas/limits.test.ts` (new), `fn/_shared/ai.contract.test.ts` (new; sorting only) | — | **Partial**: contract test covers sorting only; mock-ai is our model of the API, not the API |
+| Every AI request is one the real API accepts (schema limits) | — | `fn/_shared/schemas/limits.test.ts`, `fn/_shared/ai.contract.test.ts` (every AI call: sorting, ask, workshop flesh-out and turn, morning brief, weekly review, import, summarise typed and ink, suggest-leave, check-contradictions, Scout's web search; saved answers checked against the schema each request sends) | — | **Partial**: mock-ai is our model of the API, not the API (gap 3, live canary) |
 | Sort batch: brain dump splits into list entries, event, task | — | `fn/sort-batch/plan.test.ts`, `db/0004` | `sync/ai.spec.ts` "Sort now sorts a capture with AI…" (new, not wired) | **Partial**: `sort-batch/run.ts` (loading captures, calling `apply_sort_batch`) has no test |
 | "Sort now" sorts at once and shows the result | `features/inbox/sortnow.test.tsx` (fake sorting service) | — | `sync/ai.spec.ts` (new, not wired) | **Partial**: never runs against the real function in CI. This is the phone bug |
 | Sort now still answers when sync is stuck | `features/inbox/sortnow.test.tsx` "a sync that never finishes does not stop sorting" | — | `sync/network.spec.ts` "Sort now still answers when sync is stuck" (new, not wired) | **Partial**: as above |
@@ -115,7 +115,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Learned rule after four uncorrected sorts; the fifth sorts offline | `lib/db/memory.test.ts` | `db/0008` (`learn_rules`) | — | **Partial**: the full loop (server learns → rule syncs → device applies) never runs |
 | A correction against a rule switches it off | `lib/db/memory.test.ts` | — | — | |
 | Run check-up: findings and one-tap fixes | `lib/memory/checkup.test.ts`, `features/settings/checkup.test.tsx` | — | — | |
-| Check for contradictions; "Keep the first" | `features/settings/checkup.test.tsx` (fake) | `fn/check-contradictions/check.test.ts` | — | **Partial**: function never runs from the app; schema in `limits.test.ts` |
+| Check for contradictions; "Keep the first" | `features/settings/checkup.test.tsx` (fake) | `fn/check-contradictions/check.test.ts`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app; schema in `limits.test.ts` |
 | Monthly check-up report on Insights | `features/settings/checkup.test.tsx` | — | — | |
 | AI usage: month to date, projection, daily chart, editable prices | `lib/ai/usage.test.ts`, `features/insights/aiusage.test.tsx` | `db/0003` | — | **Partial**: matching the Claude Console is manual |
 | A monthly cap pauses background sorting; captures still save | — | `fn/_shared/ai.test.ts` "cap reached: nothing is sent" | — | **Partial**: no test that a capped batch leaves captures Unsorted and the app says so |
@@ -168,7 +168,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Fixtures PDF with "attending all home games" → reviewed series | `lib/import/pdf.test.ts`, `lib/import/import.test.ts` | — | — | **Partial**: no screen test of the PDF route |
 | .ics file and CSV (column mapping) | `lib/import/import.test.ts`, `features/calendar/import.test.tsx` (CSV) | — | — | |
 | Delete a series removes its events | `features/calendar/series.test.tsx` | — | — | |
-| Screenshot read by one AI call; "time TBC" | `features/calendar/import.test.tsx` (fake), `lib/import/import.test.ts` | `fn/import-extract/run.test.ts` | — | **Partial**: function never runs from the app |
+| Screenshot read by one AI call; "time TBC" | `features/calendar/import.test.tsx` (fake), `lib/import/import.test.ts` | `fn/import-extract/run.test.ts`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app |
 | An .ics link offers "Add it as a linked calendar instead" | — | `fn/import-extract/run.test.ts` (iCalendar returned as text) | — | **Partial**: the offer on screen is not asserted |
 | Clashes flagged; working-day events offer leave | `lib/import/import.test.ts`, `features/calendar/import.test.tsx` | — | — | |
 | Original file kept with the series | `lib/import/import.test.ts` | `db/0012` | — | **Partial**: Storage upload never runs |
@@ -196,7 +196,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Morning round-up at the chosen time, opens Today | — | `fn/scheduler-tick/tick.test.ts`, `fn/morning-brief/brief.test.ts` | — | **Partial**: delivery device-only |
-| Today: brief, events, Top 3 with slots, Also today | `features/today/today.test.tsx` | `fn/morning-brief/brief.test.ts`, `db/0015`, `db/0016` | — | **Partial**: a server brief never reaches a device in a test |
+| Today: brief, events, Top 3 with slots, Also today | `features/today/today.test.tsx` | `fn/morning-brief/brief.test.ts`, `db/0015`, `db/0016`, `_shared/ai.contract.test.ts` | — | **Partial**: a server brief never reaches a device in a test |
 | "Block" puts the task on the calendar | `features/today/today.test.tsx` | — | — | |
 | Carry-over cards: Today / Done / Drop | `features/today/top3.test.tsx` | — | — | |
 | Add to Top 3 from the Library; a fourth asks which to swap | `features/today/top3.test.tsx` | — | — | |
@@ -215,7 +215,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Pen colours and widths, highlighter, eraser, undo, redo | `lib/ink/strokes.test.ts`, `lib/ink/render.test.ts` | — | `e2e/ink.spec.ts` "a drawn stroke is saved, can be erased and undone…" | **Partial**: Pencil draws / finger scrolls is device-only |
 | Page grows; text boxes added, moved, deleted | `lib/ink/strokes.test.ts`, `lib/ink/texts.test.ts` | — | `e2e/ink.spec.ts` "text boxes: add with the text tool…" | |
 | Edited on two devices, one offline → "conflicted copy" | `lib/sync/notes-sync.test.ts` | `db/0018`, `db/0019` | — | **Partial**: no two-browser test |
-| Summarise typed and handwritten notes | `features/notes/summarise.test.tsx` (fake) | `fn/summarise-note/run.test.ts` | — | **Partial**: function never runs from the app |
+| Summarise typed and handwritten notes | `features/notes/summarise.test.tsx` (fake) | `fn/summarise-note/run.test.ts`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app |
 | Ticked action items become tasks; unticked do not | `features/notes/actions.test.tsx`, `lib/db/actions.test.ts` | — | — | |
 | Search finds words from a summarised handwritten page | `features/notes/library.test.tsx` | — | — | |
 | Summarised handwritten note view-only on phone/desktop, editable on iPad | `features/notes/library.test.tsx` | — | — | |
@@ -228,10 +228,10 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Share sheet / Shortcut saves link, text, photo | `features/settings/shortcuts.test.tsx` (guide) | `fn/ingest-capture/run.test.ts` | — | **Partial**: function never runs; Shortcut device-only |
 | "Quick thought" on Back Tap / Action Button | — | — | — | **None**: device-only, needs manual |
 | Bookmarklet and `/share` save the page with selected text | `features/capture/share.test.tsx` | — | — | **Partial**: manifest `share_target` not asserted |
-| Workshop: Auto flesh-out draft with versions | `features/workshop/workshop.test.tsx`, `lib/db/workshop.test.ts` | `fn/workshop/run.test.ts`, `db/0021` | — | **Partial**: function never runs from the app |
-| Work on it together; offline answer sent later | `features/workshop/session.test.tsx` | `fn/workshop/turn.test.ts` | — | **Partial**: as above |
+| Workshop: Auto flesh-out draft with versions | `features/workshop/workshop.test.tsx`, `lib/db/workshop.test.ts` | `fn/workshop/run.test.ts`, `db/0021`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app |
+| Work on it together; offline answer sent later | `features/workshop/session.test.tsx` | `fn/workshop/turn.test.ts`, `_shared/ai.contract.test.ts` | — | **Partial**: as above |
 | Next steps become tasks in one tap | `features/workshop/nextsteps.test.tsx` | — | — | |
-| Ask Airhead answers with citations that open the source | `features/library/ask.test.tsx` (fake) | `fn/ask/run.test.ts`, `db/0023` | — | **Partial**: function never runs; no real embeddings |
+| Ask Airhead answers with citations that open the source | `features/library/ask.test.tsx` (fake) | `fn/ask/run.test.ts`, `db/0023`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs; no real embeddings |
 | Embeddings queued, chunked, searchable | — | `fn/embed-items/run.test.ts`, `db/0022`, `db/0024` | — | **Partial**: the `gte-small` model never runs in a test |
 | Memory by relevance (top facts after the core profile) | — | `fn/_shared/relevant.test.ts`, `fn/workshop/run.test.ts`, `db/0024` | — | |
 
@@ -239,13 +239,13 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
-| Weekly review on the chosen day: themes, wins, slipped, suggestions, spend | `features/insights/review.test.tsx` | `fn/weekly-review/run.test.ts`, `fn/scheduler-tick/tick.test.ts`, `db/0025`, `db/0027` | — | **Partial**: never generated by the real function in a test; push manual |
+| Weekly review on the chosen day: themes, wins, slipped, suggestions, spend | `features/insights/review.test.tsx` | `fn/weekly-review/run.test.ts`, `fn/scheduler-tick/tick.test.ts`, `db/0025`, `db/0027`, `_shared/ai.contract.test.ts` | — | **Partial**: never generated by the real function in a test; push manual |
 | Tidy-up: low-risk items archived (restorable); Condense makes one note | `features/insights/review.test.tsx` | `db/0026`, `fn/weekly-review/run.test.ts` | — | |
 | Patterns: completion by weekday, capture hours, table view | `features/insights/patterns.test.tsx` | `db/0025` | — | |
 | Suggest leave: bridges avoiding events and the linked calendar | `lib/leave/bridges.test.ts`, `features/leave/ideas.test.tsx` | `fn/_shared/leave/bridges.test.ts` | — | |
-| "Ask Airhead to pick" and booking via the normal leave flow | `features/leave/ideas.test.tsx` (fake) | `fn/suggest-leave/run.test.ts` | — | **Partial**: function never runs from the app |
+| "Ask Airhead to pick" and booking via the normal leave flow | `features/leave/ideas.test.tsx` (fake) | `fn/suggest-leave/run.test.ts`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app |
 | Bridge hint inside the weekly review | — | — | — | **None**: not seen asserted |
-| Scout now: at most 5 cards; run log lists the queries | `features/settings/scout.test.tsx`, `features/today/scout.test.tsx` (fake) | `fn/scout/run.test.ts`, `fn/scout/findings.test.ts`, `db/0028` | — | **Partial**: function never runs; the web search tool is not in `limits.test.ts` or the contract test |
+| Scout now: at most 5 cards; run log lists the queries | `features/settings/scout.test.tsx`, `features/today/scout.test.tsx` (fake) | `fn/scout/run.test.ts`, `fn/scout/findings.test.ts`, `db/0028`, `_shared/ai.contract.test.ts` (web search request through the real SDK) | — | **Partial**: function never runs from the app |
 | Accept creates the item; Dismiss adds a "not interested" fact | `features/today/scout.test.tsx` | — | — | |
 | Brief and reviews read the last 4 digests | — | `fn/morning-brief/brief.test.ts` | — | |
 
@@ -296,7 +296,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Tap an empty slot in Day / Week (phone and desktop) for an hour-long event; drag for a span; Add event on the phone month's chosen day | — | — | `e2e/calendar.spec.ts` "faster adding" phone test, "create an event from an empty slot…" | Real finger on iPhone (manual) |
 | Event form: repeat (none, daily, weekly on chosen days, monthly, yearly, every N), end repeat (never, on a date, after N times), rule in words; rules the form cannot show are kept | `lib/calendar/repeat.test.ts`, `features/calendar/editor.test.tsx` | — | `e2e/calendar.spec.ts` "faster adding" desktop test | |
 | Repeating events: edit, drag or delete one occurrence asks This event / This and following / All events; "this" = exception (`data.exdates`) + one-off (`data.parent_id`, `data.recurrence_id`); "following" = UNTIL the day before + a new series (COUNT continued, weekly days moved, later exceptions and changed ones carried); "all" moves the series by the same days and time of day | `lib/calendar/occurrence.test.ts`, `lib/db/recurring.test.ts` (rows and outbox), `features/calendar/calendar.test.tsx` (chooser in details and the form; changed repeat hides "This event") | — | `e2e/calendar.spec.ts` "repeating events" (desktop drag + this and following + delete one; phone edit all + delete this and following), `sync/calendar.spec.ts` "one occurrence deleted and one changed on device A show the same on device B" | |
-| Deleted or changed occurrences get no reminder from the series and are EXDATEs in the subscribed feed | — | `fn/scheduler-tick/tick.test.ts`, `fn/calendar-feed/feed.test.ts` | — | **Gap**: the morning brief still lists a deleted occurrence (its SQL digest does not pass `data`); see DECISIONS |
+| Deleted or changed occurrences get no reminder from the series and are EXDATEs in the subscribed feed | — | `fn/scheduler-tick/tick.test.ts`, `fn/calendar-feed/feed.test.ts` | — | The morning brief skips them too: `db/0038_morning_digest_exdates.test.sql`, `fn/morning-brief/brief.test.ts` |
 | Repeat in words everywhere: details, agenda and month-day rows (subtitle and icon tooltip) | `lib/calendar/repeat.test.ts`, `features/calendar/calendar.test.tsx` | — | `e2e/calendar.spec.ts` details and phone tests | Search rows show the date, not the rule |
 | Missing events: a weekly timed, a yearly all-day and a one-off all-day event made on device A show in Day, Week, Month and Agenda on A and on B after sync | `lib/calendar/view.test.ts` "missing events" | — | `sync/calendar.spec.ts` | |
 | UI foundation: tokens follow the system scheme; a subtree can force light or dark | `ui/ui.test.tsx` (design kit panels) | — | `e2e/ui.spec.ts` (dark and light canvas, forced panels) | Device only: real iPhone safe areas and SF Pro rendering (manual checklist) |
@@ -321,7 +321,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 Ordered by risk. Sync and AI first.
 
 1. **Run Edge Functions in the e2e-sync job.** Remove `edge-runtime` from the `-x` list, serve the functions with `ANTHROPIC_BASE_URL` pointing at `tests/mock-ai/server.mjs`, and start the mock before Playwright. This makes the new `sync/ai.spec.ts` and `sync/network.spec.ts` count. Layer: CI / e2e-sync.
-2. **Contract test for every AI call, not just sorting.** Extend `ai.contract.test.ts` so each function's real prompt and schema (ask, workshop flesh-out and turn, morning-brief, weekly-review, import-extract, summarise-note, suggest-leave, check-contradictions) is sent through the real SDK to `mock-ai`. Add scout's web-search request. Teach `mock-ai` to answer each task from the saved fixtures. Layer: Function (Deno).
+2. **Done (9 November).** `ai.contract.test.ts` now sends every function's real prompt and schema through the real SDK to `mock-ai`, including Scout's web search; `mock-ai` answers each task from `tests/fixtures/ai` (new: `leave.json`, `scout.json`, `workshop.json` turn) and refuses a saved answer that does not fit the request's schema. The functions' own parsers and clean-up read the answers. Was: **Contract test for every AI call, not just sorting.** Extend `ai.contract.test.ts` so each function's real prompt and schema (ask, workshop flesh-out and turn, morning-brief, weekly-review, import-extract, summarise-note, suggest-leave, check-contradictions) is sent through the real SDK to `mock-ai`. Add scout's web-search request. Teach `mock-ai` to answer each task from the saved fixtures. Layer: Function (Deno).
 3. **Optional live canary against the real API.** One cheap small-tier sorting call on `workflow_dispatch` (or after each dev deploy), with its own tiny cap. The mock only knows the limits we taught it. Layer: CI, manual trigger.
 4. **Sort now on a stalled or slow connection, end to end.** After item 1, keep "Sort now still answers when sync is stuck" and add: function times out → the screen says so; pulls resume afterwards and the sorted items reach device B. Layer: e2e-sync.
 5. **Stalled pull and lost Realtime.** Hang a GET (pull) once and drop the Realtime socket; assert device B still gets the change through the 60 s poll and the indicator recovers. Layer: e2e-sync.
