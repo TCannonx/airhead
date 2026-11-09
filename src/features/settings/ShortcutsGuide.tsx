@@ -1,4 +1,5 @@
 import { ingestUrl } from '../../lib/capture/ingestUrl';
+import { Button } from '../../ui/Button';
 
 const steps = 'list-decimal space-y-1 pl-5';
 
@@ -8,19 +9,20 @@ const steps = 'list-decimal space-y-1 pl-5';
  */
 export default function ShortcutsGuide({ url = ingestUrl() }: { url?: string }) {
   return (
-    <details className="text-sm">
+    <details className="text-footnote">
       <summary className="cursor-pointer font-semibold">Set up the iOS Shortcuts</summary>
       <div className="mt-2 space-y-3">
         <div>
-          <p className="text-slate-500">Address for “Get Contents of URL”:</p>
-          <code className="block break-all rounded bg-slate-100 p-2 dark:bg-slate-800">{url}</code>
-          <button
-            type="button"
-            className="mt-1 text-indigo-600 hover:underline dark:text-indigo-400"
+          <p className="text-fg-muted">Address for “Get Contents of URL”:</p>
+          <code className="block break-all rounded bg-fill p-2">{url}</code>
+          <Button
+            variant="plain"
+            size="sm"
+            className="mt-1"
             onClick={() => void navigator.clipboard?.writeText(url)}
           >
             Copy address
-          </button>
+          </Button>
         </div>
         <div>
           <h4 className="font-semibold">Send to Airhead (share sheet)</h4>
@@ -53,7 +55,7 @@ export default function ShortcutsGuide({ url = ingestUrl() }: { url?: string }) 
             </li>
           </ol>
         </div>
-        <p className="text-slate-500">
+        <p className="text-fg-muted">
           No connection? The Shortcut stops with an error — open Airhead and capture there; it works
           offline and syncs later.
         </p>

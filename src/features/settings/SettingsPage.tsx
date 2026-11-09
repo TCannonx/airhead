@@ -126,13 +126,13 @@ export default function SettingsPage() {
                     <p className="text-footnote text-fg-muted">{sync.status.message}</p>
                   )}
                   {sync.status.state === 'syncing' && sync.status.since && (
-                    <p className="text-caption text-fg-subtle">
+                    <p className="text-caption text-fg-muted">
                       Syncing since {timeOf(sync.status.since)}
                       {sync.status.stage ? `: ${sync.status.stage}` : ''}
                     </p>
                   )}
                   {sync.status.state === 'error' && sync.status.detail && (
-                    <p className="text-caption break-words text-fg-subtle">{sync.status.detail}</p>
+                    <p className="text-caption break-words text-fg-muted">{sync.status.detail}</p>
                   )}
                 </div>
                 {/* Never disabled: it restarts a run that is taking too long. */}

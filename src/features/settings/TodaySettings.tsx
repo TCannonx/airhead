@@ -6,9 +6,10 @@ import { updateSettingsData } from '../../lib/db/settings';
 import { readNotifSettings } from '../../lib/notifications/settings';
 import type { SettingsRow } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
+import { Button } from '../../ui/Button';
+import { FIELD_INLINE } from '../../ui/fieldParts';
 
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = FIELD_INLINE;
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** Rough cost of one brief at the default Sonnet prices: ~3,000 tokens in, ~600 out. */
@@ -54,7 +55,7 @@ function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; us
         }).then(() => setSaved(true));
       }}
     >
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-footnote">
         Morning brief at
         <input
           type="time"
@@ -63,7 +64,7 @@ function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; us
           onChange={(e) => set('brief_time', e.target.value)}
         />
       </label>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-footnote">
         Suggest Top 3 times between
         <input
           type="time"
@@ -81,23 +82,19 @@ function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; us
           onChange={(e) => set('window_end', e.target.value)}
         />
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-caption text-fg-muted">
         To turn the brief off, switch off “Morning brief and round-up” in Notifications.
       </p>
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={!dirty || !valid}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-        >
+        <Button variant="primary" type="submit" disabled={!dirty || !valid}>
           Save
-        </button>
+        </Button>
         {!valid && (
-          <span role="alert" className="text-sm text-red-600">
+          <span role="alert" className="text-footnote text-danger">
             The day must end after it starts.
           </span>
         )}
-        {saved && !dirty && <span className="text-sm text-slate-500">Saved</span>}
+        {saved && !dirty && <span className="text-footnote text-fg-muted">Saved</span>}
       </div>
     </form>
   );
@@ -118,11 +115,10 @@ export default function TodaySettings() {
   return (
     <div className="space-y-5">
       <TodayForm key={JSON.stringify(settings?.data ?? {})} settings={settings} userId={userId} />
-      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
-        <button
-          type="button"
+      <div className="border-t border-border/60 pt-4">
+        <Button
+          size="sm"
           disabled={!briefs || !online || busy}
-          className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700"
           onClick={() => {
             if (!briefs) return;
             setBusy(true);
@@ -134,8 +130,8 @@ export default function TodaySettings() {
           }}
         >
           {busy ? 'Writing…' : `Regenerate today’s brief (${BRIEF_COST_TEXT})`}
-        </button>
-        <p className="mt-1 text-xs text-slate-500">
+        </Button>
+        <p className="mt-1 text-caption text-fg-muted">
           {!briefs
             ? 'Needs Airhead’s server.'
             : !online
@@ -143,7 +139,7 @@ export default function TodaySettings() {
               : 'One AI call, counted in Insights → AI usage.'}
         </p>
         {message && (
-          <p role="status" className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          <p role="status" className="mt-1 text-footnote text-fg-muted">
             {message}
           </p>
         )}

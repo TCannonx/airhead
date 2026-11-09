@@ -27,3 +27,6 @@ export function describedBy(ids: ReturnType<typeof useFieldIds>, f: FieldChrome)
 
 export const CONTROL =
   'w-full rounded-control border border-border bg-surface px-3 py-2 text-body text-fg placeholder:text-fg-subtle outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/30 disabled:opacity-50 aria-invalid:border-danger';
+
+/** CONTROL for a field that sits inside a row or a sentence (no full width). 44 px on touch. */
+export const FIELD_INLINE = CONTROL.replace('w-full ', '') + ' min-h-9 pointer-coarse:min-h-11';

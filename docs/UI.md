@@ -82,6 +82,7 @@ System font: SF Pro on Apple devices (`-apple-system`), Segoe UI on Windows.
 
 - A list of things to tap → `GroupedList` + `ListRow`, not a stack of cards.
 - A setting that is on or off → `Toggle` in a `GroupedListItem`.
+- A small field inside a row or a sentence (a time, a number) → a native input with `FIELD_INLINE` from `fieldParts` (44 px on touch).
 - A choice between views → `SegmentedControl`; a choice from a long list → `Select`.
 - Something to fill in without leaving the page → `Sheet`.
 - Confirmation after an action → `Toast`; an error the person must read → inline text with `role="alert"`.

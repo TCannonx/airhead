@@ -530,7 +530,7 @@ Spec: `docs/superpowers/specs/2026-11-08-phase-11-calendar-and-workshop.md`.
 - [x] **11.U1 UI foundation.** Design tokens (colour roles, type scale, radius, spacing; light and dark), shared components in `src/ui/` and a design kit at Settings → About → Design kit (PR #143); app shell with tab bar (Inbox badge), sidebar and PageHeader on every page, Settings on the new components. See `docs/UI.md`.
 - [x] **11.U2 Pages on the shared components: Capture, Today, Inbox, Evening review.** Grouped lists, shared buttons, empty states, 44 px targets on touch screens, AI actions and Undo on the shared rows; static e2e at phone and desktop with axe.
 - [x] **11.U3 Pages on the shared components: Library, Insights, Notes, Workshop, Work and leave.** Item page, Lists, Trash, Ask, Reading; Insights; notes and the ink toolbar; Workshop; Work page and the leave form in the shared Sheet.
-- [ ] **11.U4 Pages on the shared components: Settings panels, sign-in, lock, share.** Work, Memory, Check-up, Today, Linked calendars, Capture tokens, Sharing, Notifications, Scout and App lock panels (switches as Toggle); Sign in, Lock, AuthGate, Share page.
+- [x] **11.U4 Pages on the shared components: Settings panels, sign-in, lock, share.** Work, Memory, Check-up, Today, Linked calendars, Capture tokens, Sharing, Notifications, Scout and App lock panels (switches as Toggle); Sign in, Lock, AuthGate, Share page.
 
 ## Phases 5–9 (outline)
 

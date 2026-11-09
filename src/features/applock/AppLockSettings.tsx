@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../lib/auth/context';
 import { useAppLock } from '../../lib/applock/context';
 import { TIMEOUT_CHOICES } from '../../lib/applock/lock';
+import { Toggle } from '../../ui/Toggle';
+import { FIELD_INLINE } from '../../ui/fieldParts';
 
 const timeoutLabel = (m: number) =>
   m === 0 ? 'Immediately' : m === 60 ? 'After 1 hour' : `After ${m} minute${m === 1 ? '' : 's'}`;
@@ -40,43 +42,25 @@ export default function AppLockSettings() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p id="app-lock-label" className="font-medium">
-            App lock
-          </p>
-          <p className="text-sm text-slate-500">Ask for Face ID / Touch ID when Airhead opens.</p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={on}
-          aria-labelledby="app-lock-label"
-          disabled={busy || available === false || available === null}
-          onClick={() => void toggle()}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-40 ${
-            on ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-700'
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 size-6 rounded-full bg-white shadow transition-all ${
-              on ? 'left-5.5' : 'left-0.5'
-            }`}
-          />
-        </button>
-      </div>
+      <Toggle
+        label="App lock"
+        hint="Ask for Face ID / Touch ID when Airhead opens."
+        checked={on}
+        disabled={busy || available === false || available === null}
+        onChange={() => void toggle()}
+      />
 
       {available === false && (
-        <p className="text-sm text-slate-500">
+        <p className="text-footnote text-fg-muted">
           Face ID / Touch ID isn&apos;t available on this device.
         </p>
       )}
 
       {on && (
-        <label className="flex items-center justify-between gap-4 text-sm">
+        <label className="flex min-h-11 items-center justify-between gap-4 text-body">
           <span>Lock after</span>
           <select
-            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900"
+            className={FIELD_INLINE}
             value={config.timeoutMinutes}
             onChange={(e) => setTimeoutMinutes(Number(e.target.value))}
           >
@@ -90,12 +74,12 @@ export default function AppLockSettings() {
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+        <p role="alert" className="text-footnote text-danger">
           {error}
         </p>
       )}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-caption text-fg-muted">
         The lock is a privacy screen, not encryption: it stops someone browsing Airhead on an
         unlocked device. If Face ID stops working, sign out and back in.
       </p>
