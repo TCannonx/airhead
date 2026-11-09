@@ -327,19 +327,23 @@ test('a question asked on A is answered on B; the new task and details reach A; 
   );
   await sortNow(a);
   const askedA = a.getByRole('list', { name: 'Questions for you' });
-  await expect(askedA.getByText('Who are the sandwiches for?')).toBeVisible({ timeout: 60_000 });
+  await expect(askedA.getByText('Who are the sandwiches for?', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  });
 
   // B gets the questions too, and answers one with a quick answer.
   await b.getByRole('link', { name: 'Inbox' }).first().click();
   const askedB = b.getByRole('list', { name: 'Questions for you' });
-  await expect(askedB.getByText('Who are the sandwiches for?')).toBeVisible({ timeout: 60_000 });
-  await askedB.getByRole('button', { name: 'Work' }).click();
+  await expect(askedB.getByText('Who are the sandwiches for?', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  });
+  await askedB.getByRole('button', { name: 'Work', exact: true }).click();
   await expect(b.getByText('Thanks. Airhead will use that the next time it sorts.')).toBeVisible();
   await b.getByRole('button', { name: 'Sort now' }).click();
   await expect(b.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 60_000 });
 
   // A: the answer is in the event's details, and the next step is a new task.
-  await expect(askedA.getByText('Who are the sandwiches for?')).toHaveCount(0, {
+  await expect(askedA.getByText('Who are the sandwiches for?', { exact: true })).toHaveCount(0, {
     timeout: 60_000,
   });
   await a.getByRole('link', { name: 'Library' }).first().click();
