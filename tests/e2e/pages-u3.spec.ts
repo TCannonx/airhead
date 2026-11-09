@@ -8,7 +8,7 @@ import {
   PHONE,
   SIZES,
   touchTargets,
-} from './pageChecks';
+} from './pageChecks.ts';
 
 // Task 11.U3: Library (item page, lists, trash, search), Insights, notes and
 // the ink toolbar, the Workshop, Work and leave (form in the shared Sheet).
@@ -97,7 +97,7 @@ for (const [name, size] of SIZES) {
       const editor = page.getByLabel('Note', { exact: true });
       await editor.click();
       await page.keyboard.type('Buy a new kettle');
-      await expect(page.locator('.ah-note')).toContainText('Buy a new kettle');
+      await expect(page.locator('.ah-note-page')).toContainText('Buy a new kettle');
       await axe(page);
       if (name === 'phone') await touchTargets(page);
     });

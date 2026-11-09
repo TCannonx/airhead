@@ -7,13 +7,9 @@ import { useDb } from '../../lib/db/context';
 import { runCheckup, type Finding } from '../../lib/memory/checkup';
 import { applyFix, resolveContradiction } from '../../lib/memory/fixes';
 import { useSync } from '../../lib/sync/context';
+import { Button } from '../../ui/Button';
 
 const MONTH_MS = 30 * 86_400_000;
-const btn =
-  'rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700';
-const fixBtn =
-  'rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700';
-
 interface Report {
   at: string;
   findings: number;
@@ -107,22 +103,17 @@ export default function CheckupPanel({ auto = false }: { auto?: boolean }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className={btn} onClick={() => void run().catch(() => {})}>
+        <Button size="sm" onClick={() => void run().catch(() => {})}>
           Run check-up
-        </button>
+        </Button>
         {services.memory && (
-          <button
-            type="button"
-            className={btn}
-            disabled={busy}
-            onClick={() => void onContradictions()}
-          >
+          <Button size="sm" disabled={busy} onClick={() => void onContradictions()}>
             {busy ? 'Checking…' : 'Check for contradictions (one AI call, ≈ €0.001)'}
-          </button>
+          </Button>
         )}
       </div>
       {report && (
-        <p className="text-xs text-slate-500">
+        <p className="text-caption text-fg-muted">
           Last check-up:{' '}
           {new Date(report.at).toDateString() === new Date().toDateString()
             ? 'today'
@@ -132,19 +123,19 @@ export default function CheckupPanel({ auto = false }: { auto?: boolean }) {
       )}
 
       {findings && findings.length === 0 && (
-        <p className="text-sm text-slate-500">All good: nothing to tidy.</p>
+        <p className="text-footnote text-fg-muted">All good: nothing to tidy.</p>
       )}
       {findings && findings.length > 0 && (
         <ul aria-label="Check-up findings" className="space-y-2">
           {findings.map((f) => (
-            <li key={f.id} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+            <li key={f.id} className="rounded-card border border-border/60 p-3">
               <p className="font-medium">{f.title}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-300">{f.detail}</p>
-              {savingText(f) && <p className="text-xs text-slate-500">{savingText(f)}</p>}
+              <p className="text-footnote text-fg-muted">{f.detail}</p>
+              {savingText(f) && <p className="text-caption text-fg-muted">{savingText(f)}</p>}
               {f.fix && (
-                <button type="button" className={`${fixBtn} mt-2`} onClick={() => void onFix(f)}>
+                <Button variant="primary" size="sm" className="mt-2" onClick={() => void onFix(f)}>
                   {f.fix.label}
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -153,7 +144,7 @@ export default function CheckupPanel({ auto = false }: { auto?: boolean }) {
 
       {contra && (
         <div>
-          <p className="text-sm text-slate-500">{contra.message}</p>
+          <p className="text-footnote text-fg-muted">{contra.message}</p>
           {contra.conflicts.length > 0 && (
             <ContradictionList
               outcome={contra}
@@ -192,40 +183,35 @@ function ContradictionList({
       {outcome.conflicts.map((c, i) => {
         const [a, b] = c.fact_ids;
         return (
-          <li
-            key={`${a}-${b}`}
-            className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
-          >
-            <p className="text-sm">
+          <li key={`${a}-${b}`} className="rounded-card border border-amber-200 bg-amber-50 p-3">
+            <p className="text-footnote">
               “{texts[a] ?? '…'}” and “{texts[b] ?? '…'}”
             </p>
-            <p className="text-sm text-slate-600 dark:text-slate-300">{c.explanation}</p>
+            <p className="text-footnote text-fg-muted">{c.explanation}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {c.merged_text && (
-                <button
-                  type="button"
-                  className={fixBtn}
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() =>
                     void resolveContradiction(db, a, b, c.merged_text).then(() => onDone(i))
                   }
                 >
                   Use “{c.merged_text}”
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium dark:border-slate-700 dark:bg-slate-900"
+              <Button
+                size="sm"
                 onClick={() => void resolveContradiction(db, a, b, null).then(() => onDone(i))}
               >
                 Keep the first
-              </button>
-              <button
-                type="button"
-                className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium dark:border-slate-700 dark:bg-slate-900"
+              </Button>
+              <Button
+                size="sm"
                 onClick={() => void resolveContradiction(db, b, a, null).then(() => onDone(i))}
               >
                 Keep the second
-              </button>
+              </Button>
             </div>
           </li>
         );

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(ui): Library (items, search, item page, lists, trash, Ask), Insights, notes (a paper-like note surface, a calmer ink toolbar with 44 px tools), the Workshop and Work and leave on the shared components; the leave form opens in the shared sheet on the Work page too; e2e at phone and desktop with axe (Task 11.U3)
 - feat(ui): Capture, Today, Inbox (AI actions, proposals, Undo) and the Evening review on the shared components: grouped lists, shared buttons, empty states, 44 px touch targets on phones, calmer colours in light and dark; e2e at phone and desktop with an axe check (Task 11.U2)
 - test(functions): handler tests for every Edge Function: request handling moved from each `index.ts` into a tested `handler.ts` (behaviour unchanged), covering CORS preflight, methods, missing tokens, service-only refusal of user tokens, other users' ids and bad JSON (TEST-MATRIX gap 8)
 - test(ai): contract test for every AI call: ask, workshop flesh-out and turn, morning brief, weekly review, import, summarise (typed and handwritten), suggest-leave, check-contradictions and Scout's web search now go through the real SDK to the stand-in AI, which answers each from the saved fixtures and refuses a saved answer that no longer fits the schema (TEST-MATRIX gap 2)

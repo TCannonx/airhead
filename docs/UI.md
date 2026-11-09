@@ -32,7 +32,7 @@ Defined in `src/index.css` with Tailwind v4 `@theme`. Each is a CSS variable (`-
 | `success` (+ `-soft`) | Done, switched on | `text-success`, `bg-success` |
 | `warning` (+ `-soft`) | Waiting, needs attention | `text-warning`, `bg-warning-soft` |
 
-Calendar source colours stay as they are (they are data, not roles).
+Calendar source colours stay as they are (they are data, not roles). A typed note's writing surface is `.ah-note-page` (paper on the canvas); `.ah-note` styles the note's prose.
 
 Dark values are set under `@media (prefers-color-scheme: dark)`. A subtree can force a scheme with `data-theme="dark"` or `data-theme="light"` (the design kit does this). Older `dark:` utilities still follow the system setting.
 
@@ -76,6 +76,7 @@ System font: SF Pro on Apple devices (`-apple-system`), Segoe UI on Windows.
 | `Toast` | Short confirmation with one action (Undo) | `role="status"`, dismisses itself after 8 s |
 | `TextField`, `TextArea`, `Select` | Labelled form fields | `hint` and `error` are wired to `aria-describedby`; error sets `aria-invalid` |
 | `Toggle` | On/off settings | `role="switch"`, label on the left |
+| `ToolButton` | Editing toolbars (note formatting, ink tools) | Quiet until pressed (`pressed` sets `aria-pressed`); 32 px with a mouse, 44 px on touch |
 
 ### When to use which
 

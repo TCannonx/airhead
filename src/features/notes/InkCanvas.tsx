@@ -352,7 +352,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       <div
         role="toolbar"
         aria-label="Pen tools"
-        className="sticky top-0 z-10 mb-3 flex flex-wrap items-center gap-0.5 rounded-card border border-border/60 bg-surface/95 p-1.5 shadow-xs backdrop-blur"
+        className="sticky top-0 z-10 mb-3 flex items-center gap-0.5 overflow-x-auto [&>*]:shrink-0 rounded-card border border-border/60 bg-surface/95 p-1.5 shadow-xs backdrop-blur"
       >
         <ToolButton pressed={mode === 'pen'} onClick={() => pick('pen')}>
           Pen
@@ -363,13 +363,18 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
             type="button"
             aria-label={`${name} ink`}
             aria-pressed={mode === 'pen' && color === c}
-            className={`m-1.5 size-7 rounded-full border-2 border-surface pointer-coarse:m-2.5 ${mode === 'pen' && color === c ? 'ring-2 ring-accent' : 'ring-1 ring-border'}`}
-            style={{ background: c }}
+            className="inline-flex size-8 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent pointer-coarse:size-11"
             onClick={() => {
               pick('pen');
               setColor(c);
             }}
-          />
+          >
+            <span
+              aria-hidden="true"
+              className={`size-6 rounded-full border-2 border-surface ${mode === 'pen' && color === c ? 'ring-2 ring-accent' : 'ring-1 ring-border'}`}
+              style={{ background: c }}
+            />
+          </button>
         ))}
         {WIDTHS.map(([w, name]) => (
           <ToolButton pressed={width === w} key={w} onClick={() => setWidth(w)}>

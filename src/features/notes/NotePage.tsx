@@ -94,7 +94,7 @@ export default function NotePage() {
       <SummarisePanel item={item} doc={doc} />
       {doc.kind === 'typed' ? (
         // Keyed by id: switching notes starts a fresh editor.
-        <div className="ah-note">
+        <div className="ah-note-page">
           <NoteEditor
             key={doc.id}
             html={typeof doc.doc.html === 'string' ? doc.doc.html : ''}

@@ -36,13 +36,17 @@ export async function axe(page: Page, include = 'main') {
   expect(problems).toEqual([]);
 }
 
-/** On a touch screen every visible button (in main, or `scope`) is at least 44 px tall. */
+/**
+ * On a touch screen every visible button (in main, or `scope`) is at least 44 px tall.
+ * Switches are left out: their whole 44 px row (label included) is the target.
+ */
 export async function touchTargets(page: Page, scope = 'main') {
   const small = await page
     .locator(scope)
     .locator('button:visible')
     .evaluateAll((buttons) =>
       buttons
+        .filter((b) => b.getAttribute('role') !== 'switch')
         .filter((b) => b.getBoundingClientRect().height < 43.5)
         .map((b) => b.getAttribute('aria-label') ?? b.textContent),
     );

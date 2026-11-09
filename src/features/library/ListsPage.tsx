@@ -154,7 +154,7 @@ export default function ListsPage() {
                     <span
                       className={cx(
                         'text-body break-words',
-                        i.status === 'done' && 'text-fg-subtle line-through',
+                        i.status === 'done' && 'text-fg-muted line-through',
                       )}
                     >
                       {i.title}

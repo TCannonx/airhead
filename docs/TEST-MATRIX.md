@@ -306,6 +306,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Large title moves into the phone top bar once scrolled; dark mode reaches shell and pages | — | — | `e2e/shell.spec.ts` | |
 | Design kit reachable from Settings → About, every component in light and dark | `ui/ui.test.tsx` | — | `e2e/ui.spec.ts` | |
 | Pages on the shared components (11.U2): Capture, Today (Top 3, events, From yesterday, suggestions, leave to book, Scout ideas, work location), Inbox (Needs a tap, Needs your OK, Done by AI with Undo, Unsorted, To flesh out), Evening review | existing page tests (`features/capture`, `today`, `inbox`, `review`, `leave`, `work`), `ui/ui.test.tsx` (buttonClasses, small buttons 44 px on touch, Section label) | — | `e2e/pages.spec.ts` "11.U2 pages" (phone 390 × 844 and desktop: renders, main action, 44 px buttons, axe WCAG A/AA, dark mode) | Real iPhone feel (manual checklist) |
+| Pages on the shared components (11.U3): Library (filters, search, item page, lists, trash, Ask), Insights, typed and handwritten notes (`.ah-note-page`, ToolButton toolbars), Workshop, Work and leave (leave form in a Sheet, switches) | existing page tests (`features/library`, `insights`, `notes`, `workshop`, `leave`) | — | `e2e/pages-u3.spec.ts` (phone 390 × 844 and desktop: renders, main action, 44 px buttons, axe WCAG A/AA, dark mode) | Pencil feel on a real iPad (manual checklist) |
 
 ## Cross-cutting
 
