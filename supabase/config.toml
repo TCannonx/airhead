@@ -503,3 +503,7 @@ verify_jwt = false
 [functions.scout]
 # Signed-in users or the scheduler's service key; checked in the function.
 verify_jwt = false
+
+[functions.ai-eval]
+# Dev-only evaluation of the sorting model; needs the EVAL_TOKEN secret and header.
+verify_jwt = false

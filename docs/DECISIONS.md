@@ -1330,3 +1330,8 @@ Decisions and library versions, newest first.
 - **Applying.** The notes are ordinary planned items, so `apply_sort_batch` inserts them in the same transaction. Migration 0036, `apply_sort_batch` v6 (v5 copied), adds `p_plan.workshop` `[{capture_id, item_id, reason}]`: for a capture still unsorted whose note was inserted, `payload` gets `workshop_item_id` and `workshop_reason` (`unmapped` or `leftover`). `p_plan.notes[].workshop = true` sets the note's `data.workshop` when it is stamped as seen.
 - **Chip.** "Sent to Workshop" for a capture sent whole (by hand or unplaced); for a leftover it is added after what sorting did, e.g. "Tidied “Christmas sandwiches” · Sent to Workshop" or "Sorted · Sent to Workshop".
 - The stand-in AI answers the placeholder note with a weekly event plus `leftover` "Still need to plan", and "hmm …" with nothing.
+
+## Real-model evaluation on dev (2026-11-09)
+
+- The owner asked that requests like theirs be tested in their environment, not only against the stand-in AI. `supabase/functions/ai-eval` sends 14 of the owner's own requests (leave balance, haircut and cash, training plus report, quiz with times, birthday, Christmas placeholder, dentist moved, two team meetings, off 22-24 Dec, entitlement, WFH Mondays, shopping, a note about Trevor, a vague note) through the real prompt, schema, model and planner in one small-tier call (about a cent), and reports per request what it became and what is wrong. It writes nothing: no database access, no usage rows.
+- Dev only: the function answers 404 unless the `EVAL_TOKEN` secret is set (dev only) and refuses to run on the live project; callers send the token in `x-eval-token`. Its wiring is tested against the stand-in in the normal Deno tests.
