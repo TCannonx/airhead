@@ -59,5 +59,22 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Keep every precached file under Workbox's 2 MiB limit: libraries go in their
+        // own chunks (still loaded up front, so nothing changes offline). pdfjs-dist stays
+        // out: it is loaded on demand and not precached (globIgnores above).
+        codeSplitting: {
+          groups: [
+            { name: 'editor', test: /node_modules[\\/](@tiptap|prosemirror|linkifyjs)/ },
+            { name: 'calendar', test: /node_modules[\\/](@fullcalendar|rrule|ical\.js)/ },
+            { name: 'files', test: /node_modules[\\/](xlsx|jszip|papaparse)/ },
+            { name: 'vendor', test: /node_modules[\\/](?!pdfjs-dist)/ },
+          ],
+        },
+      },
+    },
+  },
   server: { port: 5173, strictPort: true },
 });

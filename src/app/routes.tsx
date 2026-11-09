@@ -15,6 +15,7 @@ import WorkPage from '../features/leave/WorkPage';
 import ReviewPage from '../features/review/ReviewPage';
 import NotePage from '../features/notes/NotePage';
 import WorkshopPage from '../features/workshop/WorkshopPage';
+import DesignKitPage from '../ui/DesignKitPage';
 import AppLayout from './AppLayout';
 
 export const routes: RouteObject[] = [
@@ -40,6 +41,8 @@ export const routes: RouteObject[] = [
       { path: 'review', Component: ReviewPage },
       { path: 'notes/:id', Component: NotePage },
       { path: 'workshop/:id', Component: WorkshopPage },
+      // Hidden design kit (Settings → About → Design kit).
+      { path: 'ui', Component: DesignKitPage },
       { path: '*', element: <Navigate to="/capture" replace /> },
     ],
   },
