@@ -3,8 +3,7 @@ import { Link } from 'react-router';
 import { useDb } from '../../lib/db/context';
 import { update } from '../../lib/db/repository';
 import type { Item } from '../../lib/schemas/records';
-
-const field = 'rounded-lg border border-border bg-surface px-2 py-1.5 text-footnote  ';
+import { TextField } from '../../ui/TextField';
 
 /** Date and attendees of a meeting note, and its event (Task 6.4). */
 export default function MeetingDetails({ item }: { item: Item }) {
@@ -17,34 +16,31 @@ export default function MeetingDetails({ item }: { item: Item }) {
     void update(db, 'items', item.id, { data: { ...item.data, ...patch } });
 
   return (
-    <div aria-label="Meeting details" className="mb-4 flex flex-wrap items-end gap-3 text-footnote">
-      <label>
-        Date
-        <input
-          type="date"
-          className={`${field} ml-2`}
-          value={date}
-          onChange={(e) => setData({ meeting_date: e.target.value || null })}
-        />
-      </label>
-      <label className="min-w-0 flex-1">
-        Attendees
-        <input
-          className={`${field} ml-2 w-full max-w-md`}
-          placeholder="e.g. Aoife, Mark"
-          value={people}
-          onChange={(e) => setPeople(e.target.value)}
-          onBlur={() => {
-            const list = people
-              .split(',')
-              .map((p) => p.trim())
-              .filter(Boolean);
-            if (list.join('|') !== attendees.join('|')) setData({ attendees: list });
-          }}
-        />
-      </label>
+    <div
+      aria-label="Meeting details"
+      className="mb-4 grid grid-cols-1 gap-3 rounded-card border border-border/60 bg-surface p-4 sm:grid-cols-[12rem_1fr]"
+    >
+      <TextField
+        label="Date"
+        type="date"
+        value={date}
+        onChange={(e) => setData({ meeting_date: e.target.value || null })}
+      />
+      <TextField
+        label="Attendees"
+        placeholder="e.g. Aoife, Mark"
+        value={people}
+        onChange={(e) => setPeople(e.target.value)}
+        onBlur={() => {
+          const list = people
+            .split(',')
+            .map((p) => p.trim())
+            .filter(Boolean);
+          if (list.join('|') !== attendees.join('|')) setData({ attendees: list });
+        }}
+      />
       {eventId && (
-        <Link to="/calendar" className="text-accent hover:underline">
+        <Link to="/calendar" className="text-footnote text-accent hover:underline sm:col-span-2">
           From a calendar event
         </Link>
       )}

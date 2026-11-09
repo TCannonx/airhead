@@ -106,15 +106,14 @@ export default function LibraryPage() {
         </Section>
       ) : (
         <>
+          <Section title="New">
+            <NewNoteButtons size="sm" />
+          </Section>
           <Section>
             <GroupedList>
               <ListRow icon="list" iconTint="bg-accent" title="Lists" to="/library/lists" />
               <ListRow icon="trash" iconTint="bg-fg-subtle" title="Trash" to="/library/trash" />
             </GroupedList>
-          </Section>
-
-          <Section title="Notes">
-            <NewNoteButtons />
           </Section>
 
           <Section title="Everything">
@@ -130,8 +129,9 @@ export default function LibraryPage() {
                 </Chip>
               ))}
             </div>
-            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <Select
+                className="col-span-2 sm:col-span-1"
                 label="Topic"
                 value={topicId}
                 onChange={(e) => setTopicId(e.target.value)}

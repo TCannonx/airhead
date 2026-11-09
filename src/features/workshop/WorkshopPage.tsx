@@ -12,6 +12,10 @@ import NextSteps from './NextSteps';
 import SessionPanel from './SessionPanel';
 import { Button } from '../../ui/Button';
 import { Chip } from '../../ui/Chip';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { Card } from '../../ui/Card';
+import { EmptyState } from '../../ui/EmptyState';
+import { Section } from '../../ui/GroupedList';
 
 function DraftView({ draft }: { draft: Draft }) {
   const c = draft.content;
@@ -61,10 +65,17 @@ export default function WorkshopPage() {
   const { item, drafts } = data;
   if (!item || item.deleted_at)
     return (
-      <Page title="Not found">
-        <Link to="/inbox" className="text-accent underline">
-          Back to the Inbox
-        </Link>
+      <Page title="Not found" back={{ to: '/inbox', label: 'Inbox' }}>
+        <EmptyState
+          icon="inbox"
+          title="Nothing here"
+          message="This idea doesn’t exist or is in the Trash."
+          action={
+            <Link to="/inbox" className={buttonClasses('secondary', 'md')}>
+              Back to the Inbox
+            </Link>
+          }
+        />
       </Page>
     );
   const current = drafts.find((d) => d.id === shown) ?? drafts[0];
@@ -89,26 +100,26 @@ export default function WorkshopPage() {
   };
 
   return (
-    <Page title={item.title || 'Workshop'}>
-      <p className="mb-4 text-footnote">
-        <Link to={`/library/item/${item.id}`} className="text-accent hover:underline">
-          Open the original
-        </Link>
-      </p>
-      {current ? (
-        <DraftView draft={current} />
-      ) : (
-        <p className="text-footnote text-fg-muted">
-          No draft yet. Auto flesh-out writes a first one.
-        </p>
-      )}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+    <Page title={item.title || 'Workshop'} back={{ to: '/inbox', label: 'Inbox' }}>
+      <Link to={`/library/item/${item.id}`} className={buttonClasses('plain', 'sm', '-ml-3 mb-3')}>
+        Open the original
+      </Link>
+      <Card>
+        {current ? (
+          <DraftView draft={current} />
+        ) : (
+          <p className="text-body text-fg-muted">
+            No draft yet. Auto flesh-out writes a first one.
+          </p>
+        )}
+      </Card>
+      <div className="mt-4 mb-8 flex flex-wrap items-center gap-3">
         {workshop ? (
           <>
             <Button
               variant="primary"
-              size="sm"
-              disabled={busy || !online}
+              loading={busy}
+              disabled={!online}
               onClick={() => void fleshOut()}
             >
               {busy ? 'Thinking…' : drafts.length ? 'Flesh out again' : 'Auto flesh-out'}
@@ -130,9 +141,8 @@ export default function WorkshopPage() {
       )}
       <SessionPanel itemId={item.id} />
       {drafts.length > 1 && (
-        <section aria-label="Versions" className="mt-6">
-          <h3 className="mb-1 text-footnote font-semibold">Versions</h3>
-          <ul className="flex flex-wrap gap-1.5">
+        <Section title="Versions" label="Versions">
+          <ul className="flex flex-wrap gap-2">
             {drafts.map((d) => (
               <li key={d.id}>
                 <Chip
@@ -145,7 +155,7 @@ export default function WorkshopPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
     </Page>
   );

@@ -7,8 +7,10 @@ import { LEAVE_STATUSES, type LeaveBooking } from '../../lib/schemas/records';
 import { leaveTypeOf, type WorkSettings } from '../../lib/work/settings';
 import { todayKey } from './useWork';
 import { Button } from '../../ui/Button';
+import { Select } from '../../ui/Select';
+import { TextField } from '../../ui/TextField';
+import { Toggle } from '../../ui/Toggle';
 
-const field = 'w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-footnote  ';
 const STATUS_LABELS: Record<LeaveBooking['status'], string> = {
   planned: 'Planned',
   requested: 'Requested',
@@ -68,7 +70,7 @@ export default function LeaveSheet({
   return (
     <form
       aria-label={booking ? 'Edit leave' : 'Book leave'}
-      className="space-y-3"
+      className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
         void onSave();
@@ -76,115 +78,79 @@ export default function LeaveSheet({
     >
       {!inSheet && (
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">{booking ? 'Edit leave' : 'Book leave'}</h2>
-          <Button size="sm" onClick={onClose}>
+          <h2 className="text-headline">{booking ? 'Edit leave' : 'Book leave'}</h2>
+          <Button size="sm" variant="plain" onClick={onClose}>
             Close
           </Button>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-footnote">
-          From
-          <input
-            type="date"
-            className={field}
-            value={f.start_date}
-            onChange={(e) => set('start_date', e.target.value)}
-          />
-        </label>
-        <label className="text-footnote">
-          To
-          <input
-            type="date"
-            className={field}
-            value={f.end_date}
-            min={f.start_date}
-            onChange={(e) => set('end_date', e.target.value)}
-          />
-        </label>
+      <div className="grid grid-cols-2 gap-3">
+        <TextField
+          label="From"
+          type="date"
+          value={f.start_date}
+          onChange={(e) => set('start_date', e.target.value)}
+        />
+        <TextField
+          label="To"
+          type="date"
+          value={f.end_date}
+          min={f.start_date}
+          onChange={(e) => set('end_date', e.target.value)}
+        />
       </div>
       {single ? (
-        <label className="block text-footnote">
-          Day
-          <select
-            className={field}
-            value={f.start_half ? 'pm' : f.end_half ? 'am' : 'full'}
-            onChange={(e) => {
-              set('start_half', e.target.value === 'pm');
-              set('end_half', e.target.value === 'am');
-            }}
-          >
-            <option value="full">Full day</option>
-            <option value="am">Half day (morning off)</option>
-            <option value="pm">Half day (afternoon off)</option>
-          </select>
-        </label>
+        <Select
+          label="Day"
+          value={f.start_half ? 'pm' : f.end_half ? 'am' : 'full'}
+          onChange={(e) => {
+            set('start_half', e.target.value === 'pm');
+            set('end_half', e.target.value === 'am');
+          }}
+          options={[
+            { value: 'full', label: 'Full day' },
+            { value: 'am', label: 'Half day (morning off)' },
+            { value: 'pm', label: 'Half day (afternoon off)' },
+          ]}
+        />
       ) : (
-        <div className="space-y-1 text-footnote">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={f.start_half}
-              onChange={(e) => set('start_half', e.target.checked)}
-            />
-            First day starts at midday
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={f.end_half}
-              onChange={(e) => set('end_half', e.target.checked)}
-            />
-            Last day ends at midday
-          </label>
+        <div>
+          <Toggle
+            label="First day starts at midday"
+            checked={f.start_half}
+            onChange={(v) => set('start_half', v)}
+          />
+          <Toggle
+            label="Last day ends at midday"
+            checked={f.end_half}
+            onChange={(v) => set('end_half', v)}
+          />
         </div>
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-footnote">
-          Type
-          <select
-            className={field}
-            value={f.leave_type}
-            onChange={(e) => set('leave_type', e.target.value)}
-          >
-            {work.leave_types.map((t) => (
-              <option key={t.key} value={t.key}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-footnote">
-          Status
-          <select
-            className={field}
-            value={f.status}
-            onChange={(e) => set('status', e.target.value as LeaveBooking['status'])}
-          >
-            {LEAVE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="grid grid-cols-2 gap-3">
+        <Select
+          label="Type"
+          value={f.leave_type}
+          onChange={(e) => set('leave_type', e.target.value)}
+          options={work.leave_types.map((t) => ({ value: t.key, label: t.name }))}
+        />
+        <Select
+          label="Status"
+          value={f.status}
+          onChange={(e) => set('status', e.target.value as LeaveBooking['status'])}
+          options={LEAVE_STATUSES.map((st) => ({ value: st, label: STATUS_LABELS[st] }))}
+        />
       </div>
-      <label className="flex items-center gap-2 text-footnote">
-        <input
-          type="checkbox"
-          checked={f.share_us}
-          onChange={(e) => set('share_us', e.target.checked)}
-        />
-        Show as “Off” on the Us calendar
-      </label>
-      <label className="block text-footnote">
-        Note
-        <input
-          className={field}
-          value={f.note ?? ''}
-          onChange={(e) => set('note', e.target.value || null)}
-        />
-      </label>
+      <Toggle
+        label="Show as “Off” on the Us calendar"
+        checked={f.share_us}
+        onChange={(v) => set('share_us', v)}
+      />
+      <TextField
+        label="Note"
+        value={f.note ?? ''}
+        onChange={(e) => set('note', e.target.value || null)}
+      />
       <p aria-live="polite" className="text-footnote text-fg-muted">
         {!valid
           ? 'The last day is before the first.'
@@ -192,14 +158,14 @@ export default function LeaveSheet({
             ? `Uses ${days(cost)} of leave${after ? ` · ${days(after.remaining)} left after this` : ''}`
             : `${days(cost)} · not taken from your annual leave`}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pt-1">
         <Button variant="primary" type="submit" disabled={!valid}>
           {booking ? 'Save' : 'Book leave'}
         </Button>
         {booking && (
           <Button
             variant="destructive"
-            size="sm"
+            className="ml-auto"
             onClick={() => void deleteLeave(db, booking.id).then(onClose)}
           >
             Delete

@@ -10,7 +10,7 @@ import { DEFAULT_TIME_ZONE } from '../../lib/rules';
 
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="rounded-card border border-border/60 p-4">
+    <div className="rounded-card border border-border/60 bg-surface p-4">
       <p className="text-caption text-fg-muted">{label}</p>
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
       {note && <p className="mt-1 text-caption text-fg-muted">{note}</p>}
@@ -62,7 +62,7 @@ export default function SuccessMeasures() {
         value={`${Math.round(m.correctionRate * 100)}%`}
         note={`${m.corrections} of ${m.itemsSorted} sorted items corrected. A rising rate means sorting needs tuning.`}
       />
-      <div className="rounded-card border border-border/60 p-4">
+      <div className="rounded-card border border-border/60 bg-surface p-4">
         <p className="text-caption text-fg-muted">AI cost per month</p>
         {costs ? (
           <ul aria-label="AI cost per month" className="mt-1 space-y-0.5 text-footnote">

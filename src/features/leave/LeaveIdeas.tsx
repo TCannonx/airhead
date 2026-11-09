@@ -80,11 +80,8 @@ export default function LeaveIdeas({
   };
 
   return (
-    <section
-      aria-label="Leave ideas"
-      className="space-y-3 rounded-card border border-border/60 p-3 text-footnote"
-    >
-      <h3 className="font-semibold">
+    <section aria-label="Leave ideas" className="space-y-3 text-footnote">
+      <h3 className="text-body font-semibold">
         {picks ? 'Airhead’s picks' : 'Good bridges in the next six months'}
       </h3>
       {bridges.length === 0 ? (
