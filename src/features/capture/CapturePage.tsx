@@ -14,6 +14,8 @@ const isTouch = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 
 function chipFor(c: Capture, items: Item[], actions: AiAction[]): string {
+  // What sorting did (e.g. tidied the instant event) comes first.
+  if (actions.some((a) => a.capture_id === c.id)) return captureChip(c, actions);
   const event = items.find((i) => i.capture_id === c.id && i.type === 'event' && !i.deleted_at);
   if (event?.status === 'open') return `Event added: ${eventLabel(event)}`;
   if (event?.status === 'suggested') return `Suggestion: ${eventLabel(event)}`;

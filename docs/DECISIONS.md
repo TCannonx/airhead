@@ -1299,3 +1299,13 @@ Decisions and library versions, newest first.
 - Owner: the AI should run over new notes in batches every 5 minutes, only when there is something new, as cheaply as possible.
 - Migration 0033: the 5-minute dispatcher now uses `users_due_now()` = due once the oldest waiting capture is 2 minutes old (so a burst shares one call) or 20 are waiting (a full batch). Before, it was 5 waiting or an hour. A person's own `batch_threshold_count` / `_minutes` settings still win. No unsorted capture → no call.
 - Cost: one small-tier batch is roughly €0.002–0.005 (cached system prompt); the monthly cap still stops everything.
+
+## Nothing lost: instant events tidied by AI (Task 11.1, 2026-11-08)
+
+- `createCapture`: a **simple** note (one sentence, at most 8 words, no instruction words such as need, remind, still, then, also, plan; `isSimpleCapture`) keeps today's behaviour. A **longer** dated note still gets its instant event, but the capture stays `unsorted` with `payload.instant_item_id`. Undoing the instant event clears that id, so sorting treats the note afresh.
+- Sorting sends such a capture as `<capture id=… instant_event="title | start (all day)">`; prompt v4 asks for that event first, with a clean title, the stated end and any repeat, then the other items. No new schema fields (union parameters unchanged).
+- The planner turns that first event item into `SortPlan.item_updates` (only the columns that change: title, status, start_at, end_at, all_day, rrule; a suggestion becomes confirmed when the model is sure, a confirmed event is never demoted). If the person deleted the instant event it is not brought back; if the server has no such item the event is inserted as usual.
+- Migration 0034, `apply_sort_batch` v4: applies an item update only while the capture is still unsorted and the item's `updated_at` equals `before.updated_at`; otherwise it is stored as a proposal ("Changed meanwhile; check before applying"). Each is logged in `ai_actions` as kind `tidy_item` (the kind check widened as in 0032) and counts in the returned `actions`. The kind is not in the model-facing action enum.
+- Inbox and capture chip: "Tidied “Training” and added 1 item"; Undo and Apply use the existing paths (item columns now include title, status and rrule). The capture chip shows what sorting did before the instant-event label.
+- Free rules: a stated time range sets `end_at` ("8pm-12pm" ends at midnight; "10pm-2am" runs past it); the item page shows the end ("Thu 20:00–00:00").
+- The stand-in AI (`tests/mock-ai`) reads `instant_event` and answers the Training and Quiz notes.

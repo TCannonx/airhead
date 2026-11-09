@@ -130,3 +130,40 @@ test('the haircut note: a repeating reminder, and a cash reminder before every b
   await a.getByRole('link', { name: 'Text barber for haircut' }).first().click();
   await expect(a.getByText(/^Due: .* · repeats every 2 weeks$/)).toBeVisible({ timeout: 30_000 });
 });
+
+test('a longer dated note: its event shows at once, then sorting tidies it and adds the lost task', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ai-tidy-${Date.now()}@example.test`);
+  const note = 'Training on Tuesday. Need a reminder to send report to Trevor';
+  await capture(a, note);
+  // The instant event is there straight away, and the note still waits for sorting.
+  const recent = a.getByRole('list', { name: 'Recent captures' });
+  await expect(recent.getByText(/^(?:Event added|Suggestion): /)).toBeVisible();
+
+  await sortNow(a);
+  const done = a.getByRole('list', { name: 'Done by AI' });
+  await expect(done.getByText('Tidied “Training” and added 1 item')).toBeVisible({
+    timeout: 60_000,
+  });
+
+  // One event, now called "Training", and the task the note asked for.
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  const items = a.getByRole('list', { name: 'Items' });
+  await expect(items.getByText('Training', { exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(items.getByText('Send report to Trevor', { exact: true })).toBeVisible();
+  await expect(items.getByText(/^Training \. Need/)).toHaveCount(0);
+});
+
+test('"Quiz every Thursday 8pm-12pm" keeps its end time', async ({ browser }) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ai-quiz-${Date.now()}@example.test`);
+  await capture(a, 'Quiz every Thursday 8pm-12pm');
+  const recent = a.getByRole('list', { name: 'Recent captures' });
+  await expect(recent.getByText(/^Event added: Thu/)).toBeVisible();
+
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  await a.getByRole('list', { name: 'Items' }).getByText('Quiz', { exact: true }).click();
+  await expect(a.getByText(/20:00\s*[–-]\s*00:00/)).toBeVisible({ timeout: 30_000 });
+});

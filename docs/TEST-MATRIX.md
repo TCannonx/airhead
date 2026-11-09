@@ -275,6 +275,13 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Existing events and tasks sent as candidates (≤ 60) | — | `fn/sort-batch/candidates.test.ts` | — | |
 | `ai_actions` synced; RLS | `lib/schemas/records.test.ts` | `db/0030` | — | |
 
+## Phase 11 — Calendar and Workshop
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Longer dated note: instant event at once, capture still sorted by AI, event tidied (title, end, repeat) and the lost task added; Undo | `lib/db/captures.test.ts`, `lib/db/aiActions.test.ts`, `lib/db/events.test.ts` | `fn/sort-batch/plan.test.ts`, `_shared/ai.contract.test.ts`, `db/0034` (applied, stale → proposal, ai_actions row) | `sync/ai.spec.ts` "a longer dated note…" | |
+| Time ranges ("8pm-12pm", "8-11pm", "20:00-23:00") set the end time | `lib/rules/rules.test.ts`, `lib/db/captures.test.ts` | — | `sync/ai.spec.ts` "Quiz every Thursday 8pm-12pm keeps its end time" | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |

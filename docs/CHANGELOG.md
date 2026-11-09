@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(sorting): nothing lost from longer dated notes: the event still shows at once, then AI sorting tidies it (clean title, end time, repeat; Undo in the Inbox) and adds what else the note asked for, e.g. "Training on Tuesday. Need a reminder to send report to Trevor" → event "Training" + task "Send report to Trevor"; time ranges ("8pm-12pm", "20:00-23:00") set the end time (Task 11.1)
 - feat(sorting): new captures are sorted at the next 5-minute check once 2 minutes old (was: 5 waiting or an hour); still no AI call when nothing is new
 - fix(sync): Sync now always kicks sync (a run stuck for more than a few seconds is abandoned and a fresh one starts); the button is never disabled; Settings shows the step and start time while syncing, and a "Load latest version" button
 - fix(sync): a sync run that stops responding is abandoned after 90 s and retried, and Settings shows the step it was stuck on

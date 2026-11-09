@@ -7,7 +7,7 @@ import { beforeText, prepRulesFor, readWorkSettings } from '../../lib/work/setti
 import ReadingDetails from './ReadingDetails';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
-import { eventLabel } from '../../lib/db/events';
+import { endLabel, eventLabel } from '../../lib/db/events';
 import { softDelete, update } from '../../lib/db/repository';
 import { changeItemType, SORTABLE_TYPES, TYPE_LABELS } from '../../lib/db/sorting';
 import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop';
@@ -95,6 +95,7 @@ function ItemForm({ item }: { item: Item }) {
         {item.type === 'event' && item.start_at && (
           <p className="text-sm text-slate-500">
             When: {eventLabel(item)}
+            {endLabel(item)}
             {item.rrule && ' · repeats'}
           </p>
         )}

@@ -334,6 +334,8 @@ export const AI_ACTION_KINDS = [
   'set_reminder',
   'reschedule_item',
   'add_prep_rule',
+  // Sorting tidied the event a longer note made instantly (Task 11.1; never asked of the model).
+  'tidy_item',
 ] as const;
 export const aiActionSchema = z.object({
   ...syncColumns,

@@ -183,6 +183,37 @@ const CASES: [string, Expect][] = [
       title: 'Swim',
     },
   ],
+  // Time ranges set the end (Task 11.1)
+  [
+    'Quiz every Thursday 8pm-12pm',
+    {
+      when: {
+        start: '2026-11-12 20:00',
+        end: '2026-11-13 00:00',
+        confident: true,
+        rrule: 'FREQ=WEEKLY;BYDAY=TH',
+      },
+      title: 'Quiz',
+    },
+  ],
+  [
+    'quiz Thursday 8-11pm',
+    {
+      when: { start: '2026-11-12 20:00', end: '2026-11-12 23:00', confident: true },
+      title: 'Quiz',
+    },
+  ],
+  [
+    'gig Saturday 20:00-23:00',
+    { when: { start: '2026-11-07 20:00', end: '2026-11-07 23:00', confident: true }, title: 'Gig' },
+  ],
+  [
+    'party Saturday 10pm-2am',
+    {
+      when: { start: '2026-11-07 22:00', end: '2026-11-08 02:00', confident: true },
+      title: 'Party',
+    },
+  ],
   // Links
   ['https://example.com/article', { kind: 'link', url: 'https://example.com/article', when: null }],
   [
@@ -220,6 +251,10 @@ describe('analyseCapture', () => {
   it('always reads d/m the British way', () => {
     const r = analyseCapture('4/3 dentist at 9am', { now: NOW, timeZone: TZ });
     expect(local(r.when?.start ?? '', false)).toBe('2027-03-04 09:00');
+  });
+
+  it('a single time has no end', () => {
+    expect(analyseCapture('dentist Tue 3pm', { now: NOW, timeZone: TZ }).when?.end).toBeNull();
   });
 
   it('keeps the original text intact (it never edits captures)', () => {

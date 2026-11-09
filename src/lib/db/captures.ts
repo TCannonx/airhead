@@ -17,6 +17,26 @@ import { newCapture, newItem, save, update } from './repository';
 export const FOR_AI =
   /\b(?:remind me|moved|move it|reschedul\w*|postpon\w*|pushed (?:back|out|to)|brought forward|annual leave|on leave|days? off|off sick|sick (?:day|leave))\b|^\s*(?:off|took|taking|on holiday)\b|\b(?:day|morning|afternoon) off\b|\boff\s*$/i;
 
+/** Words that ask for more than the event itself ("need a reminder to", "still need to plan"). */
+const INSTRUCTION =
+  /\b(?:need|needs|needed|remind|reminder|still|then|also|must|should|don'?t forget|to ?do|placeholder|plan)\b/i;
+
+/**
+ * A simple note ("dentist Tue 3pm", "Quiz every Thursday 8pm-12pm"): one
+ * sentence of at most 8 words with no instruction words. Its instant event is
+ * all there is to it, so the capture is done. Anything longer keeps its
+ * instant event but still goes to AI sorting, which tidies the event and adds
+ * what else the note asks for (Task 11.1).
+ */
+export function isSimpleCapture(text: string): boolean {
+  const sentences = text
+    .split(/[.!?;]+(?:\s+|$)|\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const words = text.split(/\s+/).filter(Boolean);
+  return sentences.length <= 1 && words.length <= 8 && !INSTRUCTION.test(text);
+}
+
 export interface CaptureInput {
   text?: string | null;
   url?: string | null;
@@ -59,6 +79,9 @@ export async function createCapture(
       ? matchRule(await db.learned_rules.toArray(), text)
       : undefined;
 
+  // A longer note keeps its instant event but waits for sorting to tidy it.
+  const tidyLater = !!when && !!text && !isSimpleCapture(text);
+
   const capture = newCapture(userId, {
     text,
     url,
@@ -71,9 +94,25 @@ export async function createCapture(
         : { status: 'needs_review' as const }
       : {}),
     ...(rule || leave ? { status: 'sorted' as const, sorted_at: at } : {}),
+    ...(tidyLater ? { status: 'unsorted' as const, sorted_at: null } : {}),
   });
   if (leave) capture.payload = { ...capture.payload, leave_proposal: leave };
   if (rule) capture.payload = { ...capture.payload, rule_id: rule.id };
+  const instant =
+    when && analysis
+      ? newItem(userId, {
+          type: 'event',
+          title: analysis.title || text || 'Event',
+          capture_id: capture.id,
+          status: when.confident ? 'open' : 'suggested',
+          calendar: 'personal',
+          start_at: when.start,
+          end_at: when.end,
+          all_day: when.allDay,
+          rrule: when.rrule,
+        })
+      : null;
+  if (instant && tidyLater) capture.payload = { ...capture.payload, instant_item_id: instant.id };
   if (input.photo) {
     const file = await queueFile(db, userId, capture.id, input.photo);
     capture.payload = {
@@ -96,24 +135,7 @@ export async function createCapture(
     );
   }
 
-  let event: Item | null = null;
-  if (when && analysis) {
-    event = await save(
-      db,
-      'items',
-      newItem(userId, {
-        type: 'event',
-        title: analysis.title || text || 'Event',
-        capture_id: saved.id,
-        status: when.confident ? 'open' : 'suggested',
-        calendar: 'personal',
-        start_at: when.start,
-        end_at: when.end,
-        all_day: when.allDay,
-        rrule: when.rrule,
-      }),
-    );
-  }
+  const event: Item | null = instant ? await save(db, 'items', instant) : null;
   let ruleItem: Item | null = null;
   if (rule && text) {
     ruleItem = await save(db, 'items', ruleItemFor(rule, userId, saved.id, text));
