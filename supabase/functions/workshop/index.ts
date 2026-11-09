@@ -1,12 +1,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { gteSmall } from '../_shared/embed.ts';
 import { anthropicClient } from '../_shared/anthropic.ts';
-import { cors, json } from '../_shared/http.ts';
+import { supabaseCaller } from '../_shared/caller.ts';
 import type { FactRow } from '../_shared/memory.ts';
 import { relevantFacts } from '../_shared/relevant.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
-import { DraftContent, runFleshOut, type WorkshopDeps } from './run.ts';
-import { runTurn, type Turn, type TurnDeps } from './turn.ts';
+import { handleWorkshop } from './handler.ts';
+import { DraftContent } from './run.ts';
+import type { Turn, TurnDeps } from './turn.ts';
 
 const db = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -118,38 +119,11 @@ function depsFor(userId: string, apiKey: string): TurnDeps {
   };
 }
 
-/**
- * POST /workshop { mode: 'flesh_out', item_id } | { mode: 'turn', item_id, answer? }
- * Signed in only. One large-tier call; the draft is saved as a new version
- * and returned so the device can show it before the next sync.
- */
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  if (req.method !== 'POST')
-    return json({ ok: false, error_code: 'method_not_allowed', message: 'Use POST.' }, 405);
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  const { data: auth } = await db.auth.getUser(token);
-  if (!auth.user)
-    return json({ ok: false, error_code: 'unauthorized', message: 'Sign in again.' }, 401);
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey)
-    return json({ ok: false, error_code: 'not_configured', message: 'AI is not set up yet.' }, 503);
-  const body = (await req.json().catch(() => ({}))) as {
-    mode?: string;
-    item_id?: string;
-    answer?: unknown;
-  };
-  if (typeof body.item_id !== 'string' || (body.mode !== 'flesh_out' && body.mode !== 'turn'))
-    return json({ ok: false, error_code: 'bad_request', message: 'Unknown request.' }, 400);
-  const deps = depsFor(auth.user.id, apiKey);
-  const outcome =
-    body.mode === 'turn'
-      ? await runTurn(
-          body.item_id,
-          typeof body.answer === 'string' ? body.answer : null,
-          auth.user.id,
-          deps,
-        )
-      : await runFleshOut(body.item_id, auth.user.id, deps);
-  return json(outcome, outcome.ok || outcome.error_code !== 'not_found' ? 200 : 404);
-});
+/** POST /workshop: see handler.ts. */
+Deno.serve((req) =>
+  handleWorkshop(req, {
+    caller: supabaseCaller(db),
+    apiKey: () => Deno.env.get('ANTHROPIC_API_KEY'),
+    runDeps: depsFor,
+  }),
+);

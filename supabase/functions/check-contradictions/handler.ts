@@ -1,0 +1,76 @@
+import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
+import { bearer, type Caller } from '../_shared/caller.ts';
+import { cors, json } from '../_shared/http.ts';
+import {
+  buildContradictionsMessage,
+  CONTRADICTIONS_SYSTEM,
+} from '../_shared/prompts/contradictions.v1.ts';
+import { ContradictionsResult, validConflicts } from './check.ts';
+
+export interface ContradictionsHandlerDeps {
+  caller: Caller;
+  apiKey(): string | undefined;
+  ai(apiKey: string): AIClient;
+  usage: UsageStore;
+  /** The user's active facts (their own rows only). */
+  facts(userId: string): Promise<{ id: string; text: string }[] | null>;
+}
+
+/** POST /check-contradictions: one small-tier call over the user's active facts (on demand). */
+export async function handleContradictions(
+  req: Request,
+  d: ContradictionsHandlerDeps,
+): Promise<Response> {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  const userId = await d.caller.userId(bearer(req));
+  if (!userId) {
+    return json({ ok: false, error_code: 'unauthorized', message: 'Sign in again.' }, 401);
+  }
+  const apiKey = d.apiKey();
+  if (!apiKey) {
+    return json({ ok: false, error_code: 'not_configured', message: 'AI is not set up yet.' }, 503);
+  }
+
+  const facts = await d.facts(userId);
+  if (!facts || facts.length < 2) {
+    return json({
+      ok: true,
+      error_code: null,
+      message: 'Not enough facts to compare.',
+      conflicts: [],
+    });
+  }
+
+  const result = await callAI(
+    { client: d.ai(apiKey), store: d.usage },
+    {
+      userId,
+      task: 'check_contradictions',
+      tier: 'small',
+      system: CONTRADICTIONS_SYSTEM,
+      messages: [{ role: 'user', content: buildContradictionsMessage(facts) }],
+      schema: ContradictionsResult,
+      maxTokens: 4000,
+      effort: 'low',
+      background: false,
+    },
+  );
+  if (!result.ok) {
+    return json(
+      { ok: false, error_code: result.error_code, message: result.message, conflicts: [] },
+      502,
+    );
+  }
+  const conflicts = validConflicts(
+    result.data,
+    facts.map((f) => f.id),
+  );
+  return json({
+    ok: true,
+    error_code: null,
+    message: conflicts.length
+      ? `Found ${conflicts.length} possible contradiction${conflicts.length === 1 ? '' : 's'}.`
+      : 'No contradictions found.',
+    conflicts,
+  });
+}

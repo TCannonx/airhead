@@ -1,10 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { anthropicClient } from '../_shared/anthropic.ts';
+import { supabaseCaller } from '../_shared/caller.ts';
 import { json } from '../_shared/http.ts';
 import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { textHash } from '../sort-batch/notes.ts';
 import { evalCases } from './cases.ts';
+import { handleEval } from './handler.ts';
 import { runEval } from './run.ts';
 
 /**
@@ -33,17 +35,7 @@ export function promptHash(): string {
   return textHash(SORT_BATCH_SYSTEM + JSON.stringify(cases));
 }
 
-Deno.serve(async (req) => {
-  const isLive = (Deno.env.get('SUPABASE_URL') ?? '').includes(LIVE_REF);
-  if (isLive || req.method !== 'POST')
-    return json({ ok: false, error_code: 'not_found', message: 'Not found.' }, 404);
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
-  if (!(await isService(token)))
-    return json({ ok: false, error_code: 'unauthorized', message: 'Service only.' }, 401);
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey) return json({ ok: false, error_code: 'not_configured', message: 'No AI key.' }, 503);
-
-  const body = (await req.json().catch(() => ({}))) as { force?: boolean };
+async function evaluate(force: boolean, apiKey: string): Promise<Response> {
   const hash = promptHash();
   const { data: last } = await db
     .from('ai_eval_runs')
@@ -52,7 +44,7 @@ Deno.serve(async (req) => {
     .limit(1)
     .maybeSingle();
   const fresh = last && last.prompt_hash === hash && Date.now() - Date.parse(last.created_at) < DAY;
-  if (fresh && !body.force)
+  if (fresh && !force)
     return json({ ok: true, error_code: null, message: 'Nothing changed since the last run.' });
 
   try {
@@ -74,4 +66,13 @@ Deno.serve(async (req) => {
       500,
     );
   }
-});
+}
+
+Deno.serve((req) =>
+  handleEval(req, {
+    caller: supabaseCaller(db, isService),
+    isLive: () => (Deno.env.get('SUPABASE_URL') ?? '').includes(LIVE_REF),
+    apiKey: () => Deno.env.get('ANTHROPIC_API_KEY'),
+    evaluate,
+  }),
+);

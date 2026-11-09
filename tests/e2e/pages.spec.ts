@@ -86,15 +86,24 @@ for (const [name, size] of [
         .getByRole('list', { name: 'Unsorted' })
         .getByRole('button', { name: 'Sort as Task' })
         .click();
+      await expect(page.getByText('Nothing waiting. Everything is sorted.')).toBeVisible();
+      // Pin it to today's Top 3 from its item page (the automatic pick depends on the hour).
+      await page.goto('/library');
+      await page
+        .getByRole('list', { name: 'Items' })
+        .getByRole('link', { name: /Post the parcel/ })
+        .click();
+      await page.getByRole('button', { name: 'Add to today’s Top 3' }).click();
+      await expect(page.getByRole('button', { name: 'Remove from today’s Top 3' })).toBeVisible();
       await open(page, '/today', 'Today');
       const top = page.getByRole('main').getByRole('list', { name: 'Top 3' });
       const done = top.getByRole('checkbox', { name: 'Done: Post the parcel' });
       await expect(done).toBeVisible();
       await axe(page);
       if (name === 'phone') await touchTargets(page);
-      // A task picked on this device (not pinned to today) leaves the Top 3 once done.
-      await done.click();
-      await expect(done).toHaveCount(0);
+      // A pinned task stays in the Top 3, ticked and struck through.
+      await done.click(); // controlled: the tick lands once the database answers
+      await expect(done).toBeChecked();
       await expect(page.getByRole('link', { name: 'Evening review' })).toBeVisible();
     });
 
