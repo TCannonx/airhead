@@ -56,6 +56,91 @@ function readItems(page: Page) {
   );
 }
 
+/** Puts events straight into the device database, then reloads so the app reads them. */
+async function seedEvents(page: Page, rows: Record<string, unknown>[]) {
+  await page.evaluate(
+    ([user, rows]) =>
+      new Promise<void>((resolve) => {
+        const req = indexedDB.open(`airhead-${user}`);
+        req.onsuccess = () => {
+          const t = new Date().toISOString();
+          const tx = req.result.transaction('items', 'readwrite');
+          for (const r of rows)
+            tx.objectStore('items').put({
+              user_id: user,
+              created_at: t,
+              updated_at: t,
+              server_updated_at: null,
+              deleted_at: null,
+              capture_id: null,
+              type: 'event',
+              body: null,
+              data: {},
+              status: 'open',
+              due_at: null,
+              end_at: null,
+              all_day: false,
+              rrule: null,
+              calendar: 'personal',
+              series_id: null,
+              list_id: null,
+              topic_ids: [],
+              confidence: null,
+              top3_date: null,
+              carry_count: 0,
+              completed_at: null,
+              ...r,
+            });
+          tx.oncomplete = () => {
+            req.result.close();
+            resolve();
+          };
+        };
+      }),
+    [LOCAL_USER, rows] as const,
+  );
+  await page.reload();
+}
+
+// Thursday 16 July 2026, 20:00–23:00 Dublin, every week; an all-day birthday on Friday 17th.
+const QUIZ = {
+  id: '22222222-2222-4222-8222-000000000001',
+  title: 'Quiz',
+  start_at: '2026-07-16T19:00:00.000Z',
+  end_at: '2026-07-16T22:00:00.000Z',
+  rrule: 'FREQ=WEEKLY',
+  data: { location: 'The Local' },
+};
+const BIRTHDAY = {
+  id: '22222222-2222-4222-8222-000000000002',
+  title: 'Niamh’s Birthday',
+  start_at: '2026-07-16T23:00:00.000Z',
+  all_day: true,
+  rrule: 'FREQ=YEARLY',
+};
+
+/** A quick horizontal swipe on the calendar (touch). */
+async function swipe(page: Page, dx: number) {
+  await page.getByTestId('calendar-body').evaluate((el, dx) => {
+    const box = el.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + Math.min(200, box.height / 2);
+    const touch = (cx: number) => new Touch({ identifier: 1, target: el, clientX: cx, clientY: y });
+    el.dispatchEvent(
+      new TouchEvent('touchstart', {
+        bubbles: true,
+        touches: [touch(x)],
+        changedTouches: [touch(x)],
+      }),
+    );
+    el.dispatchEvent(
+      new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [touch(x + dx)] }),
+    );
+  }, dx);
+}
+
+const period = (page: Page, name: string) => page.getByRole('heading', { level: 2, name });
+
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   // A fixed "now": Wednesday 15 July 2026, 08:00 in Dublin.
@@ -64,7 +149,7 @@ test.beforeEach(async ({ page }) => {
 
 test('create an event from an empty slot, then drag it to another day', async ({ page }) => {
   await page.goto('/calendar');
-  await expect(page.getByRole('button', { name: 'Week', pressed: true })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Week', checked: true })).toBeVisible();
 
   const start = await slot(page, '2026-07-15', '10:00:00');
   await page.mouse.click(start.x, start.y);
@@ -151,7 +236,7 @@ test('drag a task onto the week to time-block it', async ({ page }) => {
 
 test('select days in the month view and book them as leave', async ({ page }) => {
   await page.goto('/calendar');
-  await page.getByRole('button', { name: 'Month' }).click();
+  await page.getByRole('radio', { name: 'Month' }).click();
   const from = await page.locator('[data-date="2026-07-20"]').last().boundingBox();
   const to = await page.locator('[data-date="2026-07-22"]').last().boundingBox();
   if (!from || !to) throw new Error('month cells not drawn');
@@ -171,4 +256,131 @@ test('select days in the month view and book them as leave', async ({ page }) =>
   await sheet.getByRole('button', { name: 'Book leave' }).click();
 
   await expect(page.getByText('Annual leave · planned')).toBeVisible();
+});
+
+test.describe('easier viewing (Task 11.3)', () => {
+  test('desktop: week opens at now with a red line; Today, previous, next and every view', async ({
+    page,
+  }) => {
+    await page.goto('/calendar');
+    await expect(page.getByRole('radio', { name: 'Week', checked: true })).toBeVisible();
+    await expect(period(page, '13–19 Jul 2026')).toBeVisible();
+    await expect(page.locator('.ah-now-line').first()).toBeInViewport();
+    // Opened scrolled to the hour before now (08:00), not midnight.
+    await expect(page.locator('[data-time="07:00:00"]').first()).toBeInViewport();
+    await expect(page.locator('[data-time="01:00:00"]').first()).not.toBeInViewport();
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(period(page, '20–26 Jul 2026')).toBeVisible();
+    await page.getByRole('button', { name: 'Previous' }).click();
+    await page.getByRole('button', { name: 'Previous' }).click();
+    await expect(period(page, '6–12 Jul 2026')).toBeVisible();
+    await page.getByRole('button', { name: 'Today', exact: true }).click();
+    await expect(period(page, '13–19 Jul 2026')).toBeVisible();
+
+    await page.getByRole('radio', { name: 'Month' }).click();
+    await expect(period(page, 'July 2026')).toBeVisible();
+    await page.getByRole('radio', { name: 'Day' }).click();
+    await expect(period(page, 'Wed 15 Jul 2026')).toBeVisible();
+    await expect(page.locator('.ah-now-line').first()).toBeVisible();
+    await page.getByRole('radio', { name: 'Agenda' }).click();
+    await expect(period(page, 'Next 30 days')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Agenda' })).toBeVisible();
+
+    // Remembered on this device.
+    await page.reload();
+    await expect(page.getByRole('radio', { name: 'Agenda', checked: true })).toBeVisible();
+  });
+
+  test('desktop: tapping an event shows its details first, Edit is one tap further', async ({
+    page,
+  }) => {
+    await page.goto('/calendar');
+    await seedEvents(page, [QUIZ, BIRTHDAY]);
+    await page.locator('.ah-calendar').getByText('Quiz', { exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Quiz' });
+    await expect(sheet).toContainText('Thu 16 Jul 2026, 20:00–23:00');
+    await expect(sheet).toContainText('Every week');
+    await expect(sheet).toContainText('Personal');
+    await expect(sheet).toContainText('The Local');
+    await sheet.getByRole('button', { name: 'Edit' }).click();
+    await expect(page.getByRole('form', { name: 'Edit event' }).getByLabel('Title')).toHaveValue(
+      'Quiz',
+    );
+    await page.keyboard.press('Escape');
+
+    // The month grid has event chips; a birthday is all day.
+    await page.getByRole('radio', { name: 'Month' }).click();
+    await page.locator('.ah-calendar').getByText('Niamh’s Birthday').click();
+    await expect(page.getByRole('dialog', { name: 'Niamh’s Birthday' })).toContainText(
+      'Fri 17 Jul 2026 · All day',
+    );
+  });
+
+  test.describe('phone', () => {
+    test.use({ hasTouch: true });
+
+    test('agenda first, month with dots and the day underneath, swipe between periods', async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/calendar');
+      await seedEvents(page, [QUIZ, BIRTHDAY]);
+      await expect(page.getByRole('radio', { name: 'Agenda', checked: true })).toBeVisible();
+      const agenda = page.getByRole('region', { name: 'Agenda' });
+      await expect(agenda.getByRole('region', { name: 'Tomorrow' })).toContainText('Quiz');
+      await expect(agenda.getByRole('region', { name: 'Fri 17 Jul' })).toContainText(
+        'Niamh’s Birthday',
+      );
+
+      await agenda.getByRole('button', { name: /Quiz/ }).first().click();
+      const sheet = page.getByRole('dialog', { name: 'Quiz' });
+      await expect(sheet).toContainText('20:00–23:00');
+      await sheet.getByRole('button', { name: 'Close' }).click();
+
+      await page.getByRole('radio', { name: 'Month' }).click();
+      await expect(period(page, 'July 2026')).toBeVisible();
+      const grid = page.getByRole('grid', { name: 'Month' });
+      await expect(grid.locator('[data-day="2026-07-16"] [data-testid="day-dot"]')).toHaveCount(1);
+      await grid.locator('[data-day="2026-07-16"]').click();
+      await expect(page.getByRole('region', { name: 'Events on Thu 16 Jul 2026' })).toContainText(
+        'Quiz',
+      );
+
+      await swipe(page, -150);
+      await expect(period(page, 'August 2026')).toBeVisible();
+      await swipe(page, 150);
+      await expect(period(page, 'July 2026')).toBeVisible();
+
+      await page.getByRole('radio', { name: 'Week' }).click();
+      await expect(period(page, '13–19 Jul 2026')).toBeVisible();
+      await expect(page.locator('.ah-now-line').first()).toBeInViewport();
+      await swipe(page, -150);
+      await expect(period(page, '20–26 Jul 2026')).toBeVisible();
+      await page.getByRole('button', { name: 'Today', exact: true }).click();
+      await expect(period(page, '13–19 Jul 2026')).toBeVisible();
+    });
+
+    test('calendars panel and search', async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/calendar');
+      await seedEvents(page, [QUIZ, BIRTHDAY]);
+      await page.getByRole('button', { name: 'Calendars' }).click();
+      const panel = page.getByRole('dialog', { name: 'Calendars' });
+      await panel.getByRole('switch', { name: 'Personal' }).click();
+      await panel.getByRole('button', { name: 'Close' }).click();
+      await expect(
+        page.getByRole('status').filter({ hasText: 'Personal is hidden.' }),
+      ).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Agenda' })).not.toContainText('Quiz');
+
+      // Search still finds it, and opens its details.
+      await page.getByRole('searchbox', { name: 'Search events' }).fill('qui');
+      await page
+        .getByRole('region', { name: 'Search results' })
+        .getByRole('button', { name: /Quiz/ })
+        .click();
+      await expect(page.getByRole('dialog', { name: 'Quiz' })).toBeVisible();
+    });
+  });
 });

@@ -24,12 +24,15 @@ export default function LeaveSheet({
   booking,
   initial,
   onClose,
+  inSheet = false,
 }: {
   work: WorkSettings;
   bookings: LeaveBooking[];
   booking?: LeaveBooking;
   initial?: Partial<LeaveFields>;
   onClose: () => void;
+  /** Inside a Sheet, which already shows the title and a Close button. */
+  inSheet?: boolean;
 }) {
   const db = useDb();
   const { user } = useAuth();
@@ -71,16 +74,18 @@ export default function LeaveSheet({
         void onSave();
       }}
     >
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">{booking ? 'Edit leave' : 'Book leave'}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-        >
-          Close
-        </button>
-      </div>
+      {!inSheet && (
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">{booking ? 'Edit leave' : 'Book leave'}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            Close
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <label className="text-sm">
           From

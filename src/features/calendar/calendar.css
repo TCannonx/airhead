@@ -1,11 +1,17 @@
-/* Calendar tweaks on top of FullCalendar's classic theme (Task 4.2). */
+/* Calendar tweaks on top of FullCalendar's classic theme (Tasks 4.2, 11.3). */
 .ah-calendar {
   --fc-classic-primary: #4f46e5;
   --fc-classic-today: #6366f114;
+  --fc-classic-now: #ef4444;
 }
 
 .ah-calendar[data-color-scheme='dark'] {
   --fc-classic-background: #020617;
+}
+
+/* The red "now" line in Week and Day, a little bolder than FullCalendar's. */
+.ah-calendar .ah-now-line {
+  border-top-width: 2px;
 }
 
 /* Common days off (Good Friday, Christmas Eve, New Year's Eve) are lighter. */
