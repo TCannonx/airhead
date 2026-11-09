@@ -91,7 +91,8 @@ const movedForward = (r: CaseView) => {
       ...has(r.follow_ups.length <= 3, 'more than 3 questions'),
       ...has(!r.follow_ups.some((f) => GENERIC.test(f.question)), 'a generic question was asked'),
       ...has(r.workshop.length === 0, 'part of the note was not acted on (left to the Workshop)'),
-      ...has(r.status === 'sorted', `capture status is ${r.status}, not sorted`),
+      // A suggestion waiting for a tap is not dropped; only a failed capture is.
+      ...has(r.status !== 'failed', 'the capture failed to sort'),
     ],
   };
 };

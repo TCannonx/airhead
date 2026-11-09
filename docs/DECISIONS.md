@@ -1505,3 +1505,9 @@ Decisions and library versions, newest first.
 - **Counts from the receipts**: a capture is *handled* when its receipt (12.3) has an outcome, *waiting* before sorting, and *not acted on* when its receipt only says "Kept as written" or sorting failed. Answers to questions are captures too, and count as handled once their answer is added to the item.
 - **Questions** asked in 30 days by status (open, answered, dismissed). **Correction rate** is the same number as Success measures (corrections ÷ items sorted); dismissed questions are corrections, so they count.
 - **"Not acted on: N"** opens into the list of those captures, each with Send to Workshop, so nothing dropped stays hidden. With none it says "Not acted on: 0. Nothing was dropped."
+
+## Phase 12 tuning after the 13:07 real-model run (2026-11-09)
+
+- Run 13:07 (16 cases, 13 passed): car insurance and team night got good planning tasks with steps but no question; Christmas passed everything except its status (`needs_review`: the placeholder event came back below the 0.8 event bar, so it was a suggestion). The 12:37 run had turned the ambiguous meeting move into a question.
+- Prompt v7 (tuned in place again): a planning task always comes with 1 to 3 questions; a placeholder on stated days gets a confidence of at least 0.85; an unclear move is still `reschedule_item` with `other_matches`, never a question or a note.
+- Evaluator: "nothing dropped" now means the capture did not fail. A suggestion waiting for a tap is shown to the person, so it is not dropped.

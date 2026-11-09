@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sorting): a planning task always comes with a question; a placeholder on stated days is a confident event; an unclear move is still a move with choices, never a question; the evaluator counts a suggestion as not dropped (Phase 12 tuning)
 - feat(insights): "Notes handled": notes acted on of all captured in 30 days, questions open, answered and dismissed, the correction rate, and "Not acted on: N" that opens into the list with Send to Workshop (Task 12.5)
 - test(ai-eval): completeness checks on the real-model evaluator (Christmas: event, planning task before the first Friday, a specific question, nothing dropped; haircut, birthday, quiz and shopping ask nothing) and two new owner-style cases (car insurance, team night out); sorting no longer asks beside a clear action, and the prompt says never to ask instead of acting (Task 12.4)
 - feat(capture): "What Airhead did" on every capture (Capture → Recent, Inbox, the item page's "From your note"): one line per item made, action (with Undo), question, Workshop note, or "Kept as written, not acted on", each with the words it came from; "Waiting for AI sorting (next check by HH:MM)" before sorting (Task 12.3)
