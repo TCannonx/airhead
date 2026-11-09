@@ -429,6 +429,10 @@ export function planSort(
   ) => {
     const round = answer ? answer.round + 1 : 1;
     if (round > MAX_ROUNDS) return;
+    // A clear instruction that became an action needs no questions (Task 12.4):
+    // only a note that implies more work (a planning task) may ask beside one.
+    const planning = refs.some((x) => (x as Partial<PlannedItem> | undefined)?.data?.planning);
+    if (!answer && (r.actions ?? []).length > 0 && !planning) return;
     const fallback =
       answer?.item?.id ??
       refs.find((x) => x && !(x as Partial<PlannedItem>).data?.planning)?.id ??

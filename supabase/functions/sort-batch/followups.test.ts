@@ -365,3 +365,42 @@ Deno.test('an answer capture carries the question and the item in its block', ()
     msg,
   );
 });
+
+Deno.test(
+  'a clear instruction that became an action asks nothing; a planning note still may (Task 12.4)',
+  () => {
+    const leave = {
+      kind: 'set_leave_remaining' as const,
+      quote: 'I have 9.5 days left',
+      confidence: 0.9,
+      details: '{"days": 9.5}',
+    };
+    const clear = planSort(
+      [C1],
+      {
+        results: [
+          result(C1, {
+            actions: [leave],
+            follow_ups: [q('How many days of annual leave have you used?', [], -1)],
+          }),
+        ],
+      },
+      ctx,
+    );
+    assertEquals(clear.follow_ups, []);
+    const planned = planSort(
+      [C1],
+      {
+        results: [
+          result(C1, {
+            items: [planning()],
+            actions: [leave],
+            follow_ups: [q('Who is it for?')],
+          }),
+        ],
+      },
+      ctx,
+    );
+    assertEquals(planned.follow_ups.length, 1);
+  },
+);

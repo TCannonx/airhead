@@ -63,6 +63,39 @@ function nextLocal(now: Date, weekday: number, hour: number): string {
 const has = (cond: boolean, msg: string) => (cond ? [] : [msg]);
 const titled = (items: PlannedItem[], re: RegExp) => items.find((i) => re.test(i.title));
 
+/** Clear notes get no questions (Task 12.4: protects against nagging). */
+const noQuestions = (r: CaseView) =>
+  has(
+    r.follow_ups.length === 0,
+    `asked ${r.follow_ups.length} needless question(s): ${r.follow_ups.map((f) => f.question).join(' / ')}`,
+  );
+
+/** A question that names nothing in the note is generic. */
+const GENERIC = /\b(?:anything else|any (?:other|more|further) (?:details|info|information))\b/i;
+
+/**
+ * Notes that imply more work (Task 12.4): a planning task with steps, 1 to 3
+ * specific questions, and nothing dropped (no part left to the Workshop).
+ */
+const movedForward = (r: CaseView) => {
+  const plan = r.items.find((i) => i.type === 'task' && i.data.planning === true);
+  return {
+    plan,
+    problems: [
+      ...has(!!plan, 'no planning task with steps'),
+      ...has(
+        ((plan?.data.steps as string[] | undefined) ?? []).length >= 2,
+        'fewer than 2 planning steps',
+      ),
+      ...has(r.follow_ups.length >= 1, 'no question asked'),
+      ...has(r.follow_ups.length <= 3, 'more than 3 questions'),
+      ...has(!r.follow_ups.some((f) => GENERIC.test(f.question)), 'a generic question was asked'),
+      ...has(r.workshop.length === 0, 'part of the note was not acted on (left to the Workshop)'),
+      ...has(r.status === 'sorted', `capture status is ${r.status}, not sorted`),
+    ],
+  };
+};
+
 export function evalCases(now: Date): {
   cases: EvalCase[];
   candidates: Candidate[];
@@ -142,6 +175,7 @@ export function evalCases(now: Date): {
             !r.items.some((i) => i.type === 'task' && /cash/i.test(i.title)),
             'also made a one-off cash task',
           ),
+          ...noQuestions(r),
         ];
       },
     },
@@ -190,6 +224,7 @@ export function evalCases(now: Date): {
             !!ev?.end_at && local(ev.end_at, r.timeZone).hm === '00:00',
             'does not end at midnight',
           ),
+          ...noQuestions(r),
         ];
       },
     },
@@ -207,6 +242,7 @@ export function evalCases(now: Date): {
             !!ev?.start_at && local(ev.start_at, r.timeZone).date.endsWith('-11-11'),
             'not on 11 November',
           ),
+          ...noQuestions(r),
         ];
       },
     },
@@ -217,21 +253,23 @@ export function evalCases(now: Date): {
         'A weekly Friday placeholder event, a planning task with steps due before the first Friday, and specific questions (Phase 12).',
       check: (r) => {
         const ev = r.items.find((i) => i.type === 'event');
-        const plan = r.items.find((i) => i.type === 'task' && i.data.planning === true);
+        const { plan, problems } = movedForward(r);
         return [
+          ...problems,
           ...has(!!ev && /christmas sandwich/i.test(ev.title), 'no Christmas sandwiches event'),
           ...has(
             !ev?.start_at || local(ev.start_at, r.timeZone).day === 5,
             'first date is not a Friday',
           ),
           ...has(!!ev?.rrule && /BYDAY=FR/.test(ev.rrule), 'does not repeat on Fridays'),
-          ...has(!!plan, 'no planning task with steps'),
           ...has(
             !!plan?.due_at && !!ev?.start_at && Date.parse(plan.due_at) < Date.parse(ev.start_at),
             'the planning task is not due before the first Friday',
           ),
-          ...has(r.follow_ups.length >= 1, 'no question asked'),
-          ...has(r.follow_ups.length <= 3, 'more than 3 questions'),
+          ...has(
+            r.follow_ups.every((f) => !f.item_id || r.items.some((i) => i.id === f.item_id)),
+            'a question is about something not in this note',
+          ),
         ];
       },
     },
@@ -311,7 +349,10 @@ export function evalCases(now: Date): {
       meant: 'Two entries on the Shopping list.',
       check: (r) => {
         const entries = r.items.filter((i) => i.type === 'list_entry' && i.list_id);
-        return has(entries.length === 2, `${entries.length} list entries on a known list, not 2`);
+        return [
+          ...has(entries.length === 2, `${entries.length} list entries on a known list, not 2`),
+          ...noQuestions(r),
+        ];
       },
     },
     {
@@ -327,6 +368,43 @@ export function evalCases(now: Date): {
         return [
           ...has(!!task, 'no task from the note'),
           ...has(!!task?.due_at && local(task.due_at, r.timeZone).day === 5, 'not due on a Friday'),
+        ];
+      },
+    },
+    {
+      id: 'car-insurance',
+      text: 'Need to sort out car insurance before it renews end of month',
+      meant:
+        'A planning task to sort out the car insurance with steps, due by the end of the month, and a specific question (Phase 12).',
+      check: (r) => {
+        const { plan, problems } = movedForward(r);
+        const monthEnd = local(now.toISOString(), r.timeZone).date.slice(0, 7);
+        return [
+          ...problems,
+          ...has(
+            !!plan && /insurance/i.test(plan.title),
+            'the planning task is not about the insurance',
+          ),
+          ...has(
+            !!plan?.due_at && local(plan.due_at, r.timeZone).date.slice(0, 7) <= monthEnd,
+            'not due by the end of this month',
+          ),
+        ];
+      },
+    },
+    {
+      id: 'team-night',
+      text: 'Thinking about a team night out in December, need to figure out where',
+      meant:
+        'A planning task for the team night out with steps, and specific questions (where, when, how many), nothing dropped (Phase 12).',
+      check: (r) => {
+        const { plan, problems } = movedForward(r);
+        return [
+          ...problems,
+          ...has(
+            !!plan && /night|team/i.test(plan.title),
+            'the planning task is not about the night out',
+          ),
         ];
       },
     },
