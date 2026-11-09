@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { lit, sql, userIdFor } from './db.ts';
 import { signIn } from './helpers.ts';
 
 // AI sorting end to end: the app, the real sort-batch Edge Function and the
@@ -229,24 +230,58 @@ test('Send to Workshop on a fresh capture: it is in "To flesh out" here and on t
   }).toPass({ timeout: 60_000 });
 });
 
-test('Sort now on a placeholder note: the event is made and the rest goes to the Workshop', async ({
+test('Sort now on a placeholder note: the event, a planning task with steps, and questions (Task 12.1)', async ({
   browser,
 }) => {
+  const email = `e2e-trust-plan-${Date.now()}@example.test`;
   const a = await (await browser.newContext()).newPage();
-  await signIn(a, `e2e-ws-leftover-${Date.now()}@example.test`);
+  await signIn(a, email);
   await capture(
     a,
     'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
   );
   await sortNow(a);
+  await expect(a.getByText(/^Sorted 1 capture.*3 questions/)).toBeVisible({ timeout: 60_000 });
+
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  const items = a.getByRole('list', { name: 'Items' });
+  await expect(items.getByText('Christmas sandwiches', { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(items.getByText('Plan Christmas sandwiches', { exact: true })).toBeVisible();
+
+  // The server holds the planning task (due before the first Friday, with its
+  // checklist) and three open questions about the event, from the same batch.
+  const user = userIdFor(email);
+  const due = sql(
+    `select (t.due_at < e.start_at)::text || ' ' || (t.body like '- [ ] %')::text
+       from public.items t join public.items e on e.capture_id = t.capture_id and e.type = 'event'
+      where t.user_id = ${lit(user)} and t.title = 'Plan Christmas sandwiches'`,
+  );
+  expect(due).toBe('true true');
+  const asked = sql(
+    `select string_agg(f.question, ' | ' order by f.question)
+       from public.follow_ups f join public.items i on i.id = f.item_id
+      where f.user_id = ${lit(user)} and f.status = 'open' and i.title = 'Christmas sandwiches'`,
+  );
+  expect(asked).toBe('How many people? | Making them or ordering? | Who are the sandwiches for?');
+});
+
+test('words sorting cannot place are kept in the Workshop, next to what it could place', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ws-leftover-${Date.now()}@example.test`);
+  await capture(a, 'Call the plumber. Maybe something about the shed');
+  await sortNow(a);
   const flesh = a.getByRole('list', { name: 'To flesh out' });
-  await expect(flesh.getByRole('link', { name: 'Still need to plan' })).toBeVisible({
+  await expect(flesh.getByRole('link', { name: 'Maybe something about the shed' })).toBeVisible({
     timeout: 60_000,
   });
 
   await a.getByRole('link', { name: 'Library' }).first().click();
   const items = a.getByRole('list', { name: 'Items' });
-  await expect(items.getByText('Christmas sandwiches', { exact: true })).toBeVisible({
+  await expect(items.getByText('Call the plumber', { exact: true })).toBeVisible({
     timeout: 30_000,
   });
 

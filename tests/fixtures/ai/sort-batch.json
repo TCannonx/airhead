@@ -35,7 +35,9 @@
             "topics": [],
             "confidence": 0.95,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           },
           {
             "type": "list_entry",
@@ -50,7 +52,9 @@
             "topics": [],
             "confidence": 0.93,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           },
           {
             "type": "event",
@@ -65,7 +69,9 @@
             "topics": ["Health"],
             "confidence": 0.95,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           },
           {
             "type": "task",
@@ -80,7 +86,9 @@
             "topics": ["Home"],
             "confidence": 0.9,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           }
         ],
         "link_summary": null,
@@ -91,7 +99,8 @@
           }
         ],
         "actions": [],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000002",
@@ -109,13 +118,16 @@
             "topics": ["Garden"],
             "confidence": 0.4,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           }
         ],
         "link_summary": null,
         "proposed_facts": [],
         "actions": [],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000003",
@@ -133,7 +145,9 @@
             "topics": ["Garden", "Home"],
             "confidence": 0.88,
             "suggest_workshop": true,
-            "related_idea_title": "Vegetable patch"
+            "related_idea_title": "Vegetable patch",
+            "quote": "",
+            "steps": []
           }
         ],
         "link_summary": null,
@@ -144,7 +158,8 @@
           }
         ],
         "actions": [],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c0000000-0000-4000-8000-0000000000ff",
@@ -152,7 +167,8 @@
         "link_summary": null,
         "proposed_facts": [],
         "actions": [],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       }
     ],
     "digest": null

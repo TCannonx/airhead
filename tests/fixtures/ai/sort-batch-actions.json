@@ -117,7 +117,8 @@
             "details": "{\"days\": 9.5, \"as_of\": \"2026-11-08\", \"leave_type\": \"annual\"}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000002",
@@ -132,7 +133,8 @@
             "details": "{\"leave_type\": \"annual\", \"start_date\": \"2026-12-22\", \"end_date\": \"2026-12-24\", \"start_half\": false, \"end_half\": false, \"leave_status\": \"planned\"}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000003",
@@ -147,7 +149,8 @@
             "details": "{\"setting\": \"entitlement\", \"value\": \"23\"}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000004",
@@ -162,7 +165,8 @@
             "details": "{\"target_id\": \"e0000000-0000-4000-8000-000000000001\", \"start_at\": \"2026-11-12T16:00:00+00:00\", \"all_day\": false}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000005",
@@ -177,7 +181,8 @@
             "details": "{\"target_id\": \"e0000000-0000-4000-8000-000000000002\", \"other_matches\": [\"e0000000-0000-4000-8000-000000000003\"], \"start_at\": \"2026-11-13T10:00:00+00:00\", \"all_day\": false}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000006",
@@ -192,7 +197,8 @@
             "details": "{\"target_id\": \"e0000000-0000-4000-8000-000000000004\", \"start_at\": \"2026-11-11T18:00:00+00:00\", \"all_day\": false}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000007",
@@ -212,7 +218,9 @@
             "topics": [],
             "confidence": 0.9,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           }
         ],
         "actions": [
@@ -223,7 +231,8 @@
             "details": "{\"target_item_index\": 0, \"offset_minutes\": 1440}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       },
       {
         "capture_id": "c1000000-0000-4000-8000-000000000008",
@@ -242,7 +251,8 @@
             "details": "{\"setting\": \"entitlement\", \"value\": \"30\"}"
           }
         ],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       }
     ],
     "digest": null

@@ -18,7 +18,14 @@ Deno.test(
       assert(report.total >= 14);
       // The stand-in knows some of these phrases; those must pass here too.
       const byId = Object.fromEntries(report.cases.map((c) => [c.id, c]));
-      for (const id of ['leave-left', 'training-report', 'dentist-moved', 'off-dec', 'vague'])
+      for (const id of [
+        'leave-left',
+        'training-report',
+        'dentist-moved',
+        'off-dec',
+        'vague',
+        'christmas-placeholder',
+      ])
         assert(byId[id]?.pass, `${id}: ${byId[id]?.problems.join('; ')}`);
     } finally {
       Deno.env.delete('ANTHROPIC_BASE_URL');

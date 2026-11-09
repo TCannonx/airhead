@@ -22,6 +22,8 @@ export interface CaseView {
   actions: SortPlan['actions'];
   updates: SortPlan['item_updates'];
   workshop: SortPlan['workshop'];
+  /** Questions asked about this capture (Task 12.1). */
+  follow_ups: SortPlan['follow_ups'];
   status: string | undefined;
   timeZone: string;
 }
@@ -211,9 +213,11 @@ export function evalCases(now: Date): {
     {
       id: 'christmas-placeholder',
       text: 'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
-      meant: 'A weekly Friday placeholder event, and the planning part sent to the Workshop.',
+      meant:
+        'A weekly Friday placeholder event, a planning task with steps due before the first Friday, and specific questions (Phase 12).',
       check: (r) => {
         const ev = r.items.find((i) => i.type === 'event');
+        const plan = r.items.find((i) => i.type === 'task' && i.data.planning === true);
         return [
           ...has(!!ev && /christmas sandwich/i.test(ev.title), 'no Christmas sandwiches event'),
           ...has(
@@ -221,10 +225,13 @@ export function evalCases(now: Date): {
             'first date is not a Friday',
           ),
           ...has(!!ev?.rrule && /BYDAY=FR/.test(ev.rrule), 'does not repeat on Fridays'),
+          ...has(!!plan, 'no planning task with steps'),
           ...has(
-            r.workshop.length > 0 || r.items.some((i) => i.data.workshop === true),
-            'nothing sent to the Workshop',
+            !!plan?.due_at && !!ev?.start_at && Date.parse(plan.due_at) < Date.parse(ev.start_at),
+            'the planning task is not due before the first Friday',
           ),
+          ...has(r.follow_ups.length >= 1, 'no question asked'),
+          ...has(r.follow_ups.length <= 3, 'more than 3 questions'),
         ];
       },
     },

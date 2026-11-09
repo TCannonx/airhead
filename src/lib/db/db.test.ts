@@ -33,6 +33,7 @@ describe('local database', () => {
         'corrections',
         'devices',
         'files',
+        'follow_ups',
         'items',
         'learned_rules',
         'lists',
