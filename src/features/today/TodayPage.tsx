@@ -5,6 +5,7 @@ import LeaveCounter from '../leave/LeaveCounter';
 import LeaveProposals from '../leave/LeaveProposals';
 import LocationPicker from '../work/LocationPicker';
 import ScoutCards from './ScoutCards';
+import QuestionsCard from './QuestionsCard';
 import Suggestions from './Suggestions';
 import { CarryOverCards } from './Top3Controls';
 import { AlsoToday, BriefLines, Top3, TodayEvents } from './TodayParts';
@@ -24,6 +25,7 @@ export default function TodayPage() {
           <AlsoToday view={view} />
         </>
       )}
+      <QuestionsCard />
       <CarryOverCards />
       <LeaveProposals />
       <Suggestions />

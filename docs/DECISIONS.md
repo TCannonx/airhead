@@ -1473,3 +1473,13 @@ Decisions and library versions, newest first.
 - **Christmas placeholder**: "Still need to plan" is now covered by the planning task, so it is no longer leftover and no Workshop note is made for it. The prompt no longer asks for `suggest_workshop` on placeholders, only on ideas worth fleshing out at length. Leftover routing stays for words nothing covers (stand-in: "Call the plumber. Maybe something about the shed").
 - **Answers in the prompt now**: v7 already describes answer captures (`answer_to`, `about`, `final`) so the prompt hash and the evaluator change once; the app starts sending them in 12.2.
 - `sort-batch.v6.ts` was removed: nothing imports it any more.
+
+## Answering questions (Task 12.2, 2026-11-09)
+
+- **Where**: Inbox → "Questions for you" (top of the page, above what AI did), the item page → "Questions about this" (the questions whose `item_id` is that item, without the "From" line), and a Today row "Airhead has N questions" that opens the Inbox. No push, as the owner chose.
+- **Quick answers are buttons**, not `Chip`s: `Chip` with `onClick` is a filter toggle (`aria-pressed`), and a quick answer is an action that sends at once. They look like the small secondary buttons on the same page.
+- **An answer** marks the question answered (with the words) and saves a new unsorted capture with `payload.follow_up_id`, `question`, `item_id` and `round`. It is not passed through the instant rules, so a date in an answer does not make a stray event; sorting reads it.
+- **The batch trusts the server, not the payload**: sort-batch reads the question, round and item from the person's own `follow_ups` and `items` rows. The capture block carries `answer_to`, `about="title | type | when"` and `final="true"` from round 2.
+- **The answer is added to the item's details by the planner itself**, as a `tidy_item` update of `body` ("Who are the sandwiches for? Work" on a new line), applied with the usual freshness check and Undo (the app's Undo now knows `body`). The model only adds what the answer implies (tasks, planning steps, moves, reminders, facts). An answer is never "unplaced", so it never goes to the Workshop.
+- **One more round at most**: questions from an answer are round 2, one question, about the same item; an answer to a round-2 question asks nothing more.
+- **Dismiss** marks the question dismissed and writes a correction (`from_value: {follow_up: question}`, `to_value: {follow_up: "dismissed", reason: "not useful"}`), so it counts in the correction rate and the next batch sees it among recent corrections.

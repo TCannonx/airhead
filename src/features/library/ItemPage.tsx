@@ -13,6 +13,7 @@ import { changeItemType, SORTABLE_TYPES, TYPE_LABELS } from '../../lib/db/sortin
 import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop';
 import type { Item, ItemType } from '../../lib/schemas/records';
 import { Top3Button } from '../today/Top3Controls';
+import { FollowUpList } from '../inbox/FollowUps';
 import { Button } from '../../ui/Button';
 import { buttonClasses } from '../../ui/buttonClasses';
 import { EmptyState } from '../../ui/EmptyState';
@@ -128,6 +129,7 @@ function ItemForm({ item }: { item: Item }) {
           )}
           <TextArea label="Notes" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
         </Card>
+        <FollowUpList itemId={item.id} title="Questions about this" showSource={false} />
         <ReadingDetails item={item} />
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" onClick={() => void onSave()}>

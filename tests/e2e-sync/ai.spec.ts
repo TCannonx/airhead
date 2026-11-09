@@ -311,3 +311,65 @@ test('a note sorting cannot place goes to the Workshop instead of being lost', a
     timeout: 30_000,
   });
 });
+
+test('a question asked on A is answered on B; the new task and details reach A; Dismiss is a correction (Task 12.2)', async ({
+  browser,
+}) => {
+  const email = `e2e-trust-answer-${Date.now()}@example.test`;
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, email);
+  const b = await (await browser.newContext()).newPage();
+  await signIn(b, email);
+
+  await capture(
+    a,
+    'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
+  );
+  await sortNow(a);
+  const askedA = a.getByRole('list', { name: 'Questions for you' });
+  await expect(askedA.getByText('Who are the sandwiches for?')).toBeVisible({ timeout: 60_000 });
+
+  // B gets the questions too, and answers one with a quick answer.
+  await b.getByRole('link', { name: 'Inbox' }).first().click();
+  const askedB = b.getByRole('list', { name: 'Questions for you' });
+  await expect(askedB.getByText('Who are the sandwiches for?')).toBeVisible({ timeout: 60_000 });
+  await askedB.getByRole('button', { name: 'Work' }).click();
+  await expect(b.getByText('Thanks. Airhead will use that the next time it sorts.')).toBeVisible();
+  await b.getByRole('button', { name: 'Sort now' }).click();
+  await expect(b.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 60_000 });
+
+  // A: the answer is in the event's details, and the next step is a new task.
+  await expect(askedA.getByText('Who are the sandwiches for?')).toHaveCount(0, {
+    timeout: 60_000,
+  });
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  const items = a.getByRole('list', { name: 'Items' });
+  await expect(items.getByText('Sandwiches for Work', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  });
+  await items.getByText('Christmas sandwiches', { exact: true }).click();
+  await expect(a.getByLabel('Notes')).toHaveValue(/Who are the sandwiches for\? Work/, {
+    timeout: 30_000,
+  });
+
+  // Dismissing another question on A counts as a correction on the server.
+  await a.getByRole('button', { name: 'Dismiss: How many people?' }).click();
+  await expect(a.getByText('Dismissed. Airhead will ask less like that.')).toBeVisible();
+  const user = userIdFor(email);
+  await expect
+    .poll(
+      () =>
+        sql(
+          `select count(*) from public.corrections
+            where user_id = ${lit(user)} and to_value ->> 'follow_up' = 'dismissed'`,
+        ),
+      { timeout: 60_000 },
+    )
+    .toBe('1');
+  expect(
+    sql(
+      `select status || ' ' || coalesce(answer, '') from public.follow_ups
+        where user_id = ${lit(user)} and question = 'Who are the sandwiches for?'`,
+    ),
+  ).toBe('answered Work');
+});
