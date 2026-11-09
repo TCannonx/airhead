@@ -118,3 +118,100 @@ test('events made on one device stay visible in every view on both devices', asy
   await a.reload();
   await checkViews(a, day, false);
 });
+
+const LONG_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** The Agenda's day heading: "Tomorrow", "Thu 19 Nov", with the year when it is not this year's. */
+function agendaLabel(key: string, today: string) {
+  if (key === addDays(today, 1)) return 'Tomorrow';
+  const label = dayTitle(key);
+  return key.slice(0, 4) === today.slice(0, 4) ? label.slice(0, -5) : label;
+}
+
+/** One day of the Agenda: its text, or '' when the day has nothing on. */
+async function agendaDay(page: Page, key: string, today: string) {
+  const region = page
+    .getByRole('region', { name: 'Agenda' })
+    .getByRole('region', { name: agendaLabel(key, today), exact: true });
+  return (await region.count()) ? ((await region.textContent()) ?? '') : '';
+}
+
+async function expectSwims(page: Page, d: string, today: string, timeout = 15_000) {
+  await expect.poll(() => agendaDay(page, d, today), { timeout }).toContain('Swim');
+  await expect
+    .poll(() => agendaDay(page, addDays(d, 14), today), { timeout })
+    .toContain('Swim gala');
+  await expect.poll(() => agendaDay(page, addDays(d, 7), today)).not.toContain('Swim');
+  const changed = await agendaDay(page, addDays(d, 14), today);
+  expect(changed).toContain('09:00');
+  expect(changed).not.toContain('07:00');
+  await expect.poll(() => agendaDay(page, addDays(d, 21), today)).toContain('07:00');
+}
+
+test('one occurrence deleted and one changed on device A show the same on device B (Task 11.5)', async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const email = `e2e-repeat-${Date.now()}@example.test`;
+  const today = dayKey(new Date());
+  const d = addDays(today, 1);
+
+  const a = await newDevice(browser, 1280, 900);
+  await signIn(a, email);
+  const b = await newDevice(browser, 390, 844);
+  await signIn(b, email);
+  await b.goto('/calendar');
+
+  // Device A: quick add a weekly swim starting tomorrow.
+  await a.goto('/calendar');
+  await a.getByRole('radio', { name: 'Agenda' }).click();
+  const quick = a.getByRole('textbox', { name: 'Quick add' });
+  await quick.fill(`Swim every ${LONG_DAYS[weekday(d)]} 7am`);
+  await expect(a.getByRole('group', { name: 'Quick add preview' })).toContainText(
+    `${dayTitle(d)}, 07:00–08:00`,
+  );
+  await quick.press('Enter');
+  await expect.poll(() => agendaDay(a, addDays(d, 7), today)).toContain('Swim');
+
+  // Delete next week's on its own.
+  const agenda = a.getByRole('region', { name: 'Agenda' });
+  await agenda
+    .getByRole('region', { name: agendaLabel(addDays(d, 7), today), exact: true })
+    .getByRole('button', { name: /Swim/ })
+    .click();
+  let sheet = a.getByRole('dialog', { name: 'Swim' });
+  await sheet.getByRole('button', { name: 'Delete' }).click();
+  await sheet
+    .getByRole('group', { name: 'Delete this repeating event?' })
+    .getByRole('button', { name: 'This event' })
+    .click();
+
+  // Change the one after: a gala at 09:00, this event only.
+  await agenda
+    .getByRole('region', { name: agendaLabel(addDays(d, 14), today), exact: true })
+    .getByRole('button', { name: /Swim/ })
+    .click();
+  sheet = a.getByRole('dialog', { name: 'Swim' });
+  await sheet.getByRole('button', { name: 'Edit' }).click();
+  const form = a.getByRole('form', { name: 'Edit event' });
+  await form.getByLabel('Title').fill('Swim gala');
+  await form.getByLabel('Starts').fill(`${addDays(d, 14)}T09:00`);
+  await form.getByLabel('Ends').fill(`${addDays(d, 14)}T10:00`);
+  await form.getByRole('button', { name: 'Save' }).click();
+  await form
+    .getByRole('group', { name: 'Save for which events?' })
+    .getByRole('button', { name: 'This event' })
+    .click();
+  await expect(form).toHaveCount(0);
+  await expectSwims(a, d, today);
+
+  // Device B, a phone on the Agenda: the sync brings the exception and the change.
+  await expectSwims(b, d, today, 60_000);
+  await b.reload();
+  await expectSwims(b, d, today);
+
+  // Device A after its pull has replaced its rows with the server's copies.
+  await a.reload();
+  await a.getByRole('radio', { name: 'Agenda' }).click();
+  await expectSwims(a, d, today);
+});

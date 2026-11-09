@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { CalEvent } from '../../lib/calendar/sources';
-import type { CalendarData } from '../../lib/calendar/sources';
+import { localDate, type CalendarData } from '../../lib/calendar/sources';
+import { deleteOccurrence } from '../../lib/db/recurring';
 import { eventDays, repeatWords, sourceOf, whenText } from '../../lib/calendar/view';
 import { useDb } from '../../lib/db/context';
 import { softDelete } from '../../lib/db/repository';
@@ -12,6 +13,7 @@ import { Button } from '../../ui/Button';
 import { Sheet } from '../../ui/Sheet';
 import StartNotesButton from '../notes/StartNotesButton';
 import { reminderLabel } from './eventOptions';
+import RepeatChoice from './RepeatChoice';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -37,7 +39,7 @@ export default function EventDetails({
   event: CalEvent;
   data: CalendarData;
   onClose: () => void;
-  onEdit: (item: Item, start: Date) => void;
+  onEdit: (item: Item, start: Date, occurrence?: string) => void;
   onEditLeave: (booking: LeaveBooking) => void;
 }) {
   const db = useDb();
@@ -56,20 +58,27 @@ export default function EventDetails({
     external?.location ||
     null;
   const notes = item?.body || external?.description || booking?.note || null;
+  const occurrence = item?.rrule ? (event.extendedProps.occurrence ?? item.start_at) : null;
+  const changedOne = !!item && typeof item.data.parent_id === 'string' && !item.rrule;
   const prep = item && !isTask && !item.rrule ? prepRulesFor(item.title, data.work.prep_rules) : [];
 
   const footer = item ? (
-    confirming ? (
+    confirming && item.rrule && occurrence ? (
+      <RepeatChoice
+        question="Delete this repeating event?"
+        destructive
+        onCancel={() => setConfirming(false)}
+        onChoose={(scope) => void deleteOccurrence(db, item, occurrence, scope, tz).then(onClose)}
+      />
+    ) : confirming ? (
       <div className="flex w-full flex-wrap items-center justify-end gap-2">
-        <p className="mr-auto text-footnote">
-          {item.rrule ? 'Delete this event and all its repeats?' : 'Delete this event?'}
-        </p>
+        <p className="mr-auto text-footnote">Delete this event?</p>
         <Button onClick={() => setConfirming(false)}>Cancel</Button>
         <Button
           variant="destructive"
           onClick={() => void softDelete(db, 'items', item.id).then(onClose)}
         >
-          {item.rrule ? 'Delete all' : 'Delete'}
+          Delete
         </Button>
       </div>
     ) : (
@@ -93,7 +102,13 @@ export default function EventDetails({
         )}
         <Button
           variant="primary"
-          onClick={() => onEdit(item, new Date(item.start_at ?? event.start))}
+          onClick={() =>
+            onEdit(
+              item,
+              new Date(occurrence ?? item.start_at ?? event.start),
+              occurrence ?? undefined,
+            )
+          }
         >
           Edit
         </Button>
@@ -109,7 +124,12 @@ export default function EventDetails({
     <Sheet open title={event.title} onClose={onClose} footer={footer}>
       <dl aria-label="Event details">
         <Row label="When">{whenText(event, tz)}</Row>
-        {item?.rrule && <Row label="Repeats">{repeatWords(item.rrule)}</Row>}
+        {item?.rrule && (
+          <Row label="Repeats">
+            {repeatWords(item.rrule, item.start_at ? localDate(item.start_at, tz) : null)}
+          </Row>
+        )}
+        {changedOne && <Row label="Repeats">Changed on this date only</Row>}
         <Row label="Calendar">
           <span className="inline-flex items-center gap-2">
             <span

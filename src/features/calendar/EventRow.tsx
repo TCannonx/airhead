@@ -8,12 +8,15 @@ export default function EventRow({
   time,
   endTime,
   subtitle,
+  repeat,
   onOpen,
 }: {
   event: CalEvent;
   time: string;
   endTime?: string | null;
   subtitle?: string | null;
+  /** The repeat rule in words ("Every Thursday"), shown under the title. */
+  repeat?: string | null;
   onOpen: (event: CalEvent) => void;
 }) {
   const repeats = !!event.extendedProps.occurrence;
@@ -42,14 +45,16 @@ export default function EventRow({
           <span className="flex items-center gap-1.5">
             <span className="truncate text-body">{event.title}</span>
             {repeats && (
-              <span title="Repeats" className="shrink-0 text-fg-subtle">
+              <span title={repeat ?? 'Repeats'} className="shrink-0 text-fg-subtle">
                 <Icon name="repeat" className="size-4" />
-                <span className="sr-only">, repeats</span>
+                {!repeat && <span className="sr-only">, repeats</span>}
               </span>
             )}
           </span>
-          {subtitle && (
-            <span className="block truncate text-footnote text-fg-muted">{subtitle}</span>
+          {(subtitle || repeat) && (
+            <span className="block truncate text-footnote text-fg-muted">
+              {[subtitle, repeat].filter(Boolean).join(' · ')}
+            </span>
           )}
         </span>
       </button>

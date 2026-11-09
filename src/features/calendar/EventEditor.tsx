@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { localDate, localMidnight } from '../../lib/calendar/sources';
+import { addDays } from '../../lib/holidays/easter';
 import { beforeText, prepRulesFor, readWorkSettings } from '../../lib/work/settings';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -25,6 +26,9 @@ import {
   type RepeatForm,
 } from '../../lib/calendar/repeat';
 import { REMINDERS, REPEATS } from './eventOptions';
+import RepeatChoice from './RepeatChoice';
+import type { OccurrenceChanges, Scope } from '../../lib/calendar/occurrence';
+import { deleteOccurrence, editOccurrence } from '../../lib/db/recurring';
 import { deviceTimeZone } from './useCalendarData';
 
 /** What the editor opens with: an existing item, or a new event's times. */
@@ -37,6 +41,8 @@ export interface EventDraft {
   title?: string;
   rrule?: string | null;
   calendar?: 'personal' | 'us';
+  /** The occurrence of a repeating item being edited (its original start, ISO). */
+  occurrence?: string;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -46,15 +52,27 @@ const toLocalInput = (d: Date) =>
 
 function initialState(d: EventDraft, tz: string) {
   const item = d.item;
-  const start = item?.start_at ? new Date(item.start_at) : d.start;
+  // One occurrence of a repeating event shows that occurrence's own times.
+  const shift =
+    item?.start_at && d.occurrence ? Date.parse(d.occurrence) - Date.parse(item.start_at) : 0;
+  const start = item?.start_at ? new Date(Date.parse(item.start_at) + shift) : d.start;
   const allDay = item ? item.all_day : d.allDay;
   const end = item?.end_at
-    ? new Date(item.end_at)
+    ? new Date(Date.parse(item.end_at) + shift)
     : (d.end ?? (allDay ? null : new Date(start.getTime() + 3_600_000)));
   // A new all-day selection's end is exclusive; the form shows the last day.
   const lastDay = allDay
     ? item
-      ? end && localDate(end, tz)
+      ? item.start_at && item.end_at
+        ? // Same number of days as the series, counted in local days (clock changes).
+          addDays(
+            localDate(start, tz),
+            Math.round(
+              (Date.parse(localDate(item.end_at, tz)) - Date.parse(localDate(item.start_at, tz))) /
+                86_400_000,
+            ),
+          )
+        : null
       : end && localDate(new Date(end.getTime() - 86_400_000), tz)
     : null;
   const rrule = item ? item.rrule : (d.rrule ?? null);
@@ -92,6 +110,7 @@ export default function EventEditor({
   const settings = useLiveQuery(() => db.settings.get(user?.id ?? ''), [db, user?.id]);
   const tz = deviceTimeZone();
   const [f, setF] = useState(() => initialState(draft, tz));
+  const [choosing, setChoosing] = useState<'save' | 'delete' | null>(null);
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
   const existing = draft.item;
   const isTask = existing?.type === 'task';
@@ -123,6 +142,24 @@ export default function EventEditor({
   };
   const valid = f.title.trim() && (f.allDay || !Number.isNaN(Date.parse(f.startTime)));
 
+  const occurrenceChanges = (): OccurrenceChanges => ({
+    title: f.title.trim(),
+    body: f.body.trim() || null,
+    ...times(),
+    calendar: f.calendar,
+    rrule: rule,
+    data: { location: f.location.trim(), reminder_minutes: f.reminder },
+  });
+
+  async function onChoose(scope: Scope) {
+    const series = existing;
+    const occurrence = draft.occurrence;
+    if (!series || !occurrence) return;
+    if (choosing === 'delete') await deleteOccurrence(db, series, occurrence, scope, tz);
+    else await editOccurrence(db, series, occurrence, scope, occurrenceChanges(), tz);
+    onClose();
+  }
+
   async function onSave() {
     if (!valid) return;
     const fields = {
@@ -131,6 +168,10 @@ export default function EventEditor({
       ...times(),
       ...(isTask ? {} : { calendar: f.calendar, rrule: rule }),
     };
+    if (existing?.rrule && draft.occurrence && !isTask) {
+      setChoosing('save');
+      return;
+    }
     if (existing) {
       await update(db, 'items', existing.id, {
         ...fields,
@@ -334,50 +375,66 @@ export default function EventEditor({
         onChange={(e) => set('location', e.target.value)}
       />
       <TextArea label="Notes" value={f.body} onChange={(e) => set('body', e.target.value)} />
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <Button type="submit" variant="primary" disabled={!valid}>
-          Save
-        </Button>
-        {!existing && f.allDay && onBookLeave && (
-          <Button
-            variant="plain"
-            onClick={() =>
-              onBookLeave(f.startDate, f.endDate < f.startDate ? f.startDate : f.endDate)
-            }
-          >
-            Book as leave
+      {choosing ? (
+        <RepeatChoice
+          question={
+            choosing === 'delete' ? 'Delete this repeating event?' : 'Save for which events?'
+          }
+          destructive={choosing === 'delete'}
+          allowThis={choosing === 'delete' || rule === existing?.rrule}
+          onCancel={() => setChoosing(null)}
+          onChoose={(scope) => void onChoose(scope)}
+        />
+      ) : (
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button type="submit" variant="primary" disabled={!valid}>
+            Save
           </Button>
-        )}
-        {existing && !isTask && (
-          <StartNotesButton
-            eventKey={existing.id}
-            title={existing.title}
-            date={f.allDay ? f.startDate : f.startTime.slice(0, 10)}
-            className="inline-flex min-h-11 items-center rounded-control px-4 font-semibold text-accent hover:bg-accent-soft"
-          />
-        )}
-        {existing && !isTask && (
-          <Button
-            variant="destructive"
-            onClick={() => void softDelete(db, 'items', existing.id).then(onClose)}
-          >
-            Delete
-          </Button>
-        )}
-        {existing && isTask && (
-          <Button
-            onClick={() =>
-              void update(db, 'items', existing.id, {
-                start_at: null,
-                end_at: null,
-                all_day: false,
-              }).then(onClose)
-            }
-          >
-            Remove from calendar
-          </Button>
-        )}
-      </div>
+          {!existing && f.allDay && onBookLeave && (
+            <Button
+              variant="plain"
+              onClick={() =>
+                onBookLeave(f.startDate, f.endDate < f.startDate ? f.startDate : f.endDate)
+              }
+            >
+              Book as leave
+            </Button>
+          )}
+          {existing && !isTask && (
+            <StartNotesButton
+              eventKey={existing.id}
+              title={existing.title}
+              date={f.allDay ? f.startDate : f.startTime.slice(0, 10)}
+              className="inline-flex min-h-11 items-center rounded-control px-4 font-semibold text-accent hover:bg-accent-soft"
+            />
+          )}
+          {existing && !isTask && (
+            <Button
+              variant="destructive"
+              onClick={() =>
+                existing.rrule && draft.occurrence
+                  ? setChoosing('delete')
+                  : void softDelete(db, 'items', existing.id).then(onClose)
+              }
+            >
+              Delete
+            </Button>
+          )}
+          {existing && isTask && (
+            <Button
+              onClick={() =>
+                void update(db, 'items', existing.id, {
+                  start_at: null,
+                  end_at: null,
+                  all_day: false,
+                }).then(onClose)
+              }
+            >
+              Remove from calendar
+            </Button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

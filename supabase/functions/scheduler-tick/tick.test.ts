@@ -382,6 +382,16 @@ Deno.test(
     // Planning again doesn't duplicate.
     await runTick(at('2026-10-27T09:00:00Z'), m.store, m.send);
     assertEquals(m.nudges.filter((x) => x.kind === 'event_reminder').length, 1);
+    // An occurrence deleted or changed on its own (Task 11.5) is skipped.
+    assertEquals(
+      occurrencesBetween(
+        { ...training, data: { exdates: ['2026-10-27T19:00:00.000Z'] } },
+        at('2026-10-26T00:00:00Z'),
+        at('2026-11-04T00:00:00Z'),
+        'Europe/Dublin',
+      ).map((d) => d.toISOString()),
+      ['2026-11-03T19:00:00.000Z'],
+    );
   },
 );
 

@@ -140,6 +140,11 @@ export function occurrencesBetween(e: RecurringRow, from: Date, to: Date, tz: st
     return [];
   }
   const rule = new RRule({ ...options, dtstart: new Date(Date.UTC(y, mo - 1, d, h, m)) });
+  // Occurrences deleted or changed one at a time (Task 11.5): no reminder from the series.
+  const raw = e.data.exdates;
+  const skip = new Set(
+    (Array.isArray(raw) ? raw : []).map((x) => (typeof x === 'string' ? Date.parse(x) : NaN)),
+  );
   // Floating local times: find candidates around the window, then convert each to an instant.
   const pad = 36 * 3_600_000;
   return rule
@@ -158,7 +163,7 @@ export function occurrencesBetween(e: RecurringRow, from: Date, to: Date, tz: st
         (Number(got.slice(0, 2)) * 60 + Number(got.slice(3, 5)));
       return new Date(guess.getTime() + diff * 60_000);
     })
-    .filter((t) => t > from && t <= to);
+    .filter((t) => t > from && t <= to && !skip.has(t.getTime()));
 }
 
 /** Extra once-a-day jobs that live in other functions (the morning brief, Task 5.6). */

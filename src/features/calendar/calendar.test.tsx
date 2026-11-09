@@ -95,7 +95,7 @@ describe('agenda (Task 11.6)', () => {
     const quiz = within(tomorrow).getByRole('button', { name: /Quiz/ });
     expect(quiz).toHaveTextContent('20:00');
     expect(quiz).toHaveTextContent('23:00');
-    expect(quiz).toHaveAccessibleName(/repeats/);
+    expect(quiz).toHaveAccessibleName(/Every \w+day/);
     expect(quiz).toHaveTextContent('The Local');
     const birthday = within(agenda).getByRole('button', { name: /Niamh’s Birthday/ });
     expect(birthday).toHaveTextContent('All day');
@@ -107,6 +107,88 @@ describe('agenda (Task 11.6)', () => {
   it('says so when there is nothing coming up', async () => {
     renderCalendar();
     expect(await screen.findByText('Nothing in the next 30 days')).toBeInTheDocument();
+  });
+});
+
+const allItems = async () => {
+  const d = db();
+  const all = await d.items.toArray();
+  d.close();
+  return all;
+};
+
+describe('repeating events: this one, this and following, all (Task 11.5)', () => {
+  it('Delete asks which; "This event" removes only that occurrence', async () => {
+    await seed();
+    const user = userEvent.setup();
+    renderCalendar();
+    await user.click(await firstQuiz());
+    const sheet = await screen.findByRole('dialog', { name: 'Quiz' });
+    await user.click(within(sheet).getByRole('button', { name: 'Delete' }));
+    const choice = within(sheet).getByRole('group', { name: 'Delete this repeating event?' });
+    expect(
+      within(choice)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Cancel', 'This event', 'This and following', 'All events']);
+    await user.click(within(choice).getByRole('button', { name: 'This event' }));
+    const first = at(addDays(today, 1), 20);
+    await waitFor(async () => expect((await item(QUIZ))?.data.exdates).toEqual([first]));
+    expect((await item(QUIZ))?.deleted_at).toBeNull();
+    const agenda = await screen.findByRole('region', { name: 'Agenda' });
+    // Tomorrow had only the quiz: the day is gone from the agenda; next week's is there.
+    await waitFor(() =>
+      expect(within(agenda).queryByRole('region', { name: 'Tomorrow' })).not.toBeInTheDocument(),
+    );
+    expect(within(agenda).getAllByRole('button', { name: /Quiz/ }).length).toBeGreaterThan(0);
+  });
+
+  it('editing one occurrence asks which; "This event" makes a one-off linked to the series', async () => {
+    await seed();
+    const user = userEvent.setup();
+    renderCalendar();
+    await user.click(await firstQuiz());
+    const sheet = await screen.findByRole('dialog', { name: 'Quiz' });
+    await user.click(within(sheet).getByRole('button', { name: 'Edit' }));
+    const form = await screen.findByRole('form', { name: 'Edit event' });
+    const title = within(form).getByLabelText('Title');
+    await user.clear(title);
+    await user.type(title, 'Quiz final');
+    await user.click(within(form).getByRole('button', { name: 'Save' }));
+    const choice = within(form).getByRole('group', { name: 'Save for which events?' });
+    await user.click(within(choice).getByRole('button', { name: 'This event' }));
+    await waitFor(async () =>
+      expect((await allItems()).find((i) => i.title === 'Quiz final')).toMatchObject({
+        rrule: null,
+        start_at: at(addDays(today, 1), 20),
+        data: {
+          location: 'The Local',
+          reminder_minutes: '60',
+          parent_id: QUIZ,
+          recurrence_id: at(addDays(today, 1), 20),
+        },
+      }),
+    );
+    expect((await item(QUIZ))?.title).toBe('Quiz');
+  });
+
+  it('a changed repeat cannot apply to one event only', async () => {
+    await seed();
+    const user = userEvent.setup();
+    renderCalendar();
+    await user.click(await firstQuiz());
+    await user.click(
+      within(await screen.findByRole('dialog', { name: 'Quiz' })).getByRole('button', {
+        name: 'Edit',
+      }),
+    );
+    const form = await screen.findByRole('form', { name: 'Edit event' });
+    await user.selectOptions(within(form).getByLabelText('Repeats'), 'FREQ=DAILY');
+    await user.click(within(form).getByRole('button', { name: 'Save' }));
+    const choice = within(form).getByRole('group', { name: 'Save for which events?' });
+    expect(within(choice).queryByRole('button', { name: 'This event' })).not.toBeInTheDocument();
+    await user.click(within(choice).getByRole('button', { name: 'All events' }));
+    await waitFor(async () => expect((await item(QUIZ))?.rrule).toBe('FREQ=DAILY'));
   });
 });
 
@@ -127,7 +209,7 @@ describe('event details (Task 11.3)', () => {
     await user.click(await firstQuiz());
     const sheet = await screen.findByRole('dialog', { name: 'Quiz' });
     expect(sheet).toHaveTextContent('20:00–23:00');
-    expect(sheet).toHaveTextContent('Every week');
+    expect(sheet).toHaveTextContent(/Every \w+day/);
     expect(sheet).toHaveTextContent('Personal');
     expect(sheet).toHaveTextContent('1 hour before');
     expect(sheet).toHaveTextContent('The Local');

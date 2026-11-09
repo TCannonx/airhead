@@ -321,7 +321,7 @@ test.describe('easier viewing (Task 11.3)', () => {
     await page.locator('.ah-calendar').getByText('Quiz', { exact: true }).click();
     const sheet = page.getByRole('dialog', { name: 'Quiz' });
     await expect(sheet).toContainText('Thu 16 Jul 2026, 20:00–23:00');
-    await expect(sheet).toContainText('Every week');
+    await expect(sheet).toContainText('Every Thursday');
     await expect(sheet).toContainText('Personal');
     await expect(sheet).toContainText('The Local');
     await sheet.getByRole('button', { name: 'Edit' }).click();
@@ -485,6 +485,92 @@ test.describe('faster adding (Task 11.4)', () => {
       await page.getByRole('button', { name: 'Add event' }).click();
       form = page.getByRole('form', { name: 'New event' });
       await expect(form.getByLabel('Starts')).toHaveValue('2026-07-21T09:00');
+    });
+  });
+});
+
+test.describe('repeating events (Task 11.5)', () => {
+  test('desktop: drag one occurrence asks which; "This and following" splits the series; delete one', async ({
+    page,
+  }) => {
+    await page.goto('/calendar');
+    await seedEvents(page, [QUIZ]);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(period(page, '20–26 Jul 2026')).toBeVisible();
+    const target = await slot(page, '2026-07-24', '20:00:00');
+    const event = page.locator('.ah-calendar').getByText('Quiz', { exact: true });
+    const box = await event.boundingBox();
+    if (!box) throw new Error('Quiz not drawn');
+    await drag(page, { x: box.x + box.width / 2, y: box.y + 4 }, target);
+    const sheet = page.getByRole('dialog', { name: 'Move repeating event' });
+    const choice = sheet.getByRole('group', { name: 'Move which events?' });
+    await expect(choice.getByRole('button')).toHaveText([
+      'Cancel',
+      'This event',
+      'This and following',
+      'All events',
+    ]);
+    await choice.getByRole('button', { name: 'This and following' }).click();
+    await expect
+      .poll(async () => (await readItems(page)).find((i) => i.id === QUIZ.id)?.rrule)
+      .toBe('FREQ=WEEKLY;UNTIL=20260722T235959Z');
+    const next = (await readItems(page)).find((i) => i.title === 'Quiz' && i.id !== QUIZ.id);
+    expect(next).toMatchObject({ start_at: '2026-07-24T19:00:00.000Z', rrule: 'FREQ=WEEKLY' });
+
+    // Back a week: delete the 16 July one on its own.
+    await page.getByRole('button', { name: 'Previous' }).click();
+    await page.locator('.ah-calendar').getByText('Quiz', { exact: true }).click();
+    const details = page.getByRole('dialog', { name: 'Quiz' });
+    await expect(details).toContainText('Every Thursday until 22 Jul');
+    await details.getByRole('button', { name: 'Delete' }).click();
+    await details
+      .getByRole('group', { name: 'Delete this repeating event?' })
+      .getByRole('button', { name: 'This event' })
+      .click();
+    await expect
+      .poll(async () => (await readItems(page)).find((i) => i.id === QUIZ.id)?.data?.exdates)
+      .toEqual(['2026-07-16T19:00:00.000Z']);
+    await expect(page.locator('.ah-calendar').getByText('Quiz', { exact: true })).toHaveCount(0);
+  });
+
+  test.describe('phone', () => {
+    test.use({ hasTouch: true });
+
+    test('edit all from one occurrence, then delete this and following', async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/calendar');
+      await seedEvents(page, [QUIZ]);
+      const agenda = page.getByRole('region', { name: 'Agenda' });
+      await agenda
+        .getByRole('region', { name: 'Tomorrow' })
+        .getByRole('button', { name: /Quiz/ })
+        .click();
+      const sheet = page.getByRole('dialog', { name: 'Quiz' });
+      await expect(sheet).toContainText('Every Thursday');
+      await sheet.getByRole('button', { name: 'Edit' }).click();
+      const form = page.getByRole('form', { name: 'Edit event' });
+      await form.getByLabel('Title').fill('Quiz night');
+      await form.getByRole('button', { name: 'Save' }).click();
+      await form
+        .getByRole('group', { name: 'Save for which events?' })
+        .getByRole('button', { name: 'All events' })
+        .click();
+      await expect(agenda.getByRole('region', { name: 'Tomorrow' })).toContainText('Quiz night');
+      await expect(agenda.getByRole('region', { name: 'Thu 23 Jul' })).toContainText('Quiz night');
+
+      await agenda
+        .getByRole('region', { name: 'Thu 23 Jul' })
+        .getByRole('button', { name: /Quiz night/ })
+        .click();
+      const second = page.getByRole('dialog', { name: 'Quiz night' });
+      await second.getByRole('button', { name: 'Delete' }).click();
+      await second
+        .getByRole('group', { name: 'Delete this repeating event?' })
+        .getByRole('button', { name: 'This and following' })
+        .click();
+      await expect(agenda.getByRole('region', { name: 'Thu 23 Jul' })).toHaveCount(0);
+      await expect(agenda.getByRole('region', { name: 'Tomorrow' })).toContainText('Quiz night');
+      await expect(agenda.getByRole('button', { name: /Quiz night/ })).toHaveCount(1);
     });
   });
 });

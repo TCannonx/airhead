@@ -134,7 +134,8 @@ describe('recurring items', () => {
       id: `${training.id}|2026-10-27T19:00:00.000Z`,
       start: '2026-10-27T19:00:00.000Z',
       end: '2026-10-27T20:30:00.000Z',
-      editable: false,
+      // Dragging one occurrence asks this one / following / all (Task 11.5).
+      editable: true,
     });
   });
 

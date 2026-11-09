@@ -19,6 +19,11 @@ export interface IcsEvent {
   localEnd?: string;
   tzid?: string;
   rrule?: string | null;
+  /**
+   * Exceptions of a recurring event, already in the start's form: YYYYMMDD
+   * (all-day), a wall-clock stamp in `tzid`, or a UTC stamp.
+   */
+  exdates?: string[];
   /** TRANSPARENT for all-day markers (location, Off) so they don't block time. */
   transparent?: boolean;
 }
@@ -113,6 +118,11 @@ export function buildCalendar(name: string, events: IcsEvent[]): string {
       if (e.end) lines.push(`DTEND:${utcStamp(e.end)}`);
     }
     if (e.rrule) lines.push(`RRULE:${e.rrule.replace(/^RRULE:/, '')}`);
+    for (const x of e.rrule ? (e.exdates ?? []) : []) {
+      if (e.allDay) lines.push(`EXDATE;VALUE=DATE:${x}`);
+      else if (e.localStart && e.tzid) lines.push(`EXDATE;TZID=${e.tzid}:${x}`);
+      else lines.push(`EXDATE:${x}`);
+    }
     lines.push(`SUMMARY:${escapeText(e.summary)}`);
     if (e.location) lines.push(`LOCATION:${escapeText(e.location)}`);
     if (e.description) lines.push(`DESCRIPTION:${escapeText(e.description)}`);
