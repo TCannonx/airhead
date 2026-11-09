@@ -58,13 +58,26 @@ function readItems(page: Page) {
 
 /** Puts events straight into the device database, then reloads so the app reads them. */
 async function seedEvents(page: Page, rows: Record<string, unknown>[]) {
+  // Write only once the app has made its database: opening it first would
+  // create an empty one without the items table, and the write would never finish.
+  await expect(page.getByRole('heading', { name: 'Calendar', level: 1 })).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async (name) => (await indexedDB.databases()).some((d) => d.name === name),
+        `airhead-${LOCAL_USER}`,
+      ),
+    )
+    .toBe(true);
   await page.evaluate(
     ([user, rows]) =>
-      new Promise<void>((resolve) => {
+      new Promise<void>((resolve, reject) => {
         const req = indexedDB.open(`airhead-${user}`);
+        req.onerror = () => reject(new Error('open failed'));
         req.onsuccess = () => {
           const t = new Date().toISOString();
           const tx = req.result.transaction('items', 'readwrite');
+          tx.onerror = () => reject(new Error('write failed'));
           for (const r of rows)
             tx.objectStore('items').put({
               user_id: user,
