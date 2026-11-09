@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { euro } from '../../lib/ai/usage';
+import { Button } from '../../ui/Button';
 
 /**
  * Single-series daily bar chart (one hue, no legend: the title names it).
@@ -27,26 +28,22 @@ export default function DailyBars({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200">{title}</h3>
-        <button
-          type="button"
-          className="text-xs text-slate-500 underline"
-          onClick={() => setAsTable((t) => !t)}
-        >
+        <h3 className="text-footnote font-medium text-fg-muted">{title}</h3>
+        <Button variant="plain" size="sm" onClick={() => setAsTable((t) => !t)}>
           {asTable ? 'Show as chart' : 'Show as table'}
-        </button>
+        </Button>
       </div>
       {asTable ? (
-        <table aria-label={title} className="w-full text-sm">
+        <table aria-label={title} className="w-full text-footnote">
           <thead>
-            <tr className="text-left text-xs text-slate-500">
+            <tr className="text-left text-caption text-fg-muted">
               <th className="py-1 font-medium">Day</th>
               <th className="py-1 text-right font-medium">Spend</th>
             </tr>
           </thead>
           <tbody>
             {days.map((d) => (
-              <tr key={d.date} className="border-t border-slate-100 dark:border-slate-800">
+              <tr key={d.date} className="border-t border-border/60">
                 <td className="py-1">{d.date}</td>
                 <td className="py-1 text-right tabular-nums">{euro(d.cost)}</td>
               </tr>
@@ -59,7 +56,7 @@ export default function DailyBars({
             role="img"
             aria-label={`${title}: ${days.length} days, highest ${euro(max === 0.0001 ? 0 : max)}`}
             viewBox={`0 0 ${W} ${H}`}
-            className="h-36 w-full text-indigo-600 dark:text-indigo-400"
+            className="h-36 w-full text-accent"
             preserveAspectRatio="none"
             onMouseLeave={() => setHover(null)}
           >
@@ -68,7 +65,7 @@ export default function DailyBars({
               x2={W}
               y1={H - pad.bottom}
               y2={H - pad.bottom}
-              className="stroke-slate-200 dark:stroke-slate-700"
+              className="stroke-border"
               strokeWidth={1}
             />
             {days.map((d, i) => {
@@ -99,17 +96,17 @@ export default function DailyBars({
                 </g>
               );
             })}
-            <text x={0} y={H - 4} className="fill-slate-400 text-[10px]">
+            <text x={0} y={H - 4} className="fill-fg-subtle text-[10px]">
               {days[0]?.date.slice(8)}
             </text>
-            <text x={W} y={H - 4} textAnchor="end" className="fill-slate-400 text-[10px]">
+            <text x={W} y={H - 4} textAnchor="end" className="fill-fg-subtle text-[10px]">
               {days.at(-1)?.date.slice(8)}
             </text>
           </svg>
           {active && (
             <div
               role="tooltip"
-              className="pointer-events-none absolute top-0 rounded-md bg-slate-900 px-2 py-1 text-xs text-white shadow dark:bg-slate-100 dark:text-slate-900"
+              className="pointer-events-none absolute top-0 rounded-md bg-fg px-2 py-1 text-caption text-canvas shadow"
               style={{ left: `${((hover ?? 0) / Math.max(days.length, 1)) * 100}%` }}
             >
               {active.date}: {euro(active.cost)}

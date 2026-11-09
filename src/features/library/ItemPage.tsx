@@ -13,9 +13,13 @@ import { changeItemType, SORTABLE_TYPES, TYPE_LABELS } from '../../lib/db/sortin
 import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop';
 import type { Item, ItemType } from '../../lib/schemas/records';
 import { Top3Button } from '../today/Top3Controls';
-
-const field =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900';
+import { Button } from '../../ui/Button';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { EmptyState } from '../../ui/EmptyState';
+import { Card } from '../../ui/Card';
+import { Select } from '../../ui/Select';
+import { TextArea } from '../../ui/TextArea';
+import { TextField } from '../../ui/TextField';
 
 /** "Mon 23 Nov, 09:00" in the device's zone. */
 function dueLabel(at: string): string {
@@ -39,11 +43,17 @@ export default function ItemPage() {
     return <Navigate to={`/notes/${item.id}`} replace />;
   if (!item || item.deleted_at) {
     return (
-      <Page title="Not found">
-        <p className="text-slate-500">This item doesn&apos;t exist or is in the Trash.</p>
-        <Link to="/library" className="text-indigo-600 underline">
-          Back to Library
-        </Link>
+      <Page title="Not found" back={{ to: '/library', label: 'Library' }}>
+        <EmptyState
+          icon="library"
+          title="Nothing here"
+          message="This item doesn’t exist or is in the Trash."
+          action={
+            <Link to="/library" className={buttonClasses('secondary', 'md')}>
+              Back to Library
+            </Link>
+          }
+        />
       </Page>
     );
   }
@@ -71,97 +81,71 @@ function ItemForm({ item }: { item: Item }) {
     void navigate('/library');
   }
 
+  const meta = 'text-footnote text-fg-muted';
   return (
-    <Page title={item.title || 'Item'}>
-      <div className="space-y-4">
-        <label className="block space-y-1 text-sm font-medium">
-          <span>Title</span>
-          <input className={field} value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label className="block space-y-1 text-sm font-medium">
-          <span>Type</span>
-          <select
-            className={field}
+    <Page title={item.title || 'Item'} back={{ to: '/library', label: 'Library' }}>
+      <div className="space-y-5">
+        <Card className="space-y-4">
+          <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Select
+            label="Type"
             value={type}
             onChange={(e) => setType(e.target.value as ItemType)}
-          >
-            {SORTABLE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </label>
-        {item.type === 'event' && item.start_at && (
-          <p className="text-sm text-slate-500">
-            When: {eventLabel(item)}
-            {endLabel(item)}
-            {item.rrule && ' · repeats'}
-          </p>
-        )}
-        {item.type === 'event' &&
-          !item.rrule &&
-          prepRulesFor(item.title, readWorkSettings(settings).prep_rules).map((r) => (
-            <p key={r.id} className="text-sm text-slate-500">
-              Before this: {r.reminder} ({beforeText(r.minutes_before)})
-            </p>
-          ))}
-        {item.type === 'task' && (item.due_at || item.rrule) && (
-          <p className="text-sm text-slate-500">
-            {item.due_at && `Due: ${dueLabel(item.due_at)}`}
-            {item.due_at && item.rrule && ' · '}
-            {item.rrule && `repeats ${repeatText(item.rrule)}`}
-          </p>
-        )}
-        {typeof item.data.url === 'string' && (
-          <p className="text-sm">
-            <a
-              href={item.data.url}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="text-indigo-600 underline"
-            >
-              {item.data.url}
-            </a>
-          </p>
-        )}
-        <ReadingDetails item={item} />
-        <label className="block space-y-1 text-sm font-medium">
-          <span>Notes</span>
-          <textarea
-            className={field}
-            rows={6}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
+            options={SORTABLE_TYPES.map((t) => ({ value: t, label: TYPE_LABELS[t] }))}
           />
-        </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-            onClick={() => void onSave()}
-          >
+          {item.type === 'event' && item.start_at && (
+            <p className={meta}>
+              When: {eventLabel(item)}
+              {endLabel(item)}
+              {item.rrule && ' · repeats'}
+            </p>
+          )}
+          {item.type === 'event' &&
+            !item.rrule &&
+            prepRulesFor(item.title, readWorkSettings(settings).prep_rules).map((r) => (
+              <p key={r.id} className={meta}>
+                Before this: {r.reminder} ({beforeText(r.minutes_before)})
+              </p>
+            ))}
+          {item.type === 'task' && (item.due_at || item.rrule) && (
+            <p className={meta}>
+              {item.due_at && `Due: ${dueLabel(item.due_at)}`}
+              {item.due_at && item.rrule && ' · '}
+              {item.rrule && `repeats ${repeatText(item.rrule)}`}
+            </p>
+          )}
+          {typeof item.data.url === 'string' && (
+            <p className="text-footnote break-all">
+              <a
+                href={item.data.url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-accent underline"
+              >
+                {item.data.url}
+              </a>
+            </p>
+          )}
+          <TextArea label="Notes" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
+        </Card>
+        <ReadingDetails item={item} />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={() => void onSave()}>
             Save
-          </button>
-          <button
-            type="button"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-            onClick={() => void onDelete()}
-          >
-            Delete
-          </button>
-          <button
-            type="button"
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          </Button>
+          <Button
             onClick={() =>
               void (inWorkshop(item) ? leaveWorkshop(db, item) : sendToWorkshop(db, item))
             }
           >
             {inWorkshop(item) ? 'Take out of Workshop' : 'Send to Workshop'}
-          </button>
+          </Button>
+          <Button variant="destructive" className="ml-auto" onClick={() => void onDelete()}>
+            Delete
+          </Button>
         </div>
         {inWorkshop(item) && (
-          <Link to={`/workshop/${item.id}`} className="text-sm text-indigo-600 hover:underline">
+          <Link to={`/workshop/${item.id}`} className={buttonClasses('plain', 'sm', '-ml-3')}>
             Open in the Workshop
           </Link>
         )}

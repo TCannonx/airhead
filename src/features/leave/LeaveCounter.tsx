@@ -45,29 +45,27 @@ export default function LeaveCounter({ detailed = false }: { detailed?: boolean 
   return (
     <div aria-label="Leave balance">
       <p className="text-3xl font-semibold">
-        {b.remaining} <span className="text-base font-normal text-slate-500">days left</span>
+        {b.remaining} <span className="text-base font-normal text-fg-muted">days left</span>
       </p>
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
+      <p className="mb-3 text-footnote text-fg-muted">
         {paceText(b)} · leave year {date(b.year.start)} – {date(b.year.end)}
       </p>
-      <dl className="grid max-w-sm grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
+      <dl className="grid max-w-sm grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-footnote">
         {rows.map(([label, n]) => (
           <div key={label} className="contents">
-            <dt className="text-slate-600 dark:text-slate-300">{label}</dt>
+            <dt className="text-fg-muted">{label}</dt>
             <dd className="text-right tabular-nums">
               {n > 0 && label !== 'Entitlement' ? `+${n}` : n}
             </dd>
           </div>
         ))}
-        <dt className="border-t border-slate-200 pt-1 font-medium dark:border-slate-800">
-          Remaining
-        </dt>
-        <dd className="border-t border-slate-200 pt-1 text-right font-medium tabular-nums dark:border-slate-800">
+        <dt className="border-t border-border/60 pt-1 font-medium">Remaining</dt>
+        <dd className="border-t border-border/60 pt-1 text-right font-medium tabular-nums">
           {b.remaining}
         </dd>
       </dl>
       {leaveWarnings(b).map((w) => (
-        <p key={w} role="note" className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+        <p key={w} role="note" className="mt-2 text-footnote text-warning">
           {w}
         </p>
       ))}

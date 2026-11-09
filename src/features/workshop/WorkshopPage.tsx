@@ -10,9 +10,12 @@ import { useOnline } from '../../lib/useOnline';
 import { FLESH_OUT_COST_TEXT } from '../../lib/workshop/cost';
 import NextSteps from './NextSteps';
 import SessionPanel from './SessionPanel';
-
-const button =
-  'rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50';
+import { Button } from '../../ui/Button';
+import { Chip } from '../../ui/Chip';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { Card } from '../../ui/Card';
+import { EmptyState } from '../../ui/EmptyState';
+import { Section } from '../../ui/GroupedList';
 
 function DraftView({ draft }: { draft: Draft }) {
   const c = draft.content;
@@ -22,7 +25,7 @@ function DraftView({ draft }: { draft: Draft }) {
       {c.sections.map((s, i) => (
         <section key={i}>
           <h3 className="font-semibold">{s.heading}</h3>
-          <p className="whitespace-pre-wrap text-slate-700 dark:text-slate-300">{s.body}</p>
+          <p className="whitespace-pre-wrap text-fg-muted">{s.body}</p>
         </section>
       ))}
       {c.open_questions.length > 0 && (
@@ -62,10 +65,17 @@ export default function WorkshopPage() {
   const { item, drafts } = data;
   if (!item || item.deleted_at)
     return (
-      <Page title="Not found">
-        <Link to="/inbox" className="text-indigo-600 underline">
-          Back to the Inbox
-        </Link>
+      <Page title="Not found" back={{ to: '/inbox', label: 'Inbox' }}>
+        <EmptyState
+          icon="inbox"
+          title="Nothing here"
+          message="This idea doesn’t exist or is in the Trash."
+          action={
+            <Link to="/inbox" className={buttonClasses('secondary', 'md')}>
+              Back to the Inbox
+            </Link>
+          }
+        />
       </Page>
     );
   const current = drafts.find((d) => d.id === shown) ?? drafts[0];
@@ -90,66 +100,62 @@ export default function WorkshopPage() {
   };
 
   return (
-    <Page title={item.title || 'Workshop'}>
-      <p className="mb-4 text-sm">
-        <Link to={`/library/item/${item.id}`} className="text-indigo-600 hover:underline">
-          Open the original
-        </Link>
-      </p>
-      {current ? (
-        <DraftView draft={current} />
-      ) : (
-        <p className="text-sm text-slate-500">No draft yet. Auto flesh-out writes a first one.</p>
-      )}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+    <Page title={item.title || 'Workshop'} back={{ to: '/inbox', label: 'Inbox' }}>
+      <Link to={`/library/item/${item.id}`} className={buttonClasses('plain', 'sm', '-ml-3 mb-3')}>
+        Open the original
+      </Link>
+      <Card>
+        {current ? (
+          <DraftView draft={current} />
+        ) : (
+          <p className="text-body text-fg-muted">
+            No draft yet. Auto flesh-out writes a first one.
+          </p>
+        )}
+      </Card>
+      <div className="mt-4 mb-8 flex flex-wrap items-center gap-3">
         {workshop ? (
           <>
-            <button
-              type="button"
-              className={button}
-              disabled={busy || !online}
+            <Button
+              variant="primary"
+              loading={busy}
+              disabled={!online}
               onClick={() => void fleshOut()}
             >
               {busy ? 'Thinking…' : drafts.length ? 'Flesh out again' : 'Auto flesh-out'}
-            </button>
-            <span className="text-xs text-slate-500">
+            </Button>
+            <span className="text-caption text-fg-muted">
               {online ? `One AI call, ${FLESH_OUT_COST_TEXT}.` : 'Fleshing out needs a connection.'}
             </span>
           </>
         ) : (
-          <span className="text-sm text-slate-500">
+          <span className="text-footnote text-fg-muted">
             The Workshop needs Airhead&apos;s server (sign in).
           </span>
         )}
       </div>
       {message && (
-        <p role="status" className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+        <p role="status" className="mt-2 text-footnote text-warning">
           {message}
         </p>
       )}
       <SessionPanel itemId={item.id} />
       {drafts.length > 1 && (
-        <section aria-label="Versions" className="mt-6">
-          <h3 className="mb-1 text-sm font-semibold">Versions</h3>
-          <ul className="flex flex-wrap gap-1.5">
+        <Section title="Versions" label="Versions">
+          <ul className="flex flex-wrap gap-2">
             {drafts.map((d) => (
               <li key={d.id}>
-                <button
-                  type="button"
-                  aria-pressed={d.id === current?.id}
+                <Chip
+                  selected={d.id === current?.id}
                   onClick={() => setShown(d.id)}
-                  className={`rounded-full px-3 py-1 text-sm ${
-                    d.id === current?.id
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800'
-                  }`}
+                  className="pointer-coarse:min-h-11"
                 >
                   Version {d.version}
-                </button>
+                </Chip>
               </li>
             ))}
           </ul>
-        </section>
+        </Section>
       )}
     </Page>
   );

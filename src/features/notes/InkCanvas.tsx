@@ -32,6 +32,7 @@ import {
   translateStroke,
   type Selection,
 } from '../../lib/ink/selection';
+import { ToolButton } from '../../ui/ToolButton';
 
 export const INK_SAVE_DEBOUNCE_MS = 800;
 /** Hold the pen still this long at the end of a stroke to snap it to a shape (Task 9.4). */
@@ -48,11 +49,6 @@ const WIDTHS: [number, string][] = [
   [7, 'Thick'],
 ];
 const HIGHLIGHTER = { color: '#facc15', width: 18 };
-
-const btn = (on: boolean) =>
-  `rounded-md px-2 py-1 text-sm font-semibold ${
-    on ? 'bg-slate-200 dark:bg-slate-700' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-  }`;
 
 type Mode = Tool | 'eraser' | 'text' | 'lasso';
 
@@ -356,112 +352,68 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       <div
         role="toolbar"
         aria-label="Pen tools"
-        className="sticky top-0 z-10 mb-2 flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white/95 py-2 dark:border-slate-800 dark:bg-slate-950/95"
+        className="sticky top-0 z-10 mb-3 flex items-center gap-0.5 overflow-x-auto [&>*]:shrink-0 rounded-card border border-border/60 bg-surface/95 p-1.5 shadow-xs backdrop-blur"
       >
-        <button
-          type="button"
-          aria-pressed={mode === 'pen'}
-          className={btn(mode === 'pen')}
-          onClick={() => pick('pen')}
-        >
+        <ToolButton pressed={mode === 'pen'} onClick={() => pick('pen')}>
           Pen
-        </button>
+        </ToolButton>
         {COLORS.map(([c, name]) => (
           <button
             key={c}
             type="button"
             aria-label={`${name} ink`}
             aria-pressed={mode === 'pen' && color === c}
-            className={`size-6 rounded-full border-2 ${mode === 'pen' && color === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`}
-            style={{ background: c }}
+            className="inline-flex size-8 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent pointer-coarse:size-11"
             onClick={() => {
               pick('pen');
               setColor(c);
             }}
-          />
-        ))}
-        {WIDTHS.map(([w, name]) => (
-          <button
-            key={w}
-            type="button"
-            aria-pressed={width === w}
-            className={btn(width === w)}
-            onClick={() => setWidth(w)}
           >
-            {name}
+            <span
+              aria-hidden="true"
+              className={`size-6 rounded-full border-2 border-surface ${mode === 'pen' && color === c ? 'ring-2 ring-accent' : 'ring-1 ring-border'}`}
+              style={{ background: c }}
+            />
           </button>
         ))}
-        <button
-          type="button"
-          aria-pressed={mode === 'highlighter'}
-          className={btn(mode === 'highlighter')}
-          onClick={() => pick('highlighter')}
-        >
+        {WIDTHS.map(([w, name]) => (
+          <ToolButton pressed={width === w} key={w} onClick={() => setWidth(w)}>
+            {name}
+          </ToolButton>
+        ))}
+        <ToolButton pressed={mode === 'highlighter'} onClick={() => pick('highlighter')}>
           Highlighter
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'eraser'}
-          className={btn(mode === 'eraser')}
-          onClick={() => pick('eraser')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'eraser'} onClick={() => pick('eraser')}>
           Eraser
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'text'}
-          className={btn(mode === 'text')}
-          onClick={() => pick('text')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'text'} onClick={() => pick('text')}>
           Text
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'lasso'}
-          className={btn(mode === 'lasso')}
-          onClick={() => pick('lasso')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'lasso'} onClick={() => pick('lasso')}>
           Lasso
-        </button>
+        </ToolButton>
         {selBox && (
           <>
-            <button type="button" className={btn(false)} onClick={copySelection}>
-              Copy selection
-            </button>
-            <button type="button" className={btn(false)} onClick={deleteSelection}>
-              Delete selection
-            </button>
+            <ToolButton onClick={copySelection}>Copy selection</ToolButton>
+            <ToolButton onClick={deleteSelection}>Delete selection</ToolButton>
           </>
         )}
         {clip && (clip.strokes.length > 0 || clip.texts.length > 0) && (
-          <button type="button" className={btn(false)} onClick={paste}>
-            Paste
-          </button>
+          <ToolButton onClick={paste}>Paste</ToolButton>
         )}
-        <button
-          type="button"
-          className={btn(false)}
-          disabled={!undo.canUndo}
-          onClick={() => step('undo')}
-        >
+        <ToolButton disabled={!undo.canUndo} onClick={() => step('undo')}>
           Undo
-        </button>
-        <button
-          type="button"
-          className={btn(false)}
-          disabled={!undo.canRedo}
-          onClick={() => step('redo')}
-        >
+        </ToolButton>
+        <ToolButton disabled={!undo.canRedo} onClick={() => step('redo')}>
           Redo
-        </button>
+        </ToolButton>
       </div>
       <p role="status" aria-live="polite" className="sr-only">
         {snapNote ?? ''}
       </p>
       {snapNote && (
-        <p className="mb-1 text-xs text-indigo-600 dark:text-indigo-400">
-          {snapNote} · Undo for the hand-drawn one
-        </p>
+        <p className="mb-1 text-caption text-accent">{snapNote} · Undo for the hand-drawn one</p>
       )}
       <div className="relative">
         <svg
@@ -469,7 +421,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           role="img"
           aria-label="Handwritten page"
           viewBox={`0 0 ${PAGE_WIDTH} ${height}`}
-          className="w-full rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800"
+          className="w-full rounded-lg border border-border/60 bg-surface shadow-sm"
           style={{ touchAction: 'none', aspectRatio: `${PAGE_WIDTH} / ${height}` }}
           onPointerDown={onDown}
           onPointerMove={onMove}
@@ -533,7 +485,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
                 role="button"
                 tabIndex={-1}
                 aria-label={`Move text box ${t.text || 'new'}`}
-                className="cursor-move touch-none select-none px-1 text-slate-400"
+                className="cursor-move touch-none select-none px-1 text-fg-subtle"
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -569,13 +521,13 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
               onBlur={() => {
                 if (!t.text.trim()) setTexts((cur) => removeText(cur, t.id));
               }}
-              className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-lg text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
+              className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-lg text-fg hover:border-border focus:border-accent focus:outline-none"
             />
             {mode === 'text' && (
               <button
                 type="button"
                 aria-label={`Delete text box ${t.text || 'new'}`}
-                className="px-1 text-slate-400 hover:text-red-600"
+                className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-full text-fg-subtle hover:bg-danger-soft hover:text-danger"
                 onClick={() => {
                   const next = removeText(texts, t.id);
                   setTexts(next);

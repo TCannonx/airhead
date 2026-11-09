@@ -10,9 +10,7 @@ import { readSummary, SUMMARISE_COST_TEXT } from '../../lib/notes/summary';
 import type { Item } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
 import ActionItems from './ActionItems';
-
-const button =
-  'rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50';
+import { Button } from '../../ui/Button';
 
 /**
  * Summarise (Task 6.7): one AI call that reads the note (pages as images when
@@ -82,12 +80,9 @@ export default function SummarisePanel({
   };
 
   return (
-    <section
-      aria-label="Summary"
-      className="mb-4 rounded-xl border border-slate-200 p-3 dark:border-slate-800"
-    >
+    <section aria-label="Summary" className="mb-4 rounded-card border border-border/60 p-3">
       {stored && (
-        <div className="mb-3 space-y-2 text-sm">
+        <div className="mb-3 space-y-2 text-footnote">
           <p>{stored.summary}</p>
           {stored.decisions.length > 0 && (
             <div>
@@ -103,32 +98,27 @@ export default function SummarisePanel({
           {stored.transcription && (
             <details>
               <summary className="cursor-pointer font-semibold">Transcription</summary>
-              <p className="mt-1 whitespace-pre-wrap text-slate-700 dark:text-slate-300">
-                {stored.transcription}
-              </p>
+              <p className="mt-1 whitespace-pre-wrap text-fg-muted">{stored.transcription}</p>
             </details>
           )}
         </div>
       )}
       {!notes ? (
-        <p className="text-sm text-slate-500">Summarise needs Airhead&apos;s server (sign in).</p>
+        <p className="text-footnote text-fg-muted">
+          Summarise needs Airhead&apos;s server (sign in).
+        </p>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            className={button}
-            disabled={busy || !online}
-            onClick={() => void run()}
-          >
+          <Button variant="primary" size="sm" disabled={busy || !online} onClick={() => void run()}>
             {busy ? 'Summarising…' : stored ? 'Summarise again' : 'Done → Summarise'}
-          </button>
-          <span className="text-xs text-slate-500">
+          </Button>
+          <span className="text-caption text-fg-muted">
             {online ? `One AI call, ${SUMMARISE_COST_TEXT}.` : 'Summarise needs a connection.'}
           </span>
         </div>
       )}
       {message && (
-        <p role="status" className="mt-2 text-sm text-amber-700 dark:text-amber-400">
+        <p role="status" className="mt-2 text-footnote text-warning">
           {message}
         </p>
       )}

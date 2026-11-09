@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth/context';
 import { actionKey, actionsToTasks, tasksFromNote } from '../../lib/db/actions';
 import { useDb } from '../../lib/db/context';
 import { deviceTimeZone } from '../calendar/useCalendarData';
+import { Button } from '../../ui/Button';
 
 /**
  * A draft's next steps become tasks in one tap (Task 7.8). All are ticked to
@@ -64,11 +65,7 @@ export default function NextSteps({ itemId, steps }: { itemId: string; steps: st
                 />
                 <span>
                   {s}
-                  {done && (
-                    <span className="ml-1 text-xs text-emerald-700 dark:text-emerald-400">
-                      Task added
-                    </span>
-                  )}
+                  {done && <span className="ml-1 text-caption text-success">Task added</span>}
                 </span>
               </label>
             </li>
@@ -76,17 +73,17 @@ export default function NextSteps({ itemId, steps }: { itemId: string; steps: st
         })}
       </ul>
       {open.length > 0 && (
-        <button
-          type="button"
-          className="mt-2 rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
+        <Button
+          size="sm"
+          className="mt-2"
           disabled={busy || picked.length === 0}
           onClick={() => void add()}
         >
           {picked.length === 1 ? 'Add 1 task' : `Add ${picked.length} tasks`}
-        </button>
+        </Button>
       )}
       {message && (
-        <p role="status" className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p role="status" className="mt-1 text-footnote text-fg-muted">
           {message}
         </p>
       )}

@@ -5,6 +5,7 @@ import { actionKey, actionsToTasks, tasksFromNote, type ActionItem } from '../..
 import { useDb } from '../../lib/db/context';
 import type { Item } from '../../lib/schemas/records';
 import { deviceTimeZone } from '../calendar/useCalendarData';
+import { Button } from '../../ui/Button';
 
 /**
  * Proposed action items from Summarise (Task 6.8): a checklist, all unticked.
@@ -59,12 +60,8 @@ export default function ActionItems({ note, actions }: { note: Item; actions: Ac
                 />
                 <span>
                   {a.title}
-                  {extra && <span className="text-slate-500"> ({extra})</span>}
-                  {done && (
-                    <span className="ml-1 text-xs text-emerald-700 dark:text-emerald-400">
-                      Task added
-                    </span>
-                  )}
+                  {extra && <span className="text-fg-muted"> ({extra})</span>}
+                  {done && <span className="ml-1 text-caption text-success">Task added</span>}
                 </span>
               </label>
             </li>
@@ -72,17 +69,17 @@ export default function ActionItems({ note, actions }: { note: Item; actions: Ac
         })}
       </ul>
       {actions.some((a) => !made.has(actionKey(a.title))) && (
-        <button
-          type="button"
-          className="mt-2 rounded-lg border border-slate-300 px-3 py-1 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
+        <Button
+          size="sm"
+          className="mt-2"
           disabled={busy || picked.length === 0}
           onClick={() => void add()}
         >
           {picked.length > 1 ? `Add ${picked.length} as tasks` : 'Add as task'}
-        </button>
+        </Button>
       )}
       {message && (
-        <p role="status" className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+        <p role="status" className="mt-1 text-footnote text-fg-muted">
           {message}
         </p>
       )}

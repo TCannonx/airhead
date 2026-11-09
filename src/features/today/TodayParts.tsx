@@ -87,7 +87,7 @@ function TopRow({ t, date, compact }: { t: TopTask; date: string; compact: boole
         <p
           className={cx(
             'text-body break-words',
-            t.item.status === 'done' ? 'text-fg-subtle line-through' : 'font-medium',
+            t.item.status === 'done' ? 'text-fg-muted line-through' : 'font-medium',
           )}
         >
           {t.item.title}

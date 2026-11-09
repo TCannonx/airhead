@@ -6,6 +6,13 @@ import { useDb } from '../../lib/db/context';
 import { filterLibrary, TYPE_LABELS } from '../../lib/db/sorting';
 import { useSearch } from '../../lib/search/useSearch';
 import type { ItemType } from '../../lib/schemas/records';
+import { Chip } from '../../ui/Chip';
+import { EmptyState } from '../../ui/EmptyState';
+import { GroupedList, Section } from '../../ui/GroupedList';
+import { Icon } from '../../app/Icon';
+import { ListRow } from '../../ui/ListRow';
+import { Select } from '../../ui/Select';
+import { TextField } from '../../ui/TextField';
 import NewNoteButtons from '../notes/NewNoteButtons';
 import AskPanel from './AskPanel';
 
@@ -19,8 +26,21 @@ const TABS: { label: string; type: ItemType | null }[] = [
   { label: 'Notes', type: 'note' },
 ];
 
-const input =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+/** One row of the item list or search results: title on the left, kind on the right. */
+function ItemLink({ to, title, kind }: { to: string; title: string; kind: string }) {
+  return (
+    <li>
+      <Link
+        to={to}
+        className="flex min-h-11 items-center gap-3 px-4 py-2.5 transition outline-none hover:bg-fill/60 focus-visible:bg-fill active:bg-fill"
+      >
+        <span className="min-w-0 flex-1 truncate text-body">{title || '(untitled)'}</span>
+        <span className="max-w-[45%] shrink-0 truncate text-footnote text-fg-muted">{kind}</span>
+        <Icon name="chevron-right" className="size-4 shrink-0 text-fg-subtle" />
+      </Link>
+    </li>
+  );
+}
 
 export default function LibraryPage() {
   const db = useDb();
@@ -47,126 +67,125 @@ export default function LibraryPage() {
   return (
     <Page title="Library">
       <AskPanel />
-      <input
+      <TextField
         ref={searchRef}
         type="search"
-        aria-label="Search"
+        label="Search"
+        hideLabel
         placeholder="Search everything (press / on desktop)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mb-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-900"
+        className="mb-6"
       />
 
       {query.trim() ? (
-        <>
-          {results && results.length === 0 && (
-            <p className="text-sm text-slate-500">No matches for “{query.trim()}”.</p>
-          )}
-          <ul
-            aria-label="Search results"
-            className="divide-y divide-slate-200 dark:divide-slate-800"
-          >
-            {results?.map((r) => (
-              <li key={`${r.kind}:${r.id}`}>
-                <Link
-                  to={r.kind === 'item' ? `/library/item/${r.id}` : '/inbox'}
-                  className="flex items-center justify-between gap-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900"
-                >
-                  <span className="min-w-0 flex-1 truncate">{r.title || '(untitled)'}</span>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    {r.itemType ? TYPE_LABELS[r.itemType] : 'Capture'}
-                  </span>
-                </Link>
+        <Section title="Results">
+          {results && results.length === 0 ? (
+            <GroupedList>
+              <li>
+                <EmptyState
+                  icon="search"
+                  title="Nothing found"
+                  message={`No matches for “${query.trim()}”.`}
+                  className="py-6"
+                />
               </li>
-            ))}
-          </ul>
-        </>
+            </GroupedList>
+          ) : (
+            <GroupedList label="Search results">
+              {results?.map((r) => (
+                <ItemLink
+                  key={`${r.kind}:${r.id}`}
+                  to={r.kind === 'item' ? `/library/item/${r.id}` : '/inbox'}
+                  title={r.title}
+                  kind={r.itemType ? TYPE_LABELS[r.itemType] : 'Capture'}
+                />
+              ))}
+            </GroupedList>
+          )}
+        </Section>
       ) : (
         <>
-          <div className="mb-4 flex flex-wrap gap-1.5">
-            {TABS.map((t) => (
-              <button
-                key={t.label}
-                type="button"
-                aria-pressed={type === t.type}
-                onClick={() => setType(t.type)}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                  type === t.type
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <Section title="New">
+            <NewNoteButtons size="sm" />
+          </Section>
+          <Section>
+            <GroupedList>
+              <ListRow icon="list" iconTint="bg-accent" title="Lists" to="/library/lists" />
+              <ListRow icon="trash" iconTint="bg-fg-subtle" title="Trash" to="/library/trash" />
+            </GroupedList>
+          </Section>
 
-          <div className="mb-4 flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              Topic
-              <select
-                className={input}
+          <Section title="Everything">
+            <div className="mb-3 flex flex-wrap gap-2">
+              {TABS.map((t) => (
+                <Chip
+                  key={t.label}
+                  selected={type === t.type}
+                  onClick={() => setType(t.type)}
+                  className="pointer-coarse:min-h-11"
+                >
+                  {t.label}
+                </Chip>
+              ))}
+            </div>
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Select
+                className="col-span-2 sm:col-span-1"
+                label="Topic"
                 value={topicId}
                 onChange={(e) => setTopicId(e.target.value)}
-              >
-                <option value="">Any topic</option>
-                {topics?.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              From
-              <input
+                options={[
+                  { value: '', label: 'Any topic' },
+                  ...(topics ?? []).map((t) => ({ value: t.id, label: t.name })),
+                ]}
+              />
+              <TextField
+                label="From"
                 type="date"
-                className={input}
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
               />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              To
-              <input
+              <TextField
+                label="To"
                 type="date"
-                className={input}
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
               />
-            </label>
-            <NewNoteButtons />
-            <Link to="/library/lists" className="ml-auto text-sm text-slate-500 underline">
-              Lists
-            </Link>
-            <Link to="/library/trash" className="text-sm text-slate-500 underline">
-              Trash
-            </Link>
-          </div>
+            </div>
 
-          {shown && shown.length === 0 && (
-            <p className="text-sm text-slate-500">Nothing here yet.</p>
-          )}
-          <ul aria-label="Items" className="divide-y divide-slate-200 dark:divide-slate-800">
-            {shown?.map((i) => (
-              <li key={i.id}>
-                <Link
-                  to={`/library/item/${i.id}`}
-                  className="flex items-center justify-between gap-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900"
-                >
-                  <span className="min-w-0 flex-1 truncate">{i.title || '(untitled)'}</span>
-                  <span className="shrink-0 text-xs text-slate-500">
-                    {i.topic_ids
-                      .map((id) => topicName.get(id))
+            {shown && shown.length === 0 ? (
+              <GroupedList>
+                <li>
+                  <EmptyState
+                    icon="library"
+                    title="Nothing here yet"
+                    message="Captures land here once they are sorted."
+                    className="py-6"
+                  />
+                </li>
+              </GroupedList>
+            ) : (
+              <GroupedList label="Items">
+                {shown?.map((i) => (
+                  <ItemLink
+                    key={i.id}
+                    to={`/library/item/${i.id}`}
+                    title={i.title}
+                    kind={[
+                      i.topic_ids
+                        .map((id) => topicName.get(id))
+                        .filter(Boolean)
+                        .join(', '),
+                      TYPE_LABELS[i.type],
+                    ]
                       .filter(Boolean)
-                      .join(', ')}
-                    {i.topic_ids.length > 0 && ' · '}
-                    {TYPE_LABELS[i.type]}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                      .join(' · ')}
+                  />
+                ))}
+              </GroupedList>
+            )}
+          </Section>
         </>
       )}
     </Page>

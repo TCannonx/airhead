@@ -7,6 +7,7 @@ import { useDb } from '../../lib/db/context';
 import { updateSettingsData } from '../../lib/db/settings';
 import { DEFAULT_TIME_ZONE } from '../../lib/rules';
 import DailyBars from './DailyBars';
+import { Button } from '../../ui/Button';
 
 const TASK_LABELS: Record<string, string> = {
   sort_batch: 'Sorting',
@@ -23,7 +24,7 @@ const PRICE_FIELDS = [
 ] as const;
 
 const cell =
-  'w-20 rounded border border-slate-300 bg-white px-1.5 py-1 text-right text-sm tabular-nums dark:border-slate-700 dark:bg-slate-900';
+  'w-20 rounded border border-border bg-surface px-1.5 py-1 text-right text-footnote tabular-nums  ';
 
 function PriceTable({
   prices,
@@ -39,9 +40,9 @@ function PriceTable({
   const [saved, setSaved] = useState<string | null>(null);
 
   return (
-    <table aria-label="Prices" className="w-full text-sm">
+    <table aria-label="Prices" className="w-full text-footnote">
       <thead>
-        <tr className="text-left text-xs text-slate-500">
+        <tr className="text-left text-caption text-fg-muted">
           <th className="py-1 font-medium">Model</th>
           {PRICE_FIELDS.map(([, label]) => (
             <th key={label} className="py-1 text-right font-medium">
@@ -55,10 +56,10 @@ function PriceTable({
         {[...byModel.values()].map((p) => {
           const row = edits[p.model] ?? p;
           return (
-            <tr key={p.model} className="border-t border-slate-100 dark:border-slate-800">
+            <tr key={p.model} className="border-t border-border/60">
               <td className="py-1.5 pr-2">
                 {p.model}
-                {p.user_id && <span className="ml-1 text-xs text-slate-500">(yours)</span>}
+                {p.user_id && <span className="ml-1 text-caption text-fg-muted">(yours)</span>}
               </td>
               {PRICE_FIELDS.map(([key, label]) => (
                 <td key={key} className="py-1.5 text-right">
@@ -77,10 +78,10 @@ function PriceTable({
                 </td>
               ))}
               <td className="py-1.5 pl-2 text-right">
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="sm"
                   aria-label={`Save ${p.model}`}
-                  className="rounded-md px-2 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950"
                   onClick={async () => {
                     const values = Object.fromEntries(
                       PRICE_FIELDS.map(([k]) => [k, Number(row[k])]),
@@ -90,14 +91,14 @@ function PriceTable({
                   }}
                 >
                   Save
-                </button>
+                </Button>
               </td>
             </tr>
           );
         })}
       </tbody>
       {saved && (
-        <caption className="caption-bottom pt-2 text-left text-xs text-slate-500">
+        <caption className="caption-bottom pt-2 text-left text-caption text-fg-muted">
           Saved your price for {saved}.
         </caption>
       )}
@@ -138,13 +139,13 @@ export default function AiUsage() {
 
   if (!usage) {
     return (
-      <p className="text-sm text-slate-500">
+      <p className="text-footnote text-fg-muted">
         AI usage shows here once Airhead is connected to its server.
       </p>
     );
   }
-  if (error) return <p className="text-sm text-slate-500">{error}</p>;
-  if (!rows) return <p className="text-sm text-slate-500">Loading…</p>;
+  if (error) return <p className="text-footnote text-fg-muted">{error}</p>;
+  if (!rows) return <p className="text-footnote text-fg-muted">Loading…</p>;
 
   const s = summariseUsage(rows, new Date(), timeZone);
   const capValue = capDraft ?? (typeof cap === 'number' ? String(cap) : '');
@@ -153,17 +154,17 @@ export default function AiUsage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-8">
         <div>
-          <p className="text-xs text-slate-500">This month so far</p>
+          <p className="text-caption text-fg-muted">This month so far</p>
           <p className="text-3xl font-semibold tabular-nums">{euro(s.monthToDate)}</p>
-          <p className="text-xs text-slate-500">{s.calls} AI calls</p>
+          <p className="text-caption text-fg-muted">{s.calls} AI calls</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Projected by month-end</p>
+          <p className="text-caption text-fg-muted">Projected by month-end</p>
           <p className="text-xl font-medium tabular-nums">{euro(s.projected)}</p>
         </div>
         {typeof cap === 'number' && cap > 0 && (
           <div>
-            <p className="text-xs text-slate-500">Monthly limit</p>
+            <p className="text-caption text-fg-muted">Monthly limit</p>
             <p className="text-xl font-medium tabular-nums">{euro(cap)}</p>
           </div>
         )}
@@ -171,9 +172,9 @@ export default function AiUsage() {
 
       <DailyBars days={s.daily} title="Daily AI spend" />
 
-      <table aria-label="By task" className="w-full text-sm">
+      <table aria-label="By task" className="w-full text-footnote">
         <thead>
-          <tr className="text-left text-xs text-slate-500">
+          <tr className="text-left text-caption text-fg-muted">
             <th className="py-1 font-medium">Task</th>
             <th className="py-1 text-right font-medium">Calls</th>
             <th className="py-1 text-right font-medium">Cost</th>
@@ -181,7 +182,7 @@ export default function AiUsage() {
         </thead>
         <tbody>
           {s.byTask.map((t) => (
-            <tr key={t.task} className="border-t border-slate-100 dark:border-slate-800">
+            <tr key={t.task} className="border-t border-border/60">
               <td className="py-1">{TASK_LABELS[t.task] ?? t.task}</td>
               <td className="py-1 text-right tabular-nums">{t.calls}</td>
               <td className="py-1 text-right tabular-nums">{euro(t.cost)}</td>
@@ -189,7 +190,7 @@ export default function AiUsage() {
           ))}
           {s.byTask.length === 0 && (
             <tr>
-              <td colSpan={3} className="py-1 text-slate-500">
+              <td colSpan={3} className="py-1 text-fg-muted">
                 No AI calls this month.
               </td>
             </tr>
@@ -208,7 +209,7 @@ export default function AiUsage() {
           setCapDraft(null);
         }}
       >
-        <label className="flex flex-col gap-1 text-xs text-slate-500">
+        <label className="flex flex-col gap-1 text-caption text-fg-muted">
           Monthly limit (€)
           <input
             inputMode="decimal"
@@ -218,20 +219,17 @@ export default function AiUsage() {
             onChange={(e) => setCapDraft(e.target.value)}
           />
         </label>
-        <button
-          type="submit"
-          className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-        >
+        <Button size="sm" type="submit">
           Save limit
-        </button>
-        <p className="w-full text-xs text-slate-500">
+        </Button>
+        <p className="w-full text-caption text-fg-muted">
           At the limit, background sorting pauses (captures still save); on-demand AI says so. Empty
           or 0 = no limit.
         </p>
       </form>
 
       <div>
-        <h3 className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <h3 className="mb-1 text-footnote font-medium text-fg-muted">
           Prices (US$ per million tokens)
         </h3>
         <PriceTable
@@ -244,7 +242,7 @@ export default function AiUsage() {
         />
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-caption text-fg-muted">
         These figures are estimates from token counts and the prices above. The Claude Console is
         the true record of what you are billed.
       </p>

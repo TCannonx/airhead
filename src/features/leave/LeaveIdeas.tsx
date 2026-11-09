@@ -8,6 +8,7 @@ import { useOnline } from '../../lib/useOnline';
 import type { LeaveBooking } from '../../lib/schemas/records';
 import type { WorkSettings } from '../../lib/work/settings';
 import { todayKey } from './useWork';
+import { Button } from '../../ui/Button';
 
 const fmt = (d: string) =>
   new Intl.DateTimeFormat('en-IE', { weekday: 'short', day: 'numeric', month: 'short' }).format(
@@ -46,13 +47,9 @@ export default function LeaveIdeas({
 
   if (!open)
     return (
-      <button
-        type="button"
-        className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-        onClick={() => setOpen(true)}
-      >
+      <Button size="sm" onClick={() => setOpen(true)}>
         Suggest leave
-      </button>
+      </Button>
     );
   if (!data) return null;
   const bridges = leaveBridges(data);
@@ -83,15 +80,12 @@ export default function LeaveIdeas({
   };
 
   return (
-    <section
-      aria-label="Leave ideas"
-      className="space-y-3 rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800"
-    >
-      <h3 className="font-semibold">
+    <section aria-label="Leave ideas" className="space-y-3 text-footnote">
+      <h3 className="text-body font-semibold">
         {picks ? 'Airhead’s picks' : 'Good bridges in the next six months'}
       </h3>
       {bridges.length === 0 ? (
-        <p className="text-slate-500">No good bridges ahead (or no leave left to book).</p>
+        <p className="text-fg-muted">No good bridges ahead (or no leave left to book).</p>
       ) : (
         <ul className="space-y-2">
           {shown.map(({ b, why }) =>
@@ -106,35 +100,26 @@ export default function LeaveIdeas({
                     {b.leave.map(fmt).join(' and ')}) → {b.daysOff} days, {fmt(b.start)} to{' '}
                     {fmt(b.end)}
                   </span>
-                  {why && <span className="block text-slate-500">{why}</span>}
+                  {why && <span className="block text-fg-muted">{why}</span>}
                 </span>
-                <button
-                  type="button"
-                  className="rounded-lg bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-600"
-                  onClick={() => onBook(b)}
-                >
+                <Button variant="primary" size="sm" onClick={() => onBook(b)}>
                   Book {b.leave.map(fmt).join(' and ')}
-                </button>
+                </Button>
               </li>
             ) : null,
           )}
         </ul>
       )}
       {services.leave && bridges.length > 1 && !picks && (
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <button
-            type="button"
-            className="rounded-lg bg-slate-100 px-2.5 py-1 font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800"
-            disabled={busy || !online}
-            onClick={() => void ask()}
-          >
+        <div className="flex items-center gap-3 text-caption text-fg-muted">
+          <Button size="sm" disabled={busy || !online} onClick={() => void ask()}>
             {busy ? 'Thinking…' : 'Ask Airhead to pick'}
-          </button>
+          </Button>
           <span>{online ? 'One small AI call, ≈ €0.001.' : 'Needs a connection.'}</span>
         </div>
       )}
       {message && (
-        <p role="status" className="text-amber-700 dark:text-amber-400">
+        <p role="status" className="text-warning">
           {message}
         </p>
       )}

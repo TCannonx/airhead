@@ -13,31 +13,31 @@ export default function ReadingDetails({ item }: { item: Item }) {
   return (
     <section
       aria-label="About this link"
-      className="space-y-2 rounded-xl bg-slate-50 p-4 dark:bg-slate-900"
+      className="space-y-2 rounded-card border border-border/60 bg-surface p-4"
     >
       {d.couldnt_read && (
-        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+        <p className="text-footnote font-medium text-warning">
           Couldn&apos;t read this page (paywall, login or app page). Showing its title and
           description.
         </p>
       )}
       {typeof d.reading_minutes === 'number' && (
-        <p className="text-xs text-slate-500">About {d.reading_minutes} min read</p>
+        <p className="text-caption text-fg-muted">About {d.reading_minutes} min read</p>
       )}
       {d.summary ? (
         <p>{d.summary}</p>
       ) : (
-        d.description && <p className="text-slate-600 dark:text-slate-300">{d.description}</p>
+        d.description && <p className="text-fg-muted">{d.description}</p>
       )}
       {d.key_points && d.key_points.length > 0 && (
-        <ul className="list-disc space-y-1 pl-5 text-sm">
+        <ul className="list-disc space-y-1 pl-5 text-footnote">
           {d.key_points.map((k) => (
             <li key={k}>{k}</li>
           ))}
         </ul>
       )}
       {!d.summary && !d.couldnt_read && !d.description && (
-        <p className="text-sm text-slate-500">This link will be read and summarised soon.</p>
+        <p className="text-footnote text-fg-muted">This link will be read and summarised soon.</p>
       )}
     </section>
   );
