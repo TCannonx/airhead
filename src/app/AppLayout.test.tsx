@@ -1,4 +1,5 @@
 import { act, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it } from 'vitest';
@@ -87,5 +88,19 @@ describe('AppLayout', () => {
   it.each(['Today', 'Inbox', 'Library', 'Insights', 'Settings'])('routes to %s', (name) => {
     renderAt(1024, `/${name.toLowerCase()}`);
     expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+  });
+
+  it('the Inbox tab shows a badge for captures waiting, without changing its name', async () => {
+    renderAt(390);
+    const tabs = screen.getByRole('navigation', { name: 'Tabs' });
+    expect(within(tabs).queryByTestId('badge')).not.toBeInTheDocument();
+    await userEvent.type(await screen.findByLabelText('Capture'), 'ring the plumber{Enter}');
+    const inbox = within(tabs).getByRole('link', { name: 'Inbox' });
+    expect(await within(inbox).findByTestId('badge')).toHaveTextContent('1');
+  });
+
+  it('pages get the shared header: one h1 per page', () => {
+    renderAt(1440, '/settings');
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 });
