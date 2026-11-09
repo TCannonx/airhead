@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '../../ui/Button';
 
 /**
  * A single-series bar chart (Task 8.6), the same marks as DailyBars: one hue,
@@ -32,26 +33,22 @@ export default function Bars({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200">{title}</h3>
-        <button
-          type="button"
-          className="text-xs text-slate-500 underline"
-          onClick={() => setAsTable((t) => !t)}
-        >
+        <h3 className="text-footnote font-medium text-fg-muted">{title}</h3>
+        <Button variant="plain" size="sm" onClick={() => setAsTable((t) => !t)}>
           {asTable ? 'Show as chart' : 'Show as table'}
-        </button>
+        </Button>
       </div>
       {asTable ? (
-        <table aria-label={title} className="w-full text-sm">
+        <table aria-label={title} className="w-full text-footnote">
           <thead>
-            <tr className="text-left text-xs text-slate-500">
+            <tr className="text-left text-caption text-fg-muted">
               <th className="py-1 font-medium">{labelHeading}</th>
               <th className="py-1 text-right font-medium">{valueLabel}</th>
             </tr>
           </thead>
           <tbody>
             {bars.map((b) => (
-              <tr key={b.label} className="border-t border-slate-100 dark:border-slate-800">
+              <tr key={b.label} className="border-t border-border/60">
                 <td className="py-1">{b.label}</td>
                 <td className="py-1 text-right tabular-nums">{b.value}</td>
               </tr>
@@ -64,7 +61,7 @@ export default function Bars({
             role="img"
             aria-label={`${title}: highest ${peak?.label ?? ''} (${peak?.value ?? 0})`}
             viewBox={`0 0 ${W} ${H}`}
-            className="h-32 w-full text-indigo-600 dark:text-indigo-400"
+            className="h-32 w-full text-accent"
             preserveAspectRatio="none"
             onMouseLeave={() => setHover(null)}
           >
@@ -73,7 +70,7 @@ export default function Bars({
               x2={W}
               y1={H - pad.bottom}
               y2={H - pad.bottom}
-              className="stroke-slate-200 dark:stroke-slate-700"
+              className="stroke-border"
               strokeWidth={1}
             />
             {bars.map((b, i) => {
@@ -101,17 +98,17 @@ export default function Bars({
                 </g>
               );
             })}
-            <text x={0} y={H - 4} className="fill-slate-400 text-[10px]">
+            <text x={0} y={H - 4} className="fill-fg-subtle text-[10px]">
               {bars[0]?.label}
             </text>
-            <text x={W} y={H - 4} textAnchor="end" className="fill-slate-400 text-[10px]">
+            <text x={W} y={H - 4} textAnchor="end" className="fill-fg-subtle text-[10px]">
               {bars.at(-1)?.label}
             </text>
           </svg>
           {active && (
             <div
               role="tooltip"
-              className="pointer-events-none absolute top-0 rounded-md bg-slate-900 px-2 py-1 text-xs text-white shadow dark:bg-slate-100 dark:text-slate-900"
+              className="pointer-events-none absolute top-0 rounded-md bg-fg px-2 py-1 text-caption text-canvas shadow"
               style={{ left: `${((hover ?? 0) / Math.max(bars.length, 1)) * 100}%` }}
             >
               {active.label}: {active.value}

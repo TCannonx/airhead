@@ -15,6 +15,7 @@ import InkView from './InkView';
 import MeetingDetails from './MeetingDetails';
 import NoteEditor from './NoteEditor';
 import SummarisePanel from './SummarisePanel';
+import { Button } from '../../ui/Button';
 
 /** The iPad (with its Pencil) is where pages are written; elsewhere summarised pages are read. */
 const writesPages = () =>
@@ -42,8 +43,8 @@ export default function NotePage() {
   if (!item || item.deleted_at || !doc) {
     return (
       <Page title="Not found">
-        <p className="text-slate-500">This note doesn&apos;t exist or is in the Trash.</p>
-        <Link to="/library" className="text-indigo-600 underline">
+        <p className="text-fg-muted">This note doesn&apos;t exist or is in the Trash.</p>
+        <Link to="/library" className="text-accent underline">
           Back to Library
         </Link>
       </Page>
@@ -63,21 +64,20 @@ export default function NotePage() {
         }}
       />
       <div
-        className="mb-4 flex flex-wrap items-center gap-3 text-sm"
+        className="mb-4 flex flex-wrap items-center gap-3 text-footnote"
         aria-label="Note menu"
         role="group"
       >
-        <button
-          type="button"
-          className="rounded-lg px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+        <Button
+          size="sm"
           onClick={() =>
             void (inWorkshop(item) ? leaveWorkshop(db, item) : sendToWorkshop(db, item))
           }
         >
           {inWorkshop(item) ? 'Take out of Workshop' : 'Send to Workshop'}
-        </button>
+        </Button>
         {inWorkshop(item) && (
-          <Link to={`/workshop/${item.id}`} className="text-indigo-600 hover:underline">
+          <Link to={`/workshop/${item.id}`} className="text-accent hover:underline">
             Open in the Workshop
           </Link>
         )}
@@ -93,13 +93,9 @@ export default function NotePage() {
         />
       ) : readSummary(item) && !writesPages() && !editPages ? (
         <>
-          <button
-            type="button"
-            className="mb-2 text-sm text-indigo-600 hover:underline dark:text-indigo-400"
-            onClick={() => setEditPages(true)}
-          >
+          <Button variant="plain" size="sm" className="mb-2" onClick={() => setEditPages(true)}>
             Edit pages
-          </button>
+          </Button>
           <InkView doc={readInk(doc.doc)} />
         </>
       ) : (

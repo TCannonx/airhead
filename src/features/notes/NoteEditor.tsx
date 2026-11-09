@@ -8,9 +8,7 @@ import { useEffect, useRef } from 'react';
 export const SAVE_DEBOUNCE_MS = 600;
 
 const btn = (on: boolean) =>
-  `rounded-md px-2 py-1 text-sm font-semibold ${
-    on ? 'bg-slate-200 dark:bg-slate-700' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-  }`;
+  `rounded-md px-2 py-1 text-footnote font-semibold ${on ? 'bg-fill ' : 'hover:bg-fill'}`;
 
 function Toolbar({ editor }: { editor: Editor }) {
   const items: [string, string, () => void, boolean][] = [
@@ -51,7 +49,7 @@ function Toolbar({ editor }: { editor: Editor }) {
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-800"
+      className="mb-2 flex flex-wrap gap-1 border-b border-border/60 pb-2"
     >
       {items.map(([label, name, run, on]) => (
         <button

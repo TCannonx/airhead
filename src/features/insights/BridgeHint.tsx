@@ -36,7 +36,7 @@ export default function BridgeHint() {
   }, [db, userId]);
   if (!top) return null;
   return (
-    <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+    <p className="rounded-lg bg-success-soft px-3 py-2 text-footnote text-fg">
       A good bridge is coming up: one day off on {top.leave[0]} gives {top.daysOff} days in a row.{' '}
       <Link to="/work" className="font-semibold underline">
         Plan it

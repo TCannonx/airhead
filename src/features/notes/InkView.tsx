@@ -14,7 +14,7 @@ export default function InkView({ doc }: { doc: InkDoc }) {
             role="img"
             aria-label={`Handwritten page ${n + 1} (view only)`}
             viewBox={`0 0 ${PAGE_WIDTH} ${page.height}`}
-            className="w-full rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800"
+            className="w-full rounded-lg border border-border/60 bg-surface shadow-sm"
             style={{ aspectRatio: `${PAGE_WIDTH} / ${page.height}` }}
           >
             {page.strokes.map((s, i) => (
@@ -31,7 +31,7 @@ export default function InkView({ doc }: { doc: InkDoc }) {
             .map((t) => (
               <p
                 key={t.id}
-                className="absolute px-2 text-lg text-slate-900"
+                className="absolute px-2 text-lg text-fg"
                 style={{
                   left: `${(t.x / PAGE_WIDTH) * 100}%`,
                   top: `${(t.y / page.height) * 100}%`,

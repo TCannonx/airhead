@@ -6,9 +6,9 @@ import { balanceFor, countLeaveDays, leaveYearFor } from '../../lib/leave/engine
 import { LEAVE_STATUSES, type LeaveBooking } from '../../lib/schemas/records';
 import { leaveTypeOf, type WorkSettings } from '../../lib/work/settings';
 import { todayKey } from './useWork';
+import { Button } from '../../ui/Button';
 
-const field =
-  'w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = 'w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-footnote  ';
 const STATUS_LABELS: Record<LeaveBooking['status'], string> = {
   planned: 'Planned',
   requested: 'Requested',
@@ -77,17 +77,13 @@ export default function LeaveSheet({
       {!inSheet && (
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">{booking ? 'Edit leave' : 'Book leave'}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
+          <Button size="sm" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
       )}
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-sm">
+        <label className="text-footnote">
           From
           <input
             type="date"
@@ -96,7 +92,7 @@ export default function LeaveSheet({
             onChange={(e) => set('start_date', e.target.value)}
           />
         </label>
-        <label className="text-sm">
+        <label className="text-footnote">
           To
           <input
             type="date"
@@ -108,7 +104,7 @@ export default function LeaveSheet({
         </label>
       </div>
       {single ? (
-        <label className="block text-sm">
+        <label className="block text-footnote">
           Day
           <select
             className={field}
@@ -124,7 +120,7 @@ export default function LeaveSheet({
           </select>
         </label>
       ) : (
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1 text-footnote">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -144,7 +140,7 @@ export default function LeaveSheet({
         </div>
       )}
       <div className="grid grid-cols-2 gap-2">
-        <label className="text-sm">
+        <label className="text-footnote">
           Type
           <select
             className={field}
@@ -158,7 +154,7 @@ export default function LeaveSheet({
             ))}
           </select>
         </label>
-        <label className="text-sm">
+        <label className="text-footnote">
           Status
           <select
             className={field}
@@ -173,7 +169,7 @@ export default function LeaveSheet({
           </select>
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-footnote">
         <input
           type="checkbox"
           checked={f.share_us}
@@ -181,7 +177,7 @@ export default function LeaveSheet({
         />
         Show as “Off” on the Us calendar
       </label>
-      <label className="block text-sm">
+      <label className="block text-footnote">
         Note
         <input
           className={field}
@@ -189,7 +185,7 @@ export default function LeaveSheet({
           onChange={(e) => set('note', e.target.value || null)}
         />
       </label>
-      <p aria-live="polite" className="text-sm text-slate-600 dark:text-slate-300">
+      <p aria-live="polite" className="text-footnote text-fg-muted">
         {!valid
           ? 'The last day is before the first.'
           : deducts
@@ -197,21 +193,17 @@ export default function LeaveSheet({
             : `${days(cost)} · not taken from your annual leave`}
       </p>
       <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!valid}
-          className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-        >
+        <Button variant="primary" type="submit" disabled={!valid}>
           {booking ? 'Save' : 'Book leave'}
-        </button>
+        </Button>
         {booking && (
-          <button
-            type="button"
-            className="rounded-lg px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+          <Button
+            variant="destructive"
+            size="sm"
             onClick={() => void deleteLeave(db, booking.id).then(onClose)}
           >
             Delete
-          </button>
+          </Button>
         )}
       </div>
     </form>

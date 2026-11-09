@@ -9,7 +9,7 @@ export default function StartNotesButton({
   eventKey,
   title,
   date,
-  className = 'rounded-md px-2 py-0.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-950',
+  className = 'rounded-md px-2 py-0.5 text-caption font-semibold text-accent hover:bg-accent-soft  ',
 }: {
   eventKey: string;
   title: string;

@@ -19,7 +19,6 @@ import { cx } from '../../ui/cx';
 import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { TextField } from '../../ui/TextField';
 
-
 export default function ListsPage() {
   const db = useDb();
   const { user } = useAuth();

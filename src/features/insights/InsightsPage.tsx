@@ -1,4 +1,7 @@
+import type { ReactNode } from 'react';
 import { Page } from '../../app/Page';
+import { Card } from '../../ui/Card';
+import { Section } from '../../ui/GroupedList';
 import CheckupPanel from '../settings/CheckupPanel';
 import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
@@ -7,64 +10,45 @@ import WeeklyReview from './WeeklyReview';
 import Patterns from './Patterns';
 import ScoutCards from '../today/ScoutCards';
 
+/** A titled Insights block, named for screen readers by its title. */
+function Block({
+  title,
+  card = true,
+  children,
+}: {
+  title: string;
+  card?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Section title={title} label={title}>
+      {card ? <Card>{children}</Card> : children}
+    </Section>
+  );
+}
+
 export default function InsightsPage() {
   return (
     <Page title="Insights">
-      <section aria-labelledby="week-heading" className="mb-10">
-        <h2
-          id="week-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          This week
-        </h2>
+      <Block title="This week">
         <WeeklyReview />
-        <ScoutCards />
-      </section>
-      <section aria-labelledby="patterns-heading" className="mb-10">
-        <h2
-          id="patterns-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          Patterns
-        </h2>
+      </Block>
+      <ScoutCards />
+      <Block title="Patterns">
         <Patterns />
-      </section>
-      <section aria-labelledby="measures-heading" className="mb-10">
-        <h2
-          id="measures-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          Success measures
-        </h2>
+      </Block>
+      <Block title="Success measures" card={false}>
         <SuccessMeasures />
-      </section>
-      <section aria-labelledby="ai-usage-heading" className="mb-10">
-        <h2
-          id="ai-usage-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          AI usage
-        </h2>
+      </Block>
+      <Block title="AI usage">
         <AiUsage />
-      </section>
-      <section aria-labelledby="checkup-heading" className="mb-10">
-        <h2
-          id="checkup-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          Memory check-up
-        </h2>
+      </Block>
+      <Block title="Memory check-up">
         <CheckupPanel auto />
-      </section>
-      <section aria-labelledby="location-heading" className="mb-10">
-        <h2
-          id="location-heading"
-          className="mb-3 text-sm font-semibold tracking-wide text-slate-500 uppercase"
-        >
-          Where I worked
-        </h2>
+      </Block>
+      <Block title="Where I worked">
         <LocationInsights />
-      </section>
+      </Block>
     </Page>
   );
 }

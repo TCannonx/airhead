@@ -146,7 +146,12 @@ export default function LibraryPage() {
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
               />
-              <TextField label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+              <TextField
+                label="To"
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
             </div>
 
             {shown && shown.length === 0 ? (

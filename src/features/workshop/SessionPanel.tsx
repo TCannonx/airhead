@@ -7,9 +7,7 @@ import { sessionFor } from '../../lib/db/workshop';
 import { draftSchema, workshopSessionSchema } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
 import { clearPending, getPending, setPending } from '../../lib/workshop/pending';
-
-const button =
-  'rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700';
+import { Button } from '../../ui/Button';
 
 /**
  * "Work on it together" (Task 7.7): Airhead asks two or three questions at a
@@ -79,35 +77,28 @@ export default function SessionPanel({ itemId }: { itemId: string }) {
 
   return (
     <section aria-label="Work on it together" className="mt-6 space-y-3">
-      <h3 className="text-sm font-semibold">Work on it together</h3>
+      <h3 className="text-footnote font-semibold">Work on it together</h3>
       {turns.length === 0 && !data.pending ? (
-        <button
-          type="button"
-          className={button}
-          disabled={busy || !online}
-          onClick={() => void send(null)}
-        >
+        <Button size="sm" disabled={busy || !online} onClick={() => void send(null)}>
           {busy ? 'Thinking…' : 'Start'}
-        </button>
+        </Button>
       ) : (
         <>
-          <ol className="space-y-2 text-sm">
+          <ol className="space-y-2 text-footnote">
             {turns.map((t, i) => (
               <li
                 key={i}
                 className={`whitespace-pre-wrap rounded-lg p-2 ${
-                  t.role === 'me'
-                    ? 'ml-8 bg-indigo-50 dark:bg-indigo-950'
-                    : 'mr-8 bg-slate-100 dark:bg-slate-800'
+                  t.role === 'me' ? 'ml-8 bg-accent-soft' : 'mr-8 bg-fill'
                 }`}
               >
                 {t.text}
               </li>
             ))}
             {data.pending && (
-              <li className="ml-8 whitespace-pre-wrap rounded-lg bg-indigo-50 p-2 opacity-70 dark:bg-indigo-950">
+              <li className="ml-8 whitespace-pre-wrap rounded-lg bg-accent-soft p-2 opacity-70">
                 {data.pending.text}
-                <span className="block text-xs text-slate-500">
+                <span className="block text-caption text-fg-muted">
                   Waiting to send when you’re online
                 </span>
               </li>
@@ -115,30 +106,25 @@ export default function SessionPanel({ itemId }: { itemId: string }) {
           </ol>
           {!data.pending && (
             <div className="flex items-end gap-2">
-              <label className="min-w-0 flex-1 text-sm">
+              <label className="min-w-0 flex-1 text-footnote">
                 <span className="sr-only">Your answer</span>
                 <textarea
                   aria-label="Your answer"
                   rows={3}
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white p-2 dark:border-slate-700 dark:bg-slate-900"
+                  className="w-full rounded-lg border border-border bg-surface p-2"
                 />
               </label>
-              <button
-                type="button"
-                className={button}
-                disabled={busy || !answer.trim()}
-                onClick={() => void submit()}
-              >
+              <Button size="sm" disabled={busy || !answer.trim()} onClick={() => void submit()}>
                 {busy ? 'Thinking…' : online ? 'Send' : 'Save for later'}
-              </button>
+              </Button>
             </div>
           )}
         </>
       )}
       {message && (
-        <p role="status" className="text-sm text-amber-700 dark:text-amber-400">
+        <p role="status" className="text-footnote text-warning">
           {message}
         </p>
       )}

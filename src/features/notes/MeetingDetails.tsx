@@ -4,8 +4,7 @@ import { useDb } from '../../lib/db/context';
 import { update } from '../../lib/db/repository';
 import type { Item } from '../../lib/schemas/records';
 
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = 'rounded-lg border border-border bg-surface px-2 py-1.5 text-footnote  ';
 
 /** Date and attendees of a meeting note, and its event (Task 6.4). */
 export default function MeetingDetails({ item }: { item: Item }) {
@@ -18,7 +17,7 @@ export default function MeetingDetails({ item }: { item: Item }) {
     void update(db, 'items', item.id, { data: { ...item.data, ...patch } });
 
   return (
-    <div aria-label="Meeting details" className="mb-4 flex flex-wrap items-end gap-3 text-sm">
+    <div aria-label="Meeting details" className="mb-4 flex flex-wrap items-end gap-3 text-footnote">
       <label>
         Date
         <input
@@ -45,7 +44,7 @@ export default function MeetingDetails({ item }: { item: Item }) {
         />
       </label>
       {eventId && (
-        <Link to="/calendar" className="text-indigo-600 hover:underline dark:text-indigo-400">
+        <Link to="/calendar" className="text-accent hover:underline">
           From a calendar event
         </Link>
       )}

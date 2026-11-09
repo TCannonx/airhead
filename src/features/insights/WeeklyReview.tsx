@@ -17,9 +17,10 @@ import {
 import { readReview } from '../../lib/review/review';
 import { useOnline } from '../../lib/useOnline';
 import BridgeHint from './BridgeHint';
+import { Button } from '../../ui/Button';
 
 const btn =
-  'rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700';
+  'rounded-lg bg-fill px-2.5 py-1 text-caption font-semibold hover:bg-fill disabled:opacity-50  ';
 const STATE_LABEL = {
   kept: 'Kept',
   archived: 'Archived',
@@ -89,15 +90,10 @@ export default function WeeklyReview() {
   };
 
   const runButton = reviews && (
-    <div className="flex items-center gap-3 text-xs text-slate-500">
-      <button
-        type="button"
-        className={btn}
-        disabled={busy || !online}
-        onClick={() => void runNow()}
-      >
+    <div className="flex items-center gap-3 text-caption text-fg-muted">
+      <Button size="sm" disabled={busy || !online} onClick={() => void runNow()}>
         {busy ? 'Reviewing…' : 'Run the weekly review now'}
-      </button>
+      </Button>
       <span>{online ? 'One AI call, ≈ €0.03.' : 'Needs a connection.'}</span>
     </div>
   );
@@ -106,8 +102,8 @@ export default function WeeklyReview() {
   const { review } = data;
   if (!review)
     return (
-      <div className="space-y-2 text-sm">
-        <p className="text-slate-500">
+      <div className="space-y-2 text-footnote">
+        <p className="text-fg-muted">
           The first weekly review arrives on your review day (Sunday evening by default).
         </p>
         {runButton}
@@ -141,8 +137,8 @@ export default function WeeklyReview() {
     );
 
   return (
-    <div className="space-y-4 text-sm">
-      <p className="text-xs text-slate-500">
+    <div className="space-y-4 text-footnote">
+      <p className="text-caption text-fg-muted">
         Week of {review.week_start}
         {review.status === 'fallback' && ' · numbers only (the AI part didn’t run)'}
         {' · '}AI this week: {euro(review.ai.cost_eur)} over {review.ai.calls} calls
@@ -154,13 +150,10 @@ export default function WeeklyReview() {
       <BridgeHint />
 
       {(review.tidy.length > 0 || review.auto_done.length > 0) && (
-        <section
-          aria-label="Tidy-up"
-          className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
-        >
+        <section aria-label="Tidy-up" className="rounded-card border border-border/60 p-3">
           <h3 className="mb-2 font-semibold">Tidy-up</h3>
           {review.auto_done.length > 0 && (
-            <p className="mb-2 text-xs text-slate-500">
+            <p className="mb-2 text-caption text-fg-muted">
               Tidied for you: {review.auto_done.length} old or duplicate{' '}
               {review.auto_done.length === 1 ? 'item' : 'items'} moved to the{' '}
               <Link to="/library/trash" className="underline">
@@ -179,36 +172,24 @@ export default function WeeklyReview() {
                 >
                   <span className="min-w-0">
                     <span className="font-medium">{p.title || '(untitled)'}</span>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-caption text-fg-muted">
                       {VERB[p.proposal]}: {p.reason}
                     </span>
                   </span>
                   {st !== 'open' ? (
-                    <span className="text-xs text-emerald-700 dark:text-emerald-400">
-                      {STATE_LABEL[st]}
-                    </span>
+                    <span className="text-caption text-success">{STATE_LABEL[st]}</span>
                   ) : p.proposal === 'condense' ? (
-                    <span className="text-xs text-slate-500">In group {p.group}</span>
+                    <span className="text-caption text-fg-muted">In group {p.group}</span>
                   ) : (
                     <span className="flex gap-1.5">
                       {p.proposal !== 'keep' && (
-                        <button
-                          type="button"
-                          className={btn}
-                          disabled={busy}
-                          onClick={() => void apply(p, p.proposal)}
-                        >
+                        <Button size="sm" disabled={busy} onClick={() => void apply(p, p.proposal)}>
                           {VERB[p.proposal]} {p.title}
-                        </button>
+                        </Button>
                       )}
-                      <button
-                        type="button"
-                        className={btn}
-                        disabled={busy}
-                        onClick={() => void apply(p, 'keep')}
-                      >
+                      <Button size="sm" disabled={busy} onClick={() => void apply(p, 'keep')}>
                         Keep {p.title}
-                      </button>
+                      </Button>
                     </span>
                   )}
                 </li>
@@ -242,10 +223,7 @@ export default function WeeklyReview() {
       )}
 
       {review.facts.length > 0 && (
-        <section
-          aria-label="Memory"
-          className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
-        >
+        <section aria-label="Memory" className="rounded-card border border-border/60 p-3">
           <h3 className="mb-2 font-semibold">Memory</h3>
           <ul className="space-y-2">
             {review.facts.map((f, i) => {
@@ -263,17 +241,16 @@ export default function WeeklyReview() {
                       ? `Merge into “${f.text}”`
                       : `Retire “${facts[0]?.text ?? ''}”`}
                     {f.action === 'merge' && (
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-caption text-fg-muted">
                         {facts.map((x) => x?.text).join(' · ')}
                       </span>
                     )}
                   </span>
                   {done || facts.length === 0 ? (
-                    <span className="text-xs text-emerald-700 dark:text-emerald-400">Done</span>
+                    <span className="text-caption text-success">Done</span>
                   ) : (
-                    <button
-                      type="button"
-                      className={btn}
+                    <Button
+                      size="sm"
                       disabled={busy}
                       onClick={() =>
                         void act(() =>
@@ -284,7 +261,7 @@ export default function WeeklyReview() {
                       }
                     >
                       {f.action === 'merge' ? 'Merge' : 'Retire'}
-                    </button>
+                    </Button>
                   )}
                 </li>
               );

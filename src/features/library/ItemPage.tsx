@@ -21,7 +21,6 @@ import { Select } from '../../ui/Select';
 import { TextArea } from '../../ui/TextArea';
 import { TextField } from '../../ui/TextField';
 
-
 /** "Mon 23 Nov, 09:00" in the device's zone. */
 function dueLabel(at: string): string {
   return new Date(at).toLocaleString('en-IE', {

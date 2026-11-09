@@ -10,13 +10,15 @@ export default function Patterns() {
   if (!reviews) return null;
   const p = patternsFrom(reviews);
   if (p.weeks === 0)
-    return <p className="text-sm text-slate-500">Patterns appear after the first weekly review.</p>;
+    return (
+      <p className="text-footnote text-fg-muted">Patterns appear after the first weekly review.</p>
+    );
   const done = p.perWeek.reduce((s, w) => s + w.done, 0);
   const due = p.perWeek.reduce((s, w) => s + w.due, 0);
 
   return (
-    <div className="space-y-6 text-sm">
-      <p className="text-slate-500">
+    <div className="space-y-6 text-footnote">
+      <p className="text-fg-muted">
         Over the last {p.weeks} {p.weeks === 1 ? 'week' : 'weeks'}: {done} tasks done
         {due > 0 && ` (${Math.round((Math.min(done, due) / due) * 100)}% of those due)`}.
       </p>
@@ -56,7 +58,7 @@ export default function Patterns() {
           <ul className="list-disc pl-5">
             {p.slippingTopics.map((t) => (
               <li key={t.topic}>
-                {t.topic} <span className="text-slate-500">({t.count})</span>
+                {t.topic} <span className="text-fg-muted">({t.count})</span>
               </li>
             ))}
           </ul>
@@ -68,7 +70,7 @@ export default function Patterns() {
           <ul className="list-disc pl-5">
             {p.returningIdeas.map((t) => (
               <li key={t.title}>
-                {t.title} <span className="text-slate-500">({t.returns})</span>
+                {t.title} <span className="text-fg-muted">({t.returns})</span>
               </li>
             ))}
           </ul>

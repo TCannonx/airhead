@@ -50,9 +50,7 @@ const WIDTHS: [number, string][] = [
 const HIGHLIGHTER = { color: '#facc15', width: 18 };
 
 const btn = (on: boolean) =>
-  `rounded-md px-2 py-1 text-sm font-semibold ${
-    on ? 'bg-slate-200 dark:bg-slate-700' : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-  }`;
+  `rounded-md px-2 py-1 text-footnote font-semibold ${on ? 'bg-fill ' : 'hover:bg-fill'}`;
 
 type Mode = Tool | 'eraser' | 'text' | 'lasso';
 
@@ -356,7 +354,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       <div
         role="toolbar"
         aria-label="Pen tools"
-        className="sticky top-0 z-10 mb-2 flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white/95 py-2 dark:border-slate-800 dark:bg-slate-950/95"
+        className="sticky top-0 z-10 mb-2 flex flex-wrap items-center gap-1 border-b border-border/60 bg-surface/95 py-2"
       >
         <button
           type="button"
@@ -372,7 +370,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
             type="button"
             aria-label={`${name} ink`}
             aria-pressed={mode === 'pen' && color === c}
-            className={`size-6 rounded-full border-2 ${mode === 'pen' && color === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`}
+            className={`size-6 rounded-full border-2 ${mode === 'pen' && color === c ? 'border-fg ' : 'border-transparent'}`}
             style={{ background: c }}
             onClick={() => {
               pick('pen');
@@ -459,9 +457,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
         {snapNote ?? ''}
       </p>
       {snapNote && (
-        <p className="mb-1 text-xs text-indigo-600 dark:text-indigo-400">
-          {snapNote} · Undo for the hand-drawn one
-        </p>
+        <p className="mb-1 text-caption text-accent">{snapNote} · Undo for the hand-drawn one</p>
       )}
       <div className="relative">
         <svg
@@ -469,7 +465,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           role="img"
           aria-label="Handwritten page"
           viewBox={`0 0 ${PAGE_WIDTH} ${height}`}
-          className="w-full rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800"
+          className="w-full rounded-lg border border-border/60 bg-surface shadow-sm"
           style={{ touchAction: 'none', aspectRatio: `${PAGE_WIDTH} / ${height}` }}
           onPointerDown={onDown}
           onPointerMove={onMove}
@@ -533,7 +529,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
                 role="button"
                 tabIndex={-1}
                 aria-label={`Move text box ${t.text || 'new'}`}
-                className="cursor-move touch-none select-none px-1 text-slate-400"
+                className="cursor-move touch-none select-none px-1 text-fg-subtle"
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -569,13 +565,13 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
               onBlur={() => {
                 if (!t.text.trim()) setTexts((cur) => removeText(cur, t.id));
               }}
-              className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-lg text-slate-900 hover:border-slate-300 focus:border-indigo-500 focus:outline-none dark:text-slate-100"
+              className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 text-lg text-fg hover:border-border focus:border-accent focus:outline-none"
             />
             {mode === 'text' && (
               <button
                 type="button"
                 aria-label={`Delete text box ${t.text || 'new'}`}
-                className="px-1 text-slate-400 hover:text-red-600"
+                className="px-1 text-fg-subtle hover:text-danger"
                 onClick={() => {
                   const next = removeText(texts, t.id);
                   setTexts(next);

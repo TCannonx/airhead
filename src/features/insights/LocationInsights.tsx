@@ -30,10 +30,10 @@ function Table({
   // Only columns that were used in the period, so the table stays narrow.
   const cols = WORK_LOCATIONS.filter((l) => rows.some((r) => r.counts[l] > 0));
   return (
-    <table className="w-full text-sm">
-      <caption className="mb-1 text-left text-sm font-medium">{caption}</caption>
+    <table className="w-full text-footnote">
+      <caption className="mb-1 text-left text-footnote font-medium">{caption}</caption>
       <thead>
-        <tr className="text-left text-xs text-slate-500">
+        <tr className="text-left text-caption text-fg-muted">
           <th scope="col" className="py-1 font-medium">
             Period
           </th>
@@ -46,7 +46,7 @@ function Table({
       </thead>
       <tbody>
         {rows.map((r) => (
-          <tr key={r.period} className="border-t border-slate-100 dark:border-slate-800">
+          <tr key={r.period} className="border-t border-border/60">
             <th scope="row" className="py-1 text-left font-normal">
               {label(r.period)}
             </th>
