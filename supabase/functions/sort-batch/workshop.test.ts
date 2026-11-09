@@ -1,6 +1,6 @@
 // Workshop routing (Task 11.2): what sorting cannot place is kept, never dropped.
 import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
-import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
+import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
 import type { SortAnswer, SortedItemT } from '../_shared/schemas/sort.ts';
 import { planSort, workshopTitle } from './plan.ts';
 
@@ -30,6 +30,8 @@ const item = (o: Partial<SortedItemT> = {}): SortedItemT => ({
   confidence: 0.9,
   suggest_workshop: false,
   related_idea_title: null,
+  quote: '',
+  steps: [],
   ...o,
 });
 const result = (

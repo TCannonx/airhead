@@ -98,5 +98,7 @@ export function openUserDb(userId: string): AirheadDb {
   });
   // v10: AI actions (Task 10.2).
   db.version(10).stores({ ai_actions: 'id, capture_id, status, server_updated_at' });
+  // v11: follow-up questions (Task 12.1).
+  db.version(11).stores({ follow_ups: 'id, capture_id, item_id, status, server_updated_at' });
   return db;
 }

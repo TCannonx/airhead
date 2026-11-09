@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(sorting): a note that implies more work gets a planning task with checklist steps, due before the first occurrence (or in 3 days), and up to 3 specific questions with quick answers in the new synced `follow_ups` table; clear notes get none; prompt `sort-batch.v7`, `apply_sort_batch` v7 (Task 12.1)
 - docs: Phase 12 spec and plan, "Trust: every note counts" (questions, planning steps, receipts, completeness checks)
 - release: phase 11 (calendar, AI everywhere, Send to Workshop, new look) on dev
 - feat(ui): Settings panels (Work, Memory, Today, linked calendars, capture tokens, sharing, notifications, Scout, app lock), sign-in, lock screen, loading screen and Share page on the shared components; on/off settings are switches, working days are chips, small fields are 44 px on phones; e2e at phone and desktop with axe, sign-in and signed-in Settings checked against the real server (Task 11.U4)

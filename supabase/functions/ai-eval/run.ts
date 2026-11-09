@@ -4,7 +4,7 @@
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
 import { leaveYearFor } from '../_shared/leave/engine.ts';
 import { readWork } from '../_shared/leave/work.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort, type InstantRow } from '../sort-batch/plan.ts';
 import { evalActionContext, evalCases, type CaseView } from './cases.ts';
@@ -15,7 +15,13 @@ export interface CaseReport {
   meant: string;
   pass: boolean;
   problems: string[];
-  got: { items: unknown[]; actions: unknown[]; updates: unknown[]; workshop: number };
+  got: {
+    items: unknown[];
+    actions: unknown[];
+    updates: unknown[];
+    workshop: number;
+    follow_ups: unknown[];
+  };
 }
 
 export interface EvalReport {
@@ -163,6 +169,7 @@ export async function runEval(
       ),
       updates: plan.item_updates.filter((u) => u.capture_id === id),
       workshop: plan.workshop.filter((w) => w.capture_id === id),
+      follow_ups: mine(plan.follow_ups),
       status: plan.captures.find((x) => x.id === id)?.status,
       timeZone: TZ,
     };
@@ -184,6 +191,7 @@ export async function runEval(
           rrule: x.rrule,
           status: x.status,
           workshop: x.data.workshop === true,
+          steps: x.data.steps ?? [],
         })),
         actions: view.actions.map((a) => ({
           kind: a.kind,
@@ -193,6 +201,11 @@ export async function runEval(
         })),
         updates: view.updates.map((u) => u.after),
         workshop: view.workshop.length,
+        follow_ups: view.follow_ups.map((f) => ({
+          question: f.question,
+          options: f.options,
+          about: view.items.find((x) => x.id === f.item_id)?.title ?? null,
+        })),
       },
     };
   });

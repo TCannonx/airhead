@@ -353,6 +353,27 @@ export const aiActionSchema = z.object({
   after: z.record(z.string(), z.unknown()).nullable(),
 });
 export type AiAction = z.infer<typeof aiActionSchema>;
+
+/**
+ * A question Airhead asks about a note that implies more work (Task 12.1).
+ * Written by sorting; devices change only status and answer.
+ */
+export const followUpSchema = z.object({
+  ...syncColumns,
+  capture_id: id.nullable(),
+  /** The note it came from (Task 11.0 notes), when not from a capture. */
+  note_id: id.nullable(),
+  /** The item it is about, or null. */
+  item_id: id.nullable(),
+  question: z.string(),
+  /** Up to 4 quick answers. */
+  options: z.array(z.string()),
+  status: z.enum(['open', 'answered', 'dismissed']),
+  answer: z.string().nullable(),
+  /** 1 for a question about the note; 2 for one asked after an answer. */
+  round: z.number().int(),
+});
+export type FollowUp = z.infer<typeof followUpSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -379,6 +400,7 @@ export const SYNC_TABLES = [
   'scout_runs',
   'suggestions',
   'ai_actions',
+  'follow_ups',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -405,6 +427,7 @@ export const schemas = {
   scout_runs: scoutRunSchema,
   suggestions: suggestionSchema,
   ai_actions: aiActionSchema,
+  follow_ups: followUpSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -430,4 +453,5 @@ export interface RowTypes {
   scout_runs: ScoutRun;
   suggestions: Suggestion;
   ai_actions: AiAction;
+  follow_ups: FollowUp;
 }

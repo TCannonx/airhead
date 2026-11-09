@@ -58,6 +58,8 @@ const blankItem = {
   confidence: 0.9,
   suggest_workshop: false,
   related_idea_title: null,
+  quote: '',
+  steps: [],
 };
 const action = (kind, quote, details, confidence = 0.92) => ({
   kind,
@@ -86,7 +88,7 @@ function nextWeekdayAt(weekday, hour, minute = 0) {
 }
 
 /** What the model would plausibly return for one capture. */
-export function sortOne(id, text, ctx, instant = null) {
+export function sortOne(id, text, ctx, instant = null, answer = null) {
   const t = text.trim();
   const lower = t.toLowerCase();
   const result = {
@@ -94,12 +96,44 @@ export function sortOne(id, text, ctx, instant = null) {
     items: [],
     actions: [],
     leftover: null,
+    follow_ups: [],
     proposed_facts: [],
     link_summary: null,
   };
 
   // Words that cannot be placed at all (Task 11.2): no items, no actions.
   if (/^hmm\b/i.test(t)) return result;
+
+  // An answer to an earlier question (Task 12.2): Airhead adds it to the item
+  // itself; the model adds the next step it implies, as a task.
+  if (answer) {
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: `Sandwiches for ${t.replace(/[.\s]+$/, '')}`,
+      quote: t,
+    });
+    return result;
+  }
+
+  // "Need to sort out car insurance before it renews end of month" (Task 12.1):
+  // implied work becomes a planning task with steps, and one specific question.
+  const sortOut = t.match(/^need to (sort out|figure out|decide) (.+?)(?: before (.+?))?\.?$/i);
+  if (sortOut) {
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: cap(`${sortOut[1]} ${sortOut[2]}`),
+      quote: t,
+      steps: ['Find the current policy', 'Get two quotes', 'Pick one and pay'],
+    });
+    result.follow_ups.push({
+      question: 'When exactly does it renew?',
+      options: [],
+      about_item: 0,
+    });
+    return result;
+  }
 
   // "Planning Christmas sandwiches every week on a Friday. Still need to plan but
   // keep as a placeholder" (Task 11.2): a weekly event, plus the words no item covers.
@@ -115,8 +149,26 @@ export function sortOne(id, text, ctx, instant = null) {
       start_at: instant?.start ?? nextWeekday(day, 0),
       all_day: instant ? instant.allDay : true,
       rrule: `FREQ=WEEKLY;BYDAY=${plan[2].slice(0, 2).toUpperCase()}`,
+      quote: plan[0].split('.')[0],
     });
-    result.leftover = cap(plan[3]);
+    // Phase 12: "still need to plan" is implied work, so it becomes a planning
+    // task with steps and specific questions (no longer leftover words).
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: `Plan ${plan[1]}`,
+      quote: cap(plan[3]),
+      steps: ['Decide who they are for', 'Count how many people', 'Choose fillings'],
+    });
+    result.follow_ups.push(
+      {
+        question: 'Who are the sandwiches for?',
+        options: ['Family', 'Work', 'Friends'],
+        about_item: 0,
+      },
+      { question: 'How many people?', options: [], about_item: 0 },
+      { question: 'Making them or ordering?', options: ['Making', 'Ordering'], about_item: 0 },
+    );
     return result;
   }
 
@@ -245,6 +297,20 @@ export function sortOne(id, text, ctx, instant = null) {
     }
   }
 
+  // "Call the plumber. Maybe something about the shed" (Task 11.2): a task, and
+  // a vague part no item covers, as leftover words.
+  const vaguePart = t.match(/^(.+?)\.\s+(maybe .+?)\.?$/i);
+  if (vaguePart) {
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: cap(vaguePart[1]),
+      quote: vaguePart[1],
+    });
+    result.leftover = cap(vaguePart[2]);
+    return result;
+  }
+
   result.items.push({ ...blankItem, title: t.charAt(0).toUpperCase() + t.slice(1) });
   return result;
 }
@@ -259,6 +325,7 @@ export function sortNote(id, text) {
     items: [],
     actions: [],
     leftover: null,
+    follow_ups: [],
     proposed_facts: [],
     link_summary: null,
   };
@@ -282,13 +349,14 @@ export function sortAnswer(userText) {
   const ctx = ctxMatch ? JSON.parse(ctxMatch[1]) : {};
   const results = [];
   const re =
-    /<capture id="([^"]+)"(?: instant_event="([^"]*)")?>\n(?:url: [^\n]*\n)?([\s\S]*?)\n<\/capture>/g;
+    /<capture id="([^"]+)"(?: instant_event="([^"]*)")?(?: answer_to="([^"]*)" about="([^"]*)"(?: final="true")?)?>\n(?:url: [^\n]*\n)?([\s\S]*?)\n<\/capture>/g;
   for (const m of userText.matchAll(re)) {
-    const text = m[3].replace(/\n<article[\s\S]*<\/article>$/, '');
+    const text = m[5].replace(/\n<article[\s\S]*<\/article>$/, '');
     // instant_event="title | start (all day)": the event Airhead already made.
     const inst = m[2]?.match(/^(.*) \| (\S+)( \(all day\))?$/);
     const instant = inst ? { title: inst[1], start: inst[2], allDay: !!inst[3] } : null;
-    results.push(sortOne(m[1], text, ctx, instant));
+    const answer = m[3] !== undefined ? { question: m[3], about: m[4] } : null;
+    results.push(sortOne(m[1], text, ctx, instant, answer));
   }
   const notes = /<note id="([^"]+)" title="[^"]*">\n([\s\S]*?)\n<\/note>/g;
   for (const m of userText.matchAll(notes)) results.push(sortNote(m[1], m[2]));

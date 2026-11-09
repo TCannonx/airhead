@@ -19,6 +19,13 @@ export const SortedItem = z.object({
   confidence: z.number(),
   suggest_workshop: z.boolean(),
   related_idea_title: z.string().nullable(),
+  /** The words of the capture this item comes from (Task 12.1; shown on the receipt). */
+  quote: z.string(),
+  /**
+   * Up to 5 checklist steps for a planning task (Task 12.1): a note that implies
+   * more work ("still need to plan") gets a task with these. Empty otherwise.
+   */
+  steps: z.array(z.string()),
 });
 
 const ACTION_KINDS = [
@@ -111,6 +118,20 @@ export function readAction(w: ActionWireT): SortActionT {
   return out as SortActionT;
 }
 
+/**
+ * A question Airhead asks about a note that implies more work (Task 12.1). Not
+ * nullable anywhere, so the schema stays within the union-parameter limit.
+ */
+export const FollowUp = z.object({
+  /** Specific to the note, e.g. "Who are the sandwiches for?". */
+  question: z.string(),
+  /** 0 to 4 short quick answers, e.g. ["Family", "Work", "Friends"]. */
+  options: z.array(z.string()),
+  /** Index of this capture's own item the question is about, or -1 for none. */
+  about_item: z.number().int(),
+});
+export type FollowUpT = z.infer<typeof FollowUp>;
+
 /** Results for notes (Task 11.0) carry capture_id "note:<item id>"; no extra schema field. */
 export const NOTE_PREFIX = 'note:';
 
@@ -127,6 +148,8 @@ export const SortResult = z.object({
        * a Workshop note, so nothing is dropped silently.
        */
       leftover: z.string().nullable(),
+      /** Up to 3 questions when the capture implies more work (Task 12.1); usually none. */
+      follow_ups: z.array(FollowUp),
       /** Lasting facts about the person, only from what they typed. */
       proposed_facts: z.array(
         z.object({ text: z.string(), category: z.enum(['everyday', 'person', 'personal']) }),
@@ -148,12 +171,21 @@ export const SortResult = z.object({
 export type SortedItemT = z.infer<typeof SortedItem>;
 export type SortResultT = z.infer<typeof SortResult>;
 type SortResultEntry = SortResultT['results'][number];
+/** An item as the planner accepts it: quote and steps optional (older saved answers lack them). */
+export type SortAnswerItem = Omit<SortedItemT, 'quote' | 'steps'> & {
+  quote?: string;
+  steps?: string[];
+};
 /**
- * What the planner accepts: a sorting answer, digest and leftover optional
- * (older saved answers lack them).
+ * What the planner accepts: a sorting answer, digest, leftover, follow_ups and
+ * the items' quote and steps optional (older saved answers lack them).
  */
 export type SortAnswer = {
-  results: (Omit<SortResultEntry, 'leftover'> & { leftover?: string | null })[];
+  results: (Omit<SortResultEntry, 'leftover' | 'follow_ups' | 'items'> & {
+    items: SortAnswerItem[];
+    leftover?: string | null;
+    follow_ups?: FollowUpT[];
+  })[];
   digest?: string | null;
 };
 export type SortActionT = z.infer<typeof SortAction>;

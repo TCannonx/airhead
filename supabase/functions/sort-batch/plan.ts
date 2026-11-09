@@ -1,7 +1,9 @@
 import {
+  type FollowUpT,
   NOTE_PREFIX,
   readAction,
   type SortAnswer,
+  type SortAnswerItem,
   type SortedItemT,
 } from '../_shared/schemas/sort.ts';
 import { type ActionContext, type NewItemRef, type PlannedAction, planActions } from './actions.ts';
@@ -30,6 +32,66 @@ export interface PlanContext {
    * kept as a Workshop note. Without it, an unplaced capture fails as before.
    */
   texts?: Map<string, string>;
+  /**
+   * Captures that answer an earlier question (Task 12.2), by capture id. The
+   * answer is added to the item's details, and at most one more round is asked.
+   */
+  answers?: Map<string, AnswerContext>;
+}
+
+/** What an answer capture answers (Task 12.2). */
+export interface AnswerContext {
+  follow_up_id: string;
+  question: string;
+  /** The round of the question answered (1 = asked about the original note). */
+  round: number;
+  /** The item the question was about, as the server holds it now; null if gone. */
+  item: { id: string; title: string; body: string | null; updated_at: string } | null;
+}
+
+/** At most this many questions per note, and quick answers per question (Task 12.1). */
+export const MAX_FOLLOW_UPS = 3;
+export const MAX_OPTIONS = 4;
+/** Questions stop after this round: an answer may bring one more, no more (Task 12.2). */
+export const MAX_ROUNDS = 2;
+/** Checklist steps on a planning task. */
+export const MAX_STEPS = 5;
+
+/** A question to the person, written by apply_sort_batch into follow_ups (Task 12.1). */
+export interface PlannedFollowUp {
+  id: string;
+  capture_id: string | null;
+  note_id?: string;
+  /** The item it is about (new in this batch or existing), or null. */
+  item_id: string | null;
+  question: string;
+  options: string[];
+  round: number;
+}
+
+/** Generic questions never help (spec 12.1: "never generic"). */
+const GENERIC_QUESTION =
+  /^(?:is there )?(?:anything|something) else\b|^any (?:other|more|further) (?:details|info|information|thoughts)\b|^(?:can|could) you (?:tell me|give) more\b/i;
+
+/** Cleans the model's questions: specific, short, at most 3, at most 4 quick answers each. */
+export function cleanFollowUps(raw: FollowUpT[] | undefined, max = MAX_FOLLOW_UPS) {
+  const out: { question: string; options: string[]; about_item: number }[] = [];
+  for (const f of raw ?? []) {
+    const question = f.question.replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!question || GENERIC_QUESTION.test(question)) continue;
+    if (out.some((o) => norm(o.question) === norm(question))) continue;
+    const options = [
+      ...new Set(f.options.map((o) => o.replace(/\s+/g, ' ').trim().slice(0, 40)).filter(Boolean)),
+    ].slice(0, MAX_OPTIONS);
+    out.push({ question, options, about_item: Number.isInteger(f.about_item) ? f.about_item : -1 });
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/** A planning task's checklist, as the item body: one "- [ ] step" line each. */
+export function checklistBody(steps: string[]): string {
+  return steps.map((s) => `- [ ] ${s}`).join('\n');
 }
 
 /** A note looked at by this batch, and what it looked like (Task 11.0). */
@@ -147,6 +209,8 @@ export interface SortPlan {
   notes: NoteSeen[];
   /** Captures whose words went to the Workshop (Task 11.2). */
   workshop: WorkshopRoute[];
+  /** Questions about notes that imply more work (Task 12.1). */
+  follow_ups: PlannedFollowUp[];
 }
 
 const norm = (s: string) => s.trim().toLowerCase();
@@ -187,6 +251,56 @@ export function tomorrowMorning(now: Date, timeZone: string, daysAhead = 1): str
   const guess = Date.parse(`${day}T09:00:00Z`);
   const offsetMs = Date.parse(`${local(new Date(guess))}:00Z`) - guess;
   return new Date(guess - offsetMs).toISOString();
+}
+
+/** 09:00 on a local date (YYYY-MM-DD) in the time zone, as UTC ISO. */
+export function nineOn(ymd: string, timeZone: string): string {
+  const guess = Date.parse(`${ymd}T09:00:00Z`);
+  const local = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
+    .format(new Date(guess))
+    .replace(', ', 'T');
+  const offsetMs = Date.parse(`${local}:00Z`) - guess;
+  return new Date(guess - offsetMs).toISOString();
+}
+
+/**
+ * When a planning task is due (Task 12.1): before the first occurrence of the
+ * event it is for (09:00 the day before, or 09:00 that day, or the start, the
+ * first that is still ahead), never later than that; with no event, the model's
+ * date if it is ahead, else 09:00 in 3 days.
+ */
+export function planningDue(
+  modelDue: string | null,
+  eventStart: string | null,
+  now: Date,
+  timeZone: string,
+): string {
+  const ahead = (iso: string | null) => iso !== null && Date.parse(iso) > now.getTime();
+  if (eventStart && ahead(eventStart)) {
+    const day = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(eventStart));
+    const before = new Date(Date.parse(`${day}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+    const latest =
+      [nineOn(before, timeZone), nineOn(day, timeZone)].find(
+        (t) => ahead(t) && Date.parse(t) < Date.parse(eventStart),
+      ) ?? eventStart;
+    return modelDue && ahead(modelDue) && Date.parse(modelDue) <= Date.parse(latest)
+      ? modelDue
+      : latest;
+  }
+  return modelDue && ahead(modelDue) ? modelDue : tomorrowMorning(now, timeZone, 3);
 }
 
 /** Birthdays and anniversaries repeat every year even when the model leaves rrule out. */
@@ -284,6 +398,76 @@ export function planSort(
   const itemUpdates: ItemUpdate[] = [];
   const workshop: WorkshopRoute[] = [];
   const notesToWorkshop = new Set<string>();
+  const followUps: PlannedFollowUp[] = [];
+
+  /**
+   * A planning task is due before the first occurrence of the event it came
+   * with, or in 3 days (Task 12.1).
+   */
+  const duePlanning = (refs: (NewItemRef | undefined)[], planned: PlannedItem[]) => {
+    const event = refs.find((x) => x?.type === 'event' && x.start_at);
+    for (const p of planned)
+      if (p.data.planning === true)
+        p.due_at = planningDue(
+          p.due_at,
+          event?.start_at ?? null,
+          ctx.now,
+          ctx.timeZone ?? 'Europe/Dublin',
+        );
+  };
+
+  /**
+   * The questions for one result (Task 12.1): at most 3, about one of its own
+   * items (or the first non-planning one). An answer may bring one more, about
+   * the same item, and only up to MAX_ROUNDS (Task 12.2).
+   */
+  const ask = (
+    r: SortAnswer['results'][number],
+    refs: (NewItemRef | undefined)[],
+    owner: { capture_id: string | null; note_id?: string },
+    answer?: AnswerContext,
+  ) => {
+    const round = answer ? answer.round + 1 : 1;
+    if (round > MAX_ROUNDS) return;
+    const fallback =
+      answer?.item?.id ??
+      refs.find((x) => x && !(x as Partial<PlannedItem>).data?.planning)?.id ??
+      refs.find((x) => x)?.id ??
+      null;
+    for (const f of cleanFollowUps(r.follow_ups, answer ? 1 : MAX_FOLLOW_UPS)) {
+      // A further question stays in the thread: about the item first asked about.
+      const ref = answer?.item ? answer.item : f.about_item >= 0 ? refs[f.about_item] : undefined;
+      followUps.push({
+        id: crypto.randomUUID(),
+        ...owner,
+        item_id: ref?.id ?? fallback,
+        question: f.question,
+        options: f.options,
+        round,
+      });
+    }
+  };
+
+  /**
+   * An answer is added to the details of the item it was about (Task 12.2),
+   * as a tidy_item change the person can Undo.
+   */
+  const addAnswer = (captureId: string, answer: AnswerContext) => {
+    const text = (ctx.texts?.get(captureId) ?? '').replace(/\s+/g, ' ').trim();
+    if (!answer.item || !text) return;
+    const line = `${answer.question} ${text}`;
+    const body = [answer.item.body?.trim(), line].filter(Boolean).join('\n');
+    itemUpdates.push({
+      id: crypto.randomUUID(),
+      capture_id: captureId,
+      item_id: answer.item.id,
+      summary: `Added your answer to “${answer.item.title}”`,
+      quote: text.slice(0, 300),
+      confidence: 1,
+      before: { body: answer.item.body, updated_at: answer.item.updated_at },
+      after: { body },
+    });
+  };
 
   /**
    * Keeps captured words as a Workshop note linked to the capture (Task 11.2):
@@ -317,9 +501,27 @@ export function planSort(
   };
 
   /** One item from the model, with Airhead's rules applied. */
-  const toPlanned = (it: SortedItemT, captureId: string | null, isLink: boolean): PlannedItem => {
+  const toPlanned = (
+    it: SortAnswerItem,
+    captureId: string | null,
+    isLink: boolean,
+  ): PlannedItem => {
     const confidence = Math.min(1, Math.max(0, it.confidence));
     const data: Record<string, unknown> = {};
+    // The words it came from, for the receipt (Task 12.3).
+    const quote = (it.quote ?? '').replace(/\s+/g, ' ').trim().slice(0, 300);
+    if (quote) data.quote = quote;
+    // A planning task's checklist (Task 12.1): kept in data and shown in the body.
+    const steps =
+      it.type === 'task' && !isLink
+        ? [...new Set((it.steps ?? []).map((s) => s.replace(/\s+/g, ' ').trim()).filter(Boolean))]
+            .map((s) => s.slice(0, 120))
+            .slice(0, MAX_STEPS)
+        : [];
+    if (steps.length) {
+      data.planning = true;
+      data.steps = steps;
+    }
     let itemStatus: PlannedItem['status'] = confidence < REVIEW_BELOW ? 'suggested' : 'open';
     let listId: string | null = null;
 
@@ -353,7 +555,9 @@ export function planSort(
       capture_id: captureId,
       type: it.type,
       title: it.title.trim().replace(/\.$/, '') || '(untitled)',
-      body: it.body?.trim() || null,
+      body: steps.length
+        ? [it.body?.trim(), checklistBody(steps)].filter(Boolean).join('\n\n')
+        : it.body?.trim() || null,
       status: itemStatus,
       start_at: start,
       end_at: iso(it.end_at),
@@ -412,6 +616,11 @@ export function planSort(
           })),
         );
       }
+      duePlanning(
+        refs,
+        items.filter((p) => p.note_id === noteId),
+      );
+      ask(r, refs, { capture_id: null, note_id: noteId });
       keepFacts(r, null);
       // Words to plan that fit no item: the note itself goes to the Workshop (Task 11.2).
       if ((r.leftover ?? '').trim()) notesToWorkshop.add(noteId);
@@ -421,7 +630,9 @@ export function planSort(
     const isLink = links.has(r.capture_id);
     if (!unsorted.has(r.capture_id) && !isLink) continue;
     seen.add(r.capture_id);
-    const unmapped = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink;
+    const answer = isLink ? undefined : ctx.answers?.get(r.capture_id);
+    // An answer is never unplaced: it is added to the item it was about (Task 12.2).
+    const unmapped = r.items.length === 0 && (r.actions ?? []).length === 0 && !isLink && !answer;
     let review = unmapped;
     const instantRow = isLink ? undefined : ctx.instant?.get(r.capture_id);
     let tidyDone = false;
@@ -482,6 +693,11 @@ export function planSort(
       refs.push(planned);
     }
 
+    duePlanning(
+      refs,
+      items.filter((p) => p.capture_id === r.capture_id),
+    );
+
     if (tidy) {
       const added = items.filter((p) => p.capture_id === r.capture_id).length;
       const title = (tidy.after.title as string | undefined) ?? instantRow?.title ?? '';
@@ -529,7 +745,9 @@ export function planSort(
       // no item covers, are kept as a Workshop note.
       const text = (ctx.texts?.get(r.capture_id) ?? '').trim();
       const leftover = (r.leftover ?? '').trim();
-      if (unmapped && text) {
+      if (answer) {
+        addAnswer(r.capture_id, answer);
+      } else if (unmapped && text) {
         toWorkshop(r.capture_id, text, 'unmapped');
         review = false;
       } else if (
@@ -538,6 +756,7 @@ export function planSort(
       ) {
         toWorkshop(r.capture_id, leftover, 'leftover');
       }
+      ask(r, refs, { capture_id: r.capture_id }, answer);
       status.set(r.capture_id, review ? 'needs_review' : 'sorted');
       // Facts are learned only from what the person typed, never from page text.
       keepFacts(r, r.capture_id);
@@ -553,7 +772,9 @@ export function planSort(
   for (const id of captureIds) {
     const text = (ctx.texts?.get(id) ?? '').trim();
     if (status.has(id) || !text) continue;
-    toWorkshop(id, text, 'unmapped');
+    const answer = ctx.answers?.get(id);
+    if (answer) addAnswer(id, answer);
+    else toWorkshop(id, text, 'unmapped');
     status.set(id, 'sorted');
   }
 
@@ -570,5 +791,6 @@ export function planSort(
       notesToWorkshop.has(n.id) ? { ...n, workshop: true as const } : n,
     ),
     workshop,
+    follow_ups: followUps,
   };
 }

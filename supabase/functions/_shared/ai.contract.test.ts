@@ -32,7 +32,7 @@ import { runTurn, type Turn, TurnResult } from '../workshop/turn.ts';
 import { type AIClient, type CallAIRequest, callAI, type UsageStore } from './ai.ts';
 import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v6.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v7.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
 
 const rows: { ok: boolean; error_code: string | null }[] = [];
@@ -204,7 +204,7 @@ Deno.test('sorting: a note block comes back as a task for that note, with a dige
 });
 
 Deno.test(
-  'sorting: a placeholder comes back as an event plus leftover words; vague words map to nothing',
+  'sorting: a placeholder comes back as an event, a planning task and questions; vague words map to nothing; an answer is understood',
   async () => {
     await withMock(async (url) => {
       Deno.env.set('ANTHROPIC_BASE_URL', url);
@@ -226,6 +226,16 @@ Deno.test(
               url: null,
             },
             { id: 'c2', text: 'hmm the thing with the stuff', url: null },
+            {
+              id: 'c3',
+              text: 'the office team',
+              url: null,
+              answer: {
+                question: 'Who are the sandwiches for?',
+                about: 'Christmas sandwiches | event | ',
+                final: false,
+              },
+            },
           ],
         );
         const r = await callAI(
@@ -233,13 +243,31 @@ Deno.test(
           request(SortResult, SORT_BATCH_SYSTEM, message),
         );
         assert(r.ok, `sorting call failed: ${JSON.stringify(r)}`);
-        const [plan, vague] = r.data.results;
+        const [plan, vague, answer] = r.data.results;
+        // Phase 12: the planning is taken forward, with specific questions.
         assertEquals(
-          plan!.items.map((i) => [i.type, i.title, i.rrule]),
-          [['event', 'Christmas sandwiches', 'FREQ=WEEKLY;BYDAY=FR']],
+          plan!.items.map((i) => [i.type, i.title, i.rrule, i.steps.length > 0]),
+          [
+            ['event', 'Christmas sandwiches', 'FREQ=WEEKLY;BYDAY=FR', false],
+            ['task', 'Plan Christmas sandwiches', null, true],
+          ],
         );
-        assertEquals(plan!.leftover, 'Still need to plan');
+        assertEquals(plan!.leftover, null);
+        assertEquals(
+          plan!.follow_ups.map((f) => [f.question, f.about_item]),
+          [
+            ['Who are the sandwiches for?', 0],
+            ['How many people?', 0],
+            ['Making them or ordering?', 0],
+          ],
+        );
         assertEquals([vague!.items, vague!.actions, vague!.leftover], [[], [], null]);
+        assertEquals(vague!.follow_ups, []);
+        // An answer (Task 12.2) comes back as the next step it implies.
+        assertEquals(
+          answer!.items.map((i) => [i.type, i.title]),
+          [['task', 'Sandwiches for the office team']],
+        );
       } finally {
         Deno.env.delete('ANTHROPIC_BASE_URL');
       }

@@ -3,7 +3,7 @@ import {
   buildSortMessage,
   NOTE_TEXT_MAX,
   SORT_BATCH_SYSTEM,
-} from '../_shared/prompts/sort-batch.v6.ts';
+} from '../_shared/prompts/sort-batch.v7.ts';
 import type { SortAnswer, SortedItemT } from '../_shared/schemas/sort.ts';
 import type { ActionContext } from './actions.ts';
 import { noteForSorting, type NoteRow, textHash } from './notes.ts';
@@ -37,6 +37,8 @@ const item = (o: Partial<SortedItemT>): SortedItemT => ({
   confidence: 0.9,
   suggest_workshop: false,
   related_idea_title: null,
+  quote: '',
+  steps: [],
   ...o,
 });
 const result = (capture_id: string, o: Partial<SortAnswer['results'][number]> = {}) => ({

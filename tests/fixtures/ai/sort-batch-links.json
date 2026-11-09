@@ -26,7 +26,9 @@
             "topics": ["Running"],
             "confidence": 0.9,
             "suggest_workshop": false,
-            "related_idea_title": null
+            "related_idea_title": null,
+            "quote": "",
+            "steps": []
           }
         ],
         "link_summary": {
@@ -45,7 +47,8 @@
           }
         ],
         "actions": [],
-        "leftover": null
+        "leftover": null,
+        "follow_ups": []
       }
     ],
     "digest": null

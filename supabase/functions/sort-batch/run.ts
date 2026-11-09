@@ -1,6 +1,6 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
@@ -329,6 +329,7 @@ export async function runSortBatch(
     links: number;
     actions?: number;
     notes?: number;
+    follow_ups?: number;
   };
   const parts: string[] = [];
   if (counts.captures || !counts.notes)
@@ -338,6 +339,8 @@ export async function runSortBatch(
     parts.push(parts.length ? looked : looked.charAt(0).toUpperCase() + looked.slice(1));
   }
   if (counts.actions) parts.push(`${counts.actions} action${counts.actions === 1 ? '' : 's'}`);
+  if (counts.follow_ups)
+    parts.push(`${counts.follow_ups} question${counts.follow_ups === 1 ? '' : 's'}`);
   if (counts.links) parts.push(`summarised ${counts.links} link${counts.links === 1 ? '' : 's'}`);
   return {
     ok: true,

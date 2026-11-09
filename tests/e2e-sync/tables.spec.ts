@@ -228,6 +228,17 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       before: null,
       after: null,
     },
+    follow_ups: {
+      ...base(),
+      capture_id: ids.capture,
+      note_id: null,
+      item_id: null,
+      question: 'Every table question?',
+      options: ['Yes', 'No'],
+      status: 'dismissed',
+      answer: null,
+      round: 1,
+    },
   };
 }
 

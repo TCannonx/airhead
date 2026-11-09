@@ -309,6 +309,13 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Pages on the shared components (11.U3): Library (filters, search, item page, lists, trash, Ask), Insights, typed and handwritten notes (`.ah-note-page`, ToolButton toolbars), Workshop, Work and leave (leave form in a Sheet, switches) | existing page tests (`features/library`, `insights`, `notes`, `workshop`, `leave`) | — | `e2e/pages-u3.spec.ts` (phone 390 × 844 and desktop: renders, main action, 44 px buttons, axe WCAG A/AA, dark mode) | Pencil feel on a real iPad (manual checklist) |
 | Pages on the shared components (11.U4): Settings panels (switches, chips, inline fields), sign-in, lock and loading screens, Share page | `features/settings/*.test.tsx`, `applock/applock.test.tsx`, `auth/auth.test.tsx`, `capture/share.test.tsx` | — | `e2e/pages-u4.spec.ts` (phone and desktop: axe WCAG A/AA, 44 px buttons, a setting saved and kept, dark mode); `sync/signin-ui.spec.ts` (sign-in screen and signed-in Settings with the real server, phone light and dark and desktop, axe) | Lock screen with real Face ID (manual checklist) |
 
+## Phase 12 — Trust: every note counts
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| A note that implies more work gets a planning task with checklist steps, due before the first occurrence (or in 3 days), and up to 3 specific questions with quick answers; generic questions dropped; clear notes get none | — | `fn/sort-batch/followups.test.ts`, `_shared/ai.contract.test.ts` (placeholder → event, planning task, 3 questions), `_shared/schemas/limits.test.ts` (10 union params), `db/0039` (inserted with the batch, owner-only RLS, none for a capture sorted meanwhile) | `sync/ai.spec.ts` "Sort now on a placeholder note: the event, a planning task with steps, and questions" (server rows checked) | Whether the real model asks well: `ai-eval` on dev |
+| `follow_ups` syncs between devices | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `db/0039` | `sync/tables.spec.ts` (every synced table) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
