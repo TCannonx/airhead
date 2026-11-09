@@ -86,6 +86,7 @@ for (const [name, size] of [
         .getByRole('list', { name: 'Unsorted' })
         .getByRole('button', { name: 'Sort as Task' })
         .click();
+      await expect(page.getByText('Nothing waiting. Everything is sorted.')).toBeVisible();
       // Pin it to today's Top 3 from its item page (the automatic pick depends on the hour).
       await page.goto('/library');
       await page
