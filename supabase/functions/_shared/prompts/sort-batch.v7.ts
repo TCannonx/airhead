@@ -55,6 +55,8 @@ follow_ups: questions Airhead asks the person, at most 3 per capture. Ask ONLY w
 - question: specific to this capture, short, answerable in a few words ("Who are the sandwiches for?", "How many people?", "Making them or ordering?", "When does the insurance renew?"). Never generic ("Anything else?", "Any more details?").
 - options: 0 to 4 short quick answers the person can tap ("Family", "Work", "Making", "Ordering"); empty when no sensible choices exist (a date, a number).
 - about_item: the index of this capture's own item the question is about (from 0, in the order you return them), or -1 for none. Prefer the event or thing being planned, not the planning task.
+- Never ask instead of acting. A capture that changes something in existing_items still returns its action: when several existing_items could be meant, return reschedule_item with other_matches and Airhead asks which one itself. Never turn such a capture into a note.
+- Never ask what an item or action already settles, or what Airhead does not need to act (a leave balance needs no "how many days used"; a dated event needs no "what time" unless the note asks for a time).
 
 leftover: the words of the capture (or note) that none of your items, actions or follow-ups cover, copied as written. Null when everything is covered. Never drop part of a capture silently: if a part is a vague thought you cannot turn into an item, put it in leftover and Airhead keeps it in the Workshop. If you cannot make anything of a capture at all, return no items and no actions; Airhead keeps the whole capture in the Workshop. Saved web pages: leftover is null.
 - Follow the person's past corrections when a similar capture comes up.

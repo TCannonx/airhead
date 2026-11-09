@@ -25,6 +25,8 @@ Deno.test(
         'off-dec',
         'vague',
         'christmas-placeholder',
+        'car-insurance',
+        'team-night',
       ])
         assert(byId[id]?.pass, `${id}: ${byId[id]?.problems.join('; ')}`);
     } finally {

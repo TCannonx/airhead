@@ -116,6 +116,30 @@ export function sortOne(id, text, ctx, instant = null, answer = null) {
     return result;
   }
 
+  // "Thinking about a team night out in December, need to figure out where"
+  // (Task 12.4): a planning task and specific questions with quick answers.
+  const thinking = t.match(
+    /^thinking about (?:a |an |the )?(.+?)(?: in (\w+))?, need to (?:figure out|decide|sort out) (.+?)\.?$/i,
+  );
+  if (thinking) {
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: `Plan the ${thinking[1]}`,
+      quote: t,
+      steps: ['Pick a date', 'Choose where', 'Book it', 'Tell everyone'],
+    });
+    result.follow_ups.push(
+      {
+        question: 'Where would you like to go?',
+        options: ['Pub', 'Restaurant', 'Activity'],
+        about_item: 0,
+      },
+      { question: 'Roughly how many people?', options: [], about_item: 0 },
+    );
+    return result;
+  }
+
   // "Need to sort out car insurance before it renews end of month" (Task 12.1):
   // implied work becomes a planning task with steps, and one specific question.
   const sortOut = t.match(/^need to (sort out|figure out|decide) (.+?)(?: before (.+?))?\.?$/i);
