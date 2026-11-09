@@ -18,6 +18,8 @@ export interface Remote {
   uploadFile?(path: string, blob: Blob): Promise<void>;
   /** Calls back when another device changed something (Realtime). */
   subscribe?(onChange: () => void): () => void;
+  /** Sends this device's sync diary to the server (diagnostics; best effort). */
+  sendLog?(entries: { t: string; e: string; d?: string }[]): Promise<void>;
 }
 
 export type SyncState = 'idle' | 'syncing' | 'offline' | 'error';

@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(sync): a sync run stuck far past its time limit is dropped by the next trigger of any kind (app open, the minute timer, a write), not only by Sync now; each device keeps a sync log (Settings → Sync → Sync log) and sends it to the server so a quiet sync can be diagnosed without asking (migration 0040)
 - release: phase 12 (trust: questions, planning steps, receipts, Notes handled) on dev
 - fix(sorting): a full batch now has room for its answer (16,000 output tokens, was 8,000); with Phase 12's steps, quotes and questions a big batch could be cut off and fail every time, leaving captures unsorted; an unreadable answer is now logged with its reason
 - test(ai-eval): a new owner-style case for the real-model check ("Need to get Mam a birthday present before the 20th, not sure what yet" needs a planning task due before the 20th and a question)

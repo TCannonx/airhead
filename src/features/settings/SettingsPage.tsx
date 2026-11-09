@@ -4,6 +4,7 @@ import { Page } from '../../app/Page';
 import AppLockSettings from '../applock/AppLockSettings';
 import { lastSyncedText } from '../sync/labels';
 import { useSync } from '../../lib/sync/context';
+import { readSyncLog } from '../../lib/sync/syncLog';
 import ExportSettings from './ExportSettings';
 import CheckupPanel from './CheckupPanel';
 import MemorySettings from './MemorySettings';
@@ -140,6 +141,21 @@ export default function SettingsPage() {
                   Sync now
                 </Button>
               </div>
+            </GroupedListItem>
+            <GroupedListItem>
+              <details>
+                <summary className="cursor-pointer text-footnote text-fg-muted">Sync log</summary>
+                <ol className="mt-2 space-y-0.5 font-mono text-caption break-words text-fg-muted">
+                  {readSyncLog(15)
+                    .reverse()
+                    .map((x, i) => (
+                      <li key={`${x.t}-${i}`}>
+                        {timeOf(x.t)} {x.e}
+                        {x.d ? ` · ${x.d}` : ''}
+                      </li>
+                    ))}
+                </ol>
+              </details>
             </GroupedListItem>
             <ListRow
               title={<span className="text-footnote text-fg-muted">Version {__APP_BUILD__}</span>}
