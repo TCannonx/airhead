@@ -2,9 +2,16 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
-import { captureChip, createCapture, isUrl, type CaptureInput } from '../../lib/db/captures';
+import {
+  captureChip,
+  createCapture,
+  isUrl,
+  withWorkshop,
+  type CaptureInput,
+} from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
 import { eventLabel, undoInstantEvent } from '../../lib/db/events';
+import { sendCaptureToWorkshop } from '../../lib/db/workshop';
 import type { AiAction, Capture, Item } from '../../lib/schemas/records';
 import { TOAST_MS } from './toast';
 import { compressImage } from '../../lib/files/image';
@@ -17,8 +24,8 @@ function chipFor(c: Capture, items: Item[], actions: AiAction[]): string {
   // What sorting did (e.g. tidied the instant event) comes first.
   if (actions.some((a) => a.capture_id === c.id)) return captureChip(c, actions);
   const event = items.find((i) => i.capture_id === c.id && i.type === 'event' && !i.deleted_at);
-  if (event?.status === 'open') return `Event added: ${eventLabel(event)}`;
-  if (event?.status === 'suggested') return `Suggestion: ${eventLabel(event)}`;
+  if (event?.status === 'open') return withWorkshop(c, `Event added: ${eventLabel(event)}`);
+  if (event?.status === 'suggested') return withWorkshop(c, `Suggestion: ${eventLabel(event)}`);
   return captureChip(c, actions);
 }
 
@@ -206,8 +213,19 @@ export default function CapturePage() {
                   {c.kind === 'image' && <span aria-hidden="true">📷 </span>}
                   {c.text ?? c.url}
                 </span>
-                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {chipFor(c, recentItems ?? [], recentActions ?? [])}
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    {chipFor(c, recentItems ?? [], recentActions ?? [])}
+                  </span>
+                  {typeof c.payload.workshop_item_id !== 'string' && (
+                    <button
+                      type="button"
+                      className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                      onClick={() => void sendCaptureToWorkshop(db, userId, c.id)}
+                    >
+                      Send to Workshop
+                    </button>
+                  )}
                 </span>
               </li>
             ))}

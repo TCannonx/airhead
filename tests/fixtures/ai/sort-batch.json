@@ -90,7 +90,8 @@
             "category": "personal"
           }
         ],
-        "actions": []
+        "actions": [],
+        "leftover": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000002",
@@ -113,7 +114,8 @@
         ],
         "link_summary": null,
         "proposed_facts": [],
-        "actions": []
+        "actions": [],
+        "leftover": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-000000000003",
@@ -141,14 +143,16 @@
             "category": "everyday"
           }
         ],
-        "actions": []
+        "actions": [],
+        "leftover": null
       },
       {
         "capture_id": "c0000000-0000-4000-8000-0000000000ff",
         "items": [],
         "link_summary": null,
         "proposed_facts": [],
-        "actions": []
+        "actions": [],
+        "leftover": null
       }
     ],
     "digest": null

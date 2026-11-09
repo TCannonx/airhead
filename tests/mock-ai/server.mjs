@@ -84,7 +84,36 @@ function nextWeekdayAt(weekday, hour, minute = 0) {
 export function sortOne(id, text, ctx, instant = null) {
   const t = text.trim();
   const lower = t.toLowerCase();
-  const result = { capture_id: id, items: [], actions: [], proposed_facts: [], link_summary: null };
+  const result = {
+    capture_id: id,
+    items: [],
+    actions: [],
+    leftover: null,
+    proposed_facts: [],
+    link_summary: null,
+  };
+
+  // Words that cannot be placed at all (Task 11.2): no items, no actions.
+  if (/^hmm\b/i.test(t)) return result;
+
+  // "Planning Christmas sandwiches every week on a Friday. Still need to plan but
+  // keep as a placeholder" (Task 11.2): a weekly event, plus the words no item covers.
+  const plan = t.match(
+    /^(?:planning\s+)?(.+?) every week on (?:a )?(\w+day)\.\s*(still need to plan)\b/i,
+  );
+  if (plan && WEEKDAYS.includes(plan[2].toLowerCase())) {
+    const day = WEEKDAYS.indexOf(plan[2].toLowerCase());
+    result.items.push({
+      ...blankItem,
+      type: 'event',
+      title: cap(plan[1]),
+      start_at: instant?.start ?? nextWeekday(day, 0),
+      all_day: instant ? instant.allDay : true,
+      rrule: `FREQ=WEEKLY;BYDAY=${plan[2].slice(0, 2).toUpperCase()}`,
+    });
+    result.leftover = cap(plan[3]);
+    return result;
+  }
 
   // "Training on Tuesday. Need a reminder to send report to Trevor" (Task 11.1):
   // the instant event comes back first with a clean title, then the task it lost.
@@ -224,6 +253,7 @@ export function sortNote(id, text) {
     capture_id: `note:${id}`,
     items: [],
     actions: [],
+    leftover: null,
     proposed_facts: [],
     link_summary: null,
   };

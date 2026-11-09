@@ -15,6 +15,7 @@ import {
   TYPE_LABELS,
 } from '../../lib/db/sorting';
 import { useSort } from '../../lib/sort/context';
+import { sendCaptureToWorkshop } from '../../lib/db/workshop';
 import AiActions from './AiActions';
 
 // needs_review captures show their unsure items under "Needs a tap" instead.
@@ -179,6 +180,13 @@ export default function InboxPage() {
                     {TYPE_LABELS[type]}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  className="rounded-full border border-indigo-300 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950"
+                  onClick={() => void sendCaptureToWorkshop(db, user?.id ?? '', c.id)}
+                >
+                  Send to Workshop
+                </button>
               </div>
             </li>
           ))}

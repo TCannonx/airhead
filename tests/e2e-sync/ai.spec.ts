@@ -198,3 +198,81 @@ test('a typed note is read by AI: the task it asks for appears, the note is unch
   await a.goto(noteUrl);
   await expect(a.getByLabel('Note', { exact: true })).toHaveText(text, { timeout: 30_000 });
 });
+
+// Workshop routing (Task 11.2): nothing a note says is lost.
+test('Send to Workshop on a fresh capture: it is in "To flesh out" here and on the other device', async ({
+  browser,
+}) => {
+  const email = `e2e-ws-send-${Date.now()}@example.test`;
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, email);
+  await capture(a, 'plan the attic conversion');
+  const recent = a.getByRole('list', { name: 'Recent captures' });
+  const row = recent.getByRole('listitem').filter({ hasText: 'plan the attic conversion' });
+  await row.getByRole('button', { name: 'Send to Workshop' }).click();
+  await expect(row.getByText('Sent to Workshop')).toBeVisible();
+
+  await a.getByRole('link', { name: 'Inbox' }).first().click();
+  const flesh = a.getByRole('list', { name: 'To flesh out' });
+  await expect(flesh.getByRole('link', { name: 'Plan the attic conversion' })).toBeVisible();
+
+  // The other device receives the Workshop note once the first has pushed it.
+  const b = await (await browser.newContext()).newPage();
+  await signIn(b, email);
+  await b.getByRole('link', { name: 'Inbox' }).first().click();
+  const fleshB = b
+    .getByRole('list', { name: 'To flesh out' })
+    .getByRole('link', { name: 'Plan the attic conversion' });
+  await expect(async () => {
+    await b.reload();
+    await expect(fleshB).toBeVisible({ timeout: 5_000 });
+  }).toPass({ timeout: 60_000 });
+});
+
+test('Sort now on a placeholder note: the event is made and the rest goes to the Workshop', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ws-leftover-${Date.now()}@example.test`);
+  await capture(
+    a,
+    'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder',
+  );
+  await sortNow(a);
+  const flesh = a.getByRole('list', { name: 'To flesh out' });
+  await expect(flesh.getByRole('link', { name: 'Still need to plan' })).toBeVisible({
+    timeout: 60_000,
+  });
+
+  await a.getByRole('link', { name: 'Library' }).first().click();
+  const items = a.getByRole('list', { name: 'Items' });
+  await expect(items.getByText('Christmas sandwiches', { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+
+  await a.getByRole('link', { name: 'Capture' }).first().click();
+  await expect(
+    a.getByRole('list', { name: 'Recent captures' }).getByText(/· Sent to Workshop$/),
+  ).toBeVisible({ timeout: 30_000 });
+});
+
+test('a note sorting cannot place goes to the Workshop instead of being lost', async ({
+  browser,
+}) => {
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, `e2e-ws-vague-${Date.now()}@example.test`);
+  await capture(a, 'hmm the thing with the stuff');
+  await sortNow(a);
+  await expect(a.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 60_000 });
+  const flesh = a.getByRole('list', { name: 'To flesh out' });
+  await expect(flesh.getByRole('link', { name: 'Hmm the thing with the stuff' })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(a.getByText('Nothing waiting. Everything is sorted.')).toBeVisible();
+
+  await a.getByRole('link', { name: 'Capture' }).first().click();
+  const recent = a.getByRole('list', { name: 'Recent captures' });
+  await expect(recent.getByText('Sent to Workshop', { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+});

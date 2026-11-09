@@ -144,8 +144,24 @@ export async function createCapture(
   return { capture: saved, event, ruleItem };
 }
 
+export const WORKSHOP_CHIP = 'Sent to Workshop';
+
+/**
+ * Adds "Sent to Workshop" to a chip when the capture (or the words sorting
+ * could not place) went to the Workshop (Task 11.2). A capture sent whole shows
+ * only that; one whose leftover went shows what else sorting did first.
+ */
+export function withWorkshop(c: Capture, chip: string): string {
+  if (typeof c.payload.workshop_item_id !== 'string') return chip;
+  return c.payload.workshop_reason === 'leftover' ? `${chip} · ${WORKSHOP_CHIP}` : WORKSHOP_CHIP;
+}
+
 /** The status chip shown under a capture (what AI actions did comes first). */
 export function captureChip(c: Capture, actions: AiAction[] = []): string {
+  return withWorkshop(c, baseChip(c, actions));
+}
+
+function baseChip(c: Capture, actions: AiAction[]): string {
   const acted = chipFor(actions.filter((a) => a.capture_id === c.id));
   if (acted) return acted;
   if (c.kind === 'link') return 'Reading list';

@@ -1,6 +1,6 @@
 import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
 import fixture from '../../../tests/fixtures/ai/sort-batch.json' with { type: 'json' };
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v5.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v6.ts';
 import { type SortAnswer, SortResult } from '../_shared/schemas/sort.ts';
 import { pickCandidates } from './candidates.ts';
 import { type InstantRow, planSort, tomorrowMorning } from './plan.ts';

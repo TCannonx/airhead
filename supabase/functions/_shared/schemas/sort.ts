@@ -122,11 +122,16 @@ export const SortResult = z.object({
       items: z.array(SortedItem),
       /** Changes to records the capture asks for; usually none (Phase 10). */
       actions: z.array(ActionWire),
-      /** Only for saved web pages; null otherwise. */
+      /**
+       * Words no item or action covers (Task 11.2), or null. Airhead keeps them as
+       * a Workshop note, so nothing is dropped silently.
+       */
+      leftover: z.string().nullable(),
       /** Lasting facts about the person, only from what they typed. */
       proposed_facts: z.array(
         z.object({ text: z.string(), category: z.enum(['everyday', 'person', 'personal']) }),
       ),
+      /** Only for saved web pages; null otherwise. */
       link_summary: z
         .object({
           summary: z.string(),
@@ -142,6 +147,13 @@ export const SortResult = z.object({
 
 export type SortedItemT = z.infer<typeof SortedItem>;
 export type SortResultT = z.infer<typeof SortResult>;
-/** What the planner accepts: a sorting answer, digest optional (older saved answers lack it). */
-export type SortAnswer = Omit<SortResultT, 'digest'> & { digest?: string | null };
+type SortResultEntry = SortResultT['results'][number];
+/**
+ * What the planner accepts: a sorting answer, digest and leftover optional
+ * (older saved answers lack them).
+ */
+export type SortAnswer = {
+  results: (Omit<SortResultEntry, 'leftover'> & { leftover?: string | null })[];
+  digest?: string | null;
+};
 export type SortActionT = z.infer<typeof SortAction>;
