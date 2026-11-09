@@ -5,6 +5,7 @@ import { Section } from '../../ui/GroupedList';
 import CheckupPanel from '../settings/CheckupPanel';
 import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
+import NotesHandled from './NotesHandled';
 import SuccessMeasures from './SuccessMeasures';
 import WeeklyReview from './WeeklyReview';
 import Patterns from './Patterns';
@@ -39,6 +40,9 @@ export default function InsightsPage() {
       </Block>
       <Block title="Success measures" card={false}>
         <SuccessMeasures />
+      </Block>
+      <Block title="Notes handled" card={false}>
+        <NotesHandled />
       </Block>
       <Block title="AI usage">
         <AiUsage />

@@ -540,7 +540,7 @@ Spec: `docs/superpowers/specs/2026-11-09-trust-every-note-counts.md`. Principle 
 - [x] **12.2 Answering.** Inbox "Questions for you" with quick answers, on the related item and a Today card; an answer is a linked capture the next batch acts on (one more round at most); Dismiss counts as a correction.
 - [x] **12.3 Receipts.** "What Airhead did" on every capture: one line per outcome with the words it came from, including "kept as written, not acted on".
 - [x] **12.4 Completeness checks.** Real-model evaluator checks nothing is dropped, questions where work is implied and none on clear notes; new owner-style cases; e2e-sync for ask, answer on another device, new task.
-- [ ] **12.5 Trust in Insights.** Notes handled, questions open, answered and dismissed, correction rate.
+- [x] **12.5 Trust in Insights.** Notes handled, questions open, answered and dismissed, correction rate.
 
 ## Phases 5–9 (outline)
 
