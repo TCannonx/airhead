@@ -377,3 +377,51 @@ test('a question asked on A is answered on B; the new task and details reach A; 
     ),
   ).toBe('answered Work');
 });
+
+test('What Airhead did: waiting before sorting, then every outcome with its words, on both devices (Task 12.3)', async ({
+  browser,
+}) => {
+  const email = `e2e-trust-receipt-${Date.now()}@example.test`;
+  const a = await (await browser.newContext()).newPage();
+  await signIn(a, email);
+  const b = await (await browser.newContext()).newPage();
+  await signIn(b, email);
+
+  const text =
+    'Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder';
+  await capture(a, text);
+  const rowA = a
+    .getByRole('list', { name: 'Recent captures' })
+    .getByRole('listitem')
+    .filter({ hasText: text });
+  await rowA.getByText('What Airhead did', { exact: true }).click();
+  await expect(
+    rowA.getByText(/^Waiting for AI sorting \(next check by \d\d:\d\d\)$/),
+  ).toBeVisible();
+
+  await sortNow(a);
+  await expect(a.getByText(/^Sorted 1 capture/)).toBeVisible({ timeout: 60_000 });
+
+  for (const page of [a, b]) {
+    await page.getByRole('link', { name: 'Capture' }).first().click();
+    const row = page
+      .getByRole('list', { name: 'Recent captures' })
+      .getByRole('listitem')
+      .filter({ hasText: text });
+    const lines = row.getByRole('list', { name: 'What Airhead did' });
+    await expect(async () => {
+      if (!(await lines.isVisible()))
+        await row.getByText('What Airhead did', { exact: true }).click();
+      await expect(
+        lines.getByRole('link', { name: 'Made a task with 3 steps: Plan Christmas sandwiches' }),
+      ).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 60_000 });
+    await expect(
+      lines.getByRole('link', { name: 'Made an event: Christmas sandwiches' }),
+    ).toBeVisible();
+    await expect(lines.getByText('from “Still need to plan”', { exact: true })).toBeVisible();
+    await expect(
+      lines.getByText('Asked: Who are the sandwiches for?', { exact: true }),
+    ).toBeVisible();
+  }
+});

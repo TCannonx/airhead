@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(capture): "What Airhead did" on every capture (Capture → Recent, Inbox, the item page's "From your note"): one line per item made, action (with Undo), question, Workshop note, or "Kept as written, not acted on", each with the words it came from; "Waiting for AI sorting (next check by HH:MM)" before sorting (Task 12.3)
 - feat(inbox): "Questions for you" in the Inbox (quick answers, a text box, Dismiss), open questions on the item page and a Today card; an answer is a capture linked to its question that the next batch adds to the item (with Undo) and acts on, one more round at most; Dismiss records a correction (Task 12.2)
 - feat(sorting): a note that implies more work gets a planning task with checklist steps, due before the first occurrence (or in 3 days), and up to 3 specific questions with quick answers in the new synced `follow_ups` table; clear notes get none; prompt `sort-batch.v7`, `apply_sort_batch` v7 (Task 12.1)
 - docs: Phase 12 spec and plan, "Trust: every note counts" (questions, planning steps, receipts, completeness checks)

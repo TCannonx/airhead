@@ -1483,3 +1483,11 @@ Decisions and library versions, newest first.
 - **The answer is added to the item's details by the planner itself**, as a `tidy_item` update of `body` ("Who are the sandwiches for? Work" on a new line), applied with the usual freshness check and Undo (the app's Undo now knows `body`). The model only adds what the answer implies (tasks, planning steps, moves, reminders, facts). An answer is never "unplaced", so it never goes to the Workshop.
 - **One more round at most**: questions from an answer are round 2, one question, about the same item; an answer to a round-2 question asks nothing more.
 - **Dismiss** marks the question dismissed and writes a correction (`from_value: {follow_up: question}`, `to_value: {follow_up: "dismissed", reason: "not useful"}`), so it counts in the correction rate and the next batch sees it among recent corrections.
+
+## Receipts: what Airhead did (Task 12.3, 2026-11-09)
+
+- **Built on the device** (`src/lib/db/receipts.ts`, `buildReceipt`) from the items, AI actions and questions with the capture's id. No new table or server work, so a receipt is the same on every device once they have synced.
+- **Lines, in this order**: items made (linked to the item; planning tasks say "with N steps"; suggestions say "needs a tap"), notes kept ("Kept as a note"), Workshop notes ("Sent to the Workshop", linked), AI actions (applied with Undo, proposed as "Asks your OK", undone or dismissed as such), questions ("Asked: …", with "You said: …" once answered, or "(dismissed)"). A sorted capture with nothing at all says "Kept as written, not acted on: “…”", so nothing is silent.
+- **The words it came from**: items show `data.quote` (the model's new `quote`, 12.1), actions their `quote`, a leftover Workshop note its own title (the leftover words), a whole capture sent to the Workshop the capture's text. Older items without a quote just show no quote line.
+- **Waiting**: an unsorted capture says "Waiting for AI sorting (next check by HH:MM)": the first 5-minute check after the capture has settled for 2 minutes (the dispatch rule from 0033), in the device's time.
+- **Shown as a disclosure** (`<details>` "What Airhead did") under each capture in Capture → Recent and the Inbox's Unsorted list, and under the source capture on the item page ("From your note"), so lists stay short.

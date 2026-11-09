@@ -14,6 +14,8 @@ import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop
 import type { Item, ItemType } from '../../lib/schemas/records';
 import { Top3Button } from '../today/Top3Controls';
 import { FollowUpList } from '../inbox/FollowUps';
+import { Receipt } from '../capture/Receipt';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { Button } from '../../ui/Button';
 import { buttonClasses } from '../../ui/buttonClasses';
 import { EmptyState } from '../../ui/EmptyState';
@@ -67,6 +69,11 @@ function ItemForm({ item }: { item: Item }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const settings = useLiveQuery(() => db.settings.get(user?.id ?? ''), [db, user?.id]);
+  // The capture this item came from, and what Airhead did with it (Task 12.3).
+  const source = useLiveQuery(
+    async () => (item.capture_id ? ((await db.captures.get(item.capture_id)) ?? null) : null),
+    [db, item.capture_id],
+  );
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body ?? '');
   const [type, setType] = useState<ItemType>(item.type);
@@ -130,6 +137,18 @@ function ItemForm({ item }: { item: Item }) {
           <TextArea label="Notes" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
         </Card>
         <FollowUpList itemId={item.id} title="Questions about this" showSource={false} />
+        {source && !source.deleted_at && (
+          <Section title="From your note">
+            <GroupedList label="From your note">
+              <GroupedListItem>
+                <p className="text-body break-words whitespace-pre-wrap">
+                  {source.text ?? source.url}
+                </p>
+                <Receipt capture={source} />
+              </GroupedListItem>
+            </GroupedList>
+          </Section>
+        )}
         <ReadingDetails item={item} />
         <div className="flex flex-wrap gap-2">
           <Button variant="primary" onClick={() => void onSave()}>
