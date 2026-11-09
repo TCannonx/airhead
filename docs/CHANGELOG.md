@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- test(e2e-sync): a row in every synced table goes from device A through real PostgREST to device B (taken from the sync engine's table list, so a new table without coverage fails), and a capture token made in Settings saves a capture through the real ingest-capture until it is revoked, then gets 401 (TEST-MATRIX gaps 12 and 16)
+
 - test(e2e-sync): background sorting with no tap (the scheduler's SQL → pg_net → sort-batch with the Vault service key → the other device) and the monthly AI limit end to end (batch skipped, capture stays Unsorted, Sort now explains); CI puts the local URL and demo service key in Vault and stops pg_cron's own schedules (TEST-MATRIX gaps 6 and 19)
 
 - feat(ui): Capture, Today, Inbox (AI actions, proposals, Undo) and the Evening review on the shared components: grouped lists, shared buttons, empty states, 44 px touch targets on phones, calmer colours in light and dark; e2e at phone and desktop with an axe check (Task 11.U2)
