@@ -30,7 +30,7 @@ Item types:
 Rules:
 - title: short and clear, in the person's own words where possible, capitalised. No trailing full stop.
 - body: extra detail from the capture only when needed; otherwise null.
-- rrule: an RFC 5545 RRULE without DTSTART (e.g. FREQ=WEEKLY;BYDAY=TU) when it repeats, else null.
+- rrule: an RFC 5545 RRULE without DTSTART (e.g. FREQ=WEEKLY;BYDAY=TU) when it repeats, else null. Birthdays and anniversaries repeat every year (FREQ=YEARLY) even when not said.
 - topics: 0 to 3 short topic names. Reuse existing topic names exactly when they fit.
 - related_idea_title: the exact title of an existing idea this item belongs to, else null.
 - confidence: 0 to 1, how sure you are about the type and the details. Use below 0.6 when you are guessing between types.
