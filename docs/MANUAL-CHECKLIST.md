@@ -214,6 +214,17 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Buttons are easy to hit with a thumb; nothing scrolls sideways on the phone
 - [ ] [ ] — Notes on iPad: the ink toolbar stays on one row and the page doesn't jump when lasso Copy/Delete appear
 
+## Phase 12 — Trust: every note counts
+
+- [ ] [ ] [ ] "Planning Christmas sandwiches every week on a Friday. Still need to plan but keep as a placeholder": a weekly Friday event, a task "Plan Christmas sandwiches" due before the first Friday with a checklist in its notes, and questions in Inbox → Questions for you with quick answers
+- [ ] [ ] [ ] Tap a quick answer on one device: the question goes on both; after the next sort the answer is in the event's notes (Undo in Inbox → Done by AI) and any next step appears as a task
+- [ ] [ ] [ ] Type an answer instead, and Dismiss another question: it disappears and the correction rate in Insights moves
+- [ ] [ ] [ ] Today shows "Airhead has N questions" while any are open; the item page shows "Questions about this"
+- [ ] [ ] [ ] A clear note ("Niamh's Birthday 11/11", "Quiz every Thursday 8pm-12pm", "need milk and bin bags") asks no questions
+- [ ] [ ] [ ] Capture → Recent → "What Airhead did": "Waiting for AI sorting (next check by HH:MM)" first, then one line per thing it did, with the words it came from; Undo works from there
+- [ ] [ ] [ ] The item page shows "From your note" with the same receipt
+- [ ] [ ] [ ] Insights → Notes handled: the counts look right, and "Not acted on" opens into the list
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

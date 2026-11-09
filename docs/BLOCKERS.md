@@ -2,6 +2,16 @@
 
 ## Waiting for the user
 
+### Phase 12 ready for device testing on dev
+
+"Trust: every note counts" is on the dev site: a note that implies more work gets a planning task with steps and up to 3 specific questions (Inbox → Questions for you, the item page, a Today row; no push), answers are acted on by the next sort, every capture has "What Airhead did", and Insights shows Notes handled.
+
+1. Open the dev site on the iPhone, Settings → Sync → **Load latest version** (check the Version line changed).
+2. Work through "Phase 12 — Trust: every note counts" in `docs/MANUAL-CHECKLIST.md`.
+3. Your example requests are checked against the real AI model on dev (ai-eval): 17/17 on 2026-11-09 18:07 UTC, including Christmas sandwiches (event, planning task, question), car insurance, team night out and Mam's present, and no questions on clear notes. About EUR 0.05 a run, only when the prompt or cases change, or once a day.
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 11 ready for device testing on dev
 
 The calendar overhaul (views, details, search, quick add, tap to create, repeating events with "this / following / all"), AI sorting over notes every 5 minutes with Send to Workshop, and the new look on every page are on the dev site.
