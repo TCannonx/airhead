@@ -77,7 +77,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Settings → Sync: last successful sync, Sync now | `features/sync/sync.test.tsx` | — | — | **Partial**: no e2e |
 | Push in batches of 100, pull pages of 500, cursor, late commits | `lib/sync/engine.test.ts` | `db/0002` (sync index) | — | **Partial**: only against `fakeRemote`; `supabaseRemote.ts` is never unit-tested |
 | Local unpushed edits are never overwritten; deletions pulled | `lib/sync/engine.test.ts` | — | — | **Partial**: fake server only |
-| Every synced table pulls | `lib/sync/engine.test.ts` "pulls every synced table" | — | `sync/*` cover `captures` and `devices` only | **Partial**: real PostgREST pull of the other ~25 tables never runs |
+| Every synced table pulls | `lib/sync/engine.test.ts` "pulls every synced table" | — | `sync/tables.spec.ts` "a row in every synced table goes from device A through PostgREST to device B" (all of `SYNC_TABLES`: device tables pushed from A's outbox, server-only tables written by SQL, each compared field by field on B) | |
 | Sync triggers: open, online, after a write, 60 s, Realtime | `lib/sync/engine.test.ts` | Realtime publications in `db/0015`, `0018`, `0021`, `0027` | `sync/devices.spec.ts` (Realtime nudge) | |
 | A stalled request does not freeze sync | `lib/timedFetch.test.ts`, `lib/sync/engine.test.ts` (one run at a time) | — | `sync/network.spec.ts` "a stalled request does not stop sync…" (new) | **Partial**: only a stalled captures push; no stalled pull, no flaky Realtime |
 | Delete → Trash → Restore within 30 days | `features/library/library.test.tsx`, `lib/db/db.test.ts`, `lib/db/sorting.test.ts` | `db/0002` (purge after 30 days) | — | |
@@ -224,8 +224,8 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
-| Capture token: create (shown once), last use, revoke | `features/settings/tokens.test.tsx` | `db/0020` | — | **Partial**: no test that a revoked token makes the real function refuse |
-| Share sheet / Shortcut saves link, text, photo | `features/settings/shortcuts.test.tsx` (guide) | `fn/ingest-capture/run.test.ts` | — | **Partial**: function never runs; Shortcut device-only |
+| Capture token: create (shown once), last use, revoke | `features/settings/tokens.test.tsx` | `db/0020` | `sync/tokens.spec.ts` "a capture token made in Settings saves a capture through ingest-capture; once revoked it gets 401" | |
+| Share sheet / Shortcut saves link, text, photo | `features/settings/shortcuts.test.tsx` (guide) | `fn/ingest-capture/run.test.ts` | `sync/tokens.spec.ts` (text through the real `ingest-capture`) | **Partial**: the Shortcut itself is device-only; photo uploads not run end to end (gap 18) |
 | "Quick thought" on Back Tap / Action Button | — | — | — | **None**: device-only, needs manual |
 | Bookmarklet and `/share` save the page with selected text | `features/capture/share.test.tsx` | — | — | **Partial**: manifest `share_target` not asserted |
 | Workshop: Auto flesh-out draft with versions | `features/workshop/workshop.test.tsx`, `lib/db/workshop.test.ts` | `fn/workshop/run.test.ts`, `db/0021`, `_shared/ai.contract.test.ts` | — | **Partial**: function never runs from the app |
@@ -330,11 +330,11 @@ Ordered by risk. Sync and AI first.
 9. **`sort-batch/run.ts` with a real database.** Insert captures, run the function against the local stack with mock-ai, and assert items, `ai_actions`, `ai_usage` rows and capture statuses. This is the step that the unit tests skip. Layer: Function + DB (e2e-sync job).
 10. **AI actions through the whole chain.** After item 1, cover "I get 23 days", "WFH Mondays", "remind me the day before" and "which one?" in `sync/ai.spec.ts`, and check the second device. Layer: e2e-sync.
 11. **Unit tests for the app-side adapters.** `supabaseRemote.ts` (pull query shape, cursor overlap, upsert conflict target) and the 13 `supabase*.ts` function adapters (function name, body, error mapping, time-out via `timedFetch`). Layer: Unit.
-12. **Sync of every table through real PostgREST.** One e2e-sync test that writes a row to each synced table on A and reads it on B (catches a missing column, RLS or schema mismatch). Layer: e2e-sync.
+12. **Done (9 November).** `sync/tables.spec.ts` builds one row per table from the sync engine's own `SYNC_TABLES` (a new table without a row fails the type check and the test), checks each against the app's schema, writes the device tables into A's local database with outbox entries, then checks each reached the server and that B holds every row as sent (server-written tables come from SQL). Was: **Sync of every table through real PostgREST.** One e2e-sync test that writes a row to each synced table on A and reads it on B (catches a missing column, RLS or schema mismatch). Layer: e2e-sync.
 13. **Note conflict copy across two browsers.** Edit a note on A offline and on B online; reconnect A; assert the "conflicted copy". Layer: e2e-sync.
 14. **Push pipeline up to the push service.** Run `scheduler-tick` and `send-push` against the local stack with a fake push endpoint; assert a due nudge is posted with the right payload and a 410 clears the subscription. Real delivery stays manual. Layer: Function + DB.
 15. **Service worker notification click.** In Playwright, post a push payload to the service worker and assert `notificationclick` opens the path. Layer: e2e static.
-16. **Capture token end to end.** Create a token in the app, POST to `ingest-capture`, see the capture on the device, revoke, get 401. Layer: e2e-sync.
+16. **Done (9 November).** `sync/tokens.spec.ts`: Settings → Create token, POST to the real `ingest-capture`, the capture on the device and "Last used" set, Revoke, then the same token gets 401 and nothing is saved. Was: **Capture token end to end.** Create a token in the app, POST to `ingest-capture`, see the capture on the device, revoke, get 401. Layer: e2e-sync.
 17. **Outgoing feed and linked calendars against real functions.** Fetch `calendar-feed?t=` from the local stack and parse it; add a linked calendar served from a fixture URL and see its events. Layer: e2e-sync.
 18. **Photo and import file uploads to Storage.** Attach a photo on A; assert the object in `captures/<user id>/` and the image on B. Layer: e2e-sync.
 19. **Done (9 November).** `sync/background.spec.ts`: €1 spent, a €0.50 limit set in Insights → AI usage, the background batch logs `cap_reached`, the capture stays Unsorted, no items, and Sort now says "This month’s AI limit has been reached". Was: **Monthly cap end to end.** Set a tiny cap; assert the batch is skipped, captures stay Unsorted and the app explains it. Layer: e2e-sync.

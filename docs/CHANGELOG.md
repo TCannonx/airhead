@@ -2,6 +2,8 @@
 
 One line per merged PR, newest first.
 
+- test(e2e-sync): a row in every synced table goes from device A through real PostgREST to device B (taken from the sync engine's table list, so a new table without coverage fails), and a capture token made in Settings saves a capture through the real ingest-capture until it is revoked, then gets 401 (TEST-MATRIX gaps 12 and 16)
+
 - test(e2e-sync): background sorting with no tap (the scheduler's SQL → pg_net → sort-batch with the Vault service key → the other device) and the monthly AI limit end to end (batch skipped, capture stays Unsorted, Sort now explains); CI puts the local URL and demo service key in Vault and stops pg_cron's own schedules (TEST-MATRIX gaps 6 and 19)
 
 - test(functions): handler tests for every Edge Function: request handling moved from each `index.ts` into a tested `handler.ts` (behaviour unchanged), covering CORS preflight, methods, missing tokens, service-only refusal of user tokens, other users' ids and bad JSON (TEST-MATRIX gap 8)
