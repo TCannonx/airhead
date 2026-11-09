@@ -124,6 +124,10 @@ for (const [name, size] of SIZES) {
         .getByRole('list', { name: 'Recent captures' })
         .getByRole('button', { name: 'Send to Workshop' })
         .click();
+      // Wait for the write to land before leaving the page.
+      await expect(page.getByRole('list', { name: 'Recent captures' })).toContainText(
+        'Sent to Workshop',
+      );
       await page.goto('/inbox');
       await page
         .getByRole('list', { name: 'To flesh out' })

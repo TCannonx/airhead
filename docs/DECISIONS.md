@@ -1422,6 +1422,26 @@ Decisions and library versions, newest first.
 - The work-location chip on Today (`LocationPicker`, listed under 11.U4) moved here because axe flagged its low-contrast grey on Today.
 - **Tests**: `tests/e2e/pages.spec.ts` opens each page at 390 × 844 (touch) and 1440 × 900, checks the h1, no sideways scroll, the main action (save a capture, sort by hand, tick a Top 3 task, review empty state and back), every visible button at least 44 px on the phone, dark surfaces, and runs axe (`@axe-core/playwright` 4.14.0, WCAG 2 A and AA, over `main`). Before and after screenshots at phone and desktop, light and dark, were checked by eye.
 
+## Background sorting and the monthly cap, end to end (TEST-MATRIX gaps 6 and 19, 2026-11-09)
+
+- **Vault in CI only, with local values.** The e2e-sync job writes `project_url` = `http://kong:8000` (Kong's name inside the stack's Docker network, where `pg_net` runs) and `service_role_key` = the CLI's well-known local demo key from `supabase status`. No real secret is involved and nothing touches dev or live.
+- **pg_cron's schedules are stopped in that job** (`cron.unschedule` on every job). With Vault filled, the real schedules would start sorting, briefs, reminders and embeddings for every test user every few minutes, racing the tests' own Sort now taps. The tests run the dispatcher themselves: `select public.dispatch_sort_batches()`, the exact SQL the schedule runs. That pg_cron fires it stays proven by `db/0005`.
+- **The clock is stood in for, not the threshold.** Writing `batch_threshold_count` into `settings` behind the device's back could make a server row that clashes with the device's own settings row (`settings_one_per_user`). Instead the test moves the capture's `captured_at` back 10 minutes, so `users_due_now` (oldest settled for 2 minutes) picks it up. The test checks `users_due_now` names the user before dispatching.
+- **Cap**: the month's spend is one `ai_usage` row of €1 written by SQL (standing in for earlier calls); the €0.50 limit is set through the app's own Insights → AI usage form, so device → settings → `sort-batch` is real. Proof that the batch was skipped: an `ai_usage` row with `cap_reached`, the capture still `unsorted`, no items, and Sort now showing the limit message.
+- **Database access from Playwright** goes through `psql` and `SUPABASE_DB_URL` (`tests/e2e-sync/db.ts`); the runner image has the PostgreSQL client. Waits on `sort-batch` print `net._http_response` on time-out, so a failing call says why.
+- No PLAN.md task covers the TEST-MATRIX gaps, so nothing is ticked there.
+
+
+
+## Every synced table and capture tokens, end to end (TEST-MATRIX gaps 12 and 16, 2026-11-09)
+
+- **The table list is the sync engine's own** (`SYNC_TABLES` from `src/lib/schemas/records.ts`). The test's rows are a `Record<SyncTable, …>`, so a new synced table without a row fails `tsc`, and the test also checks the keys match at run time. Each row is checked against the app's Zod schema first, so the test cannot pass on a row the app would never make.
+- **Device writes go in through raw IndexedDB**, the same two writes every app save makes (the row and an outbox entry in one transaction), then the `online` event starts the engine. Going through each screen for 18 device tables would test the UI, not sync, and would break whenever the UI changes (another session is redoing it). The push and pull, PostgREST, RLS and Realtime are all real.
+- **Server-only tables** (`external_events`, `briefs`, `reviews`, `scout_runs`: devices may only read them) get their row by SQL (`jsonb_populate_record`), standing in for the functions that write them; they must still reach B.
+- **What counts as the same**: every field sent, with timestamps compared as instants (PostgREST writes `+00:00`, devices `Z`); `server_updated_at` and the server-numbered `version` of note docs and drafts are skipped, and the test checks both came back as 1. Settings change the device's own row, since there is one per user.
+- **Rows are inert**: the capture is already sorted, the linked calendar is switched off, the suggestion and AI action are dismissed, dates are in 2031, so no sorting, fetching or reminder reacts during the test.
+- **Capture tokens**: the token is read from the app's "shown once" panel and posted with Playwright's `request` to the local `ingest-capture`, as an iOS Shortcut would. The test also checks the server holds only a hash, the device receives the capture, "Last used" changes, and after Revoke the same token gets 401 and saves nothing.
+
 ## Pages on the shared components: Library, Insights, Notes, Workshop, Work and leave (Task 11.U3, 2026-11-09)
 
 - **Library**: search is a `TextField` (still the searchbox "Search"), the type filters are `Chip` toggles (still buttons with `aria-pressed`), Topic / From / To are shared fields (Topic full width and the dates side by side on the phone), Lists and Trash are list rows, the note buttons are small buttons under "New", and items and search results are one grouped list with the kind on the right. Empty library and no-match search use `EmptyState`.
