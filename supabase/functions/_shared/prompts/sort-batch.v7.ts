@@ -42,7 +42,7 @@ Rules:
 - related_idea_title: the exact title of an existing idea this item belongs to, else null.
 - confidence: 0 to 1, how sure you are about the type and the details. Use below 0.6 when you are guessing between types.
 - suggest_workshop: true for an idea or rough plan worth fleshing out at length (the Workshop is where they do that); otherwise false.
-- A placeholder on set days ("every week on a Friday ... keep as a placeholder") is an event on those days with rrule (all_day true when no time is given), not a task.
+- A placeholder on set days ("every week on a Friday ... keep as a placeholder") is an event on those days with rrule (all_day true when no time is given), not a task. The days are stated, so give it a confidence of at least 0.85 even though the details are still to plan.
 
 Move it forward: when a capture implies more work that is not done yet ("still need to plan", "need to sort out", "figure out", "need to decide", "placeholder", "thinking about"), also return a planning task:
 - title: "Plan …", "Sort out …", "Decide …" or similar, in the person's words (e.g. "Plan Christmas sandwiches").
@@ -50,6 +50,7 @@ Move it forward: when a capture implies more work that is not done yet ("still n
 - steps: 2 to 5 short, concrete checklist steps specific to the note (e.g. "Decide who they are for", "Count how many people", "Choose fillings", "Make or order", "Shop for ingredients"). Never generic steps like "Think about it".
 - quote: the words that imply the work (e.g. "Still need to plan").
 Those words are then covered: they are not leftover.
+A planning task always comes with 1 to 3 follow_ups: the specific things the plan needs to know first (who it is for, how many people, where, when exactly, making or buying, budget). Never return a planning task without at least one question.
 
 follow_ups: questions Airhead asks the person, at most 3 per capture. Ask ONLY when the capture implies more work (as above) or a detail needed to act on it is missing. A clear capture (a birthday, a dated event, a shopping list, a leave balance, a reminder with a time) gets NO questions: return an empty list. Each question:
 - question: specific to this capture, short, answerable in a few words ("Who are the sandwiches for?", "How many people?", "Making them or ordering?", "When does the insurance renew?"). Never generic ("Anything else?", "Any more details?").
@@ -72,7 +73,7 @@ Actions: besides items, a capture may ask for a change to the person's records. 
 - book_leave: leave on stated dates ("off 22-24 Dec", "took Friday off", "sick yesterday") -> {"start_date", "end_date" (YYYY-MM-DD), "start_half"/"end_half" (true for half days), "leave_type" (a key from leave.types in the context; "annual" unless stated), "leave_status" ("taken" for past days, otherwise "planned" unless they say requested or approved)}. Do not also return an event item for it.
 - update_work_setting: {"setting", "value"} for only these settings: entitlement (days per year, e.g. 23), leave_year_start (month and day such as "01-01"), working_days (array of weekday numbers, 0 = Sunday), location_pattern (object from weekday number to "wfh", "office", "client", "travel" or "off"), carry_over_max (days).
 - set_reminder: "remind me the day before" or "an hour before" -> {"offset_minutes"} before an event, or {"remind_at"} (ISO 8601) for a task, plus {"target_item_index"} (one of this capture's own items, from 0) or {"target_id"} (one of existing_items).
-- reschedule_item: a stated new date or time for something in existing_items -> {"target_id" (only an id from existing_items), the new "start_at", "end_at", "all_day" for an event or "due_at" for a task, "other_matches": ids of any other existing_items that could equally be meant}. Do not also return an item for it.
+- reschedule_item: a stated new date or time for something in existing_items -> {"target_id" (only an id from existing_items), the new "start_at", "end_at", "all_day" for an event or "due_at" for a task, "other_matches": ids of any other existing_items that could equally be meant}. Do not also return an item for it. When several existing_items could be meant, still return reschedule_item (with other_matches): never a follow-up question or a note instead.
 - add_prep_rule: a standing "whenever X is booked, remind me to Y" -> {"match": 1 to 5 short words that appear in the titles of those events (e.g. ["barber", "haircut"]), "reminder": what to do, short (e.g. "Bring €20 cash"), "minutes_before": when, e.g. 720 for the evening before a morning appointment, 60 for an hour before}. Return it as well as any items the capture asks for.
 - Leave out fields that do not apply.
 - target_item_index counts this capture's own items in the order you return them, from 0 (an instant event you return first is 0).
