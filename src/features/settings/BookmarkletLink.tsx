@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { bookmarkletHref } from '../../lib/capture/bookmarklet';
+import { buttonClasses } from '../../ui/buttonClasses';
 
 /**
  * The "Send to Airhead" bookmarklet to drag to the bookmarks bar (Task 7.4).
@@ -12,8 +13,8 @@ export default function BookmarkletLink({ origin = window.location.origin }: { o
     link.current?.setAttribute('href', bookmarkletHref(origin));
   }, [origin]);
   return (
-    <div className="space-y-1 text-sm">
-      <p className="text-slate-500">
+    <div className="space-y-1 text-footnote">
+      <p className="text-fg-muted">
         Desktop Chrome: drag this to your bookmarks bar, then click it on any page to save the page
         (and any selected text).
       </p>
@@ -21,7 +22,7 @@ export default function BookmarkletLink({ origin = window.location.origin }: { o
         ref={link}
         draggable
         onClick={(e) => e.preventDefault()}
-        className="inline-block rounded-lg bg-indigo-600 px-3 py-1.5 font-semibold text-white"
+        className={buttonClasses('primary', 'sm')}
       >
         Send to Airhead
       </a>

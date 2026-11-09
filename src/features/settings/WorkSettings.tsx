@@ -11,11 +11,12 @@ import {
   type LeaveType,
   type WorkSettings as Work,
 } from '../../lib/work/settings';
+import { Button } from '../../ui/Button';
+import { FIELD_INLINE } from '../../ui/fieldParts';
+import { Toggle } from '../../ui/Toggle';
+import { Chip } from '../../ui/Chip';
 
-const small =
-  'rounded-md px-2 py-1 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800';
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = FIELD_INLINE;
 const num = `${field} w-20`;
 /** Monday first, as people read a week. */
 const WEEK: [number, string][] = [
@@ -55,7 +56,7 @@ const SHARING: [Work['location_sharing'], string][] = [
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="space-y-2">
-      <legend className="mb-1 text-sm font-medium">{title}</legend>
+      <legend className="mb-1 text-footnote font-medium text-fg-muted">{title}</legend>
       {children}
     </fieldset>
   );
@@ -113,24 +114,24 @@ function WorkForm({
       <Group title="Working days">
         <div className="flex flex-wrap gap-3">
           {WEEK.map(([d, label]) => (
-            <label key={d} className="flex items-center gap-1 text-sm">
-              <input
-                type="checkbox"
-                checked={w.working_days.includes(d)}
-                onChange={(e) =>
-                  set(
-                    'working_days',
-                    e.target.checked
-                      ? [...w.working_days, d].sort()
-                      : w.working_days.filter((x) => x !== d),
-                  )
-                }
-              />
+            <Chip
+              key={d}
+              selected={w.working_days.includes(d)}
+              onClick={() =>
+                set(
+                  'working_days',
+                  w.working_days.includes(d)
+                    ? w.working_days.filter((x) => x !== d)
+                    : [...w.working_days, d].sort(),
+                )
+              }
+              className="pointer-coarse:min-h-11"
+            >
               {label}
-            </label>
+            </Chip>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-footnote">
           Hours per day
           <input
             type="number"
@@ -145,7 +146,7 @@ function WorkForm({
       </Group>
 
       <Group title="Leave">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
+        <div className="flex flex-wrap items-center gap-2 text-footnote">
           Leave year starts on
           <select
             aria-label="Leave year start day"
@@ -172,7 +173,7 @@ function WorkForm({
             ))}
           </select>
         </div>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-footnote">
           Annual leave (days a year)
           <input
             type="number"
@@ -183,7 +184,7 @@ function WorkForm({
             onChange={(e) => set('entitlement', Number(e.target.value))}
           />
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-footnote">
           Most days carried over
           <input
             type="number"
@@ -194,7 +195,7 @@ function WorkForm({
             onChange={(e) => set('carry_over_max', Number(e.target.value))}
           />
         </label>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-footnote">
           Carried-over days expire
           <select
             className={field}
@@ -218,7 +219,7 @@ function WorkForm({
 
       <Group title="Public holiday on a day I don’t work">
         {WEEKEND_RULES.map(([value, label]) => (
-          <label key={value} className="flex items-center gap-2 text-sm">
+          <label key={value} className="flex items-center gap-2 text-footnote">
             <input
               type="radio"
               name="weekend_holiday"
@@ -231,21 +232,17 @@ function WorkForm({
       </Group>
 
       <Group title="Company closure days">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={w.closure_uses_leave}
-            onChange={(e) => set('closure_uses_leave', e.target.checked)}
-          />
-          Closure days come out of my annual leave
-        </label>
-        <ul aria-label="Closure days" className="text-sm">
+        <Toggle
+          label="Closure days come out of my annual leave"
+          checked={w.closure_uses_leave}
+          onChange={(v) => set('closure_uses_leave', v)}
+        />
+        <ul aria-label="Closure days" className="text-footnote">
           {w.closure_days.map((d) => (
             <li key={d} className="flex items-center gap-2">
               {d}
-              <button
-                type="button"
-                className={small}
+              <Button
+                size="sm"
                 aria-label={`Remove closure day ${d}`}
                 onClick={() =>
                   set(
@@ -255,7 +252,7 @@ function WorkForm({
                 }
               >
                 Remove
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -267,9 +264,8 @@ function WorkForm({
             value={closure}
             onChange={(e) => setClosure(e.target.value)}
           />
-          <button
-            type="button"
-            className={small}
+          <Button
+            size="sm"
             disabled={!closure || w.closure_days.includes(closure)}
             onClick={() => {
               set('closure_days', [...w.closure_days, closure].sort());
@@ -277,18 +273,17 @@ function WorkForm({
             }}
           >
             Add closure day
-          </button>
+          </Button>
         </div>
       </Group>
 
       <Group title="Extra one-off holidays">
-        <ul aria-label="One-off holidays" className="text-sm">
+        <ul aria-label="One-off holidays" className="text-footnote">
           {w.manual_holidays.map((h) => (
             <li key={h.date} className="flex items-center gap-2">
               {h.date} · {h.name}
-              <button
-                type="button"
-                className={small}
+              <Button
+                size="sm"
                 aria-label={`Remove holiday ${h.name}`}
                 onClick={() =>
                   set(
@@ -298,7 +293,7 @@ function WorkForm({
                 }
               >
                 Remove
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -317,9 +312,8 @@ function WorkForm({
             value={holiday.name}
             onChange={(e) => setHoliday({ ...holiday, name: e.target.value })}
           />
-          <button
-            type="button"
-            className={small}
+          <Button
+            size="sm"
             disabled={
               !holiday.date ||
               !holiday.name.trim() ||
@@ -336,33 +330,29 @@ function WorkForm({
             }}
           >
             Add holiday
-          </button>
+          </Button>
         </div>
       </Group>
 
       <Group title="Leave types">
         <ul aria-label="Leave types" className="space-y-1">
           {w.leave_types.map((t, i) => (
-            <li key={t.key} className="flex flex-wrap items-center gap-2 text-sm">
+            <li key={t.key} className="flex flex-wrap items-center gap-2 text-footnote">
               <input
                 aria-label={`Leave type ${i + 1} name`}
                 className={field}
                 value={t.name}
                 onChange={(e) => setType(i, { name: e.target.value })}
               />
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={t.deducts}
-                  disabled={t.key === 'annual'}
-                  onChange={(e) => setType(i, { deducts: e.target.checked })}
-                />
-                Uses annual leave
-              </label>
+              <Toggle
+                label="Uses annual leave"
+                checked={t.deducts}
+                disabled={t.key === 'annual'}
+                onChange={(v) => setType(i, { deducts: v })}
+              />
               {t.key !== 'annual' && (
-                <button
-                  type="button"
-                  className={small}
+                <Button
+                  size="sm"
                   onClick={() =>
                     set(
                       'leave_types',
@@ -371,7 +361,7 @@ function WorkForm({
                   }
                 >
                   Remove
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -384,9 +374,8 @@ function WorkForm({
             value={newType}
             onChange={(e) => setNewType(e.target.value)}
           />
-          <button
-            type="button"
-            className={small}
+          <Button
+            size="sm"
             disabled={!newType.trim() || w.leave_types.some((t) => t.key === slug(newType.trim()))}
             onClick={() => {
               set('leave_types', [
@@ -397,14 +386,14 @@ function WorkForm({
             }}
           >
             Add leave type
-          </button>
+          </Button>
         </div>
       </Group>
 
       <Group title="Usual week">
         <ul aria-label="Usual week" className="space-y-1">
           {WEEK.filter(([d]) => w.working_days.includes(d)).map(([d, label]) => (
-            <li key={d} className="flex items-center gap-2 text-sm">
+            <li key={d} className="flex items-center gap-2 text-footnote">
               <span className="w-10">{label}</span>
               <select
                 aria-label={`${label} location`}
@@ -430,7 +419,7 @@ function WorkForm({
 
       <Group title="Checklist the evening before (one per line)">
         {WORK_LOCATIONS.filter((l) => l !== 'off').map((l) => (
-          <label key={l} className="block text-sm">
+          <label key={l} className="block text-footnote">
             {LOCATION_LABELS[l]}
             <textarea
               aria-label={`${LOCATION_LABELS[l]} checklist`}
@@ -464,19 +453,15 @@ function WorkForm({
       </Group>
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={!dirty || !valid}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-        >
+        <Button variant="primary" type="submit" disabled={!dirty || !valid}>
           Save work settings
-        </button>
+        </Button>
         {!valid && (
-          <span role="alert" className="text-sm text-red-600">
+          <span role="alert" className="text-footnote text-danger">
             Check the numbers above.
           </span>
         )}
-        {saved && !dirty && <span className="text-sm text-slate-500">Saved</span>}
+        {saved && !dirty && <span className="text-footnote text-fg-muted">Saved</span>}
       </div>
     </form>
   );
@@ -489,7 +474,7 @@ export default function WorkSettings() {
   const userId = user?.id ?? '';
   const settings = useLiveQuery(() => db.settings.get(userId), [db, userId], null);
   const [saved, setSaved] = useState(false);
-  if (settings === null) return <p className="text-sm text-slate-500">Loading…</p>;
+  if (settings === null) return <p className="text-footnote text-fg-muted">Loading…</p>;
   const work = readWorkSettings(settings);
   const clean = (w: Work): Work => ({
     ...w,

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAppLock } from '../../lib/applock/context';
+import { Button } from '../../ui/Button';
 
 export default function LockScreen({ onSignOut }: { onSignOut: () => Promise<void> }) {
   const { unlock } = useAppLock();
@@ -19,28 +20,23 @@ export default function LockScreen({ onSignOut }: { onSignOut: () => Promise<voi
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-white px-4 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <main className="flex min-h-dvh items-center justify-center bg-canvas px-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-fg">
       <div className="w-full max-w-sm space-y-6 text-center">
         <img src="/logo.svg" alt="" className="mx-auto size-16 rounded-2xl" />
-        <h1 className="text-2xl font-semibold tracking-tight">Airhead is locked</h1>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void tryUnlock()}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-        >
+        <h1 className="text-title">Airhead is locked</h1>
+        <Button variant="primary" size="lg" loading={busy} onClick={() => void tryUnlock()}>
           Unlock with Face ID / Touch ID
-        </button>
+        </Button>
         {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-footnote text-danger">
             {error}
           </p>
         )}
-        <p className="text-sm text-slate-500">
+        <p className="text-footnote text-fg-muted">
           Can&apos;t unlock?{' '}
-          <button type="button" className="underline" onClick={() => void onSignOut()}>
+          <Button variant="plain" size="sm" className="-mx-1 px-1" onClick={() => void onSignOut()}>
             Sign out
-          </button>{' '}
+          </Button>{' '}
           and sign back in. Your data stays safe on the server.
         </p>
       </div>

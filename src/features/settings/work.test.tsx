@@ -51,7 +51,7 @@ describe('Settings → Work (Task 4.4)', () => {
     const entitlement = screen.getByRole('spinbutton', { name: 'Annual leave (days a year)' });
     await user.clear(entitlement);
     await user.type(entitlement, '23');
-    await user.click(screen.getByRole('checkbox', { name: 'Fri' }));
+    await user.click(screen.getByRole('button', { name: 'Fri' }));
     await user.click(screen.getByRole('radio', { name: 'An extra day of annual leave' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Leave year start month' }), '1');
     await user.click(save);

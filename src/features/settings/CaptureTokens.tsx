@@ -3,12 +3,10 @@ import { useAuth } from '../../lib/auth/context';
 import type { CaptureTokenRow } from '../../lib/capture/tokens';
 import BookmarkletLink from './BookmarkletLink';
 import ShortcutsGuide from './ShortcutsGuide';
+import { Button } from '../../ui/Button';
+import { FIELD_INLINE } from '../../ui/fieldParts';
 
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
-const button =
-  'rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700';
-
+const field = FIELD_INLINE;
 const when = (iso: string | null) =>
   iso
     ? new Intl.DateTimeFormat('en-IE', { dateStyle: 'medium', timeStyle: 'short' }).format(
@@ -38,7 +36,7 @@ export default function CaptureTokens() {
   if (!tokens)
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-500">
+        <p className="text-footnote text-fg-muted">
           Capturing from Shortcuts needs Airhead&apos;s server (sign in).
         </p>
         <BookmarkletLink />
@@ -59,19 +57,18 @@ export default function CaptureTokens() {
   };
 
   return (
-    <div className="space-y-4 text-sm">
-      <p className="text-slate-500">
+    <div className="space-y-4 text-footnote">
+      <p className="text-fg-muted">
         A token lets an iOS Shortcut save captures to Airhead. Each device or Shortcut gets its own;
         revoke one if a phone is lost.
       </p>
       <div className="flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs text-slate-500">
+        <label className="flex flex-col gap-1 text-caption text-fg-muted">
           Name
           <input className={field} value={label} onChange={(e) => setLabel(e.target.value)} />
         </label>
-        <button
-          type="button"
-          className={button}
+        <Button
+          size="sm"
           disabled={busy || !label.trim()}
           onClick={() =>
             void act(async () => {
@@ -80,56 +77,44 @@ export default function CaptureTokens() {
           }
         >
           Create token
-        </button>
+        </Button>
       </div>
       {fresh && (
-        <div
-          role="alert"
-          className="rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-950"
-        >
+        <div role="alert" className="rounded-card bg-warning-soft p-3 text-fg">
           <p className="mb-1 font-semibold">Copy this token now — it won&apos;t be shown again.</p>
           <code className="block break-all">{fresh}</code>
           <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              className={button}
-              onClick={() => void navigator.clipboard?.writeText(fresh)}
-            >
+            <Button size="sm" onClick={() => void navigator.clipboard?.writeText(fresh)}>
               Copy
-            </button>
-            <button type="button" className={button} onClick={() => setFresh(null)}>
+            </Button>
+            <Button size="sm" onClick={() => setFresh(null)}>
               Done
-            </button>
+            </Button>
           </div>
         </div>
       )}
-      {rows && rows.length === 0 && <p className="text-slate-500">No tokens yet.</p>}
-      <ul aria-label="Capture tokens" className="divide-y divide-slate-200 dark:divide-slate-800">
+      {rows && rows.length === 0 && <p className="text-fg-muted">No tokens yet.</p>}
+      <ul aria-label="Capture tokens" className="divide-y divide-border/70">
         {rows?.map((t) => (
           <li key={t.id} className="flex items-center justify-between gap-3 py-2">
             <div>
               <p className="font-medium">{t.label}</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-caption text-fg-muted">
                 {t.revoked_at
                   ? `Revoked ${when(t.revoked_at)}`
                   : `Last used: ${when(t.last_used_at)}`}
               </p>
             </div>
             {!t.revoked_at && (
-              <button
-                type="button"
-                className={button}
-                disabled={busy}
-                onClick={() => void act(() => tokens.revoke(t.id))}
-              >
+              <Button size="sm" disabled={busy} onClick={() => void act(() => tokens.revoke(t.id))}>
                 Revoke {t.label}
-              </button>
+              </Button>
             )}
           </li>
         ))}
       </ul>
       {message && (
-        <p role="status" className="text-amber-700 dark:text-amber-400">
+        <p role="status" className="text-warning">
           {message}
         </p>
       )}

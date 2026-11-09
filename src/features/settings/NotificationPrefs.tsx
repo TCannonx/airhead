@@ -10,9 +10,11 @@ import {
   readNotifSettings,
   type NotifSettings,
 } from '../../lib/notifications/settings';
+import { Button } from '../../ui/Button';
+import { FIELD_INLINE } from '../../ui/fieldParts';
+import { Toggle } from '../../ui/Toggle';
 
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = FIELD_INLINE;
 const REMINDER_DEFAULTS = [0, 5, 10, 15, 30, 60, 120];
 
 function PrefsForm({
@@ -44,22 +46,20 @@ function PrefsForm({
       }}
     >
       <fieldset className="space-y-1">
-        <legend className="mb-1 text-sm font-medium">Send me</legend>
+        <legend className="mb-1 text-footnote font-medium text-fg-muted">Send me</legend>
         {NUDGE_TYPES.map((t) => (
-          <label key={t} className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={n.types[t]}
-              onChange={(e) => set('types', { ...n.types, [t]: e.target.checked })}
-            />
-            {NUDGE_LABELS[t]}
-          </label>
+          <Toggle
+            key={t}
+            label={NUDGE_LABELS[t]}
+            checked={n.types[t]}
+            onChange={(v) => set('types', { ...n.types, [t]: v })}
+          />
         ))}
       </fieldset>
 
       <fieldset className="space-y-2">
-        <legend className="mb-1 text-sm font-medium">Quiet hours</legend>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
+        <legend className="mb-1 text-footnote font-medium text-fg-muted">Quiet hours</legend>
+        <div className="flex flex-wrap items-center gap-2 text-footnote">
           From
           <input
             type="time"
@@ -77,18 +77,15 @@ function PrefsForm({
             onChange={(e) => set('quiet_end', e.target.value)}
           />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={n.quiet_allows_events}
-            onChange={(e) => set('quiet_allows_events', e.target.checked)}
-          />
-          Event reminders still come through
-        </label>
+        <Toggle
+          label="Event reminders still come through"
+          checked={n.quiet_allows_events}
+          onChange={(v) => set('quiet_allows_events', v)}
+        />
       </fieldset>
 
       <div className="flex flex-wrap gap-4">
-        <label className="text-sm">
+        <label className="text-footnote">
           Most notifications a day
           <input
             type="number"
@@ -99,7 +96,7 @@ function PrefsForm({
             onChange={(e) => set('daily_cap', Number(e.target.value))}
           />
         </label>
-        <label className="text-sm">
+        <label className="text-footnote">
           Event reminders by default
           <select
             className={`${field} ml-2`}
@@ -115,7 +112,7 @@ function PrefsForm({
         </label>
       </div>
 
-      <div className="flex flex-wrap gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-footnote">
         {(
           [
             ['evening_review_time', 'Evening review at'],
@@ -134,20 +131,16 @@ function PrefsForm({
           </label>
         ))}
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-caption text-fg-muted">
         More than the daily limit are bundled into one summary. Times are a minute or two late at
         most.
       </p>
 
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={!dirty || !valid}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-        >
+        <Button variant="primary" type="submit" disabled={!dirty || !valid}>
           Save notification settings
-        </button>
-        {saved && !dirty && <span className="text-sm text-slate-500">Saved</span>}
+        </Button>
+        {saved && !dirty && <span className="text-footnote text-fg-muted">Saved</span>}
       </div>
     </form>
   );

@@ -13,11 +13,7 @@ import {
 import { useSync } from '../../lib/sync/context';
 import { update } from '../../lib/db/repository';
 import NotificationPrefs from './NotificationPrefs';
-
-const small =
-  'rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800';
-const primary =
-  'rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50';
+import { Button } from '../../ui/Button';
 
 /** Settings → Notifications (Task 4.11): turn on push, choose the device, send a test. */
 export default function NotificationSettings({ standalone }: { standalone?: boolean }) {
@@ -39,7 +35,7 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
 
   if (!push) {
     return (
-      <p className="text-sm text-slate-500">
+      <p className="text-footnote text-fg-muted">
         Needs a server: notifications are sent by Airhead’s server.
       </p>
     );
@@ -81,21 +77,21 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-500">
+      <p className="text-footnote text-fg-muted">
         Reminders, the evening review and other nudges go to one device (your iPhone, normally).
         Other devices stay quiet but in sync.
       </p>
       {support === 'needs_install' && (
-        <div role="note" className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
+        <div role="note" className="rounded-card bg-warning-soft p-3 text-footnote text-fg">
           On iPhone and iPad, notifications work only when Airhead is on your Home Screen: tap{' '}
           <strong>Share</strong> → <strong>Add to Home Screen</strong>, then open Airhead from the
           Home Screen and come back here.
         </div>
       )}
       {support === 'unsupported' && (
-        <p className="text-sm text-slate-500">This browser can’t show notifications.</p>
+        <p className="text-footnote text-fg-muted">This browser can’t show notifications.</p>
       )}
-      <p className="text-sm">
+      <p className="text-footnote">
         {receiver
           ? me?.receives_notifications
             ? 'This device gets notifications.'
@@ -107,17 +103,17 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
           {devices
             .filter((d) => d.push_subscription)
             .map((d) => (
-              <li key={d.id} className="flex items-center justify-between gap-2 text-sm">
+              <li key={d.id} className="flex items-center justify-between gap-2 text-footnote">
                 <span>
                   {d.name}
                   {d.id === deviceId ? ' (this device)' : ''}
                 </span>
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   role="switch"
                   aria-checked={d.receives_notifications}
                   aria-label={`Notifications on ${d.name}`}
-                  className={small}
+
                   onClick={() =>
                     void update(db, 'devices', d.id, {
                       receives_notifications: !d.receives_notifications,
@@ -125,7 +121,7 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
                   }
                 >
                   {d.receives_notifications ? 'On' : 'Off'}
-                </button>
+                </Button>
               </li>
             ))}
         </ul>
@@ -133,31 +129,32 @@ export default function NotificationSettings({ standalone }: { standalone?: bool
       {support === 'supported' && (
         <div className="flex flex-wrap gap-2">
           {!me?.push_subscription ? (
-            <button type="button" className={primary} disabled={busy} onClick={() => void turnOn()}>
+            <Button variant="primary" size="sm" disabled={busy} onClick={() => void turnOn()}>
               Turn on notifications
-            </button>
+            </Button>
           ) : (
             <>
-              <button type="button" className={small} disabled={busy} onClick={() => void test()}>
+              <Button size="sm" disabled={busy} onClick={() => void test()}>
                 Send test notification
-              </button>
-              <button
-                type="button"
-                className={`${small} text-red-600`}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+
                 onClick={() => void unsubscribe(db, deviceId ?? '')}
               >
                 Turn off on this device
-              </button>
+              </Button>
             </>
           )}
         </div>
       )}
       {message && (
-        <p role="status" className="text-sm text-slate-600 dark:text-slate-300">
+        <p role="status" className="text-footnote text-fg-muted">
           {message}
         </p>
       )}
-      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+      <div className="border-t border-border/60 pt-4">
         <NotificationPrefs />
       </div>
     </div>

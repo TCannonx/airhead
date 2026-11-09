@@ -4,9 +4,10 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { updateSettingsData } from '../../lib/db/settings';
 import { MAX_SEARCHES, readScoutSettings, type ScoutSettings } from '../../lib/scout/settings';
+import { FIELD_INLINE } from '../../ui/fieldParts';
+import { Toggle } from '../../ui/Toggle';
 
-const field =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
+const field = FIELD_INLINE;
 
 /** Settings → Scout (Task 8.9): on or off, the city for web searches, and the search cap. */
 export default function ScoutSettingsPanel() {
@@ -32,15 +33,12 @@ export default function ScoutSettingsPanel() {
       );
 
   return (
-    <div className="space-y-3 text-sm">
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={scout.enabled}
-          onChange={(e) => save({ enabled: e.target.checked })}
-        />
-        Scout for ideas each week (with the weekly review)
-      </label>
+    <div className="space-y-3 text-footnote">
+      <Toggle
+        label="Scout for ideas each week (with the weekly review)"
+        checked={scout.enabled}
+        onChange={(v) => save({ enabled: v })}
+      />
       <label className="flex flex-wrap items-center gap-2">
         City for web searches
         <input
@@ -67,15 +65,12 @@ export default function ScoutSettingsPanel() {
           ))}
         </select>
       </label>
-      <p className="text-xs text-slate-500">
+      <p className="text-caption text-fg-muted">
         Searches use only your interests from Memory and this city, never names or personal details.
         Each search costs about €0.01.
       </p>
       {last && (
-        <div
-          aria-label="Last Scout run"
-          className="rounded-lg bg-slate-50 p-2 text-xs dark:bg-slate-900"
-        >
+        <div aria-label="Last Scout run" className="rounded-lg bg-fill/50 p-2 text-caption">
           <p className="font-medium">
             Last run {last.created_at.slice(0, 10)}: {last.cards} ideas, {last.searches} searches
           </p>

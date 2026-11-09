@@ -5,6 +5,10 @@ import { useAuth } from '../../lib/auth/context';
 import { sharedText } from '../../lib/capture/bookmarklet';
 import { createCapture } from '../../lib/db/captures';
 import { useDb } from '../../lib/db/context';
+import { Icon } from '../../app/Icon';
+import { Card } from '../../ui/Card';
+import { cx } from '../../ui/cx';
+import { Spinner } from '../../ui/Spinner';
 
 const HTTP = /^https?:\/\//i;
 
@@ -37,13 +41,24 @@ export default function SharePage({ closeDelayMs = 1200 }: { closeDelayMs?: numb
 
   return (
     <Page title="Send to Airhead">
-      <p role="status" className="text-lg">
-        {state === 'saving'
-          ? 'Saving…'
-          : state === 'saved'
-            ? 'Saved to Airhead.'
-            : 'Nothing to save: no page address or text came with this.'}
-      </p>
+      <Card className="flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className={cx(
+            'inline-flex size-10 shrink-0 items-center justify-center rounded-full',
+            state === 'saved' ? 'bg-success-soft text-success' : 'bg-fill text-fg-muted',
+          )}
+        >
+          {state === 'saving' ? <Spinner /> : <Icon name={state === 'saved' ? 'check' : 'info'} />}
+        </span>
+        <p role="status" className="text-headline font-normal">
+          {state === 'saving'
+            ? 'Saving…'
+            : state === 'saved'
+              ? 'Saved to Airhead.'
+              : 'Nothing to save: no page address or text came with this.'}
+        </p>
+      </Card>
     </Page>
   );
 }

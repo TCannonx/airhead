@@ -1,10 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../../lib/auth/context';
-
-const button =
-  'w-full rounded-lg px-4 py-3 text-sm font-semibold disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500';
-const input =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-base dark:border-slate-700 dark:bg-slate-900';
+import { Button } from '../../ui/Button';
+import { TextField } from '../../ui/TextField';
 
 /**
  * One form for new and returning users: email + password, no emails sent.
@@ -50,81 +47,81 @@ export default function SignInScreen() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-white px-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <main className="flex min-h-dvh items-center justify-center bg-surface px-4 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-fg">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <img src="/logo.svg" alt="" className="size-16 rounded-2xl" />
-          <h1 className="text-2xl font-semibold tracking-tight">Airhead</h1>
-          <p className="text-sm text-slate-500">Capture anything, sorted later.</p>
+          <h1 className="text-title">Airhead</h1>
+          <p className="text-footnote text-fg-muted">Capture anything, sorted later.</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3">
-          <label className="block space-y-1 text-sm font-medium">
-            <span>Email</span>
-            <input
-              type="email"
-              name="email"
-              required
-              autoComplete="username"
-              autoCapitalize="none"
-              className={input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <label className="block space-y-1 text-sm font-medium">
-            <span>{isNew ? 'Choose a password' : 'Password'}</span>
-            <input
-              type="password"
-              name="password"
-              required
-              minLength={isNew ? 8 : undefined}
-              // "new-password" makes iOS and Chrome offer a strong password and save it.
-              autoComplete={isNew ? 'new-password' : 'current-password'}
-              className={input}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-          <button
+          <TextField
+            label="Email"
+            type="email"
+            name="email"
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            className="[&_input]:min-h-12"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label={isNew ? 'Choose a password' : 'Password'}
+            type="password"
+            name="password"
+            required
+            minLength={isNew ? 8 : undefined}
+            // "new-password" makes iOS and Chrome offer a strong password and save it.
+            autoComplete={isNew ? 'new-password' : 'current-password'}
+            hint={isNew ? 'At least 8 characters.' : undefined}
+            className="[&_input]:min-h-12"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button
             type="submit"
-            disabled={busy || !email || !password}
-            className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
+            variant="primary"
+            size="lg"
+            className="mt-2"
+            loading={busy}
+            disabled={!email || !password}
           >
             {isNew ? 'Create account' : 'Continue'}
-          </button>
-          <button
-            type="button"
-            className="w-full text-sm text-slate-500 underline"
+          </Button>
+          <Button
+            variant="plain"
+            size="sm"
+            className="w-full"
             onClick={() => {
               setIsNew(!isNew);
               setError(null);
             }}
           >
             {isNew ? 'I already have an account' : 'New here? Create an account'}
-          </button>
+          </Button>
         </form>
 
         {google && (
           <>
-            <div className="flex items-center gap-3 text-xs text-slate-400">
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            <div className="flex items-center gap-3 text-caption text-fg-subtle">
+              <span className="h-px flex-1 bg-border" />
               or
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              <span className="h-px flex-1 bg-border" />
             </div>
-            <button
-              type="button"
-              className={`${button} bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700`}
+            <Button
+              size="lg"
               disabled={busy}
               onClick={() => void run(() => services.auth.signInWithGoogle())}
             >
               Continue with Google
-            </button>
+            </Button>
           </>
         )}
 
         {error && (
-          <p role="alert" className="text-center text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="text-center text-footnote text-danger">
             {error}
           </p>
         )}

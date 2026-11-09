@@ -7,11 +7,10 @@ import { addLinkedCalendar, LINKED_COLOURS, linkHost } from '../../lib/db/feeds'
 import { softDelete, update } from '../../lib/db/repository';
 import { useSync } from '../../lib/sync/context';
 import { lastSyncedText } from '../sync/labels';
+import { Button } from '../../ui/Button';
+import { FIELD_INLINE } from '../../ui/fieldParts';
 
-const field =
-  'w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-900';
-const small =
-  'rounded-md px-2 py-1 text-xs font-semibold hover:bg-slate-100 disabled:opacity-50 dark:hover:bg-slate-800';
+const field = `${FIELD_INLINE} w-full`;
 
 /** Settings → Linked calendars (Task 4.9): someone's secret iCal link, read-only in Airhead. */
 export default function LinkedCalendars() {
@@ -32,7 +31,7 @@ export default function LinkedCalendars() {
 
   if (!calendars) {
     return (
-      <p className="text-sm text-slate-500">
+      <p className="text-footnote text-fg-muted">
         Needs a server: linked calendars are fetched by Airhead’s server every 30 minutes.
       </p>
     );
@@ -64,20 +63,17 @@ export default function LinkedCalendars() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-500">
+      <p className="text-footnote text-fg-muted">
         Paste a calendar’s secret iCal link (for example your partner’s shared calendar). Its events
         show in Airhead read-only and refresh every 30 minutes. Airhead only reads it; it never
         learns from or acts on what’s inside.
       </p>
       {feeds && feeds.length > 0 && (
-        <ul
-          aria-label="Linked calendars"
-          className="divide-y divide-slate-100 dark:divide-slate-800"
-        >
+        <ul aria-label="Linked calendars" className="divide-y divide-border/70">
           {feeds.map((f) => (
             <li key={f.id} className="flex items-center justify-between gap-2 py-2">
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-sm font-medium">
+                <span className="flex items-center gap-2 text-footnote font-medium">
                   <span
                     aria-hidden="true"
                     className="size-3 shrink-0 rounded-full"
@@ -85,10 +81,10 @@ export default function LinkedCalendars() {
                   />
                   {f.name || 'Linked calendar'}
                 </span>
-                <span className="block truncate text-xs text-slate-500">
+                <span className="block truncate text-caption text-fg-muted">
                   {linkHost(f.url)} ·{' '}
                   {f.last_error ? (
-                    <span className="text-red-600">{f.last_error}</span>
+                    <span className="text-danger">{f.last_error}</span>
                   ) : f.last_fetched_at ? (
                     `updated ${lastSyncedText(f.last_fetched_at).replace(/^Today/, 'today')}`
                   ) : (
@@ -97,31 +93,31 @@ export default function LinkedCalendars() {
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   role="switch"
                   aria-checked={f.enabled}
                   aria-label={`Show ${f.name || 'linked calendar'}`}
-                  className={small}
+
                   onClick={() => void update(db, 'feeds', f.id, { enabled: !f.enabled })}
                 >
                   {f.enabled ? 'On' : 'Off'}
-                </button>
-                <button
-                  type="button"
-                  className={small}
+                </Button>
+                <Button
+                  size="sm"
                   disabled={busy}
                   onClick={() => void calendars.refresh(f.id).then(() => sync.syncNow())}
                 >
                   Refresh
-                </button>
-                <button
-                  type="button"
-                  className={`${small} text-red-600`}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+
                   onClick={() => void softDelete(db, 'feeds', f.id)}
                 >
                   Remove
-                </button>
+                </Button>
               </span>
             </li>
           ))}
@@ -132,7 +128,7 @@ export default function LinkedCalendars() {
         onSubmit={(e) => void onAdd(e)}
         className="space-y-2"
       >
-        <label className="block text-sm">
+        <label className="block text-footnote">
           Calendar link
           <input
             className={field}
@@ -147,18 +143,13 @@ export default function LinkedCalendars() {
           />
         </label>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:hover:bg-slate-700"
-            disabled={!url.trim() || busy}
-            onClick={() => void onCheck()}
-          >
+          <Button size="sm" disabled={!url.trim() || busy} onClick={() => void onCheck()}>
             Check link
-          </button>
+          </Button>
           {check && (
             <span
               role="status"
-              className={`text-sm ${check.ok ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600'}`}
+              className={`text-footnote ${check.ok ? 'text-success' : 'text-danger'}`}
             >
               {check.message}
             </span>
@@ -166,7 +157,7 @@ export default function LinkedCalendars() {
         </div>
         {check?.ok && (
           <div className="flex flex-wrap items-end gap-2">
-            <label className="text-sm">
+            <label className="text-footnote">
               Name
               <input className={field} value={name} onChange={(e) => setName(e.target.value)} />
             </label>
@@ -184,19 +175,15 @@ export default function LinkedCalendars() {
                   />
                   <span
                     aria-hidden="true"
-                    className={`block size-6 rounded-full ${colour === c ? 'ring-2 ring-slate-900 ring-offset-2 dark:ring-white' : ''}`}
+                    className={`block size-6 rounded-full ${colour === c ? 'ring-2 ring-fg ring-offset-2 ring-offset-surface' : ''}`}
                     style={{ background: c }}
                   />
                 </label>
               ))}
             </fieldset>
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
-            >
+            <Button variant="primary" size="sm" type="submit" disabled={busy}>
               Add calendar
-            </button>
+            </Button>
           </div>
         )}
       </form>
