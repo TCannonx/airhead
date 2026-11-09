@@ -410,6 +410,26 @@ export function evalCases(now: Date): {
       },
     },
     {
+      id: 'mams-present',
+      text: 'Need to get Mam a birthday present before the 20th, not sure what yet',
+      meant:
+        'A planning task for the present due before the 20th, with steps and a specific question (ideas, budget), nothing dropped (Phase 12).',
+      check: (r) => {
+        const { plan, problems } = movedForward(r);
+        return [
+          ...problems,
+          ...has(
+            !!plan && /present|gift|mam/i.test(plan.title),
+            'the planning task is not about the present',
+          ),
+          ...has(
+            !!plan?.due_at && Number(local(plan.due_at, r.timeZone).date.slice(8, 10)) < 20,
+            'not due before the 20th',
+          ),
+        ];
+      },
+    },
+    {
       id: 'vague',
       text: 'hmm the thing with the stuff',
       meant: 'Nothing clear: kept in the Workshop, not lost.',
