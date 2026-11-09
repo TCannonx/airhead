@@ -1,5 +1,6 @@
-import { Link } from 'react-router';
 import { Page } from '../../app/Page';
+import { GroupedList, Section } from '../../ui/GroupedList';
+import { ListRow } from '../../ui/ListRow';
 import LeaveCounter from '../leave/LeaveCounter';
 import LeaveProposals from '../leave/LeaveProposals';
 import LocationPicker from '../work/LocationPicker';
@@ -28,11 +29,11 @@ export default function TodayPage() {
       <Suggestions />
       <ScoutCards />
       <LeaveCounter />
-      <p className="mt-6 text-sm">
-        <Link to="/review" className="text-indigo-600 hover:underline dark:text-indigo-400">
-          Evening review
-        </Link>
-      </p>
+      <Section>
+        <GroupedList>
+          <ListRow icon="check" iconTint="bg-success" title="Evening review" to="/review" />
+        </GroupedList>
+      </Section>
     </Page>
   );
 }

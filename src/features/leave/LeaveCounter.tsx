@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Icon } from '../../app/Icon';
 import { currentBalance, paceText } from '../../lib/leave/engine';
 import { daysText as days, longDate as date, leaveWarnings } from './warnings';
 import { useWork, todayKey } from './useWork';
@@ -25,15 +26,18 @@ export default function LeaveCounter({ detailed = false }: { detailed?: boolean 
       <Link
         to="/work"
         aria-label="Leave"
-        className="mb-6 block rounded-xl border border-emerald-200 bg-emerald-50 p-3 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:hover:bg-emerald-950"
+        className="mb-8 flex min-h-11 items-center gap-3 rounded-card border border-border/60 bg-surface px-4 py-3 transition outline-none hover:bg-fill/60 focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <p className="font-medium">Leave: {days(b.remaining)} left</p>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{paceText(b)}</p>
-        {leaveWarnings(b).map((w) => (
-          <p key={w} className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-            {w}
-          </p>
-        ))}
+        <span className="min-w-0 flex-1">
+          <span className="block text-body font-medium">Leave: {days(b.remaining)} left</span>
+          <span className="block text-footnote text-fg-muted">{paceText(b)}</span>
+          {leaveWarnings(b).map((w) => (
+            <span key={w} className="mt-1 block text-footnote text-warning">
+              {w}
+            </span>
+          ))}
+        </span>
+        <Icon name="chevron-right" className="size-4 shrink-0 text-fg-subtle" />
       </Link>
     );
   }

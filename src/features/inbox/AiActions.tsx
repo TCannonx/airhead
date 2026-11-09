@@ -5,25 +5,38 @@ import { useAuth } from '../../lib/auth/context';
 import { applyProposal, dismissAction, fixLink, undoAction } from '../../lib/db/aiActions';
 import { useDb } from '../../lib/db/context';
 import type { AiAction } from '../../lib/schemas/records';
+import { Button } from '../../ui/Button';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 
 const WEEK = 7 * 86_400_000;
-const chip =
-  'rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800';
-const primary =
-  'rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700';
-
-function Heading({ children }: { children: string }) {
-  return (
-    <h2 className="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-      {children}
-    </h2>
-  );
-}
 
 function Quote({ a }: { a: AiAction }) {
   if (!a.quote) return null;
-  return <p className="text-sm text-slate-500">“{a.quote}”</p>;
+  return <p className="text-footnote break-words text-fg-muted italic">“{a.quote}”</p>;
 }
+
+/** What happened when an action ran ("Changed since…"), with a link to look at it. */
+function Note({ a, text }: { a: AiAction; text?: string }) {
+  if (!text) return null;
+  return (
+    <p role="status" className="mt-1 text-footnote text-fg-muted">
+      {text}{' '}
+      <Link to={fixLink(a)} className="font-medium text-accent underline">
+        Open
+      </Link>
+    </p>
+  );
+}
+
+const when = (at: string) =>
+  new Date(at).toLocaleString('en-IE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
 /**
  * What AI sorting did for you this week (each with Undo) and what it would like
@@ -81,108 +94,72 @@ export default function AiActions() {
   return (
     <>
       {asks.length > 0 && (
-        <section className="mb-8">
-          <Heading>Needs your OK</Heading>
-          <ul aria-label="Needs your OK" className="space-y-2">
+        <Section title="Needs your OK">
+          <GroupedList label="Needs your OK">
             {asks.map((a) => {
               const choices = Array.isArray(a.payload.choices)
                 ? (a.payload.choices as string[])
                 : [];
               return (
-                <li
-                  key={a.id}
-                  className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40"
-                >
-                  <p className="font-medium">{a.summary}</p>
+                <GroupedListItem key={a.id}>
+                  <p className="text-body font-medium break-words">{a.summary}</p>
                   <Quote a={a} />
-                  {a.reason && (
-                    <p className="text-sm text-slate-700 dark:text-slate-300">{a.reason}</p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  {a.reason && <p className="text-footnote text-fg-muted">{a.reason}</p>}
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {choices.length > 0 ? (
-                      choices.map((id, n) => (
-                        <button
-                          key={id}
-                          type="button"
-                          className={chip}
-                          onClick={() => void apply(a, id)}
-                        >
-                          {titleOf(id) ?? `Option ${n + 1}`}
-                          {(() => {
-                            const at = choiceItems?.find((i) => i?.id === id)?.start_at;
-                            return at
-                              ? ` · ${new Date(at).toLocaleString('en-IE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
-                              : '';
-                          })()}
-                        </button>
-                      ))
+                      choices.map((id, n) => {
+                        const at = choiceItems?.find((i) => i?.id === id)?.start_at;
+                        return (
+                          <Button key={id} size="sm" onClick={() => void apply(a, id)}>
+                            {titleOf(id) ?? `Option ${n + 1}`}
+                            {at ? ` · ${when(at)}` : ''}
+                          </Button>
+                        );
+                      })
                     ) : a.after ? (
-                      <button type="button" className={primary} onClick={() => void apply(a)}>
+                      <Button size="sm" variant="primary" onClick={() => void apply(a)}>
                         Apply
-                      </button>
+                      </Button>
                     ) : (
-                      <Link to={fixLink(a)} className={primary}>
+                      <Link to={fixLink(a)} className={buttonClasses('primary', 'sm')}>
                         Fix
                       </Link>
                     )}
-                    <button
-                      type="button"
-                      className={chip}
+                    <Button
+                      size="sm"
+                      variant="plain"
                       onClick={() => void dismissAction(db, uid, a)}
                     >
                       Dismiss
-                    </button>
+                    </Button>
                   </div>
-                  {notes[a.id] && (
-                    <p role="status" className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                      {notes[a.id]}{' '}
-                      <Link to={fixLink(a)} className="text-indigo-600 underline">
-                        Open
-                      </Link>
-                    </p>
-                  )}
-                </li>
+                  <Note a={a} text={notes[a.id]} />
+                </GroupedListItem>
               );
             })}
-          </ul>
-        </section>
+          </GroupedList>
+        </Section>
       )}
 
       {done.length > 0 && (
-        <section className="mb-8">
-          <Heading>Done by AI</Heading>
-          <ul aria-label="Done by AI" className="space-y-2">
+        <Section title="Done by AI">
+          <GroupedList label="Done by AI">
             {done.map((a) => (
-              <li
-                key={a.id}
-                className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950/40"
-              >
+              <GroupedListItem key={a.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium">{a.summary}</p>
+                    <p className="text-body break-words">{a.summary}</p>
                     <Quote a={a} />
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`Undo: ${a.summary}`}
-                    className={chip}
-                    onClick={() => void undo(a)}
-                  >
+                  <Button size="sm" aria-label={`Undo: ${a.summary}`} onClick={() => void undo(a)}>
                     Undo
-                  </button>
+                  </Button>
                 </div>
-                {notes[a.id] && (
-                  <p role="status" className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                    {notes[a.id]}{' '}
-                    <Link to={fixLink(a)} className="text-indigo-600 underline">
-                      Open
-                    </Link>
-                  </p>
-                )}
-              </li>
+                <Note a={a} text={notes[a.id]} />
+              </GroupedListItem>
             ))}
-          </ul>
-        </section>
+          </GroupedList>
+        </Section>
       )}
     </>
   );

@@ -63,7 +63,9 @@ describe('Inbox → Needs a tap', () => {
     expect(within(review).getByText('Garden thing')).toBeVisible();
     expect(within(review).getByRole('button', { name: 'Keep as Idea' })).toBeVisible();
     expect(within(review).getByRole('button', { name: 'Task' })).toBeVisible();
-    expect(screen.queryByRole('list', { name: 'Unsorted' })).toHaveTextContent('');
+    // The capture waits under Needs a tap, so Unsorted is empty.
+    expect(await screen.findByText('Nothing waiting. Everything is sorted.')).toBeVisible();
+    expect(screen.queryByRole('list', { name: 'Unsorted' })).not.toBeInTheDocument();
   });
 
   it('keeping the type confirms it: no correction, capture sorted', async () => {

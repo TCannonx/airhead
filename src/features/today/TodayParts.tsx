@@ -4,42 +4,39 @@ import { update } from '../../lib/db/repository';
 import { completeTask } from '../../lib/db/review';
 import { removeFromTop3 } from '../../lib/db/top3';
 import type { Item } from '../../lib/schemas/records';
+import { Button } from '../../ui/Button';
+import { buttonClasses } from '../../ui/buttonClasses';
+import { cx } from '../../ui/cx';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
+import { IconButton } from '../../ui/IconButton';
 import StartNotesButton from '../notes/StartNotesButton';
 import { hhmmOf, slotTimes, type TodayView, type TopTask } from './useToday';
-
-const h2 = 'mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase';
 
 export function BriefLines({ view }: { view: TodayView }) {
   if (!view.brief?.content.reflection) return null;
   return (
-    <p
-      aria-label="Morning brief"
-      className="mb-6 text-lg leading-snug text-slate-700 dark:text-slate-200"
-    >
+    <p aria-label="Morning brief" className="mb-6 px-1 text-headline font-normal text-fg">
       {view.brief.content.reflection}
     </p>
   );
 }
 
-export function TodayEvents({ view }: { view: TodayView }) {
+export function TodayEvents({ view, compact = false }: { view: TodayView; compact?: boolean }) {
   if (view.events.length === 0) return null;
   return (
-    <section className="mb-6">
-      <h2 className={h2}>Today</h2>
-      <ul aria-label="Today's events" className="space-y-1">
+    <Section title="Today" className={compact ? 'mb-6' : undefined}>
+      <GroupedList label="Today's events">
         {view.events.map((e) => (
-          <li key={e.id} className="flex items-baseline gap-3 text-sm">
-            <span className="w-12 shrink-0 tabular-nums text-slate-500">
+          <GroupedListItem key={e.id} className="flex min-h-11 items-center gap-3 py-2">
+            <span className="w-14 shrink-0 text-footnote text-fg-muted tabular-nums">
               {e.allDay ? 'All day' : hhmmOf(e.start)}
             </span>
-            <span className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="size-2 rounded-full"
-                style={{ background: e.color }}
-              />
-              {e.title}
-            </span>
+            <span
+              aria-hidden="true"
+              className="h-5 w-1 shrink-0 rounded-full"
+              style={{ background: e.color }}
+            />
+            <span className="min-w-0 flex-1 text-body break-words">{e.title}</span>
             {e.extendedProps.itemId && (
               <StartNotesButton
                 eventKey={
@@ -49,30 +46,34 @@ export function TodayEvents({ view }: { view: TodayView }) {
                 }
                 title={e.title}
                 date={view.date}
+                className={buttonClasses('plain', 'sm', '-mr-2')}
               />
             )}
-          </li>
+          </GroupedListItem>
         ))}
-      </ul>
-    </section>
+      </GroupedList>
+    </Section>
   );
 }
 
+/** A round tick box, 44 px to tap, that completes or reopens a task. */
 function Done({ item }: { item: Item }) {
   const db = useDb();
   const done = item.status === 'done';
   return (
-    <input
-      type="checkbox"
-      aria-label={`Done: ${item.title}`}
-      checked={done}
-      className="mt-1 size-5 shrink-0"
-      onChange={() =>
-        void (done
-          ? update(db, 'items', item.id, { status: 'open', completed_at: null })
-          : completeTask(db, item.id))
-      }
-    />
+    <label className="-my-2 -ml-2 inline-flex size-11 shrink-0 cursor-pointer items-center justify-center">
+      <input
+        type="checkbox"
+        aria-label={`Done: ${item.title}`}
+        checked={done}
+        className="size-5 cursor-pointer accent-accent"
+        onChange={() =>
+          void (done
+            ? update(db, 'items', item.id, { status: 'open', completed_at: null })
+            : completeTask(db, item.id))
+        }
+      />
+    </label>
   );
 }
 
@@ -80,24 +81,28 @@ function TopRow({ t, date, compact }: { t: TopTask; date: string; compact: boole
   const db = useDb();
   const blocked = !!t.item.start_at;
   return (
-    <li className="flex items-start gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+    <GroupedListItem className="flex items-start gap-2">
       <Done item={t.item} />
       <div className="min-w-0 flex-1">
         <p
-          className={`font-medium ${t.item.status === 'done' ? 'text-slate-400 line-through' : ''}`}
+          className={cx(
+            'text-body break-words',
+            t.item.status === 'done' ? 'text-fg-subtle line-through' : 'font-medium',
+          )}
         >
           {t.item.title}
         </p>
-        {t.why && <p className="text-xs text-slate-500">{t.why}</p>}
+        {t.why && <p className="text-footnote text-fg-muted">{t.why}</p>}
         {t.item.status === 'open' &&
           (blocked ? (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-0.5 text-footnote text-fg-muted">
               On the calendar at {hhmmOf(t.item.start_at ?? '')}
             </p>
           ) : t.slot ? (
-            <button
-              type="button"
-              className="mt-1 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950 dark:text-indigo-300"
+            <Button
+              variant="plain"
+              size="sm"
+              className="-ml-3"
               onClick={() =>
                 void update(
                   db,
@@ -108,65 +113,74 @@ function TopRow({ t, date, compact }: { t: TopTask; date: string; compact: boole
               }
             >
               Block {t.slot.start}–{t.slot.end}
-            </button>
+            </Button>
           ) : (
-            <p className="mt-1 text-xs text-slate-500">No free slot today</p>
+            <p className="mt-0.5 text-footnote text-fg-muted">No free slot today</p>
           ))}
       </div>
       {!compact && t.item.status === 'open' && t.item.top3_date === date && (
-        <button
-          type="button"
-          aria-label={`Remove from Top 3: ${t.item.title}`}
-          className="rounded-md px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+        <IconButton
+          icon="close"
+          label={`Remove from Top 3: ${t.item.title}`}
+          className="-my-2 -mr-2"
           onClick={() => void removeFromTop3(db, t.item.id)}
-        >
-          ✕
-        </button>
+        />
       )}
-    </li>
+    </GroupedListItem>
   );
 }
 
 export function Top3({ view, compact = false }: { view: TodayView; compact?: boolean }) {
   return (
-    <section className="mb-6">
-      <h2 className={h2}>Top 3</h2>
+    <Section
+      title="Top 3"
+      className={compact ? 'mb-6' : undefined}
+      footer={
+        !view.brief && !compact
+          ? 'Picked on this device (overdue, due today, then what keeps slipping) until the morning brief arrives.'
+          : undefined
+      }
+    >
       {view.top3.length === 0 ? (
-        <p className="text-sm text-slate-500">Nothing pressing today.</p>
+        <GroupedList>
+          <GroupedListItem>
+            <p className="text-body text-fg-muted">Nothing pressing today.</p>
+          </GroupedListItem>
+        </GroupedList>
       ) : (
-        <ul aria-label="Top 3" className={compact ? 'space-y-1' : 'space-y-2'}>
+        <GroupedList label="Top 3">
           {view.top3.map((t) => (
             <TopRow key={t.item.id} t={t} date={view.date} compact={compact} />
           ))}
-        </ul>
+        </GroupedList>
       )}
-      {!view.brief && !compact && (
-        <p className="mt-1 text-xs text-slate-500">
-          Picked on this device (overdue, due today, then what keeps slipping) until the morning
-          brief arrives.
-        </p>
-      )}
-    </section>
+    </Section>
   );
 }
 
 export function AlsoToday({ view }: { view: TodayView }) {
   if (view.also.length === 0) return null;
   return (
-    <details className="mb-6">
-      <summary className="cursor-pointer text-sm font-semibold text-slate-600 dark:text-slate-300">
-        Also today ({view.also.length})
+    <details className="group mb-8">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 px-4 text-footnote font-medium tracking-wide text-fg-muted uppercase marker:hidden">
+        <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">
+          ›
+        </span>
+        <span>Also today ({view.also.length})</span>
       </summary>
-      <ul aria-label="Also today" className="mt-2 space-y-1">
+      <GroupedList label="Also today" className="mt-1">
         {view.also.map((i) => (
-          <li key={i.id} className="flex items-start gap-3 text-sm">
+          <GroupedListItem key={i.id} className="flex items-center gap-2 py-2">
             <Done item={i} />
-            <Link to={`/library/item/${i.id}`} className="hover:underline">
+            <Link
+              to={`/library/item/${i.id}`}
+              className="min-w-0 flex-1 py-1 text-body break-words hover:text-accent"
+            >
               {i.title}
             </Link>
-          </li>
+          </GroupedListItem>
         ))}
-      </ul>
+      </GroupedList>
     </details>
   );
 }
