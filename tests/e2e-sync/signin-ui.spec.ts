@@ -45,7 +45,7 @@ for (const [name, viewport, colorScheme] of [
     });
 
     test('signed-in Settings panels pass axe', async ({ page }) => {
-      await signIn(page, `ui-${name.replace(' ', '-')}-${Date.now()}@example.com`);
+      await signIn(page, `e2e-ui-${name.replace(' ', '-')}-${Date.now()}@example.test`);
       await page.goto('/settings');
       await expect(page.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
