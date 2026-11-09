@@ -100,6 +100,22 @@ jobs:
           key="${ANON_KEY:-$PUBLISHABLE_KEY}"
           echo "VITE_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "VITE_SUPABASE_ANON_KEY=$key" >> "$GITHUB_ENV"
+          echo "SUPABASE_DB_URL=$DB_URL" >> "$GITHUB_ENV"
+      # The scheduler's SQL calls functions through pg_net with the project URL
+      # and service key from Vault. Local stack only: the URL is Kong inside
+      # Docker's network and the key is the CLI's well-known local demo key.
+      # pg_cron's own schedules are stopped so nothing runs in the background
+      # mid-test; tests run the dispatchers themselves (tests/e2e-sync/db.ts).
+      - name: Let the local database call the functions
+        run: |
+          set -a; . /tmp/sb.env; set +a
+          psql --version
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -X -q \
+            -v url='http://kong:8000' -v key="${SERVICE_ROLE_KEY:-$SECRET_KEY}" <<'SQL'
+          select vault.create_secret(:'url', 'project_url');
+          select vault.create_secret(:'key', 'service_role_key');
+          select count(cron.unschedule(jobid)) as unscheduled from cron.job;
+          SQL
       # The Edge Functions run for real; their AI calls go to a stand-in that
       # answers with worked-out outputs and rejects what the real API would.
       - name: Start the stand-in AI and the Edge Functions
