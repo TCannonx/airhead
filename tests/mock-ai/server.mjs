@@ -1,13 +1,18 @@
-// A stand-in for the Anthropic Messages API, used only by CI's end-to-end job
-// (the functions get ANTHROPIC_BASE_URL pointing here). It answers sorting
-// requests with outputs worked out from the capture text, so the whole flow
-// (app -> Edge Function -> database -> other device) runs without the paid API.
+// A stand-in for the Anthropic Messages API, used by CI's end-to-end job (the
+// functions get ANTHROPIC_BASE_URL pointing here) and by the Deno contract tests
+// (supabase/functions/_shared/ai.contract.test.ts). It answers sorting requests
+// with outputs worked out from the capture text, and every other AI task (found
+// by its system prompt, or by the web search tool for Scout) from the saved
+// answers in tests/fixtures/ai, so the whole flow runs without the paid API.
+// A saved answer must match the output schema the request sent, as the real API
+// guarantees; when it does not, the request fails (a fixture or schema drifted).
 //
 // It also rejects requests the real API would reject, so a schema that breaks
 // the API's structured-output limits fails CI instead of failing the owner
 // (2026-11-08: the sorting schema had 26 union-typed parameters; the limit is 16).
 //
 // Usage: node tests/mock-ai/server.mjs [port]   (default 4010)
+import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 
 const PORT = Number(process.argv[2] ?? 4010);
@@ -293,6 +298,140 @@ export function sortAnswer(userText) {
   return { results, digest };
 }
 
+/** A saved answer from tests/fixtures/ai (read when needed). */
+export function fixture(name) {
+  return JSON.parse(readFileSync(new URL(`../fixtures/ai/${name}.json`, import.meta.url), 'utf8'));
+}
+
+/**
+ * Every structured-output task the functions send, found by the start of its
+ * fixed system prompt. `answer` gets the user text and whether images were sent.
+ */
+export const TASKS = [
+  { task: 'sort_batch', prompt: 'You sort the captures', answer: ({ user }) => sortAnswer(user) },
+  { task: 'ask', prompt: 'You answer one person', answer: () => fixture('ask').answer },
+  {
+    task: 'morning_brief',
+    prompt: "You write one person's morning brief",
+    answer: () => fixture('brief').output,
+  },
+  {
+    task: 'check_contradictions',
+    prompt: 'You check a short list of facts',
+    answer: () => fixture('contradictions').output,
+  },
+  {
+    task: 'workshop_flesh_out',
+    prompt: 'You help one person think an idea through',
+    answer: () => fixture('workshop').flesh_out,
+  },
+  {
+    task: 'workshop_turn',
+    prompt: 'You and one person are thinking an idea through together',
+    answer: () => fixture('workshop').turn,
+  },
+  {
+    task: 'import_extract',
+    prompt: 'You turn a schedule',
+    answer: () => fixture('import-screenshot').output,
+  },
+  {
+    task: 'suggest_leave',
+    prompt: 'You help one person plan time off',
+    answer: () => fixture('leave').output,
+  },
+  {
+    task: 'weekly_review',
+    prompt: "You write one person's weekly review",
+    answer: () => fixture('review').review,
+  },
+  {
+    task: 'summarise_note',
+    prompt: "You summarise one person's note",
+    answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],
+  },
+];
+
+/** Prompts may spell the apostrophe either way; match on the plain one. */
+const plain = (s) => s.replaceAll('’', "'");
+
+/** The task a system prompt belongs to, or undefined. */
+export const taskFor = (system) => TASKS.find((t) => plain(system).startsWith(t.prompt));
+
+/**
+ * Where `value` breaks the JSON schema (the subset structured outputs use), or
+ * null when it matches. The real API only ever returns matching output.
+ */
+export function schemaMismatch(schema, value, root = schema, path = '$') {
+  if (!schema || typeof schema !== 'object') return null;
+  if (schema.$ref) {
+    const target = schema.$ref
+      .replace(/^#\//, '')
+      .split('/')
+      .reduce((node, key) => node?.[key], root);
+    return schemaMismatch(target, value, root, path);
+  }
+  const options = schema.anyOf ?? schema.oneOf;
+  if (Array.isArray(options))
+    return options.some((o) => schemaMismatch(o, value, root, path) === null)
+      ? null
+      : `${path}: matches none of the options`;
+  if (schema.const !== undefined && value !== schema.const) return `${path}: not ${schema.const}`;
+  if (Array.isArray(schema.enum) && !schema.enum.includes(value))
+    return `${path}: ${JSON.stringify(value)} is not one of ${schema.enum.join(', ')}`;
+  const kind =
+    value === null
+      ? 'null'
+      : Array.isArray(value)
+        ? 'array'
+        : Number.isInteger(value)
+          ? 'integer'
+          : typeof value;
+  const types = schema.type === undefined ? [] : [schema.type].flat();
+  if (types.length && !types.some((t) => t === kind || (t === 'number' && kind === 'integer')))
+    return `${path}: expected ${types.join(' or ')}, got ${kind}`;
+  if (kind === 'array' && schema.items)
+    for (const [i, v] of value.entries()) {
+      const bad = schemaMismatch(schema.items, v, root, `${path}[${i}]`);
+      if (bad) return bad;
+    }
+  if (kind === 'object') {
+    const props = schema.properties ?? {};
+    for (const key of schema.required ?? []) if (!(key in value)) return `${path}.${key}: missing`;
+    for (const [key, v] of Object.entries(value)) {
+      if (key in props) {
+        const bad = schemaMismatch(props[key], v, root, `${path}.${key}`);
+        if (bad) return bad;
+      } else if (schema.additionalProperties === false) return `${path}.${key}: not in the schema`;
+    }
+  }
+  return null;
+}
+
+/** The queries in Scout's user message ("Queries:\n- one\n- two"). */
+export const scoutQueries = (user) =>
+  [...user.matchAll(/^- (.+)$/gm)].map((m) => m[1].trim()).filter(Boolean);
+
+/** A web search answer for Scout: one search per query, then the saved final text. */
+export function scoutAnswer(user, maxUses) {
+  const queries = scoutQueries(user).slice(0, maxUses);
+  const saved = fixture('scout');
+  return {
+    content: [
+      ...queries.flatMap((query, i) => [
+        { type: 'server_tool_use', id: `srvtoolu_mock_${i}`, name: 'web_search', input: { query } },
+        {
+          type: 'web_search_tool_result',
+          tool_use_id: `srvtoolu_mock_${i}`,
+          content: saved.results ?? [],
+        },
+      ]),
+      { type: 'text', text: saved.text },
+    ],
+    searches: queries.length,
+  };
+}
+
 function reply(res, status, body) {
   res.writeHead(status, { 'content-type': 'application/json' });
   res.end(JSON.stringify(body));
@@ -327,34 +466,63 @@ export function createMockServer() {
           );
         }
       }
-      const system = (body.system ?? []).map((b) => b.text ?? '').join('\n');
-      const user = (body.messages ?? [])
-        .map((m) =>
-          typeof m.content === 'string' ? m.content : m.content.map((c) => c.text ?? '').join(''),
-        )
+      const system = (
+        typeof body.system === 'string' ? [{ text: body.system }] : (body.system ?? [])
+      )
+        .map((b) => b.text ?? '')
         .join('\n');
-      let answer;
-      if (system.startsWith('You sort the captures')) answer = sortAnswer(user);
-      else {
+      const blocks = (body.messages ?? []).flatMap((m) =>
+        typeof m.content === 'string' ? [{ type: 'text', text: m.content }] : m.content,
+      );
+      const user = blocks.map((c) => c.text ?? '').join('\n');
+      const images = blocks.some((c) => c.type === 'image');
+      const message = (content, extraUsage = {}) =>
+        reply(res, 200, {
+          id: `msg_mock_${Date.now()}`,
+          type: 'message',
+          role: 'assistant',
+          model: body.model,
+          content,
+          stop_reason: 'end_turn',
+          stop_sequence: null,
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            ...extraUsage,
+          },
+        });
+
+      // Scout: the web search server tool, no output schema.
+      const search = (body.tools ?? []).find((t) => t.name === 'web_search');
+      if (search) {
+        if (!/^web_search_\d{8}$/.test(search.type ?? '') || !(search.max_uses >= 1))
+          return apiError(res, 400, `mock: unknown web search tool ${JSON.stringify(search)}`);
+        const { content, searches } = scoutAnswer(user, search.max_uses);
+        console.log(`mock-ai: web search for ${searches} quer${searches === 1 ? 'y' : 'ies'}`);
+        return message(content, { server_tool_use: { web_search_requests: searches } });
+      }
+
+      const task = taskFor(system);
+      if (!task) {
         console.log('mock-ai: no saved answer for this task');
         return apiError(res, 400, 'mock: no saved answer for this task');
       }
-      console.log(`mock-ai: sorted ${answer.results.length} capture(s) and note(s)`);
-      reply(res, 200, {
-        id: `msg_mock_${Date.now()}`,
-        type: 'message',
-        role: 'assistant',
-        model: body.model,
-        content: [{ type: 'text', text: JSON.stringify(answer) }],
-        stop_reason: 'end_turn',
-        stop_sequence: null,
-        usage: {
-          input_tokens: 100,
-          output_tokens: 50,
-          cache_creation_input_tokens: 0,
-          cache_read_input_tokens: 0,
-        },
-      });
+      const answer = task.answer({ user, images });
+      if (schema) {
+        const bad = schemaMismatch(schema, answer);
+        if (bad) {
+          console.log(`mock-ai: saved ${task.task} answer breaks the schema: ${bad}`);
+          return apiError(res, 400, `mock: saved ${task.task} answer breaks the schema: ${bad}`);
+        }
+      }
+      console.log(
+        task.task === 'sort_batch'
+          ? `mock-ai: sorted ${answer.results.length} capture(s) and note(s)`
+          : `mock-ai: answered ${task.task}`,
+      );
+      message([{ type: 'text', text: JSON.stringify(answer) }]);
     });
   });
 }

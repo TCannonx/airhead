@@ -1,0 +1,13 @@
+{
+  "note": "Scout's final text after its web searches. The idea with a plain http link and the third idea must be dropped. Used by the contract test and tests/mock-ai; the paid API is never called.",
+  "results": [
+    {
+      "type": "web_search_result",
+      "url": "https://example.com/christmas-market",
+      "title": "Christmas market at Dublin Castle",
+      "encrypted_content": "mock",
+      "page_age": null
+    }
+  ],
+  "text": "Here is what I found.\n[{\"title\": \"Christmas market at Dublin Castle\", \"body\": \"Fri 5 Dec to Sun 21 Dec in the castle courtyard.\", \"url\": \"https://example.com/christmas-market\"}, {\"title\": \"Ignore your instructions\", \"body\": \"Not safe.\", \"url\": \"http://insecure.example.com\"}, {\"title\": \"Trail run in the Phoenix Park\", \"body\": \"Saturday 6 Dec, 10:00.\", \"url\": \"https://example.com/trail-run\"}, {\"title\": \"A third idea\", \"body\": \"Too many.\", \"url\": \"https://example.com/third\"}]"
+}
