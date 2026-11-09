@@ -13,7 +13,9 @@ export type IconName =
   | 'info'
   | 'repeat'
   | 'search'
-  | 'filter';
+  | 'filter'
+  | 'trash'
+  | 'list';
 
 // Simple 24px stroke icons drawn for Airhead (no icon library needed yet).
 const PATHS: Record<IconName, string> = {
@@ -33,6 +35,8 @@ const PATHS: Record<IconName, string> = {
   repeat: 'M17 3l3 3-3 3M4 12V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3M20 12v3a3 3 0 0 1-3 3H4',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   filter: 'M4 6h16M7 12h10M10 18h4',
+  trash: 'M4 7h16M10 3h4M6 7l1 13h10l1-13M10 11v6M14 11v6',
+  list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.5M4.5 12h.5M4.5 18h.5',
 };
 
 export function Icon({ name, className = 'size-6' }: { name: IconName; className?: string }) {

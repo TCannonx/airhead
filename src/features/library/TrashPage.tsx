@@ -1,9 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Link } from 'react-router';
 import { Page } from '../../app/Page';
 import { useDb } from '../../lib/db/context';
 import { restore } from '../../lib/db/repository';
 import { trashItems, TRASH_DAYS, TYPE_LABELS } from '../../lib/db/sorting';
+import { Button } from '../../ui/Button';
+import { EmptyState } from '../../ui/EmptyState';
+import { GroupedList, Section } from '../../ui/GroupedList';
+import { ListRow } from '../../ui/ListRow';
 
 export default function TrashPage() {
   const db = useDb();
@@ -11,29 +14,33 @@ export default function TrashPage() {
   const trash = items ? trashItems(items) : undefined;
 
   return (
-    <Page title="Trash">
-      <p className="mb-4 text-sm text-slate-500">
-        Deleted items can be restored here. They are deleted for good after {TRASH_DAYS} days.{' '}
-        <Link to="/library" className="underline">
-          Back to Library
-        </Link>
-      </p>
-      {trash && trash.length === 0 && <p className="text-sm text-slate-500">The Trash is empty.</p>}
-      <ul aria-label="Trash" className="divide-y divide-slate-200 dark:divide-slate-800">
-        {trash?.map((i) => (
-          <li key={i.id} className="flex items-center justify-between gap-3 py-2.5">
-            <span className="min-w-0 flex-1 truncate">{i.title || '(untitled)'}</span>
-            <span className="text-xs text-slate-500">{TYPE_LABELS[i.type]}</span>
-            <button
-              type="button"
-              className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-              onClick={() => void restore(db, 'items', i.id)}
-            >
-              Restore
-            </button>
-          </li>
-        ))}
-      </ul>
+    <Page title="Trash" back={{ to: '/library', label: 'Library' }}>
+      <Section
+        footer={`Deleted items can be restored here. They are deleted for good after ${TRASH_DAYS} days.`}
+      >
+        {trash && trash.length === 0 ? (
+          <GroupedList>
+            <li>
+              <EmptyState icon="trash" title="The Trash is empty." className="py-6" />
+            </li>
+          </GroupedList>
+        ) : (
+          <GroupedList label="Trash">
+            {trash?.map((i) => (
+              <ListRow
+                key={i.id}
+                title={<span className="block truncate">{i.title || '(untitled)'}</span>}
+                subtitle={TYPE_LABELS[i.type]}
+                trailing={
+                  <Button size="sm" onClick={() => void restore(db, 'items', i.id)}>
+                    Restore
+                  </Button>
+                }
+              />
+            ))}
+          </GroupedList>
+        )}
+      </Section>
     </Page>
   );
 }

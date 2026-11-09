@@ -1,6 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router';
 import { Page } from '../../app/Page';
 import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
@@ -14,11 +13,12 @@ import {
   renameList,
   toggleEntry,
 } from '../../lib/db/lists';
+import { Button } from '../../ui/Button';
+import { Chip } from '../../ui/Chip';
+import { cx } from '../../ui/cx';
+import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
+import { TextField } from '../../ui/TextField';
 
-const input =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900';
-const small =
-  'rounded-lg px-2.5 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-800';
 
 export default function ListsPage() {
   const db = useDb();
@@ -68,126 +68,129 @@ export default function ListsPage() {
   }
 
   return (
-    <Page title="Lists">
-      <p className="mb-4 text-sm">
-        <Link to="/library" className="text-slate-500 underline">
-          Back to Library
-        </Link>
-      </p>
-      <div role="group" aria-label="Lists" className="mb-3 flex flex-wrap gap-1.5">
+    <Page title="Lists" back={{ to: '/library', label: 'Library' }}>
+      <div role="group" aria-label="Lists" className="mb-5 flex flex-wrap gap-2">
         {lists?.map((l) => (
-          <button
+          <Chip
             key={l.id}
-            type="button"
-            aria-pressed={l.id === current?.id}
+            selected={l.id === current?.id}
             onClick={() => setSelected(l.id)}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              l.id === current?.id
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200'
-            }`}
+            className="pointer-coarse:min-h-11"
           >
             {l.name}
-          </button>
+          </Chip>
         ))}
       </div>
-      <form onSubmit={(e) => void onNewList(e)} className="mb-6 flex gap-2">
-        <input
-          aria-label="New list"
-          placeholder="New list (e.g. Packing)"
-          className={input}
-          value={newList}
-          onChange={(e) => setNewList(e.target.value)}
-        />
-        <button type="submit" className={`${small} shrink-0 bg-slate-100 dark:bg-slate-800`}>
-          Create
-        </button>
-      </form>
 
       {current && (
-        <section className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <Section>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
             {renaming !== null ? (
-              <form onSubmit={(e) => void onRename(e)} className="flex flex-1 gap-2">
-                <input
-                  aria-label="List name"
-                  className={input}
+              <form onSubmit={(e) => void onRename(e)} className="flex flex-1 items-end gap-2">
+                <TextField
+                  label="List name"
+                  hideLabel
+                  className="flex-1"
                   value={renaming}
                   onChange={(e) => setRenaming(e.target.value)}
                   autoFocus
                 />
-                <button type="submit" className={small}>
+                <Button type="submit" variant="primary">
                   Save
-                </button>
+                </Button>
               </form>
             ) : (
-              <h2 className="text-lg font-semibold">{current.name}</h2>
+              <h2 className="text-headline">{current.name}</h2>
             )}
-            <div className="flex gap-1">
-              <button type="button" className={small} onClick={() => setRenaming(current.name)}>
+            <div className="-mr-2 flex gap-1">
+              <Button size="sm" variant="plain" onClick={() => setRenaming(current.name)}>
                 Rename
-              </button>
-              <button
-                type="button"
-                className={small}
+              </Button>
+              <Button
+                size="sm"
+                variant="plain"
                 disabled={index <= 0}
                 onClick={() => void moveList(db, userId, current.id, -1)}
               >
                 Move up
-              </button>
-              <button
-                type="button"
-                className={small}
+              </Button>
+              <Button
+                size="sm"
+                variant="plain"
                 disabled={!lists || index >= lists.length - 1}
                 onClick={() => void moveList(db, userId, current.id, 1)}
               >
                 Move down
-              </button>
+              </Button>
             </div>
           </div>
 
           <form onSubmit={(e) => void onAdd(e)} className="mb-3">
-            <input
-              aria-label={`Add to ${current.name}`}
+            <TextField
+              label={`Add to ${current.name}`}
+              hideLabel
               placeholder="Add an item and press Enter"
-              className={input}
               value={entry}
               onChange={(e) => setEntry(e.target.value)}
             />
           </form>
 
-          {entries.length === 0 && <p className="text-sm text-slate-500">Nothing on this list.</p>}
-          <ul
-            aria-label={`${current.name} entries`}
-            className="divide-y divide-slate-100 dark:divide-slate-800"
-          >
-            {entries.map((i) => (
-              <li key={i.id} className="py-2">
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    className="size-5 accent-indigo-600"
-                    checked={i.status === 'done'}
-                    onChange={() => void toggleEntry(db, i.id)}
-                  />
-                  <span className={i.status === 'done' ? 'text-slate-400 line-through' : ''}>
-                    {i.title}
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
+          {entries.length === 0 ? (
+            <GroupedList>
+              <GroupedListItem>
+                <p className="text-body text-fg-muted">Nothing on this list.</p>
+              </GroupedListItem>
+            </GroupedList>
+          ) : (
+            <GroupedList label={`${current.name} entries`}>
+              {entries.map((i) => (
+                <li key={i.id}>
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 px-4 py-2">
+                    <input
+                      type="checkbox"
+                      className="size-5 shrink-0 cursor-pointer accent-accent"
+                      checked={i.status === 'done'}
+                      onChange={() => void toggleEntry(db, i.id)}
+                    />
+                    <span
+                      className={cx(
+                        'text-body break-words',
+                        i.status === 'done' && 'text-fg-subtle line-through',
+                      )}
+                    >
+                      {i.title}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </GroupedList>
+          )}
 
-          <button
-            type="button"
-            className={`${small} mt-3`}
+          <Button
+            size="sm"
+            variant="plain"
+            className="mt-2"
             disabled={!entries.some((i) => i.status === 'done')}
             onClick={() => void clearCompleted(db, current.id)}
           >
             Clear completed
-          </button>
-        </section>
+          </Button>
+        </Section>
       )}
+
+      <Section title="New list">
+        <form onSubmit={(e) => void onNewList(e)} className="flex items-end gap-2">
+          <TextField
+            label="New list"
+            hideLabel
+            placeholder="New list (e.g. Packing)"
+            className="flex-1"
+            value={newList}
+            onChange={(e) => setNewList(e.target.value)}
+          />
+          <Button type="submit">Create</Button>
+        </form>
+      </Section>
     </Page>
   );
 }
