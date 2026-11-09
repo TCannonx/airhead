@@ -32,6 +32,7 @@ import {
   translateStroke,
   type Selection,
 } from '../../lib/ink/selection';
+import { ToolButton } from '../../ui/ToolButton';
 
 export const INK_SAVE_DEBOUNCE_MS = 800;
 /** Hold the pen still this long at the end of a stroke to snap it to a shape (Task 9.4). */
@@ -48,9 +49,6 @@ const WIDTHS: [number, string][] = [
   [7, 'Thick'],
 ];
 const HIGHLIGHTER = { color: '#facc15', width: 18 };
-
-const btn = (on: boolean) =>
-  `rounded-md px-2 py-1 text-footnote font-semibold ${on ? 'bg-fill ' : 'hover:bg-fill'}`;
 
 type Mode = Tool | 'eraser' | 'text' | 'lasso';
 
@@ -354,23 +352,18 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
       <div
         role="toolbar"
         aria-label="Pen tools"
-        className="sticky top-0 z-10 mb-2 flex flex-wrap items-center gap-1 border-b border-border/60 bg-surface/95 py-2"
+        className="sticky top-0 z-10 mb-3 flex flex-wrap items-center gap-0.5 rounded-card border border-border/60 bg-surface/95 p-1.5 shadow-xs backdrop-blur"
       >
-        <button
-          type="button"
-          aria-pressed={mode === 'pen'}
-          className={btn(mode === 'pen')}
-          onClick={() => pick('pen')}
-        >
+        <ToolButton pressed={mode === 'pen'} onClick={() => pick('pen')}>
           Pen
-        </button>
+        </ToolButton>
         {COLORS.map(([c, name]) => (
           <button
             key={c}
             type="button"
             aria-label={`${name} ink`}
             aria-pressed={mode === 'pen' && color === c}
-            className={`size-6 rounded-full border-2 ${mode === 'pen' && color === c ? 'border-fg ' : 'border-transparent'}`}
+            className={`m-1.5 size-7 rounded-full border-2 border-surface pointer-coarse:m-2.5 ${mode === 'pen' && color === c ? 'ring-2 ring-accent' : 'ring-1 ring-border'}`}
             style={{ background: c }}
             onClick={() => {
               pick('pen');
@@ -379,79 +372,37 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
           />
         ))}
         {WIDTHS.map(([w, name]) => (
-          <button
-            key={w}
-            type="button"
-            aria-pressed={width === w}
-            className={btn(width === w)}
-            onClick={() => setWidth(w)}
-          >
+          <ToolButton pressed={width === w} key={w} onClick={() => setWidth(w)}>
             {name}
-          </button>
+          </ToolButton>
         ))}
-        <button
-          type="button"
-          aria-pressed={mode === 'highlighter'}
-          className={btn(mode === 'highlighter')}
-          onClick={() => pick('highlighter')}
-        >
+        <ToolButton pressed={mode === 'highlighter'} onClick={() => pick('highlighter')}>
           Highlighter
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'eraser'}
-          className={btn(mode === 'eraser')}
-          onClick={() => pick('eraser')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'eraser'} onClick={() => pick('eraser')}>
           Eraser
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'text'}
-          className={btn(mode === 'text')}
-          onClick={() => pick('text')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'text'} onClick={() => pick('text')}>
           Text
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'lasso'}
-          className={btn(mode === 'lasso')}
-          onClick={() => pick('lasso')}
-        >
+        </ToolButton>
+        <ToolButton pressed={mode === 'lasso'} onClick={() => pick('lasso')}>
           Lasso
-        </button>
+        </ToolButton>
         {selBox && (
           <>
-            <button type="button" className={btn(false)} onClick={copySelection}>
-              Copy selection
-            </button>
-            <button type="button" className={btn(false)} onClick={deleteSelection}>
-              Delete selection
-            </button>
+            <ToolButton onClick={copySelection}>Copy selection</ToolButton>
+            <ToolButton onClick={deleteSelection}>Delete selection</ToolButton>
           </>
         )}
         {clip && (clip.strokes.length > 0 || clip.texts.length > 0) && (
-          <button type="button" className={btn(false)} onClick={paste}>
-            Paste
-          </button>
+          <ToolButton onClick={paste}>Paste</ToolButton>
         )}
-        <button
-          type="button"
-          className={btn(false)}
-          disabled={!undo.canUndo}
-          onClick={() => step('undo')}
-        >
+        <ToolButton disabled={!undo.canUndo} onClick={() => step('undo')}>
           Undo
-        </button>
-        <button
-          type="button"
-          className={btn(false)}
-          disabled={!undo.canRedo}
-          onClick={() => step('redo')}
-        >
+        </ToolButton>
+        <ToolButton disabled={!undo.canRedo} onClick={() => step('redo')}>
           Redo
-        </button>
+        </ToolButton>
       </div>
       <p role="status" aria-live="polite" className="sr-only">
         {snapNote ?? ''}
@@ -571,7 +522,7 @@ export default function InkCanvas({ doc, onSave }: { doc: InkDoc; onSave: (doc: 
               <button
                 type="button"
                 aria-label={`Delete text box ${t.text || 'new'}`}
-                className="px-1 text-fg-subtle hover:text-danger"
+                className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-full text-fg-subtle hover:bg-danger-soft hover:text-danger"
                 onClick={() => {
                   const next = removeText(texts, t.id);
                   setTexts(next);

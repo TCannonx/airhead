@@ -19,8 +19,6 @@ import { useOnline } from '../../lib/useOnline';
 import BridgeHint from './BridgeHint';
 import { Button } from '../../ui/Button';
 
-const btn =
-  'rounded-lg bg-fill px-2.5 py-1 text-caption font-semibold hover:bg-fill disabled:opacity-50  ';
 const STATE_LABEL = {
   kept: 'Kept',
   archived: 'Archived',
@@ -198,10 +196,10 @@ export default function WeeklyReview() {
           </ul>
           {[...groups.entries()].map(([g, members]) =>
             members.length < 2 ? null : (
-              <button
+              <Button
                 key={g}
-                type="button"
-                className={`${btn} mt-2`}
+                size="sm"
+                className="mt-2"
                 disabled={busy}
                 onClick={() =>
                   void act(() =>
@@ -216,7 +214,7 @@ export default function WeeklyReview() {
                 }
               >
                 Condense {members.length} into one note
-              </button>
+              </Button>
             ),
           )}
         </section>

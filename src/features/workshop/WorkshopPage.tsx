@@ -11,9 +11,7 @@ import { FLESH_OUT_COST_TEXT } from '../../lib/workshop/cost';
 import NextSteps from './NextSteps';
 import SessionPanel from './SessionPanel';
 import { Button } from '../../ui/Button';
-
-const button =
-  'rounded-lg bg-accent px-3 py-1.5 text-footnote font-semibold text-white disabled:opacity-50';
+import { Chip } from '../../ui/Chip';
 
 function DraftView({ draft }: { draft: Draft }) {
   const c = draft.content;
@@ -137,16 +135,13 @@ export default function WorkshopPage() {
           <ul className="flex flex-wrap gap-1.5">
             {drafts.map((d) => (
               <li key={d.id}>
-                <button
-                  type="button"
-                  aria-pressed={d.id === current?.id}
+                <Chip
+                  selected={d.id === current?.id}
                   onClick={() => setShown(d.id)}
-                  className={`rounded-full px-3 py-1 text-footnote ${
-                    d.id === current?.id ? 'bg-accent text-white' : 'bg-fill'
-                  }`}
+                  className="pointer-coarse:min-h-11"
                 >
                   Version {d.version}
-                </button>
+                </Chip>
               </li>
             ))}
           </ul>
