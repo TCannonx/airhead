@@ -39,19 +39,27 @@ async function drag(page: Page, from: { x: number; y: number }, to: { x: number;
 function readItems(page: Page) {
   return page.evaluate(
     (user) =>
-      new Promise<{ id: string; title: string; type: string; start_at: string | null }[]>(
-        (resolve, reject) => {
-          const req = indexedDB.open(`airhead-${user}`);
-          req.onerror = () => reject(new Error('open failed'));
-          req.onsuccess = () => {
-            const all = req.result.transaction('items').objectStore('items').getAll();
-            all.onsuccess = () => {
-              resolve(all.result as never);
-              req.result.close();
-            };
+      new Promise<
+        {
+          id: string;
+          title: string;
+          type: string;
+          start_at: string | null;
+          rrule?: string | null;
+          data?: Record<string, unknown>;
+          deleted_at?: string | null;
+        }[]
+      >((resolve, reject) => {
+        const req = indexedDB.open(`airhead-${user}`);
+        req.onerror = () => reject(new Error('open failed'));
+        req.onsuccess = () => {
+          const all = req.result.transaction('items').objectStore('items').getAll();
+          all.onsuccess = () => {
+            resolve(all.result as never);
+            req.result.close();
           };
-        },
-      ),
+        };
+      }),
     LOCAL_USER,
   );
 }
@@ -394,6 +402,89 @@ test.describe('easier viewing (Task 11.3)', () => {
         .getByRole('button', { name: /Quiz/ })
         .click();
       await expect(page.getByRole('dialog', { name: 'Quiz' })).toBeVisible();
+    });
+  });
+});
+
+test.describe('faster adding (Task 11.4)', () => {
+  test('desktop: quick add with a preview; More options opens the form filled in', async ({
+    page,
+  }) => {
+    await page.goto('/calendar');
+    const box = page.getByRole('textbox', { name: 'Quick add' });
+    await box.fill('Quiz every Thursday 8pm-12pm');
+    const preview = page.getByRole('group', { name: 'Quick add preview' });
+    await expect(preview).toContainText('Thu 16 Jul 2026, 20:00–00:00');
+    await expect(preview).toContainText('Every Thursday · Personal');
+    await box.press('Enter');
+    await expect(page.getByRole('status').filter({ hasText: 'Added “Quiz”' })).toBeVisible();
+    await expect(page.locator('.ah-calendar').getByText('Quiz', { exact: true })).toBeVisible();
+    const quiz = (await readItems(page)).find((i) => i.title === 'Quiz');
+    expect(quiz).toMatchObject({
+      start_at: '2026-07-16T19:00:00.000Z',
+      rrule: 'FREQ=WEEKLY;BYDAY=TH',
+    });
+
+    await box.fill('Dentist Fri 3pm');
+    await page.getByRole('button', { name: 'More options' }).click();
+    const form = page.getByRole('form', { name: 'New event' });
+    await expect(form.getByLabel('Title')).toHaveValue('Dentist');
+    await expect(form.getByLabel('Starts')).toHaveValue('2026-07-17T15:00');
+    await expect(form.getByLabel('Ends')).toHaveValue('2026-07-17T16:00');
+    await form.getByLabel('Repeats').selectOption('FREQ=WEEKLY');
+    await form.getByLabel('End repeat').selectOption('after');
+    await form.getByLabel('Times').fill('3');
+    await expect(form.getByTestId('repeat-summary')).toHaveText('Every Friday, 3 times');
+    await form.getByRole('button', { name: 'Save' }).click();
+    await expect
+      .poll(async () => (await readItems(page)).find((i) => i.title === 'Dentist')?.rrule)
+      .toBe('FREQ=WEEKLY;BYDAY=FR;COUNT=3');
+  });
+
+  test.describe('phone', () => {
+    test.use({ hasTouch: true });
+
+    test('quick add, tap an empty slot in Day and Week, add on a day in Month', async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/calendar');
+      await page
+        .getByRole('textbox', { name: 'Quick add' })
+        .fill("Niamh's birthday 17/7 every year");
+      const preview = page.getByRole('group', { name: 'Quick add preview' });
+      await expect(preview).toContainText('Fri 17 Jul 2026 · All day');
+      await expect(preview).toContainText('Every year on 17 Jul');
+      await preview.getByRole('button', { name: 'Add' }).click();
+      await expect(
+        page.getByRole('region', { name: 'Agenda' }).getByRole('region', { name: 'Fri 17 Jul' }),
+      ).toContainText("Niamh's birthday");
+
+      // Day view: one tap on 10:00 makes a 10:00–11:00 event.
+      await page.getByRole('radio', { name: 'Day' }).click();
+      const ten = await slot(page, '2026-07-15', '10:00:00');
+      await page.touchscreen.tap(ten.x, ten.y);
+      let form = page.getByRole('form', { name: 'New event' });
+      await expect(form.getByLabel('Starts')).toHaveValue('2026-07-15T10:00');
+      await expect(form.getByLabel('Ends')).toHaveValue('2026-07-15T11:00');
+      await form.getByLabel('Title').fill('Coffee');
+      await form.getByRole('button', { name: 'Save' }).click();
+      await expect(page.locator('.ah-calendar').getByText('Coffee')).toBeVisible();
+
+      // Week view: a tap in Friday's column at 14:00.
+      await page.getByRole('radio', { name: 'Week' }).click();
+      const target = await slot(page, '2026-07-17', '14:00:00');
+      await page.touchscreen.tap(target.x, target.y);
+      form = page.getByRole('form', { name: 'New event' });
+      await expect(form.getByLabel('Starts')).toHaveValue('2026-07-17T14:00');
+      await page.keyboard.press('Escape');
+
+      // Month: pick a day, then Add event on it.
+      await page.getByRole('radio', { name: 'Month' }).click();
+      await page.getByRole('grid', { name: 'Month' }).locator('[data-day="2026-07-21"]').click();
+      await page.getByRole('button', { name: 'Add event' }).click();
+      form = page.getByRole('form', { name: 'New event' });
+      await expect(form.getByLabel('Starts')).toHaveValue('2026-07-21T09:00');
     });
   });
 });

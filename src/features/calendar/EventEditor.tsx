@@ -12,6 +12,18 @@ import { Select } from '../../ui/Select';
 import { TextArea } from '../../ui/TextArea';
 import { TextField } from '../../ui/TextField';
 import { Toggle } from '../../ui/Toggle';
+import { Chip } from '../../ui/Chip';
+import {
+  buildRepeat,
+  formCanEdit,
+  readRepeat,
+  repeatWords,
+  weekdayOf,
+  WEEKDAYS,
+  type Ends,
+  type Freq,
+  type RepeatForm,
+} from '../../lib/calendar/repeat';
 import { REMINDERS, REPEATS } from './eventOptions';
 import { deviceTimeZone } from './useCalendarData';
 
@@ -21,6 +33,10 @@ export interface EventDraft {
   start: Date;
   end: Date | null;
   allDay: boolean;
+  /** Quick add's "More options": the parsed title, repeat and calendar. */
+  title?: string;
+  rrule?: string | null;
+  calendar?: 'personal' | 'us';
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -41,9 +57,10 @@ function initialState(d: EventDraft, tz: string) {
       ? end && localDate(end, tz)
       : end && localDate(new Date(end.getTime() - 86_400_000), tz)
     : null;
+  const rrule = item ? item.rrule : (d.rrule ?? null);
   return {
-    title: item?.title ?? '',
-    calendar: (item?.calendar ?? 'personal') as 'personal' | 'us',
+    title: item?.title ?? d.title ?? '',
+    calendar: (item?.calendar ?? d.calendar ?? 'personal') as 'personal' | 'us',
     allDay,
     startDate: localDate(start, tz),
     endDate: lastDay ?? localDate(start, tz),
@@ -51,7 +68,10 @@ function initialState(d: EventDraft, tz: string) {
     endTime: toLocalInput(end ?? new Date(start.getTime() + 3_600_000)),
     location: typeof item?.data.location === 'string' ? item.data.location : '',
     body: item?.body ?? '',
-    rrule: item?.rrule ?? '',
+    rrule: rrule ?? '',
+    repeat: readRepeat(rrule, localDate(start, tz)),
+    /** False until the repeat fields change: the rule is saved exactly as it was. */
+    repeatTouched: false,
     reminder: typeof item?.data.reminder_minutes === 'string' ? item.data.reminder_minutes : '',
   };
 }
@@ -75,7 +95,14 @@ export default function EventEditor({
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((p) => ({ ...p, [k]: v }));
   const existing = draft.item;
   const isTask = existing?.type === 'task';
-  const knownRepeat = REPEATS.some((r) => r.value === f.rrule);
+  const editable = f.repeatTouched || formCanEdit(f.rrule);
+  const startDay = f.allDay ? f.startDate : f.startTime.slice(0, 10);
+  const setRepeat = (changes: Partial<RepeatForm>) =>
+    setF((p) => ({ ...p, repeat: { ...p.repeat, ...changes }, repeatTouched: true }));
+  const rule = f.repeatTouched ? buildRepeat(f.repeat) : f.rrule || null;
+  const unit = { DAILY: 'day', WEEKLY: 'week', MONTHLY: 'month', YEARLY: 'year', '': '' }[
+    f.repeat.freq
+  ];
 
   const times = () => {
     if (f.allDay) {
@@ -102,7 +129,7 @@ export default function EventEditor({
       title: f.title.trim(),
       body: f.body.trim() || null,
       ...times(),
-      ...(isTask ? {} : { calendar: f.calendar, rrule: f.rrule || null }),
+      ...(isTask ? {} : { calendar: f.calendar, rrule: rule }),
     };
     if (existing) {
       await update(db, 'items', existing.id, {
@@ -193,16 +220,101 @@ export default function EventEditor({
       {!isTask && (
         <Select
           label="Repeats"
-          value={f.rrule}
-          onChange={(e) => set('rrule', e.target.value)}
+          value={editable ? (f.repeat.freq ? `FREQ=${f.repeat.freq}` : '') : 'custom'}
+          onChange={(e) => {
+            const freq = e.target.value.replace('FREQ=', '') as Freq;
+            setRepeat({
+              freq,
+              ...(freq === 'WEEKLY' && f.repeat.byDay.length === 0
+                ? { byDay: [weekdayOf(startDay)] }
+                : {}),
+            });
+          }}
           options={[
-            ...(knownRepeat ? [] : [{ value: f.rrule, label: `Custom (${f.rrule})` }]),
+            ...(editable ? [] : [{ value: 'custom', label: `Custom (${f.rrule})` }]),
             ...REPEATS,
           ]}
         />
       )}
+      {!isTask && editable && f.repeat.freq && (
+        <div className="space-y-3 rounded-card border border-border p-3">
+          <div className="flex items-end gap-2">
+            <TextField
+              label="Every"
+              type="number"
+              min={1}
+              max={99}
+              inputMode="numeric"
+              className="w-24"
+              value={f.repeat.interval ? String(f.repeat.interval) : ''}
+              onChange={(e) => setRepeat({ interval: Math.max(0, Number(e.target.value) || 0) })}
+            />
+            <span className="pb-3 text-body text-fg-muted">
+              {unit}
+              {f.repeat.interval > 1 ? 's' : ''}
+            </span>
+          </div>
+          {f.repeat.freq === 'WEEKLY' && (
+            <div role="group" aria-label="On days" className="flex flex-wrap gap-1.5">
+              {WEEKDAYS.map((w) => {
+                const on = f.repeat.byDay.includes(w.code);
+                return (
+                  <Chip
+                    key={w.code}
+                    selected={on}
+                    onClick={() =>
+                      setRepeat({
+                        byDay: on
+                          ? f.repeat.byDay.filter((d) => d !== w.code)
+                          : [...f.repeat.byDay, w.code],
+                      })
+                    }
+                  >
+                    {w.short}
+                  </Chip>
+                );
+              })}
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              label="End repeat"
+              value={f.repeat.ends}
+              onChange={(e) => setRepeat({ ends: e.target.value as Ends })}
+              options={[
+                { value: 'never', label: 'Never' },
+                { value: 'on', label: 'On a date' },
+                { value: 'after', label: 'After a number of times' },
+              ]}
+            />
+            {f.repeat.ends === 'on' && (
+              <TextField
+                label="End date"
+                type="date"
+                value={f.repeat.until}
+                onChange={(e) => setRepeat({ until: e.target.value })}
+              />
+            )}
+            {f.repeat.ends === 'after' && (
+              <TextField
+                label="Times"
+                type="number"
+                min={1}
+                inputMode="numeric"
+                value={f.repeat.count ? String(f.repeat.count) : ''}
+                onChange={(e) => setRepeat({ count: Math.max(0, Number(e.target.value) || 0) })}
+              />
+            )}
+          </div>
+        </div>
+      )}
+      {!isTask && rule && (
+        <p data-testid="repeat-summary" aria-live="polite" className="text-footnote text-fg-muted">
+          {repeatWords(rule, startDay)}
+        </p>
+      )}
       {!isTask &&
-        !f.rrule &&
+        !rule &&
         prepRulesFor(f.title, readWorkSettings(settings).prep_rules).map((r) => (
           <p key={r.id} className="text-footnote text-fg-muted">
             Before this: {r.reminder} ({beforeText(r.minutes_before)})
