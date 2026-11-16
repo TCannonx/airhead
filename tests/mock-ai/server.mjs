@@ -549,6 +549,11 @@ export const TASKS = [
     answer: () => fixture('link-enrich').output,
   },
   {
+    task: 'topic_collate',
+    prompt: 'You keep a running page on one topic a person is reading about',
+    answer: () => fixture('topic-collate').output,
+  },
+  {
     task: 'timing_pref',
     prompt: 'You word one habit Airhead noticed',
     answer: () => fixture('timing-pref').output,

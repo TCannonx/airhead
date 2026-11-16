@@ -114,3 +114,43 @@ Deno.test('facts: dated, tidied, newest first, at most 8', () => {
   assertEquals(out.length, 8);
   assertEquals(out[0], { date: '2026-11-10', text: 'fact 9' });
 });
+
+import topicFx from '../../../tests/fixtures/ai/topic-collate.json' with { type: 'json' };
+
+Deno.test(
+  'topic pages (Task 16.5): collated from 3 reading items, notes kept for known links only',
+  async () => {
+    const saved: { summary: string; notes: { item_id: string }[]; collation: unknown }[] = [];
+    const base = {
+      due: async () => [topicFx.page as PageRow],
+      items: async () => topicFx.links,
+      save: async () => {},
+      saveTopic: async (_p: string, row: (typeof saved)[number]) => {
+        saved.push(row);
+      },
+    };
+    const wait = ai(topicFx.output);
+    await runPageSummaries(USER, {
+      store: { ...base, readingCount: async () => 2 } as PageSummaryStore,
+      ai: wait.client,
+      usage,
+    });
+    assertEquals([wait.calls.length, saved.length], [0, 0]);
+
+    const go = ai({
+      ...topicFx.output,
+      notes: [...topicFx.output.notes, { item_id: 'not-on-page', note: 'x' }],
+    });
+    const res = await runPageSummaries(USER, {
+      store: { ...base, readingCount: async () => 5 } as PageSummaryStore,
+      ai: go.client,
+      usage,
+    });
+    assertEquals(res.built, [topicFx.page.id]);
+    assertEquals(saved[0]?.notes.length, 5);
+    assertStringIncludes(
+      (go.calls[0]?.messages as { content: string }[])[0]?.content ?? '',
+      'Fuelling long runs',
+    );
+  },
+);
