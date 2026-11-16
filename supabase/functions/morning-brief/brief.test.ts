@@ -2,7 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1.0.
 import digestFixture from '../../../tests/fixtures/brief/digest.json' with { type: 'json' };
 import aiFixture from '../../../tests/fixtures/ai/brief.json' with { type: 'json' };
 import type { AIClient, UsageRow, UsageStore } from '../_shared/ai.ts';
-import { BRIEF_SYSTEM, buildBriefMessage } from '../_shared/prompts/brief.v1.ts';
+import { BRIEF_SYSTEM, buildBriefMessage } from '../_shared/prompts/brief.v2.ts';
 import { buildBrief, enrichDigest, type Digest } from './brief.ts';
 import { keepPrep, runMorningBrief, todayStarts, type BriefStore } from './run.ts';
 
@@ -340,3 +340,57 @@ Deno.test('keepPrep: the 2-hour line and prep with no item', () => {
   );
   assertEquals(todayStarts(digest, {}).get('e0000000-0000-4000-8000-000000000001'), 14 * 60);
 });
+
+import { briefPlan } from './brief.ts';
+
+Deno.test(
+  'the brief is built with the plan (Task 15.2): plan in the message and in the content',
+  async () => {
+    const { client, calls } = ai({ parsed_output: aiFixture.output });
+    const plan = {
+      left_out: 0,
+      dropped: 0,
+      clashes: [{ note: 'Dentist overlaps team lunch' }],
+      prepare_now: ['Pack your training bag'],
+      surfacing: [{ item_id: 'a0000000-0000-4000-8000-000000000001', title: 'Call plumber' }],
+      reading: null,
+    };
+    const b = await buildBrief(USER, digest, {}, NOW, {
+      ai: client,
+      store: usage().store,
+      profile: '',
+      plan,
+    });
+    const msg = (calls[0]?.messages as { content: string }[])[0]?.content ?? '';
+    assertStringIncludes(msg, '<plan>');
+    assertStringIncludes(msg, 'Dentist overlaps team lunch');
+    assertEquals(b.content.plan?.clashes, ['Dentist overlaps team lunch']);
+    assertEquals(b.content.plan?.left_out, null);
+  },
+);
+
+Deno.test(
+  'the plan stays in the code-built fallback, and "Left out" is there whenever the digest was capped',
+  async () => {
+    const { client } = ai({ throw: { status: 500 } });
+    const b = await buildBrief(USER, digest, {}, NOW, {
+      ai: client,
+      store: usage().store,
+      profile: '',
+      plan: {
+        left_out: 12,
+        dropped: 1,
+        clashes: [],
+        prepare_now: [],
+        surfacing: [],
+        reading: null,
+      },
+    });
+    assertEquals(b.status, 'fallback');
+    assertEquals(
+      b.content.plan?.left_out,
+      'Left out: 12 items beyond what the planner reads; 1 reminder that broke the rules.',
+    );
+    assertEquals(briefPlan(null), null);
+  },
+);

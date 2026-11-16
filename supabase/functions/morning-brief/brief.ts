@@ -3,7 +3,7 @@ import { callAI, type AIClient, type UsageStore } from '../_shared/ai.ts';
 import { addDays, weekday } from '../_shared/holidays/easter.ts';
 import { holidaysBetween } from '../_shared/holidays/ie.ts';
 import { patternLocation, readWork, type WorkLocation } from '../_shared/leave/work.ts';
-import { BRIEF_SYSTEM, buildBriefMessage } from '../_shared/prompts/brief.v1.ts';
+import { BRIEF_SYSTEM, buildBriefMessage } from '../_shared/prompts/brief.v2.ts';
 import { fallbackList, type ListTask } from '../_shared/today/fallback.ts';
 import {
   DEFAULT_WINDOW,
@@ -92,6 +92,52 @@ export interface BriefContent {
   }[];
   also_today: string[];
   prep: { text: string; send_at: string; item_id: string | null }[];
+  /** From the planner (Task 15.2), assembled in code; null when no plan exists. */
+  plan: BriefPlan | null;
+}
+
+/** What the planner decided for today, as the brief shows it (Task 15.2). */
+export interface BriefPlan {
+  /** Planner "prepare" reminders due today, by title, in time order. */
+  prepare_now: string[];
+  clashes: string[];
+  /** Tasks that become actionable today (item_plans.surface_at). */
+  surfacing: { item_id: string; title: string }[];
+  /** One unread reading item that fits today, or null. */
+  reading: { item_id: string; title: string } | null;
+  /** "Left out: …" when the planner's digest was capped or dropped nudges; else null. */
+  left_out: string | null;
+}
+
+/** What the store reads for today's plan (raw, before shaping). */
+export interface PlanForBrief {
+  left_out: number;
+  dropped: number;
+  clashes: { note: string }[];
+  prepare_now: string[];
+  surfacing: { item_id: string; title: string }[];
+  reading: { item_id: string; title: string } | null;
+}
+
+/** The plan section, with the "Left out" line whenever the digest was capped. */
+export function briefPlan(p: PlanForBrief | null): BriefPlan | null {
+  if (!p) return null;
+  const parts = [
+    p.left_out > 0
+      ? `${p.left_out} item${p.left_out === 1 ? '' : 's'} beyond what the planner reads`
+      : '',
+    p.dropped > 0 ? `${p.dropped} reminder${p.dropped === 1 ? '' : 's'} that broke the rules` : '',
+  ].filter(Boolean);
+  return {
+    prepare_now: p.prepare_now.slice(0, 5),
+    clashes: p.clashes
+      .map((c) => c.note)
+      .filter(Boolean)
+      .slice(0, 3),
+    surfacing: p.surfacing.slice(0, 5),
+    reading: p.reading,
+    left_out: parts.length ? `Left out: ${parts.join('; ')}.` : null,
+  };
 }
 
 export interface BuiltBrief {
@@ -241,6 +287,8 @@ export interface BriefDeps {
   profile: string;
   /** The last few weekly digests, newest first (Task 8.5). */
   recentWeeks?: { week_start: string; digest: string }[];
+  /** Today's plan (Task 15.2), or null. */
+  plan?: PlanForBrief | null;
 }
 
 /** The weekly digests that go with the brief: at most 4, each at most 600 characters. */
@@ -267,6 +315,7 @@ export async function buildBrief(
   const enriched = enrichDigest(digest, settings);
   const nowLocal = localNow(now, digest.time_zone);
   const titles = new Map(digest.tasks.map((t) => [t.id, t.title]));
+  const plan = briefPlan(deps.plan ?? null);
 
   const result = await callAI(
     { client: deps.ai, store: deps.store },
@@ -279,7 +328,7 @@ export async function buildBrief(
         {
           role: 'user',
           content:
-            buildBriefMessage(enriched, `${digest.date} ${nowLocal.hhmm}`) +
+            buildBriefMessage(enriched, `${digest.date} ${nowLocal.hhmm}`, plan ?? undefined) +
             weeksText(deps.recentWeeks),
         },
       ],
@@ -339,6 +388,7 @@ export async function buildBrief(
         send_at: localTimeIso(digest.date, p.send_at, digest.time_zone),
         item_id: p.item_id,
       })),
+      plan,
     },
   };
 }

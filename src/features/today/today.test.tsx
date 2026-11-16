@@ -95,6 +95,7 @@ const brief = (): Brief => ({
     ],
     also_today: [T3],
     prep: [],
+    plan: null,
   },
 });
 
@@ -123,6 +124,31 @@ describe('Today tab (Task 5.7)', () => {
 
     await user.click(within(top).getByRole('checkbox', { name: 'Done: Send invoice' }));
     await waitFor(async () => expect((await get(T2))?.status).toBe('done'));
+  });
+
+  it('shows what the planner decided, with the Left out line (Task 15.2)', async () => {
+    const d = db();
+    const b = brief();
+    await save(d, 'briefs', {
+      ...b,
+      content: {
+        ...b.content,
+        plan: {
+          prepare_now: ['Pack your training bag'],
+          clashes: ['Dentist overlaps team lunch'],
+          surfacing: [{ item_id: T3, title: 'Book flights' }],
+          reading: null,
+          left_out: 'Left out: 12 items beyond what the planner reads.',
+        },
+      },
+    });
+    d.close();
+    renderAt('/today');
+    const plan = await screen.findByRole('list', { name: 'From your plan' });
+    expect(plan).toHaveTextContent('Prepare: Pack your training bag');
+    expect(plan).toHaveTextContent('Clash: Dentist overlaps team lunch');
+    expect(within(plan).getByRole('link', { name: 'Ready today: Book flights' })).toBeVisible();
+    expect(plan).toHaveTextContent('Left out: 12 items beyond what the planner reads.');
   });
 
   it('without a brief (offline): the device picks the Top 3 itself', async () => {
