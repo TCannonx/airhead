@@ -11,6 +11,7 @@ import type { PriceRow, UsageRow } from '../../lib/ai/usage';
 import { DataProvider } from '../../lib/db/DataProvider';
 import { openUserDb } from '../../lib/db/db';
 import { AppLockProvider } from '../applock/AppLockProvider';
+import PlanCosts from './PlanCosts';
 
 const U = LOCAL_USER_ID;
 const db = () => openUserDb(U);
@@ -135,5 +136,48 @@ describe('Insights → AI usage', () => {
   it('shows a plain message when the usage cannot be loaded', async () => {
     setup({ ...fakeUsage(), monthRows: vi.fn(async () => Promise.reject(new Error('net'))) });
     expect(await screen.findByText(/couldn.t be loaded/i)).toBeVisible();
+  });
+});
+
+describe('Insights → Planner costs (Task 17.4)', () => {
+  it('shows cost per day by kind, look-ups and defaults days', async () => {
+    const usage: UsageService = {
+      monthRows: () => Promise.resolve([]),
+      prices: () => Promise.resolve([]),
+      savePrice: () => Promise.resolve(),
+      planDays: () =>
+        Promise.resolve([
+          {
+            local_date: '2026-11-16',
+            kind: 'evening',
+            runs: 1,
+            ok_runs: 1,
+            capped_runs: 0,
+            nudges_written: 3,
+            lookups_used: 2,
+            cost_eur: 0.004,
+          },
+          {
+            local_date: '2026-11-15',
+            kind: 'defaults',
+            runs: 1,
+            ok_runs: 1,
+            capped_runs: 0,
+            nudges_written: 0,
+            lookups_used: 0,
+            cost_eur: 0,
+          },
+        ]),
+    };
+    render(
+      <AuthProvider services={{ ...localServices(), usage }}>
+        <PlanCosts />
+      </AuthProvider>,
+    );
+    expect(await screen.findByText(/2 look-ups · defaults carried 1 day/)).toBeVisible();
+    const table = screen.getByRole('table', { name: 'Planner cost by day' });
+    expect(table).toHaveTextContent('Evening');
+    expect(table).toHaveTextContent('€0.004');
+    expect(table).toHaveTextContent('defaults');
   });
 });
