@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- release: phase 17 (outcome statistics, timing preferences learned from snoozes, the weekly review on planner data with proposals for your OK, planner costs in Insights) on dev
 - feat(learning): when you keep moving the same reminder the same way (3 of the last 5 times), Airhead learns it as an everyday fact you can see and remove in Settings → Memory, e.g. "Packs the training bag in the morning, not the evening before"; the planner uses it, and a fact contradicted three times is archived (migration 0058, Task 17.2)
 - feat(insights): Planner costs: the last 14 days of planning cost by day and run kind (evening, morning, re-plan), look-ups used, and how many days the defaults carried (Task 17.4)
 - feat(review): the weekly review now looks at how the planner did (its runs, what you did with its reminders, what slipped and why) and next week's commitments against free time, and may propose moving, splitting or dropping a task; each waits under "Needs your OK" and nothing changes until you approve (prompt review.v2, migration 0059, Task 17.3)
