@@ -12,7 +12,7 @@ import { addDays } from '../_shared/holidays/easter.ts';
 import { buildPlanDigest, changedSince, type RawPlanDigest } from './digest.ts';
 import { type ApplyPayload, validatePlan } from './validate.ts';
 
-export type PlanMode = 'evening' | 'morning';
+export type PlanMode = 'evening' | 'morning' | 'replan';
 export type PlanRunStatus = 'ok' | 'failed' | 'cap_reached' | 'skipped';
 
 /** Database access for one planner run (a fake in tests, Supabase in production). */
@@ -77,6 +77,8 @@ export async function runPlanDay(
     usage: UsageStore;
     /** History look-ups the model may call (Task 14.8); without them, one plain call. */
     lookups?: Record<string, Lookup>;
+    /** Replan (Task 15.3): only these items. */
+    itemIds?: string[];
   },
 ): Promise<PlanRunResult> {
   const runId = await deps.store.startRun(userId, mode, localDate);
@@ -99,7 +101,7 @@ export async function runPlanDay(
 
     // The evening plans from tonight; the morning refresh (Task 15.1) plans from
     // last night's view of the week, only for what changed since that run.
-    const evening = mode === 'morning' ? addDays(localDate, -1) : localDate;
+    const evening = mode === 'evening' ? localDate : addDays(localDate, -1);
     let raw = await deps.store.digest(userId, evening);
     if (mode === 'morning') {
       const since = (await deps.store.eveningFinishedAt?.(userId, evening)) ?? null;
@@ -107,6 +109,10 @@ export async function runPlanDay(
       if (since && !raw.items.length && !raw.linked.length) {
         return await done('skipped', { summary: { why: 'nothing changed since the evening' } });
       }
+    }
+    if (mode === 'replan') {
+      const wanted = new Set(deps.itemIds ?? []);
+      raw = { ...raw, items: raw.items.filter((i) => wanted.has(i.id)), linked: [] };
     }
     const { digest, left_out } = buildPlanDigest(raw, settings, now);
     const plannable = digest.items.filter((i) => i.kind !== 'linked').length;
