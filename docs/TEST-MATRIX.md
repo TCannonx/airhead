@@ -341,6 +341,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Day summaries: nightly at 03:10 from `day_digest_source`; one small call, 120 words, item ids kept; empty day → "Nothing recorded." without a call; stale days rebuilt from sources; a failure waits for the next night | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `fn/day-digest/run.test.ts`, `fn/scheduler-tick/tick.test.ts` (03:10 once a night), `_shared/ai.contract.test.ts` (against mock-ai), `_shared/schemas/limits.test.ts`, `db/0047` (sources, one a day, stale trigger within 30 days, RLS) | `sync/tables.spec.ts` (every synced table) | Wording quality: read a few on dev |
+| Month summaries: last month from its weekly digests (one small call, 150 words, week starts kept), "Nothing recorded." without a call, stale when a weekly digest changes | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `fn/day-digest/month.test.ts`, `fn/scheduler-tick/tick.test.ts` (03:20 once a night), `_shared/ai.contract.test.ts`, `_shared/schemas/limits.test.ts`, `db/0048` (first-of-month check, one a month, stale trigger, RLS) | `sync/tables.spec.ts` (every synced table) | |
 
 ## Cross-cutting
 

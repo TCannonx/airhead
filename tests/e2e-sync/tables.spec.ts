@@ -23,6 +23,7 @@ const SERVER_ONLY = new Set<SyncTable>([
   'item_plans',
   'nudges',
   'day_digests',
+  'month_digests',
 ]);
 
 function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> {
@@ -285,6 +286,14 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       local_date: '2031-01-05',
       digest: 'Every table day.',
       item_ids: [id()],
+      stale: false,
+      built_at: now,
+    },
+    month_digests: {
+      ...base(),
+      month: '2031-01-01',
+      digest: 'Every table month.',
+      week_starts: ['2031-01-06'],
       stale: false,
       built_at: now,
     },

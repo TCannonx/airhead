@@ -1610,3 +1610,10 @@ Decisions and library versions, newest first.
 - At most 7 days are built a night: yesterday when it has no summary, then stale ones newest first. A failed call leaves the day unbuilt (or still stale) for the next night; at the monthly cap the night stops.
 - The stale trigger fires on changes to `title`, `status`, `start_at`, `due_at`, `completed_at` and `deleted_at`, and only for summaries in the last 30 days (`current_date` on the server, UTC).
 - `day_digests` is a synced, read-only table on the device (Dexie v13), as `item_plans` and `briefs`.
+
+## Month summaries (Task 14.2, 2026-11-16)
+
+- **Plan names vs code**: the plan points at migration `…000025` for how weekly digests are stored; that migration is the SQL `weekly_digest()` numbers. The weekly digest text the review writes is `reviews.digest` (migration `…000027`), and month summaries are built from that.
+- A week belongs to the month its Monday (`week_start`) is in.
+- The tick checks every night at 03:20 local; last month is built as soon as it has no summary (so on the 1st, or the first night after if that one failed), then stale months, at most 3 a night.
+- Same "Nothing recorded." and failure rules as day summaries; `month_digests` is a synced read-only table on the device (Dexie v14).

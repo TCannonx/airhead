@@ -431,6 +431,17 @@ export const dayDigestSchema = z.object({
   built_at: ts,
 });
 export type DayDigest = z.infer<typeof dayDigestSchema>;
+
+/** One month's short summary and the weeks it came from (Task 14.2). Server-written. */
+export const monthDigestSchema = z.object({
+  ...syncColumns,
+  month: date,
+  digest: z.string(),
+  week_starts: z.array(date),
+  stale: z.boolean(),
+  built_at: ts,
+});
+export type MonthDigest = z.infer<typeof monthDigestSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -461,6 +472,7 @@ export const SYNC_TABLES = [
   'item_plans',
   'nudges',
   'day_digests',
+  'month_digests',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -491,6 +503,7 @@ export const schemas = {
   item_plans: itemPlanSchema,
   nudges: nudgeSchema,
   day_digests: dayDigestSchema,
+  month_digests: monthDigestSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -520,4 +533,5 @@ export interface RowTypes {
   item_plans: ItemPlan;
   nudges: Nudge;
   day_digests: DayDigest;
+  month_digests: MonthDigest;
 }

@@ -37,7 +37,9 @@ import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v7.ts';
 import { PlanResult } from './schemas/plan.ts';
-import { DayDigestResult } from './schemas/history.ts';
+import { DayDigestResult, MonthDigestResult } from './schemas/history.ts';
+import monthFixture from '../../../tests/fixtures/ai/month-digest.json' with { type: 'json' };
+import { runMonthDigests } from '../day-digest/month.ts';
 import dayFixture from '../../../tests/fixtures/ai/day-digest.json' with { type: 'json' };
 import { runDayDigests, type DaySource } from '../day-digest/run.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
@@ -469,6 +471,29 @@ Deno.test(
   },
 );
 
+Deno.test(
+  'month summary: the real small-tier request is accepted and saved with its weeks',
+  async () => {
+    await viaMock(async (ai) => {
+      const saved: { digest: string; week_starts: string[] }[] = [];
+      const res = await runMonthDigests(USER, '2026-12-01', {
+        store: {
+          monthsToBuild: async (_u, last) => [last],
+          weeks: async () => monthFixture.weeks,
+          save: async (_u, _m, row) => {
+            saved.push(row);
+          },
+        },
+        ai,
+        usage,
+      });
+      assertEquals(res, { built: ['2026-11-01'], failed: [] });
+      assertEquals(saved[0]?.digest, monthFixture.output.digest);
+      assertEquals(saved[0]?.week_starts.length, 2);
+    });
+  },
+);
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -668,6 +693,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     summarise_note: SummaryResult,
     plan_day: PlanResult,
     day_digest: DayDigestResult,
+    month_digest: MonthDigestResult,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;

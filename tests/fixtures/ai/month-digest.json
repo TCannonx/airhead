@@ -1,0 +1,16 @@
+{
+  "_comment": "Month summary (Task 14.2). weeks: weekly digests (reviews.digest) whose Monday is in November 2026; output: a saved answer in the MonthDigestResult shape.",
+  "weeks": [
+    {
+      "week_start": "2026-11-02",
+      "digest": "Trained three times; sent the insurance form; the plumber call slipped again."
+    },
+    {
+      "week_start": "2026-11-09",
+      "digest": "Started planning Christmas sandwiches for work; dentist on Thursday; quiet weekend."
+    }
+  ],
+  "output": {
+    "digest": "November started with three training sessions and the insurance form sent, while the call to the plumber kept slipping. Planning Christmas sandwiches for work began in the second week, alongside a dentist visit."
+  }
+}
