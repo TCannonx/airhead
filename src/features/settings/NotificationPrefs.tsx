@@ -4,8 +4,13 @@ import { useAuth } from '../../lib/auth/context';
 import { useDb } from '../../lib/db/context';
 import { updateSettingsData } from '../../lib/db/settings';
 import {
+  DELIVERY_NAMES,
   NUDGE_LABELS,
   NUDGE_TYPES,
+  PLAN_DELIVERIES,
+  PLAN_KIND_NAMES,
+  PLAN_KINDS,
+  type PlanDelivery,
   notifSettingsSchema,
   readNotifSettings,
   type NotifSettings,
@@ -54,6 +59,32 @@ function PrefsForm({
             checked={n.types[t]}
             onChange={(v) => set('types', { ...n.types, [t]: v })}
           />
+        ))}
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <legend className="mb-1 text-footnote font-medium text-fg-muted">Planner reminders</legend>
+        <p className="text-caption text-fg-muted">
+          “In the digest” lists them in the morning brief or the evening round-up instead of a
+          notification of their own.
+        </p>
+        {PLAN_KINDS.map((k) => (
+          <label key={k} className="flex items-center justify-between gap-2 text-footnote">
+            {PLAN_KIND_NAMES[k]}
+            <select
+              className={field}
+              value={n.plan_kinds[k]}
+              onChange={(e) =>
+                set('plan_kinds', { ...n.plan_kinds, [k]: e.target.value as PlanDelivery })
+              }
+            >
+              {PLAN_DELIVERIES.map((d) => (
+                <option key={d} value={d}>
+                  {DELIVERY_NAMES[d]}
+                </option>
+              ))}
+            </select>
+          </label>
         ))}
       </fieldset>
 
