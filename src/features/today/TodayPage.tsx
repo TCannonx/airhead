@@ -8,7 +8,7 @@ import ScoutCards from './ScoutCards';
 import QuestionsCard from './QuestionsCard';
 import Suggestions from './Suggestions';
 import { CarryOverCards } from './Top3Controls';
-import { AlsoToday, BriefLines, Top3, TodayEvents } from './TodayParts';
+import { AlsoToday, BriefLines, PlanLines, Top3, TodayEvents } from './TodayParts';
 import { useToday } from './useToday';
 
 /** Today (Task 5.7): brief, events, Top 3 with slots, Also today, suggestion cards. */
@@ -20,6 +20,7 @@ export default function TodayPage() {
       {view && (
         <>
           <BriefLines view={view} />
+          <PlanLines view={view} />
           <TodayEvents view={view} />
           <Top3 view={view} />
           <AlsoToday view={view} />

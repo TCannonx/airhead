@@ -12,7 +12,7 @@ import { supabaseReviewStore } from '../weekly-review/store.ts';
 import { runScout } from '../scout/run.ts';
 import { supabaseScoutStore } from '../scout/store.ts';
 import { runTick, type TickStore } from './tick.ts';
-import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
+import { drainPlanQueue, drainReplans, type PlanQueueStore, type ReplanStore } from './plan.ts';
 import { runPlanDay } from '../plan-day/run.ts';
 import { supabasePlanStore } from '../plan-day/store.ts';
 import { planLookups } from '../plan-day/lookups.ts';
@@ -169,7 +169,12 @@ const store: TickStore = {
 /** The plan queue (Task 13.3): default nudges for items changed since the last tick. */
 const planStore: PlanQueueStore = {
   async queued(limit) {
-    const { data } = await db.from('plan_queue').select('item_id').order('queued_at').limit(limit);
+    const { data } = await db
+      .from('plan_queue')
+      .select('item_id')
+      .eq('defaults_done', false)
+      .order('queued_at')
+      .limit(limit);
     return (data ?? []).map((r) => r.item_id as string);
   },
   async items(ids) {
@@ -218,7 +223,43 @@ const planStore: PlanQueueStore = {
     await db.rpc('cancel_nudge', { p_user_id: userId, p_key: key });
   },
   async dequeue(ids) {
-    await db.from('plan_queue').delete().in('item_id', ids);
+    // Kept for re-planning (Task 15.3); a newer change sets defaults_done back to false.
+    await db
+      .from('plan_queue')
+      .update({ defaults_done: true })
+      .in('item_id', ids)
+      .eq('defaults_done', false);
+  },
+};
+
+/** Re-planning after a change (Task 15.3). */
+const replanStore: ReplanStore = {
+  async due(before) {
+    const { data } = await db
+      .from('plan_queue')
+      .select('item_id, user_id')
+      .eq('defaults_done', true)
+      .lt('queued_at', before)
+      .order('queued_at')
+      .limit(100);
+    return (data ?? []) as { item_id: string; user_id: string }[];
+  },
+  async settings(userId) {
+    const { data } = await db.from('settings').select('data').eq('id', userId).maybeSingle();
+    return (data?.data ?? {}) as Record<string, unknown>;
+  },
+  async runsToday(userId, localDate) {
+    const { count } = await db
+      .from('plan_runs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('kind', 'replan')
+      .eq('local_date', localDate);
+    return count ?? 0;
+  },
+  async clear(itemIds) {
+    // Only rows not changed again since (those wait for their own defaults).
+    await db.from('plan_queue').delete().in('item_id', itemIds).eq('defaults_done', true);
   },
 };
 
@@ -234,6 +275,18 @@ Deno.serve((req) =>
         drainPlanQueue(new Date(), planStore),
         db.rpc('drain_page_queue'),
       ]);
+      await drainReplans(new Date(), replanStore, async (userId, localDate, itemIds) => {
+        await runPlanDay(userId, localDate, new Date(), 'replan', {
+          store: supabasePlanStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+          lookups: planLookups(
+            supabaseHistoryStore(db, (t) => gteSmall(t).catch(() => null)),
+            userId,
+          ),
+          itemIds,
+        });
+      }).catch(() => undefined);
       return {
         plan: plan.status === 'fulfilled' ? plan.value : { failed: true },
         pages: pages.status === 'fulfilled' ? (pages.value.data ?? 0) : { failed: true },

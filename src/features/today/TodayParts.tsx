@@ -21,6 +21,54 @@ export function BriefLines({ view }: { view: TodayView }) {
   );
 }
 
+/** What the planner decided for today (Task 15.2), with the "Left out" line. */
+export function PlanLines({ view }: { view: TodayView }) {
+  const plan = view.brief?.content.plan;
+  if (!plan) return null;
+  const empty =
+    !plan.prepare_now.length &&
+    !plan.clashes.length &&
+    !plan.surfacing.length &&
+    !plan.reading &&
+    !plan.left_out;
+  if (empty) return null;
+  return (
+    <Section title="From your plan" className="mb-6">
+      <GroupedList label="From your plan">
+        {plan.prepare_now.length > 0 && (
+          <GroupedListItem>
+            <p className="text-body">Prepare: {plan.prepare_now.join(', ')}</p>
+          </GroupedListItem>
+        )}
+        {plan.clashes.map((c, i) => (
+          <GroupedListItem key={`c${i}`}>
+            <p className="text-body">Clash: {c}</p>
+          </GroupedListItem>
+        ))}
+        {plan.surfacing.map((s) => (
+          <GroupedListItem key={s.item_id}>
+            <Link to={`/library/item/${s.item_id}`} className="text-body text-accent">
+              Ready today: {s.title}
+            </Link>
+          </GroupedListItem>
+        ))}
+        {plan.reading && (
+          <GroupedListItem>
+            <Link to={`/library/item/${plan.reading.item_id}`} className="text-body text-accent">
+              Read: {plan.reading.title}
+            </Link>
+          </GroupedListItem>
+        )}
+        {plan.left_out && (
+          <GroupedListItem>
+            <p className="text-footnote text-fg-muted">{plan.left_out}</p>
+          </GroupedListItem>
+        )}
+      </GroupedList>
+    </Section>
+  );
+}
+
 export function TodayEvents({ view, compact = false }: { view: TodayView; compact?: boolean }) {
   if (view.events.length === 0) return null;
   return (
