@@ -16,7 +16,8 @@ export function findUrl(text: string): FoundUrl | null {
 
 const URLS_IN_TEXT = /https?:\/\/[^\s<>"']+/gi;
 /** Query parameters that only track where a link came from (Task 16.1). */
-const TRACKING = /^(?:utm_[a-z]+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|ref|ref_src|_hsenc|_hsmi|mkt_tok)$/i;
+const TRACKING =
+  /^(?:utm_[a-z]+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|ref|ref_src|_hsenc|_hsmi|mkt_tok)$/i;
 
 /**
  * The same link however it was shared (Task 16.1): lower-case host, no
@@ -27,7 +28,8 @@ export function normaliseUrl(url: string): string {
     const u = new URL(url);
     u.hash = '';
     u.hostname = u.hostname.toLowerCase().replace(/^www\./, '');
-    for (const key of [...u.searchParams.keys()]) if (TRACKING.test(key)) u.searchParams.delete(key);
+    for (const key of [...u.searchParams.keys()])
+      if (TRACKING.test(key)) u.searchParams.delete(key);
     const out = u.toString().replace(/\/(\?|$)/, '$1');
     return out.replace(/\?$/, '');
   } catch {

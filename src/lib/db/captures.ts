@@ -75,7 +75,8 @@ export async function createCapture(
   // longer note still wait for sorting, as written.
   const urls = input.url ? [input.url] : text ? findUrls(text).map((f) => f.url) : [];
   const otherWords = text ? withoutUrls(text) : '';
-  const linkOnly = urls.length > 0 && (input.url ? true : otherWords.split(' ').filter(Boolean).length <= 3);
+  const linkOnly =
+    urls.length > 0 && (input.url ? true : otherWords.split(' ').filter(Boolean).length <= 3);
   const when = leave || (text && FOR_AI.test(text)) ? null : (analysis?.when ?? null);
   const at = new Date().toISOString();
 
