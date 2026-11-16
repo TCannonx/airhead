@@ -259,6 +259,17 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Installed app on the iPhone: the icon badge shows overdue tasks plus open questions and goes when they are cleared
 - [ ] [ ] [ ] With APP_URL set (see BLOCKERS), a notification tapped on the iPhone opens the right item
 
+## Phase 16 — Reading
+
+- [ ] [ ] [ ] Load the latest version (Settings → Sync → Load latest version)
+- [ ] [ ] [ ] Capture "For the spring marathon, Niamh recommended https://… and also https://… worth a read": two reading items appear, the rest of the note is still sorted
+- [ ] [ ] [ ] On the other device, each link shows its kind, minutes, a three-line summary, key points, why you saved it and its topics (Library and the item page)
+- [ ] [ ] [ ] Save the same link again with "?utm_source=x" on the end: no second reading item
+- [ ] [ ] [ ] Save a members-only or broken link: it says why ("needs sign-in", "not found") with "Open anyway"
+- [ ] [ ] [ ] After three links on one topic, the next morning Library → Topics shows it with a summary, a line per link, where sources agree, open questions and a next step
+- [ ] [ ] [ ] Collate, Rename, Merge with another topic and Send to Workshop work
+- [ ] [ ] [ ] Reading suggestions come in the morning digest (never as their own notification), and at most one topic mention a day
+
 ## Phase 17 — Learning and the weekly review
 
 - [ ] [ ] [ ] Load the latest version (Settings → Sync → Load latest version)
