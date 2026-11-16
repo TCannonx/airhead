@@ -613,7 +613,7 @@ Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack yo
     4. An event at 08:00 during quiet hours ending 07:00 → the `leave` nudge still goes out; nothing else in quiet hours.
     5. A day with nothing on → an empty plan and no nudges.
     - The evaluator checks structure (kinds and time windows), not wording.
-- [ ] **13.10 Release to dev.** `release: phase 13` PR: CHANGELOG, MANUAL-CHECKLIST section "Phase 13: the planner" (set an early event for tomorrow, check the evening nudge and its reason, snooze it, check the leave nudge), TEST-MATRIX rows, and a BLOCKERS entry "Phase 13 ready for device testing on dev". Live waits for a tag.
+- [x] **13.10 Release to dev.** `release: phase 13` PR: CHANGELOG, MANUAL-CHECKLIST section "Phase 13: the planner" (set an early event for tomorrow, check the evening nudge and its reason, snooze it, check the leave nudge), TEST-MATRIX rows, and a BLOCKERS entry "Phase 13 ready for device testing on dev". Live waits for a tag.
 - Phase done when: the owner's bag example passes in unit tests, in the e2e-sync job and in the real-model check, and the manual checklist section passes on the iPhone.
 
 ### Phase 14: History the planner can reach

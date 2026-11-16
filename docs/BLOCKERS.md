@@ -2,6 +2,17 @@
 
 ## Waiting for the user
 
+### Phase 13 ready for device testing on dev
+
+The planner is on the dev site: every event and task gets sensible reminder times the moment it is saved (get ready the evening before anything early, time to leave, do it now), and at 18:00 a small AI call plans tomorrow and anything that needs lead time, with a reason on every reminder ("Why now?" on the item and in event details). Tapping a planner notification opens a snooze sheet.
+
+1. Load the latest version on the iPhone (Settings → Sync → Load latest version).
+2. Work through "Phase 13 — The planner" in `docs/MANUAL-CHECKLIST.md`. The owner's bag example (training at 08:00) is the first line.
+3. Cost: one small call per evening, capped at €0.15 a day (`settings.data.plan.daily_cap_eur`); the monthly cap still applies.
+4. Real-model check: `ai-eval` on dev now also runs five planner timing cases (only when a prompt or case changes, or once a day, about €0.01). Results are in the `ai_eval_runs` table on dev; this machine has no dev database access or API key, so I could not read them. Please glance at the latest row (cases with `"kind": "plan"`).
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 12 ready for device testing on dev
 
 "Trust: every note counts" is on the dev site: a note that implies more work gets a planning task with steps and up to 3 specific questions (Inbox → Questions for you, the item page, a Today row; no push), answers are acted on by the next sort, every capture has "What Airhead did", and Insights shows Notes handled.
