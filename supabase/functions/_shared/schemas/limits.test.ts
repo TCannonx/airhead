@@ -39,7 +39,7 @@ import { ReviewResult } from '../../weekly-review/review.ts';
 import { DraftContent } from '../../workshop/run.ts';
 import { TurnResult } from '../../workshop/turn.ts';
 import { PlanResult } from './plan.ts';
-import { DayDigestResult, MonthDigestResult } from './history.ts';
+import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './history.ts';
 
 Deno.test('every AI output schema stays within the union-parameter limit', () => {
   const all = {
@@ -51,6 +51,7 @@ Deno.test('every AI output schema stays within the union-parameter limit', () =>
     ImportResult,
     LeaveResult,
     MonthDigestResult,
+    PageSummaryResult,
     PlanResult,
     ReviewResult,
     SummaryResult,

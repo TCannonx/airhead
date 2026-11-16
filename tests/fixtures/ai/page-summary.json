@@ -1,0 +1,28 @@
+{
+  "_comment": "Page summary (Task 14.5). input: what the planner sends for the repeating Training page; output: a saved answer in the PageSummaryResult shape.",
+  "page": {
+    "id": "d1450000-0000-4000-8000-000000000001",
+    "kind": "series",
+    "name": "Training",
+    "summary": "",
+    "facts": [],
+    "summarised_at": null,
+    "rebuild_requested_at": null
+  },
+  "items": [
+    {
+      "id": "d1450000-0000-4000-8000-000000000002",
+      "type": "event",
+      "date": "2026-11-11",
+      "title": "Training",
+      "line": "Brought boots and a water bottle; coach wants everyone there by 07:50"
+    }
+  ],
+  "output": {
+    "summary": "Weekly training at the gym on Wednesday mornings at 08:00. Last time the owner brought boots and a water bottle, and the coach asked everyone to arrive by 07:50.",
+    "facts": [
+      { "date": "2026-11-11", "text": "Brought boots and a water bottle" },
+      { "date": "2026-11-11", "text": "Coach wants everyone there by 07:50" }
+    ]
+  }
+}

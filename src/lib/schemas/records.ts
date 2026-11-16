@@ -459,6 +459,10 @@ export const pageSchema = z.object({
   status: z.enum(['active', 'pending_approval', 'archived']),
   item_count: z.number().int(),
   last_item_at: ts.nullable(),
+  /** Task 14.5: the summary needs refreshing; when it was last written; a Rebuild asked for. */
+  summary_stale: z.boolean(),
+  summarised_at: ts.nullable(),
+  rebuild_requested_at: ts.nullable(),
 });
 export type Page = z.infer<typeof pageSchema>;
 
