@@ -321,6 +321,13 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Completeness: notes that imply more work get a planning task, specific questions and nothing dropped; clear notes get no questions; no question beside a clear action | `fn/sort-batch/followups.test.ts` (action guard) | `fn/ai-eval/run.test.ts` (mock: Christmas, car insurance, team night pass), `ai-eval` real model on dev after each prompt change (`ai_eval_runs`) | — | Real-model results vary run to run: watch `ai_eval_runs` |
 | Insights → Notes handled: handled of total, waiting, questions by status, correction rate, "Not acted on: N" opens the list | `features/insights/noteshandled.test.tsx` | — | — | Computed from synced rows already proven end to end (`sync/tables.spec.ts`, `sync/ai.spec.ts`) |
 
+## Phase 13 — The planner
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Default timings: prepare the evening before (before noon) or 3 h before, never inside 45 min; leave = start − travel − 10; do at a task's due time; nothing in the past | — | `fn/_shared/plan/defaults.test.ts` (owner's training case, noon, Dublin clock change, all-day, tasks) | — | Pure logic; delivered through 13.3 |
+| `item_plans` and `nudges` sync to the device (pull-only); `plan_runs` owner-only; new nudge kinds and columns | `lib/db/db.test.ts`, `lib/schemas/records.test.ts` | `db/0041` (RLS for a second user, one plan per item, once-a-day runs, kind and outcome checks, devices cannot write) | `sync/tables.spec.ts` (every synced table) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |

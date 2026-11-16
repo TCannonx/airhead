@@ -100,5 +100,10 @@ export function openUserDb(userId: string): AirheadDb {
   db.version(10).stores({ ai_actions: 'id, capture_id, status, server_updated_at' });
   // v11: follow-up questions (Task 12.1).
   db.version(11).stores({ follow_ups: 'id, capture_id, item_id, status, server_updated_at' });
+  // v12: item plans and nudges (Task 13.2), pull-only.
+  db.version(12).stores({
+    item_plans: 'id, item_id, server_updated_at',
+    nudges: 'id, item_id, status, send_at, server_updated_at',
+  });
   return db;
 }
