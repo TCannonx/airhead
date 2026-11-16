@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(reading): a topic you keep feeding collates itself: from 3 saved links its page gets a running summary, one line per link on what it adds, where sources agree or repeat, open questions and a next step; each new link updates it, removing one rebuilds it (migration 0055, Task 16.5)
 - feat(reading): a saved link joins your existing topics by name, then by meaning, and only makes a new topic when nothing is close (Task 16.4)
 - feat(reading): every saved link is read and explained: kind, reading minutes, a three-line summary, up to five key points, why it was probably saved (from your own words around it), up to three topics and who or what it mentions; a page that cannot be read says why in plain words and costs no AI call (Task 16.2)
 - feat(brief): the morning brief is built with the plan: Today shows "From your plan" (what to prepare, clashes, tasks ready today, one reading pick) and a "Left out: …" line whenever the planner had to leave something out; the code-built fallback keeps it (prompt brief.v2, Task 15.2)

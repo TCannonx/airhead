@@ -1701,3 +1701,10 @@ Decisions and library versions, newest first.
 - `_shared/topics.ts` (`matchTopics`): exact name, then normalised (lower case, punctuation removed, a simple plural "s" dropped), then the closest existing topic by cosine similarity of gte-small embeddings at or above `SIMILAR = 0.86`, else a new `topics` row. `read-link` applies it to each enriched link and merges the ids into `items.topic_ids`.
 - **Threshold**: the plan asks for it to be recorded "after trying it on fixtures". It was tried on fixture vectors in `topics.test.ts`; real gte-small vectors can only be computed inside the Supabase Edge runtime, which this machine does not have. 0.86 is a conservative start (gte-small puts unrelated short phrases around 0.7–0.8); worth checking on dev with real topic names (BLOCKERS).
 - Without the embedding model (outside the Edge runtime), unknown names become new topics.
+
+## Topic pages (Task 16.5, 2026-11-16)
+
+- **Plan vs code**: 14.3 already makes a topic page for every topic with any item. 16.5's "a topic with fewer than 3 reading items has no page yet" is kept as "is not collated yet": the AI collation runs only from 3 reading items (`page_reading_count`), and the device's Topics list (16.6) shows topics from 3. Other items on a topic stay linked to its page.
+- `update-topic` is part of the nightly page summaries (`page-summary/run.ts`, task `topic_collate`, prompt `topic.v1`, schema `TopicResult`), not a separate function: topic pages go through the same due list, so cost stays bounded (20 pages a night). Each new link updates from the existing summary plus the new links; a removed link sets `rebuild_requested_at` (0055), as does Collate on the device.
+- Overlaps, open questions and next step are kept in `pages.collation` (new column, server-written; the owner-edit trigger keeps it). Per-link notes go to `page_items.note`, only for links the call was given.
+- A saved link's line in the prompt is its enrichment summary (16.2), else its body.

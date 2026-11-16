@@ -548,6 +548,11 @@ export const TASKS = [
     answer: () => fixture('link-enrich').output,
   },
   {
+    task: 'topic_collate',
+    prompt: 'You keep a running page on one topic a person is reading about',
+    answer: () => fixture('topic-collate').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],

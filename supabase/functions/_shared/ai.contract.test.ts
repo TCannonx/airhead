@@ -49,7 +49,9 @@ import {
   LinkEnrichment,
   MonthDigestResult,
   PageSummaryResult,
+  TopicResult,
 } from './schemas/history.ts';
+import topicFixture from '../../../tests/fixtures/ai/topic-collate.json' with { type: 'json' };
 import linkFixture from '../../../tests/fixtures/ai/link-enrich.json' with { type: 'json' };
 import { enrichLink } from '../read-link/enrich.ts';
 import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
@@ -594,6 +596,32 @@ Deno.test(
   },
 );
 
+Deno.test(
+  'topic collation: the real small-tier request is accepted; notes go to their links',
+  async () => {
+    await viaMock(async (ai) => {
+      let saved: { notes: unknown[]; collation: { next_step: string } } | null = null;
+      const res = await runPageSummaries(USER, {
+        store: {
+          due: async () => [topicFixture.page],
+          items: async () => topicFixture.links,
+          save: async () => {},
+          readingCount: async () => 5,
+          saveTopic: async (_p, row) => {
+            saved = row;
+          },
+        },
+        ai,
+        usage,
+      });
+      assertEquals(res.failed, []);
+      const s = saved as unknown as { notes: unknown[]; collation: { next_step: string } };
+      assertEquals(s.notes.length, 5);
+      assertEquals(s.collation.next_step, 'Pick the race date and count back 16 weeks.');
+    });
+  },
+);
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -796,6 +824,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     month_digest: MonthDigestResult,
     page_summary: PageSummaryResult,
     link_enrich: LinkEnrichment,
+    topic_collate: TopicResult,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;
