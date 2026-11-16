@@ -1549,3 +1549,4 @@ Decisions and library versions, newest first.
 - An occurrence is "live" if it is in the next 8 days. Pending `plan:*` nudges for dates that are no longer live are cancelled whatever their source; for live dates only stale `default` ones are.
 - **Quiet hours**: `leave` and `do` come through quiet hours like `event_reminder` (governed by the same "event reminders in quiet hours" switch). `leave` is dropped 30 minutes after its time, `do` after 2 hours.
 - The e2e-sync test puts the event two days out, so "prepare at 20:30 the evening before" is never already past when CI runs after 20:30.
+- **The dispatcher also runs for queued plan work**: `dispatch_scheduler_tick` skipped the call when nobody had a push device, so defaults would never be written for someone without notifications (found by the e2e-sync test). 0042 redefines it to call the tick when `plan_queue` has rows too.

@@ -102,3 +102,36 @@ end;
 $$;
 revoke all on function public.upsert_plan_nudge(uuid, text, text, uuid, timestamptz, text, text,
   text, text, text, text, uuid) from public, anon, authenticated;
+
+-- The tick also drains the plan queue, so it runs when the queue has work even
+-- if nobody has a notification device (copy of 0014 with that one change).
+create or replace function public.dispatch_scheduler_tick()
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_url text;
+  v_key text;
+begin
+  select decrypted_secret into v_url from vault.decrypted_secrets where name = 'project_url';
+  select decrypted_secret into v_key from vault.decrypted_secrets where name = 'service_role_key';
+  if v_url is null or v_key is null then
+    return false;
+  end if;
+  if not exists (select 1 from public.devices
+                  where receives_notifications and push_subscription is not null and deleted_at is null)
+     and not exists (select 1 from public.plan_queue) then
+    return false;
+  end if;
+  perform net.http_post(
+    url := rtrim(v_url, '/') || '/functions/v1/scheduler-tick',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || v_key),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 55000
+  );
+  return true;
+end;
+$$;
+revoke all on function public.dispatch_scheduler_tick() from public, anon, authenticated;

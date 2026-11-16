@@ -1,5 +1,6 @@
 import type { AIClient, UsageStore } from '../_shared/ai.ts';
-import { buildBrief, type BuiltBrief, type Digest } from './brief.ts';
+import { buildBrief, enrichDigest, type BuiltBrief, type Digest } from './brief.ts';
+import { localNow } from '../scheduler-tick/notif.ts';
 
 /** Database access for one morning brief (a fake in tests, Supabase in production). */
 export interface BriefStore {
@@ -12,6 +13,11 @@ export interface BriefStore {
   saveBrief(userId: string, localDate: string, brief: BuiltBrief): Promise<void>;
   /** Marks tasks as today's Top 3. */
   setTop3(userId: string, itemIds: string[], localDate: string): Promise<void>;
+  /**
+   * Items with a planner prepare nudge (plan:prepare:<item id>:<localDate>), pending or
+   * sent (Task 13.4). Optional for older fakes.
+   */
+  planPrepared?(userId: string, itemIds: string[], localDate: string): Promise<Set<string>>;
   /** Cancels pending prep nudges from an earlier brief the same day (Regenerate). */
   cancelPrep(userId: string, localDate: string): Promise<void>;
   addNudge(
@@ -26,6 +32,41 @@ export interface BriefStore {
       dedupe_key: string;
     },
   ): Promise<void>;
+}
+
+/** No same-day prep nudge for anything starting within this many minutes of the brief. */
+export const PREP_MIN_LEAD = 120;
+
+const minutes = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+
+/**
+ * Which of the brief's prep nudges to send (Task 13.4): none for an item that
+ * starts today within 2 hours of the brief (a 07:30 "pack your bag" for 08:00
+ * is too late), and none for an occurrence the planner already prepared the
+ * evening before. The brief text may still mention the prep.
+ */
+export function keepPrep<T extends { item_id: string | null }>(
+  prep: T[],
+  starts: Map<string, number>,
+  briefMinutes: number,
+  planned: Set<string>,
+): T[] {
+  return prep.filter((p) => {
+    if (!p.item_id) return true;
+    if (planned.has(p.item_id)) return false;
+    const start = starts.get(p.item_id);
+    return start === undefined || start - briefMinutes >= PREP_MIN_LEAD;
+  });
+}
+
+/** Today's start time (local minutes) of each timed event in the digest, one-off or repeating. */
+export function todayStarts(digest: Digest, settings: Record<string, unknown>): Map<string, number> {
+  const starts = new Map<string, number>();
+  const e = enrichDigest(digest, settings);
+  for (const x of [...e.events, ...e.recurring_events]) {
+    if (x.date === digest.date && x.start && !starts.has(x.id)) starts.set(x.id, minutes(x.start));
+  }
+  return starts;
 }
 
 export type BriefRunResult =
@@ -69,7 +110,18 @@ export async function runMorningBrief(
     localDate,
   );
   await deps.store.cancelPrep(userId, localDate);
-  for (const [i, p] of brief.content.prep.entries()) {
+  const prepIds = brief.content.prep.flatMap((p) => (p.item_id ? [p.item_id] : []));
+  const planned =
+    prepIds.length && deps.store.planPrepared
+      ? await deps.store.planPrepared(userId, prepIds, localDate)
+      : new Set<string>();
+  const prep = keepPrep(
+    brief.content.prep,
+    todayStarts(digest, settings),
+    minutes(localNow(now, digest.time_zone).hhmm),
+    planned,
+  );
+  for (const [i, p] of prep.entries()) {
     await deps.store.addNudge(userId, {
       kind: 'prep',
       item_id: p.item_id,

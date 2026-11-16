@@ -57,6 +57,18 @@ export function supabaseBriefStore(db: SupabaseClient): BriefStore {
       if (ids.length)
         await db.from('items').update({ top3_date: localDate }).eq('user_id', userId).in('id', ids);
     },
+    async planPrepared(userId, itemIds, localDate) {
+      const { data } = await db
+        .from('nudges')
+        .select('item_id')
+        .eq('user_id', userId)
+        .in('status', ['pending', 'sent', 'bundled'])
+        .in(
+          'dedupe_key',
+          itemIds.map((id) => `plan:prepare:${id}:${localDate}`),
+        );
+      return new Set((data ?? []).map((r) => r.item_id as string));
+    },
     async cancelPrep(userId, localDate) {
       await db
         .from('nudges')

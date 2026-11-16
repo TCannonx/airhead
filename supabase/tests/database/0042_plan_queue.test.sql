@@ -52,6 +52,17 @@ select lives_ok(
   $$select public.refresh_plan_nudges('10000000-0000-4000-8000-000000000421')$$,
   'refresh_plan_nudges is callable by the service role');
 
+-- The tick runs when the plan queue has work, even with no notification device.
+select vault.create_secret('http://localhost:54321', 'project_url')
+ where not exists (select 1 from vault.decrypted_secrets where name = 'project_url');
+select vault.create_secret('test-key', 'service_role_key')
+ where not exists (select 1 from vault.decrypted_secrets where name = 'service_role_key');
+delete from public.devices;
+delete from public.plan_queue;
+select is(public.dispatch_scheduler_tick(), false, 'no queue and no device: no call');
+select public.refresh_plan_nudges('10000000-0000-4000-8000-000000000421');
+select is(public.dispatch_scheduler_tick(), true, 'queued plan work: the tick is called');
+
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000a"}';
 select throws_ok(

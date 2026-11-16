@@ -4,7 +4,7 @@ import aiFixture from '../../../tests/fixtures/ai/brief.json' with { type: 'json
 import type { AIClient, UsageRow, UsageStore } from '../_shared/ai.ts';
 import { BRIEF_SYSTEM, buildBriefMessage } from '../_shared/prompts/brief.v1.ts';
 import { buildBrief, enrichDigest, type Digest } from './brief.ts';
-import { runMorningBrief, type BriefStore } from './run.ts';
+import { keepPrep, runMorningBrief, todayStarts, type BriefStore } from './run.ts';
 
 const USER = '11111111-1111-4111-8111-111111111111';
 const digest = digestFixture as unknown as Digest;
@@ -276,4 +276,64 @@ Deno.test('the brief reads the last weekly digests (Task 8.5), at most 4', async
     String((none.calls[0]?.messages as { content: string }[])[0]?.content).includes('Recent weeks'),
     false,
   );
+});
+
+Deno.test('no same-day prep for anything starting within 2 hours of the brief (Task 13.4)', async () => {
+  // Training moved to 08:30 today: "Pack your training bag" at 07:30 is too late.
+  const early: Digest = {
+    ...digest,
+    recurring: digest.recurring.map((r) => ({
+      ...r,
+      start_at: '2026-07-01T07:30:00.000Z',
+      end_at: '2026-07-01T09:00:00.000Z',
+    })),
+  };
+  const st = store(early);
+  const res = await runMorningBrief(
+    USER,
+    '2026-07-15',
+    NOW,
+    { store: st.s, ai: ai({ parsed_output: aiFixture.output }).client, usage: usage().store },
+    { roundUp: false },
+  );
+  assertEquals(
+    st.nudges.map((n) => n.title),
+    ['Leave by 14:40 for the dentist'],
+  );
+  // The brief itself still mentions it.
+  assert(res.status === 'ok' && res.brief.content.prep.some((p) => p.text.includes('training')));
+});
+
+Deno.test('no brief prep for an occurrence the planner already prepared (Task 13.4)', async () => {
+  const st = store(digest);
+  const asked: string[] = [];
+  st.s.planPrepared = (_u, ids, date) => {
+    asked.push(...ids.map((i) => `${i}@${date}`));
+    return Promise.resolve(new Set(['e0000000-0000-4000-8000-000000000003']));
+  };
+  await runMorningBrief(
+    USER,
+    '2026-07-15',
+    NOW,
+    { store: st.s, ai: ai({ parsed_output: aiFixture.output }).client, usage: usage().store },
+    { roundUp: false },
+  );
+  assertEquals(
+    st.nudges.map((n) => n.title),
+    ['Leave by 14:40 for the dentist'],
+  );
+  assertEquals(asked.length, 2);
+});
+
+Deno.test('keepPrep: the 2-hour line and prep with no item', () => {
+  const starts = new Map([
+    ['a', 9 * 60 + 29],
+    ['b', 9 * 60 + 30],
+  ]);
+  const prep = [{ item_id: 'a' }, { item_id: 'b' }, { item_id: null }, { item_id: 'c' }];
+  assertEquals(
+    keepPrep(prep, starts, 7 * 60 + 30, new Set()).map((p) => p.item_id),
+    ['b', null, 'c'],
+  );
+  assertEquals(todayStarts(digest, {}).get('e0000000-0000-4000-8000-000000000001'), 14 * 60);
 });
