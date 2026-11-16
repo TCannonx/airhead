@@ -1643,3 +1643,10 @@ Decisions and library versions, newest first.
 - Incremental runs send the current summary and facts plus items updated since `summarised_at` (at most 40, newest first); a rebuild, or a page never summarised, sends every item (at most 40) and no summary.
 - Person pages waiting for approval are not summarised ("personal details wait for the owner's approval"); archived pages are skipped.
 - Runs in the tick at 03:30 local, after day (03:10) and month (03:20) summaries.
+
+## Look-ups (Task 14.6, 2026-11-16)
+
+- **Plan vs code**: `hybrid_search` (0023) is security invoker and filters by `auth.uid()`, so it only works for a signed-in caller. The planner runs with the service key, so 0052 adds `hybrid_search_for(user, …)`, the same search for one given person, service role only.
+- `searchHistory` asks for three times the limit and filters by date (the item's start, due or created date) and type in code, so a range does not starve the results. Without the embedding model (outside the Edge runtime) it is keyword-only (`semantic_weight = 0`).
+- `getPage` finds a page by its key (`<kind>:<normalised name>`); pages keyed by id (series, topics) are found by name.
+- `previousOccurrences`: a repeating event is one row, so its "previous occurrences" are earlier items in the same series (`series_id`) or, failing that, earlier events sharing a word of four letters or more with the title, most recent first, each with `item_plans.prep` and its planner nudges with their outcomes.
