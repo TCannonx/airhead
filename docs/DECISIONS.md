@@ -1540,3 +1540,12 @@ Decisions and library versions, newest first.
 - **Nudge statuses in the code** include `bundled` as well as the plan's `pending`, `sent`, `cancelled`, `failed`; left as is.
 - `item_plans` follows the `nudges`/`external_events` shape (owner selects; only the service role writes), the "same as ai_actions" in the plan does not fit: devices may write `ai_actions`.
 - `plan_runs` once-a-day rule is a partial unique index on (`user_id`, `kind`, `local_date`) for `evening` and `morning`. `plan_runs_daily` is a `security_invoker` view (one row per day and kind) for Insights.
+
+## Defaults applied on save (Task 13.3, 2026-11-16)
+
+- `public.refresh_plan_nudges(p_item_id)` **queues** the item (insert into `plan_queue`, one row per item); the `item_plan_queue` trigger on `items` calls it. Writing nudges needs the code in `_shared/plan/defaults.ts`, so the tick does the writing (`scheduler-tick/plan.ts`, `drainPlanQueue`, at most 50 items a tick, before sending).
+- The trigger also fires on `title` and `data` changes (the nudge title and `data.travel_minutes` come from them), besides the plan's list.
+- `public.upsert_plan_nudge(…, p_reason, p_source, p_delivery, p_plan_run_id)` is the successor of `upsert_nudge` for planner nudges: same de-duplication by `dedupe_key`, same "past time cancels", and a `default` never replaces an `ai` or `user` nudge.
+- An occurrence is "live" if it is in the next 8 days. Pending `plan:*` nudges for dates that are no longer live are cancelled whatever their source; for live dates only stale `default` ones are.
+- **Quiet hours**: `leave` and `do` come through quiet hours like `event_reminder` (governed by the same "event reminders in quiet hours" switch). `leave` is dropped 30 minutes after its time, `do` after 2 hours.
+- The e2e-sync test puts the event two days out, so "prepare at 20:30 the evening before" is never already past when CI runs after 20:30.

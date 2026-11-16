@@ -512,3 +512,30 @@ Deno.test('the weekly review runs on the chosen day and time, once (Task 8.3)', 
   });
   assertEquals(fridayRuns, [U]);
 });
+
+Deno.test(
+  'planner nudges: leave and do come through quiet hours, prepare waits (Task 13.3)',
+  async () => {
+    const m = memory({
+      settings: quietJobs,
+      nudges: [
+        { kind: 'leave', title: 'Time to leave: Training', send_at: '2026-11-18T07:20:00.000Z' },
+        { kind: 'do', title: 'Send form', send_at: '2026-11-18T07:20:00.000Z' },
+        { kind: 'prepare', title: 'Get ready', send_at: '2026-11-18T07:20:00.000Z' },
+      ],
+    });
+    // 07:21 in Dublin (GMT), inside quiet hours ending 07:30.
+    const r = await runTick(at('2026-11-18T07:21:00Z'), m.store, m.send);
+    assertEquals(m.sent.map((s) => s.title).sort(), ['Send form', 'Time to leave: Training']);
+    assertEquals(r.deferred, 1);
+  },
+);
+
+Deno.test('a leave nudge more than 30 minutes late is cancelled, not sent', async () => {
+  const m = memory({
+    settings: quietJobs,
+    nudges: [{ kind: 'leave', title: 'Time to leave', send_at: '2026-11-18T10:00:00.000Z' }],
+  });
+  const r = await runTick(at('2026-11-18T10:40:00Z'), m.store, m.send);
+  assertEquals([r.sent, r.cancelled], [0, 1]);
+});

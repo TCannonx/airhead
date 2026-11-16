@@ -12,6 +12,7 @@ import { supabaseReviewStore } from '../weekly-review/store.ts';
 import { runScout } from '../scout/run.ts';
 import { supabaseScoutStore } from '../scout/store.ts';
 import { runTick, type TickStore } from './tick.ts';
+import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', SERVICE_KEY, {
@@ -138,6 +139,62 @@ const store: TickStore = {
   },
 };
 
+/** The plan queue (Task 13.3): default nudges for items changed since the last tick. */
+const planStore: PlanQueueStore = {
+  async queued(limit) {
+    const { data } = await db.from('plan_queue').select('item_id').order('queued_at').limit(limit);
+    return (data ?? []).map((r) => r.item_id as string);
+  },
+  async items(ids) {
+    const { data } = await db
+      .from('items')
+      .select(
+        'id, user_id, type, title, status, all_day, start_at, due_at, rrule, deleted_at, data',
+      )
+      .in('id', ids);
+    return data ?? [];
+  },
+  async settings(userId) {
+    const { data } = await db.from('settings').select('data').eq('id', userId).maybeSingle();
+    return (data?.data ?? {}) as Record<string, unknown>;
+  },
+  async prep(itemId) {
+    const { data } = await db.from('item_plans').select('prep').eq('item_id', itemId).maybeSingle();
+    return Array.isArray(data?.prep) ? (data.prep as string[]) : [];
+  },
+  async pendingKeys(userId, itemId) {
+    const { data } = await db
+      .from('nudges')
+      .select('dedupe_key, source')
+      .eq('user_id', userId)
+      .eq('item_id', itemId)
+      .eq('status', 'pending')
+      .like('dedupe_key', 'plan:%');
+    return (data ?? []).map((r) => ({ key: r.dedupe_key as string, source: r.source as string }));
+  },
+  async upsert(userId, n) {
+    const { error } = await db.rpc('upsert_plan_nudge', {
+      p_user_id: userId,
+      p_key: n.key,
+      p_kind: n.kind,
+      p_item_id: n.item_id,
+      p_send_at: n.send_at,
+      p_title: n.title,
+      p_body: n.body,
+      p_url: n.url,
+      p_reason: n.reason,
+      p_source: 'default',
+    });
+    if (error) throw new Error(error.message);
+  },
+  async cancel(userId, key) {
+    await db.rpc('cancel_nudge', { p_user_id: userId, p_key: key });
+  },
+  async dequeue(ids) {
+    await db.from('plan_queue').delete().in('item_id', ids);
+  },
+};
+
 /** POST /scheduler-tick (service key only): see handler.ts. */
 Deno.serve((req) =>
   handleTick(req, {
@@ -147,7 +204,9 @@ Deno.serve((req) =>
   }),
 );
 
-function tickNow(pusher: Pusher) {
+async function tickNow(pusher: Pusher) {
+  // Defaults first, so a nudge due this minute is already written. A failure must not stop the tick.
+  await drainPlanQueue(new Date(), planStore).catch((e) => console.error('plan queue', e));
   return runTick(
     new Date(),
     store,
