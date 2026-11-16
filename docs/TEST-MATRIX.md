@@ -362,6 +362,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 | Weekly review on planner data: planner runs, outcomes, slipped tasks with plans, next week's commitments and free minutes in the message; move/split/drop proposals checked (known tasks, a date, 2–5 steps, at most 5) and stored as proposed AI actions; applied only on approval, undoable | `lib/db/aiActions.test.ts` (drop and split applied, undone) | `fn/weekly-review/run.test.ts`, `db/0059` (new kinds) | `sync/ai.spec.ts` (proposals reach Needs your OK) | Real model: proposal quality on dev (review runs weekly) |
 
+## Phase 16 — Reading that collates itself
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
