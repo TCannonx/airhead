@@ -1,7 +1,7 @@
 import { assertEquals, assertStringIncludes } from 'jsr:@std/assert@1.0.19';
 import fixture from '../../../tests/fixtures/ai/review.json' with { type: 'json' };
 import type { AIClient, UsageStore } from '../_shared/ai.ts';
-import { REVIEW_SYSTEM } from '../_shared/prompts/review.v1.ts';
+import { REVIEW_SYSTEM } from '../_shared/prompts/review.v2.ts';
 import type { BuiltReview, Candidate } from './review.ts';
 import { lastWeekStart, runWeeklyReview, type ReviewStore } from './run.ts';
 
@@ -160,5 +160,59 @@ Deno.test(
     assertEquals(lastWeekStart('2026-07-19'), '2026-07-13'); // Sunday
     assertEquals(lastWeekStart('2026-07-20'), '2026-07-13'); // Monday
     assertEquals(lastWeekStart('2026-07-15'), '2026-07-06'); // Wednesday
+  },
+);
+
+import { validProposals } from './review.ts';
+
+const PLANNER = {
+  runs: [{ kind: 'evening', ok: 6, failed: 1, capped: 0, cost_eur: 0.02 }],
+  outcomes: { acted: 10, snoozed: 4, dismissed: 1, ignored: 2 },
+  slipped: [
+    { id: 't-slip', title: 'Call the plumber', due: '2026-07-10', carry_count: 5, plan: null },
+  ],
+  next_week: {
+    days: [{ date: '2026-07-20', commitments: 6, busy_minutes: 600, free_minutes: 180 }],
+    tasks: [{ id: 't-big', title: 'Kitchen plans', due: '2026-07-22', effort_minutes: 240 }],
+  },
+};
+
+Deno.test(
+  'planner data goes to the review; proposals are checked and stored for approval (Task 17.3)',
+  async () => {
+    const proposals = [
+      {
+        kind: 'move',
+        item_id: 't-slip',
+        when: '2026-07-21',
+        steps: [],
+        reason: 'Free Tuesday morning',
+      },
+      {
+        kind: 'split',
+        item_id: 't-big',
+        when: '',
+        steps: ['Measure', 'Get quotes', 'Pick a builder'],
+        reason: 'Too big for one go',
+      },
+      { kind: 'drop', item_id: 'not-shown', when: '', steps: [], reason: 'x' },
+      { kind: 'move', item_id: 't-big', when: 'next week', steps: [], reason: 'bad date' },
+      { kind: 'split', item_id: 't-slip', when: '', steps: ['One'], reason: 'too few' },
+    ];
+    const { d, calls, saved } = deps({ ...fixture.review, proposals });
+    const stored: unknown[] = [];
+    d.store.planner = () => Promise.resolve(PLANNER);
+    d.store.propose = (_u, _w, p) => (stored.push(...p), Promise.resolve());
+    await runWeeklyReview(USER, '2026-07-13', d, { notify: false });
+    assertStringIncludes((calls[0]?.messages as Msg[])[0]?.content ?? '', '<planner>');
+    assertEquals(
+      saved[0]?.content.proposals.map((p) => [p.kind, p.item_id, p.when, p.steps.length]),
+      [
+        ['move', 't-slip', '2026-07-21', 0],
+        ['split', 't-big', null, 3],
+      ],
+    );
+    assertEquals(stored.length, 2);
+    assertEquals(validProposals({ ...fixture.review, proposals } as never, null), []);
   },
 );
