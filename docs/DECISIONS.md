@@ -1681,6 +1681,17 @@ Decisions and library versions, newest first.
 - The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
 - Same validation and `apply_plan`; the run's summary records `mode`.
 
+## Digest delivery (Task 15.4, 2026-11-16)
+
+- The round-up is one notification titled "From your plan" (kind `summary`, key `digest:<date>:am|pm`), sent right after the morning brief job and with the evening review job; the listed nudges are marked `sent`. Planner nudges only (`prepare`, `leave`, `do`, `follow_up`, `reading`).
+- `settings.data.notifications.plan_kinds` holds the per-kind choice: `auto` (as the plan says), `push`, `digest` or `off`. The owner's choice wins over the plan's `delivery`; `off` cancels the nudge when it falls due.
+- The evening round-up rides on the evening review job, so it runs when "Evening review" is switched on; the morning one on the brief job. If both are off, digest nudges wait (they are marked ignored after 12 hours only once sent, so nothing is lost).
+## Re-plan on change (Task 15.3, 2026-11-16)
+
+- `plan_queue` rows now stay after the defaults are written (`defaults_done = true`); a newer change sets it back to false and restarts the 5-minute debounce (`queued_at`). `queue_plan(item, reason)` is the one way in: `changed` from the items trigger (via `refresh_plan_nudges`), `snoozed` from `nudge_outcome`, `missed` from `mark_ignored_nudges`.
+- `drainReplans` (each tick, after the defaults) sends quiet items to `plan-day` mode `replan` per person: at most 10 items a run and 6 replan runs a local day; with the planner off or past the limit the rows are cleared and the defaults stand.
+- A replan plans from today (the digest as of the evening before), only for the given items, with the same look-ups, validation and `apply_plan`.
+- The e2e test moves the event by SQL (the row the device's sync push writes), not through the calendar form, to keep the test about the server side.
 ## The brief from the plan (Task 15.2, 2026-11-16)
 
 - The plan section (`content.plan`) is assembled in code (`BriefStore.plan`, shaped by `briefPlan`): the evening run of the day before and today's morning run (`plan_runs.summary`: clashes, `left_out`, dropped), today's planner `prepare` reminders, tasks whose `item_plans.surface_at` is today, and one unread reading item (the newest; Phase 16 makes it a real pick). It is also given to the model as a `<plan>` block (prompt `brief.v2`), so the reflection agrees with it.
@@ -1701,3 +1712,14 @@ Decisions and library versions, newest first.
 - `_shared/topics.ts` (`matchTopics`): exact name, then normalised (lower case, punctuation removed, a simple plural "s" dropped), then the closest existing topic by cosine similarity of gte-small embeddings at or above `SIMILAR = 0.86`, else a new `topics` row. `read-link` applies it to each enriched link and merges the ids into `items.topic_ids`.
 - **Threshold**: the plan asks for it to be recorded "after trying it on fixtures". It was tried on fixture vectors in `topics.test.ts`; real gte-small vectors can only be computed inside the Supabase Edge runtime, which this machine does not have. 0.86 is a conservative start (gte-small puts unrelated short phrases around 0.7–0.8); worth checking on dev with real topic names (BLOCKERS).
 - Without the embedding model (outside the Edge runtime), unknown names become new topics.
+## Every link (Task 16.1, 2026-11-16)
+
+- **Plan vs code**: link detection lives in `src/lib/rules/links.ts` (`findUrls`, `normaliseUrl`, `withoutUrls`) and is applied in `createCapture` (`src/lib/db/captures.ts`), where the one-link rule was.
+- A note is "just a link" (sorted at once, as before) when the words besides its links are three or fewer; otherwise one reading item per link is made and the capture still waits for sorting, so nothing it says is lost.
+- Links are compared by `normaliseUrl`: lower-case host without `www.`, no fragment, no trailing slash, and without tracking parameters (`utm_*`, `fbclid`, `gclid`, `dclid`, `msclkid`, `mc_cid`, `mc_eid`, `igshid`, `si`, `ref`, `ref_src`, `_hsenc`, `_hsmi`, `mkt_tok`). The stored URL is the one the owner pasted.
+- A repeat joins the existing reading item: its `data.captures` lists every capture that saved it. On the server, sorting skips `reading` items from the model for any capture whose text has a link, since the device already made them.
+## Badge and Declarative Web Push (Task 15.5, 2026-11-16)
+
+- **Verified** (WebKit blog "Meet Declarative Web Push", https://webkit.org/?p=16535, and the W3C Push API draft): a declarative message is JSON with a top-level `"web_push": 8030` and a `notification` object holding `title` (required), `body`, `navigate` (an absolute URL, required) and optional `tag`. Browsers without it ignore the extra keys, and the service worker still reads Airhead's own `title`, `body`, `url`, `tag`.
+- `pushMessage` adds those fields only when the `APP_URL` function secret is an https address (the push must link to the app's real origin). Without it the message is exactly as before. Setting `APP_URL` is left for the owner (BLOCKERS).
+- **`app_badge` is not sent**: WebKit bug reports show it crashing Safari 18.6 on macOS and disagree on its placement (inside `notification` in the blog, top level in the spec). The app sets the badge itself instead: the Badging API (`navigator.setAppBadge`) with overdue tasks plus open questions, recomputed live from the device's database (`useAppBadge` in the app layout). It works only in an installed web app; elsewhere it does nothing.

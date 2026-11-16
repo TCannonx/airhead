@@ -680,6 +680,11 @@ export function planSort(
         refs.push(undefined); // the reading item already exists
         continue;
       }
+      // Every link in a note already has its reading item from the device (Task 16.1).
+      if (it.type === 'reading' && /https?:\/\//i.test(ctx.texts?.get(r.capture_id) ?? '')) {
+        refs.push(undefined);
+        continue;
+      }
       const planned = toPlanned(it, r.capture_id, isLink);
 
       // The first event of a longer note is the instant event, tidied (Task 11.1).
