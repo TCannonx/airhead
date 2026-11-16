@@ -76,7 +76,7 @@ describe('brief schema (Task 5.1)', () => {
       model: null,
       cost_eur: '0.012300',
     });
-    expect(b.content).toEqual({ reflection: null, top3: [], also_today: [], prep: [] });
+    expect(b.content).toEqual({ reflection: null, top3: [], also_today: [], prep: [], plan: null });
     expect(b.cost_eur).toBeCloseTo(0.0123);
   });
 });

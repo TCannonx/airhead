@@ -1,5 +1,11 @@
 import type { AIClient, UsageStore } from '../_shared/ai.ts';
-import { buildBrief, enrichDigest, type BuiltBrief, type Digest } from './brief.ts';
+import {
+  buildBrief,
+  enrichDigest,
+  type BuiltBrief,
+  type Digest,
+  type PlanForBrief,
+} from './brief.ts';
 import { localNow } from '../scheduler-tick/notif.ts';
 
 /** Database access for one morning brief (a fake in tests, Supabase in production). */
@@ -18,6 +24,8 @@ export interface BriefStore {
    * sent (Task 13.4). Optional for older fakes.
    */
   planPrepared?(userId: string, itemIds: string[], localDate: string): Promise<Set<string>>;
+  /** Today's plan from the planner runs (Task 15.2); optional for older fakes. */
+  plan?(userId: string, localDate: string): Promise<PlanForBrief | null>;
   /** Cancels pending prep nudges from an earlier brief the same day (Regenerate). */
   cancelPrep(userId: string, localDate: string): Promise<void>;
   addNudge(
@@ -94,16 +102,18 @@ export async function runMorningBrief(
     digest.recurring.length > 0;
   if (digest.tasks.length === 0 && !eventsToday) return { status: 'skipped', reason: 'quiet_day' };
 
-  const [settings, profile, recentWeeks] = await Promise.all([
+  const [settings, profile, recentWeeks, plan] = await Promise.all([
     deps.store.settings(userId),
     deps.store.profile(userId),
     deps.store.recentWeeks?.(userId, 4) ?? Promise.resolve([]),
+    deps.store.plan?.(userId, localDate).catch(() => null) ?? Promise.resolve(null),
   ]);
   const brief = await buildBrief(userId, digest, settings, now, {
     ai: deps.ai,
     store: deps.usage,
     profile,
     recentWeeks,
+    plan,
   });
 
   await deps.store.saveBrief(userId, localDate, brief);

@@ -1680,3 +1680,10 @@ Decisions and library versions, newest first.
 - `plan-day` mode `morning` builds the digest as of the previous evening (`plan_digest(user, yesterday)`), so the window starts today, then keeps only items and linked-calendar events whose `server_updated_at` (0053 adds it to the digest) is later than the evening run's `finished_at`. With no successful evening run it plans everything; with one and nothing changed, the run is `skipped` and no call is made.
 - The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
 - Same validation and `apply_plan`; the run's summary records `mode`.
+
+## The brief from the plan (Task 15.2, 2026-11-16)
+
+- The plan section (`content.plan`) is assembled in code (`BriefStore.plan`, shaped by `briefPlan`): the evening run of the day before and today's morning run (`plan_runs.summary`: clashes, `left_out`, dropped), today's planner `prepare` reminders, tasks whose `item_plans.surface_at` is today, and one unread reading item (the newest; Phase 16 makes it a real pick). It is also given to the model as a `<plan>` block (prompt `brief.v2`), so the reflection agrees with it.
+- "Left out: …" appears whenever the planner's digest was capped (`left_out > 0`) or nudges were dropped, in the AI brief and in the code-built fallback alike.
+- Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
+- The device brief schema gains `plan` (default null), so older briefs still parse.
