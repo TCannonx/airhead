@@ -92,7 +92,14 @@ export interface TickReport {
 // rrule ships CommonJS; Deno exposes it as the default export.
 const { RRule } = rrule;
 
-const STALE_MS: Record<string, number> = { event_reminder: 2 * 3_600_000 };
+const STALE_MS: Record<string, number> = {
+  event_reminder: 2 * 3_600_000,
+  // A "time to leave" or "do it now" is useless once well past (Task 13.3).
+  leave: 30 * 60_000,
+  do: 2 * 3_600_000,
+};
+/** Kinds for something the owner put in the diary: allowed in quiet hours like event reminders. */
+const QUIET_OK = new Set(['event_reminder', 'leave', 'do']);
 const DEFAULT_STALE = 12 * 3_600_000;
 const SUMMARY_GAP_MS = 60 * 60_000;
 const LOOKAHEAD_MS = 26 * 3_600_000;
@@ -345,7 +352,7 @@ export async function runTick(
         cancel.push(n.id);
       } else if (
         inQuietHours(local.hhmm, notif) &&
-        !(n.kind === 'event_reminder' && notif.quiet_allows_events)
+        !(QUIET_OK.has(n.kind) && notif.quiet_allows_events)
       ) {
         report.deferred++;
       } else ready.push(n);
