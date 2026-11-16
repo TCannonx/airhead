@@ -65,6 +65,30 @@ Deno.test('scheduler-tick: no push keys → 200 not_configured, nothing runs', a
   assertEquals([await outcome(res), ran], [[200, 'not_configured'], []]);
 });
 
+Deno.test(
+  'scheduler-tick: the plan queue drains even without push keys, before the tick',
+  async () => {
+    const ran: string[] = [];
+    const deps = {
+      caller: fakeCaller,
+      tick: () => (ran.push('tick'), Promise.resolve({})),
+      plan: () => (ran.push('plan'), Promise.resolve({ items: 1 })),
+    };
+    await handleTick(post({}, SERVICE), { ...deps, pusher: () => Promise.resolve(null) });
+    assertEquals(ran, ['plan']);
+    await handleTick(post({}, SERVICE), { ...deps, pusher: () => Promise.resolve(pusher) });
+    assertEquals(ran, ['plan', 'plan', 'tick']);
+    // A failing drain does not stop the tick.
+    ran.length = 0;
+    await handleTick(post({}, SERVICE), {
+      ...deps,
+      plan: () => Promise.reject(new Error('db down')),
+      pusher: () => Promise.resolve(pusher),
+    });
+    assertEquals(ran, ['tick']);
+  },
+);
+
 Deno.test('ai-eval: not on live, POST only, needs a key; bad JSON is not forced', async () => {
   const forced: boolean[] = [];
   const deps = (live: boolean, key = 'key') => ({

@@ -201,12 +201,11 @@ Deno.serve((req) =>
     caller: supabaseCaller(db, isService),
     pusher: () => pusherFromEnv(),
     tick: (pusher) => tickNow(pusher),
+    plan: () => drainPlanQueue(new Date(), planStore),
   }),
 );
 
-async function tickNow(pusher: Pusher) {
-  // Defaults first, so a nudge due this minute is already written. A failure must not stop the tick.
-  await drainPlanQueue(new Date(), planStore).catch((e) => console.error('plan queue', e));
+function tickNow(pusher: Pusher) {
   return runTick(
     new Date(),
     store,
