@@ -83,16 +83,17 @@ test('an event at 08:00 gets a prepare the evening before and a leave at 07:20, 
               r.onsuccess = () => resolve(r.result);
               r.onerror = () => reject(r.error);
             });
-            const all = await new Promise<{ item_id: string; kind: string }[]>(
-              (resolve, reject) => {
-                const r = db.transaction('nudges').objectStore('nudges').getAll();
-                r.onsuccess = () => resolve(r.result as { item_id: string; kind: string }[]);
-                r.onerror = () => reject(r.error);
-              },
-            );
+            const all = await new Promise<
+              { item_id: string; kind: string; dedupe_key: string | null }[]
+            >((resolve, reject) => {
+              const r = db.transaction('nudges').objectStore('nudges').getAll();
+              r.onsuccess = () =>
+                resolve(r.result as { item_id: string; kind: string; dedupe_key: string | null }[]);
+              r.onerror = () => reject(r.error);
+            });
             db.close();
             return all
-              .filter((n) => n.item_id === itemId)
+              .filter((n) => n.item_id === itemId && (n.dedupe_key ?? '').startsWith('plan:'))
               .map((n) => n.kind)
               .sort()
               .join(',');
