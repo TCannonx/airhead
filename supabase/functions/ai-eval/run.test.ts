@@ -44,6 +44,12 @@ Deno.test(
           'plan-empty-day',
         ],
       );
+      const ask = report.cases.find((c) => c.kind === 'ask');
+      // The stand-in's saved answer is about something else; the link to the source must hold.
+      assert(
+        ask && !ask.problems.includes('the meeting is not linked as a source'),
+        `ask: ${ask?.problems.join('; ')}`,
+      );
       // The history cases need a model that reads its look-ups; the stand-in does not.
       for (const c of plans.filter((p) => !/repeat-detail|dinner-page/.test(p.id)))
         assert(c.pass, `${c.id}: ${c.problems.join('; ')}`);

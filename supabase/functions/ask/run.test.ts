@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1.0.19';
 import fixture from '../../../tests/fixtures/ai/ask.json' with { type: 'json' };
 import type { AIClient, Tier, UsageRow, UsageStore } from '../_shared/ai.ts';
-import { ASK_SYSTEM } from '../_shared/prompts/ask.v1.ts';
+import { ASK_SYSTEM } from '../_shared/prompts/ask.v2.ts';
 import { runAsk, type AskDeps, type Passage } from './run.ts';
 
 const USER = '11111111-1111-4111-8111-111111111111';
@@ -107,3 +107,30 @@ Deno.test('no passages: a plain answer and no AI call; an empty question is refu
   const bad = await runAsk('   ', USER, empty.d);
   assertEquals([bad.ok, empty.calls.length, empty.embedded.length], [false, 0, 0]);
 });
+
+Deno.test(
+  'pages (Task 14.9): summaries of the pages the passages belong to go with them, never cited',
+  async () => {
+    const { d, calls } = deps(fixture.passages);
+    const asked: string[][] = [];
+    d.pages = (ids) => {
+      asked.push(ids);
+      return Promise.resolve([
+        { kind: 'project', name: 'Travel budget', summary: 'Cut by ten percent in August.' },
+        { kind: 'topic', name: 'Empty', summary: ' ' },
+        { kind: 'person', name: 'A', summary: 'a' },
+        { kind: 'person', name: 'B', summary: 'b' },
+        { kind: 'person', name: 'C', summary: 'c' },
+      ]);
+    };
+    const res = await runAsk('What happened to the travel budget?', USER, d);
+    assert(res.ok);
+    assertEquals(asked[0]?.includes('i-budget'), true);
+    const msg = (calls[0]?.messages as Msg[])[0]?.content ?? '';
+    assertStringIncludes(msg, '<page kind="project" name="Travel budget">');
+    assertEquals(msg.includes('name="Empty"'), false);
+    assertEquals(msg.includes('name="C"'), false);
+    assert(msg.indexOf('<page') < msg.indexOf('<passage'));
+    assert(res.sources.every((s) => s.item_id !== 'Travel budget'));
+  },
+);
