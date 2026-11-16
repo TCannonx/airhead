@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- test(ai-eval): the real-model check on dev now also runs five planner timing cases in the owner's words (training bag the evening before, dentist at 2, a Friday form with no time, an early leave in quiet hours, an empty day), checking kinds and time windows; still only when a prompt or case changes, or once a day (Task 13.9)
 - feat(plan): "Why now?" on the item page and event details (what to prepare, each upcoming reminder with its time, reason and whether it came from Airhead's defaults, the AI or you); a tapped planner notification opens the item with a snooze sheet (in an hour, this evening, tomorrow morning, pick a time, Done, Not needed); a reminder untouched for 12 hours counts as ignored (migration 0045, Task 13.8)
 - feat(plan): the evening planner runs each day at 18:00 local (Settings → Today: "Plan my day at" and a switch to turn it off; defaults still apply); 90 minutes later, a day with no successful plan is recorded as carried by the defaults (Task 13.7)
 - feat(plan): the evening planner (`plan-day`): one small AI call plans tomorrow and anything that needs lead time, its nudges checked in code (no prepare inside 45 minutes, no pushes in quiet hours except leave and do, at most 3 per occurrence, the daily cap) and applied in one transaction with reasons; a daily planning cap (€0.15) leaves the defaults standing (migration 0044, Task 13.6)

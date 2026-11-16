@@ -1587,3 +1587,12 @@ Decisions and library versions, newest first.
 - **The notification tap** opens `<url>?nudge=<id>` for planner kinds (`tapUrl` in the tick); the item page opens the sheet from that parameter and removes it on close.
 - **Ignored**: `mark_ignored_nudges()` runs at the start of every tick: planner kinds sent more than 12 hours ago (and within 7 days) with no outcome.
 - `ship.py` prints with `errors="replace"`: CI logs contain characters the Windows console code page cannot print.
+
+## Real-model planner cases (Task 13.9, 2026-11-16)
+
+- `ai-eval` runs the planner cases after the sorting cases in the same run (one small-tier call per case, five in all, about €0.01 together), with the same trigger: only when the sorting prompt, the planner prompt or any case changed since the last saved run, or once a day. Each report case has `kind: 'sort' | 'plan'`.
+- The cases are planned from a synthetic evening (18:00 local on the run's date), so the answer is the same whatever time the evaluator runs.
+- The checks read the model's own answer (not what validation keeps), so a 07:30 "pack your bag" fails the case even though validation would drop it; what validation would drop is saved alongside.
+- Case 4 ("an event at 08:00 during quiet hours ending 07:00") uses one hour of travel so the leave nudge (06:50) falls inside quiet hours.
+- **mock-ai** now works out a plan from the digest it is sent (like the defaults) instead of replaying one saved answer, so the planner cases pass through the stand-in and contract tests stay meaningful for any digest.
+- **Real API checks during development**: the owner asked for periodic, capped checks against the paid API. This is how they happen: `ai-eval` on dev (key held in Supabase secrets; this machine has none). Results are in `ai_eval_runs` on dev, which can't be read from this machine either; see BLOCKERS.

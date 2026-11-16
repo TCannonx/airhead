@@ -9,9 +9,13 @@ import { SORT_MAX_TOKENS } from '../sort-batch/run.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort, type InstantRow } from '../sort-batch/plan.ts';
 import { evalActionContext, evalCases, type CaseView } from './cases.ts';
+import { planCases } from './planCases.ts';
+import { runPlanEval } from './planRun.ts';
 
 export interface CaseReport {
   id: string;
+  /** Sorting cases (Phase 11–12) or planner timing cases (Task 13.9). */
+  kind: 'sort' | 'plan';
   text: string;
   meant: string;
   pass: boolean;
@@ -22,6 +26,8 @@ export interface CaseReport {
     updates: unknown[];
     workshop: number;
     follow_ups: unknown[];
+    /** Planner cases: what validation would drop from the model's answer. */
+    dropped?: unknown[];
   };
 }
 
@@ -178,6 +184,7 @@ export async function runEval(
     const problems = c.check(view);
     return {
       id: c.id,
+      kind: 'sort' as const,
       text: c.text,
       meant: c.meant,
       pass: problems.length === 0,
@@ -211,13 +218,16 @@ export async function runEval(
       },
     };
   });
-  const passed = reports.filter((r) => r.pass).length;
+  // The planner's timing cases (Task 13.9), one small call each.
+  const planned = await runPlanEval(ai, now, store);
+  const all = [...reports, ...planned.cases];
+  const passed = all.filter((r) => r.pass).length;
   return {
-    ok: true,
-    error: null,
+    ok: planned.ok,
+    error: planned.error,
     passed,
-    total: reports.length,
-    cost_eur: Number.isFinite(result.costEur) ? result.costEur : 0,
-    cases: reports,
+    total: planned.ok ? all.length : reports.length + planCases(now).cases.length,
+    cost_eur: (Number.isFinite(result.costEur) ? result.costEur : 0) + planned.cost_eur,
+    cases: all,
   };
 }

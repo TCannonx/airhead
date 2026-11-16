@@ -606,7 +606,7 @@ Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack yo
     - Tapping a notification opens the item with a snooze sheet: "In an hour", "This evening" (the prepare-evening time), "Tomorrow morning" (the brief time), "Pick a time", and "Done". No reliance on notification action buttons (not confirmed on iPhone).
     - A choice writes the outcome on the nudge (`acted`, `snoozed` with `snoozed_to`, or `dismissed`) through an RPC and, for a snooze, a new nudge with `source = 'user'`. A nudge sent and untouched for 12 hours becomes `ignored` (set by the tick).
     - Tests: component tests for the plan panel and the sheet; pgTAP for the RPC; an e2e-sync test: snooze on one device, the new nudge and the outcome appear on the other.
-- [ ] **13.9 Real-model cases for timing.** Extend `supabase/functions/ai-eval` so it can run planner cases as well as sorting cases (a `kind` on each case; keep the hash-or-daily trigger). Add cases in the owner's words:
+- [x] **13.9 Real-model cases for timing.** Extend `supabase/functions/ai-eval` so it can run planner cases as well as sorting cases (a `kind` on each case; keep the hash-or-daily trigger). Add cases in the owner's words:
     1. Training at 08:00 tomorrow → a `prepare` the evening before, a `leave` before the start, no `prepare` inside 45 minutes.
     2. A 14:00 dentist appointment → `prepare` on the morning of the day, `leave` before the start.
     3. A task due "Friday" with no time → no push; it is left for the digest.
