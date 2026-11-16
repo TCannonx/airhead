@@ -2,6 +2,16 @@
 
 ## Waiting for the user
 
+### Phase 14 ready for device testing on dev
+
+History is on the dev site: a short record of each day (03:10) and month, a running page for each repeating event, topic, place you go to often, and the people and projects in your notes (people wait for your OK under Settings → Memory), nightly page summaries with dated facts, Library → Pages, and an evening planner that reads recent history and may look up what you did last time. Ask Airhead reads the pages too.
+
+1. Load the latest version on the iPhone and work through "Phase 14 — History" in `docs/MANUAL-CHECKLIST.md`.
+2. Cost: each night a few small calls (one per day summary, one per changed page, at most 20 pages); the planner may add up to 4 look-ups (no AI cost, just database reads, but each round is logged).
+3. The real-model check on dev now has 22 cases (sorting, planner timing, history, Ask). Please glance at the latest `ai_eval_runs` row: the cases "people-project", "plan-repeat-detail", "plan-dinner-page" and "ask-three-months" are new and only the real model can pass them.
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 13 ready for device testing on dev
 
 The planner is on the dev site: every event and task gets sensible reminder times the moment it is saved (get ready the evening before anything early, time to leave, do it now), and at 18:00 a small AI call plans tomorrow and anything that needs lead time, with a reason on every reminder ("Why now?" on the item and in event details). Tapping a planner notification opens a snooze sheet.

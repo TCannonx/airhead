@@ -237,6 +237,17 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Settings → Today → switch "Plan my day with AI" off: the next evening no AI call is made and reminders still come at the default times
 - [ ] [ ] [ ] Move tomorrow's event to 15:00: the evening reminder is replaced by one that morning ("Get ready" 3 hours before)
 
+## Phase 14 — History
+
+- [ ] [ ] [ ] Load the latest version (Settings → Sync → Load latest version)
+- [ ] [ ] [ ] Library → Pages lists your repeating events and topics after the first minute; a place appears once three events share a location
+- [ ] [ ] [ ] Capture "Need to ask Niamh and Trevor about the kitchen extension by Friday": after sorting, Settings → Memory → People Airhead noticed shows Niamh and Trevor; "Keep a page" moves them to Library → Pages → People; the Kitchen extension project page is there
+- [ ] [ ] [ ] The next morning a page you used has a summary and dated facts; Rebuild says "tonight" and the summary is rewritten overnight; Rename and Archive work and reach the other device
+- [ ] [ ] [ ] An item page shows "Pages" with links to the pages it is on
+- [ ] [ ] [ ] Training (or another repeating event) planned in the evening: its reminder or prep mentions something from last time
+- [ ] [ ] [ ] Ask Airhead about something from a few months ago: the answer links to the item it came from
+- [ ] [ ] [ ] Insights → AI usage: the nightly summaries are small calls; nothing runs for a quiet day
+
 ## v0.1 release
 
 - [ ] Everything above is ticked
