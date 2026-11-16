@@ -81,6 +81,7 @@ Deno.test(
           nudges,
           reason: '',
           confidence: 1,
+          reading_slot: '',
         },
       ],
       tonight: [],

@@ -1698,3 +1698,9 @@ Decisions and library versions, newest first.
 - "Left out: …" appears whenever the planner's digest was capped (`left_out > 0`) or nudges were dropped, in the AI brief and in the code-built fallback alike.
 - Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
 - The device brief schema gains `plan` (default null), so older briefs still parse.
+
+## Surfacing and reading slots (Task 16.7, 2026-11-16)
+
+- The evening run (only) gets `topics` (names with 3+ unread links, count, last added) and up to 8 unread, readable saved links as digest items of kind `reading` on tomorrow's date, with their minutes (`data.link.minutes`, else `reading_minutes`). Reading items do not count as "something to plan": a day with only unread links makes no call.
+- The model may suggest at most 2 (prompt `plan.v3`); validation allows only a `reading` nudge on a saved link and forces `delivery = 'digest'` (as before), so it appears in the round-up (15.4), never as its own push. `reading_slot` (`commute`, `lunch`, `evening`, `weekend`) is kept in `item_plans` (apply_plan v2, migration 0056).
+- One topic mention a day is asked of the model in `digest_draft`; the brief reads the plan (15.2).

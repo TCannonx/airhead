@@ -475,6 +475,7 @@ export function planAnswer(user) {
       })),
       reason: 'Stand-in plan',
       confidence: 0.8,
+      reading_slot: '',
     });
   }
   return { ...empty, items };
