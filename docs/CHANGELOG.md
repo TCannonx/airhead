@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(review): the weekly review now looks at how the planner did (its runs, what you did with its reminders, what slipped and why) and next week's commitments against free time, and may propose moving, splitting or dropping a task; each waits under "Needs your OK" and nothing changes until you approve (prompt review.v2, migration 0059, Task 17.3)
 - feat(reading): a saved link joins your existing topics by name, then by meaning, and only makes a new topic when nothing is close (Task 16.4)
 - feat(reading): every saved link is read and explained: kind, reading minutes, a three-line summary, up to five key points, why it was probably saved (from your own words around it), up to three topics and who or what it mentions; a page that cannot be read says why in plain words and costs no AI call (Task 16.2)
 - release: phase 15 (morning refresh, the brief from the plan with "Left out", re-plan on change, digest delivery with per-kind settings, app badge and declarative push) on dev
