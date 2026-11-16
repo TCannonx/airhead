@@ -248,6 +248,17 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Ask Airhead about something from a few months ago: the answer links to the item it came from
 - [ ] [ ] [ ] Insights → AI usage: the nightly summaries are small calls; nothing runs for a quiet day
 
+## Phase 15 — Digest and re-plan
+
+- [ ] [ ] [ ] Load the latest version (Settings → Sync → Load latest version)
+- [ ] [ ] [ ] Morning: Today shows "From your plan" (what to prepare, clashes, tasks ready today, a reading pick) and, when something was left out, a "Left out: …" line
+- [ ] [ ] [ ] Add an event for today after the evening run: within about 25 minutes of the brief, or 5 minutes after the change, its reminders are planned (Insights → AI usage shows a small call)
+- [ ] [ ] [ ] Move tomorrow's 08:00 event to 15:00: the evening "Get ready" disappears and one appears that morning
+- [ ] [ ] [ ] Snooze a reminder: a few minutes later its item is re-planned
+- [ ] [ ] [ ] Settings → Notifications → Planner reminders: set "Reading suggestions" to "In the digest" and "Get ready" to "Off"; reading suggestions come in one "From your plan" notification with the brief or the evening review; no "Get ready" notifications arrive
+- [ ] [ ] [ ] Installed app on the iPhone: the icon badge shows overdue tasks plus open questions and goes when they are cleared
+- [ ] [ ] [ ] With APP_URL set (see BLOCKERS), a notification tapped on the iPhone opens the right item
+
 ## v0.1 release
 
 - [ ] Everything above is ticked
