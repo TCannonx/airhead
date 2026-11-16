@@ -1,0 +1,77 @@
+{
+  "_comment": "Topic collation (Task 16.5): the third, fourth and fifth link on Marathon training. links: what the store sends; output: a saved answer in the TopicResult shape.",
+  "page": {
+    "id": "e1650000-0000-4000-8000-000000000001",
+    "kind": "topic",
+    "name": "Marathon training",
+    "summary": "",
+    "facts": [],
+    "summarised_at": null,
+    "rebuild_requested_at": null
+  },
+  "links": [
+    {
+      "id": "e1650000-0000-4000-8000-000000000011",
+      "type": "reading",
+      "date": "2026-11-01",
+      "title": "A 16-week marathon plan",
+      "line": "Builds from 30 to 70 km a week with a cut-back every fourth week."
+    },
+    {
+      "id": "e1650000-0000-4000-8000-000000000012",
+      "type": "reading",
+      "date": "2026-11-05",
+      "title": "Why easy runs should be easy",
+      "line": "Most running should be at a conversational pace."
+    },
+    {
+      "id": "e1650000-0000-4000-8000-000000000013",
+      "type": "reading",
+      "date": "2026-11-09",
+      "title": "Strength work for runners",
+      "line": "Two short strength sessions a week reduce injury."
+    },
+    {
+      "id": "e1650000-0000-4000-8000-000000000014",
+      "type": "reading",
+      "date": "2026-11-12",
+      "title": "Taper myths",
+      "line": "A two-week taper is enough for most amateurs."
+    },
+    {
+      "id": "e1650000-0000-4000-8000-000000000015",
+      "type": "reading",
+      "date": "2026-11-15",
+      "title": "Fuelling long runs",
+      "line": "Practise race-day food on long runs."
+    }
+  ],
+  "output": {
+    "summary": "Five pieces on preparing for a marathon. The plan builds weekly distance slowly with regular cut-back weeks, most runs stay easy, strength work twice a week keeps injuries away, a two-week taper is enough, and race food should be practised on long runs.",
+    "notes": [
+      {
+        "item_id": "e1650000-0000-4000-8000-000000000011",
+        "note": "The backbone: a 16-week plan with cut-back weeks."
+      },
+      {
+        "item_id": "e1650000-0000-4000-8000-000000000012",
+        "note": "Why most runs in the plan should be easy."
+      },
+      {
+        "item_id": "e1650000-0000-4000-8000-000000000013",
+        "note": "Adds two strength sessions a week."
+      },
+      {
+        "item_id": "e1650000-0000-4000-8000-000000000014",
+        "note": "Settles the taper at two weeks."
+      },
+      {
+        "item_id": "e1650000-0000-4000-8000-000000000015",
+        "note": "Food on long runs, which the plan does not cover."
+      }
+    ],
+    "overlaps": ["The plan and the taper piece agree on two weeks of tapering"],
+    "open_questions": ["Which spring marathon, and how many weeks away is it?"],
+    "next_step": "Pick the race date and count back 16 weeks."
+  }
+}

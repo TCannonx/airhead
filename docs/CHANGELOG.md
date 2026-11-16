@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(reading): a topic you keep feeding collates itself: from 3 saved links its page gets a running summary, one line per link on what it adds, where sources agree or repeat, open questions and a next step; each new link updates it, removing one rebuilds it (migration 0055, Task 16.5)
 - feat(learning): when you keep moving the same reminder the same way (3 of the last 5 times), Airhead learns it as an everyday fact you can see and remove in Settings → Memory, e.g. "Packs the training bag in the morning, not the evening before"; the planner uses it, and a fact contradicted three times is archived (migration 0058, Task 17.2)
 - feat(insights): Planner costs: the last 14 days of planning cost by day and run kind (evening, morning, re-plan), look-ups used, and how many days the defaults carried (Task 17.4)
 - feat(review): the weekly review now looks at how the planner did (its runs, what you did with its reminders, what slipped and why) and next week's commitments against free time, and may propose moving, splitting or dropping a task; each waits under "Needs your OK" and nothing changes until you approve (prompt review.v2, migration 0059, Task 17.3)
