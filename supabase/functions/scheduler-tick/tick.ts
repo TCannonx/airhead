@@ -10,7 +10,15 @@ import {
 } from '../_shared/leave/work.ts';
 import type { PushPayload } from '../_shared/push.ts';
 import { readPlanSettings } from '../_shared/plan/defaults.ts';
-import { inQuietHours, localMidnightIso, localNow, readNotif, type NudgeType } from './notif.ts';
+import {
+  deliveryFor,
+  inQuietHours,
+  localMidnightIso,
+  localNow,
+  readNotif,
+  type NotifSettings,
+  type NudgeType,
+} from './notif.ts';
 
 /**
  * One scheduler tick (Task 4.13), run every minute: plan reminders for
@@ -20,6 +28,8 @@ import { inQuietHours, localMidnightIso, localNow, readNotif, type NudgeType } f
 export interface Nudge {
   id: string;
   kind: string;
+  /** 'push' or 'digest' (Task 15.4); older rows and fakes: push. */
+  delivery?: string | null;
   send_at: string;
   title: string;
   body: string | null;
@@ -77,6 +87,8 @@ export interface TickStore {
   recurringEvents(userId: string): Promise<RecurringRow[]>;
   leave(userId: string): Promise<LeaveRow[]>;
   workDays(userId: string): Promise<WorkDayRow[]>;
+  /** Pending nudges due by `now` that go in a digest, not alone (Task 15.4). */
+  dueDigest?(userId: string, now: string): Promise<Nudge[]>;
   /** Sent plan nudges untouched for 12 hours become 'ignored' (Task 13.8). */
   markIgnored?(): Promise<number>;
 }
@@ -281,6 +293,7 @@ export async function runTick(
       report.jobs.push('morning_brief');
       // A failed brief must not stop the rest of the tick (it falls back inside anyway).
       await extras.brief(u.user_id, local.date, now).catch(() => undefined);
+      await digestRoundUp(store, u.user_id, notif, nowIso, `digest:${local.date}:am`, '/today');
     }
     if (
       extras.review &&
@@ -341,6 +354,7 @@ export async function runTick(
           dedupe_key: `evening_review:${local.date}`,
         });
       }
+      await digestRoundUp(store, u.user_id, notif, nowIso, `digest:${local.date}:pm`, '/today');
     }
 
     if (notif.types.checklist && (await job('checklist', notif.checklist_time))) {
@@ -425,6 +439,13 @@ export async function runTick(
     const cancel: string[] = [];
     const ready: Nudge[] = [];
     for (const n of due) {
+      // Digest nudges wait for the next round-up; "off" ones never go (Task 15.4).
+      const how = deliveryFor(n.kind, n.delivery, notif);
+      if (how === 'digest') continue;
+      if (how === 'off') {
+        cancel.push(n.id);
+        continue;
+      }
       const age = now.getTime() - Date.parse(n.send_at);
       const known = n.kind in notif.types;
       if (
@@ -495,4 +516,42 @@ export async function runTick(
     }
   }
   return report;
+}
+
+/**
+ * The digest round-up (Task 15.4): planner nudges due by now that go in a
+ * digest (by the plan or the owner's setting) are listed in one notification
+ * with the morning brief or the evening review, whichever comes first, and
+ * marked sent.
+ */
+export async function digestRoundUp(
+  store: TickStore,
+  userId: string,
+  notif: NotifSettings,
+  nowIso: string,
+  key: string,
+  url: string,
+): Promise<number> {
+  if (!store.dueDigest) return 0;
+  const waiting = (await store.dueDigest(userId, nowIso)).filter(
+    (n) => deliveryFor(n.kind, n.delivery, notif) === 'digest',
+  );
+  if (!waiting.length) return 0;
+  await store.addNudge(userId, {
+    kind: 'summary',
+    send_at: nowIso,
+    title: 'From your plan',
+    body: waiting
+      .map((n) => n.title)
+      .slice(0, 6)
+      .join(' · '),
+    url,
+    dedupe_key: key,
+  });
+  await store.setStatus(
+    waiting.map((n) => n.id),
+    'sent',
+    nowIso,
+  );
+  return waiting.length;
 }

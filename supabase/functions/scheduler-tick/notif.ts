@@ -32,7 +32,14 @@ export interface NotifSettings {
   review_day: number;
   review_time: string;
   event_reminder_minutes: number;
+  /** Planner kinds (Task 15.4): as planned, always push, always digest, or off. */
+  plan_kinds: Record<PlanKind, PlanDelivery>;
 }
+
+export const PLAN_KINDS = ['prepare', 'leave', 'do', 'follow_up', 'reading'] as const;
+export type PlanKind = (typeof PLAN_KINDS)[number];
+export type PlanDelivery = 'auto' | 'push' | 'digest' | 'off';
+const DELIVERIES: PlanDelivery[] = ['auto', 'push', 'digest', 'off'];
 
 export const DEFAULT_NOTIF: NotifSettings = {
   types: Object.fromEntries(NUDGE_TYPES.map((t) => [t, true])) as Record<NudgeType, boolean>,
@@ -47,13 +54,22 @@ export const DEFAULT_NOTIF: NotifSettings = {
   review_day: 6,
   review_time: '19:00',
   event_reminder_minutes: 30,
+  plan_kinds: { prepare: 'auto', leave: 'auto', do: 'auto', follow_up: 'auto', reading: 'auto' },
 };
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function readNotif(data: Record<string, unknown> | null | undefined): NotifSettings {
   const n = (data?.notifications ?? {}) as Record<string, unknown>;
-  const out: NotifSettings = { ...DEFAULT_NOTIF, types: { ...DEFAULT_NOTIF.types } };
+  const out: NotifSettings = {
+    ...DEFAULT_NOTIF,
+    types: { ...DEFAULT_NOTIF.types },
+    plan_kinds: { ...DEFAULT_NOTIF.plan_kinds },
+  };
+  const pk = (n.plan_kinds ?? {}) as Record<string, unknown>;
+  for (const k of PLAN_KINDS) {
+    if (DELIVERIES.includes(pk[k] as PlanDelivery)) out.plan_kinds[k] = pk[k] as PlanDelivery;
+  }
   const t = (n.types ?? {}) as Record<string, unknown>;
   for (const k of NUDGE_TYPES) if (typeof t[k] === 'boolean') out.types[k] = t[k] as boolean;
   for (const k of [
@@ -136,4 +152,15 @@ export function localTimeIso(date: string, hhmm: string, tz: string): string {
   const guess = new Date(Date.parse(localMidnightIso(date, tz)) + want * 60_000);
   const got = localNow(guess, tz).hhmm.split(':').map(Number) as [number, number];
   return new Date(guess.getTime() + (want - (got[0] * 60 + got[1])) * 60_000).toISOString();
+}
+
+/** How a nudge goes out (Task 15.4): the owner's setting for its kind wins over the plan. */
+export function deliveryFor(
+  kind: string,
+  delivery: string | null | undefined,
+  s: Pick<NotifSettings, 'plan_kinds'>,
+): 'push' | 'digest' | 'off' {
+  const set = (s.plan_kinds as Record<string, PlanDelivery>)[kind];
+  if (set && set !== 'auto') return set;
+  return delivery === 'digest' ? 'digest' : 'push';
 }
