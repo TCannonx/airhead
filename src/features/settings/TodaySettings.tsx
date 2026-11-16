@@ -27,7 +27,7 @@ function readToday(settings: SettingsRow | undefined) {
 }
 
 /** settings.data.plan (Task 13.7): when the evening planner runs, and whether it runs at all. */
-export function readPlan(settings: SettingsRow | undefined) {
+function readPlan(settings: SettingsRow | undefined) {
   const p = (settings?.data.plan ?? {}) as Record<string, unknown>;
   return {
     ...p,
