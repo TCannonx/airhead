@@ -365,6 +365,11 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 | Weekly review on planner data: planner runs, outcomes, slipped tasks with plans, next week's commitments and free minutes in the message; move/split/drop proposals checked (known tasks, a date, 2–5 steps, at most 5) and stored as proposed AI actions; applied only on approval, undoable | `lib/db/aiActions.test.ts` (drop and split applied, undone) | `fn/weekly-review/run.test.ts`, `db/0059` (new kinds) | `sync/ai.spec.ts` (proposals reach Needs your OK) | Real model: proposal quality on dev (review runs weekly) |
 
+## Phase 17 — Learning and the weekly review
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Outcome statistics: per kind and per series/place/person page, 8 weeks, counts and median snooze shift; nightly at 03:40; owner reads | — | `db/0057` (counts, median, window, per page, RLS), `fn/scheduler-tick/tick.test.ts` | — | Server-side only (read by 17.2–17.4) |
 ## Phase 16 — Reading that collates itself
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |

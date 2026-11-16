@@ -678,7 +678,7 @@ Outcome: every link dropped anywhere becomes a reading item that explains itself
 
 Outcome: timing gets better because of what the owner actually does, and the weekly review plans against real capacity.
 
-- [ ] **17.1 Outcome statistics, in code.** A nightly SQL job writes `nudge_stats`: per nudge kind and per page (series, place, person), counts of acted, snoozed, dismissed and ignored over the last 8 weeks, and the median snooze shift in minutes.
+- [x] **17.1 Outcome statistics, in code.** A nightly SQL job writes `nudge_stats`: per nudge kind and per page (series, place, person), counts of acted, snoozed, dismissed and ignored over the last 8 weeks, and the median snooze shift in minutes.
 - [ ] **17.2 Timing preferences.** When a pattern is clear (at least 3 snoozes in the same direction out of the last 5 for the same kind and page), a small AI call words it as an everyday memory fact ("Packs the training bag in the morning, not the evening before"), saved through the existing memory path so it is visible and removable in Settings → Memory. The planner already reads facts through the profile. A fact contradicted by 3 later outcomes is archived.
     - Tests: unit tests for the pattern rule; fixture and contract test; a real-model case: after three morning snoozes of the bag nudge, the next plan puts it in the morning.
 - [x] **17.3 Weekly review on planner data.** `weekly-review` (large tier) receives the week's `plan_runs`, nudge outcomes, slipped items with their plans, and next week's commitments against free time from the calendar gap finder. It may propose changes as `ai_actions` under "Needs your OK" (move a task, split a large one, drop a stale one); it applies nothing itself.
