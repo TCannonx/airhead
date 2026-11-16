@@ -48,7 +48,8 @@ export interface RawPlanDigest {
 export interface DigestItem {
   item_id: string;
   /** event and task can be planned; linked (another calendar) is context only. */
-  kind: 'event' | 'task' | 'linked';
+  /** reading: an unread saved link (Task 16.7), context for reading suggestions. */
+  kind: 'event' | 'task' | 'linked' | 'reading';
   occurrence_date: string;
   /** ISO instant of the start (event) or due time (task); null for all-day. */
   at: string | null;
@@ -66,6 +67,12 @@ export interface DigestItem {
   nudges?: { kind: string; at: string; source: string }[];
 }
 
+/** What the planner gets about reading (Task 16.7). */
+export interface ReadingInput {
+  topics: { name: string; count: number; last_added: string }[];
+  unread: { item_id: string; title: string; minutes: number | null; topics: string[] }[];
+}
+
 export interface PlanDigest {
   /** The evening's own local date; the plan is for the days after it. */
   date: string;
@@ -78,6 +85,8 @@ export interface PlanDigest {
   days: { date: string; weekday: string; location: string }[];
   items: DigestItem[];
   prep_rules: { match: string[]; reminder: string }[];
+  /** Topics the owner is feeding with reading (Task 16.7). */
+  topics: { name: string; count: number; last_added: string }[];
 }
 
 export const DIGEST_CAP = 60;
@@ -247,6 +256,7 @@ export function buildPlanDigest(
       days,
       items: chosen.slice(0, DIGEST_CAP),
       prep_rules: rules,
+      topics: [],
     },
     left_out: Math.max(0, chosen.length - DIGEST_CAP),
   };
@@ -263,5 +273,33 @@ export function changedSince(raw: RawPlanDigest, since: string | null): RawPlanD
     ...raw,
     items: raw.items.filter((i) => after(i.updated_at)),
     linked: raw.linked.filter((e) => after(e.updated_at)),
+  };
+}
+
+/**
+ * Adds reading to the planner's digest (Task 16.7): the topics the owner is
+ * feeding and up to 8 unread links, each a plannable item on tomorrow's date
+ * (a reading nudge always goes to the digest).
+ */
+export function withReading(digest: PlanDigest, reading: ReadingInput | null): PlanDigest {
+  if (!reading) return digest;
+  const tomorrow = addDays(digest.date, 1);
+  return {
+    ...digest,
+    topics: reading.topics.slice(0, 6),
+    items: [
+      ...digest.items,
+      ...reading.unread.slice(0, 8).map((r): DigestItem => ({
+        item_id: r.item_id,
+        kind: 'reading',
+        occurrence_date: tomorrow,
+        at: null,
+        time: null,
+        end: null,
+        all_day: true,
+        title: r.title,
+        ...(r.minutes ? { effort_minutes: r.minutes } : {}),
+      })),
+    ],
   };
 }

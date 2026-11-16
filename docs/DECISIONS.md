@@ -1704,6 +1704,11 @@ Decisions and library versions, newest first.
 - `nudge_stats` is rebuilt per person by `refresh_nudge_stats` (delete and insert, one SQL statement), nightly at 03:40 local (job `nudge_stats`). Rows: per planner nudge kind overall (`page_id` null) and per page the nudge's item is on, for series, place and person pages. The window is outcomes in the last 8 weeks (`outcome_at`, else `send_at`).
 - The median snooze shift is `snoozed_to - send_at` in minutes (positive = later), `percentile_cont(0.5)`, rounded.
 - Not synced: the device has no use for it yet; the owner may read it (RLS) and Insights can later.
+## Surfacing and reading slots (Task 16.7, 2026-11-16)
+
+- The evening run (only) gets `topics` (names with 3+ unread links, count, last added) and up to 8 unread, readable saved links as digest items of kind `reading` on tomorrow's date, with their minutes (`data.link.minutes`, else `reading_minutes`). Reading items do not count as "something to plan": a day with only unread links makes no call.
+- The model may suggest at most 2 (prompt `plan.v3`); validation allows only a `reading` nudge on a saved link and forces `delivery = 'digest'` (as before), so it appears in the round-up (15.4), never as its own push. `reading_slot` (`commute`, `lunch`, `evening`, `weekend`) is kept in `item_plans` (apply_plan v2, migration 0056).
+- One topic mention a day is asked of the model in `digest_draft`; the brief reads the plan (15.2).
 ## Reading item on the device (Task 16.3, 2026-11-16)
 
 - `src/lib/reading.ts` reads `data.link` leniently (`linkInfo`) and makes the one-line row text (`readingLine`: "Article · 13 min · Marathon training", or "Couldn't read: needs sign-in"). Older items without `data.link` keep the Phase 3 view (summary, key points, minutes from sorting).

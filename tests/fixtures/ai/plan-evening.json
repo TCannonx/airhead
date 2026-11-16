@@ -75,7 +75,8 @@
           }
         ],
         "reason": "Early start: pack tonight, leave at 07:30",
-        "confidence": 0.9
+        "confidence": 0.9,
+        "reading_slot": ""
       },
       {
         "item_id": "a1300000-0000-4000-8000-000000000002",
@@ -95,7 +96,8 @@
           }
         ],
         "reason": "A short task with a deadline",
-        "confidence": 0.8
+        "confidence": 0.8,
+        "reading_slot": ""
       }
     ],
     "tonight": ["Pack your training bag"],
