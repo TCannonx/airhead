@@ -677,3 +677,74 @@ Deno.test('the morning refresh runs 20 minutes before the brief, once (Task 15.1
   assertEquals(ran2, []);
   assertEquals(addMinutesHHMM('00:10', -20), '00:00');
 });
+
+Deno.test(
+  'digest delivery (Task 15.4): never pushed alone, listed in the next round-up and marked sent',
+  async () => {
+    const m = memory({
+      settings: {
+        notifications: {
+          types: { checklist: false, slip: false, leave_runout: false, evening_review: true },
+          evening_review_time: '21:00',
+        },
+      },
+      nudges: [
+        {
+          kind: 'reading',
+          title: 'Read: long article',
+          send_at: '2026-11-18T12:00:00.000Z',
+          delivery: 'digest',
+        },
+        {
+          kind: 'prepare',
+          title: 'Get ready: quiz',
+          send_at: '2026-11-18T12:00:00.000Z',
+          delivery: 'push',
+        },
+      ],
+    });
+    m.store.dueDigest = (_u, now) =>
+      Promise.resolve(
+        m.nudges.filter(
+          (x) =>
+            x.status === 'pending' &&
+            x.send_at <= now &&
+            x.kind !== 'summary' &&
+            x.kind !== 'evening_review',
+        ),
+      );
+    await runTick(at('2026-11-18T12:01:00Z'), m.store, m.send);
+    assertEquals(
+      m.sent.map((s) => s.title),
+      ['Get ready: quiz'],
+    );
+    await runTick(at('2026-11-18T21:00:00Z'), m.store, m.send);
+    const roundUp = m.nudges.find((x) => x.dedupe_key === 'digest:2026-11-18:pm');
+    assertEquals(roundUp?.body, 'Read: long article');
+    assertEquals(m.nudges.find((x) => x.title === 'Read: long article')?.status, 'sent');
+  },
+);
+
+Deno.test('the owner can turn a planner kind to digest or off (Task 15.4)', async () => {
+  const m = memory({
+    settings: {
+      ...quietJobs,
+      notifications: {
+        ...quietJobs.notifications,
+        plan_kinds: { prepare: 'off', leave: 'digest' },
+      },
+    },
+    nudges: [
+      { kind: 'prepare', title: 'Get ready', send_at: '2026-11-18T12:00:00.000Z' },
+      { kind: 'leave', title: 'Time to leave', send_at: '2026-11-18T12:00:00.000Z' },
+      { kind: 'do', title: 'Do it', send_at: '2026-11-18T12:00:00.000Z' },
+    ],
+  });
+  const r = await runTick(at('2026-11-18T12:01:00Z'), m.store, m.send);
+  assertEquals(
+    m.sent.map((s) => s.title),
+    ['Do it'],
+  );
+  assertEquals(r.cancelled, 1);
+  assertEquals(m.nudges.find((x) => x.title === 'Time to leave')?.status, 'pending');
+});

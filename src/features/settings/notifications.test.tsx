@@ -105,6 +105,23 @@ describe('Settings → Notifications (Task 4.11)', () => {
     });
   });
 
+  it('planner reminders can go to the digest or be turned off (Task 15.4)', async () => {
+    const user = userEvent.setup();
+    renderIt({ ...localServices(), push: pushService() });
+    const form = await screen.findByRole('form', { name: 'Notification preferences' });
+    expect(within(form).getByLabelText('Get ready')).toHaveValue('auto');
+    await user.selectOptions(within(form).getByLabelText('Reading suggestions'), 'off');
+    await user.selectOptions(within(form).getByLabelText('Get ready'), 'digest');
+    await user.click(within(form).getByRole('button', { name: 'Save notification settings' }));
+    expect(await screen.findByText('Saved')).toBeInTheDocument();
+    const d = db();
+    const settings = await d.settings.get(U);
+    d.close();
+    expect(settings?.data.notifications).toMatchObject({
+      plan_kinds: { prepare: 'digest', reading: 'off', leave: 'auto' },
+    });
+  });
+
   it('explains a refused permission', async () => {
     vi.stubGlobal('Notification', { requestPermission: vi.fn(() => Promise.resolve('denied')) });
     const user = userEvent.setup();

@@ -31,6 +31,24 @@ export const NUDGE_LABELS: Record<NudgeType, string> = {
   weekly_review: 'Weekly review ready',
 };
 
+export const PLAN_KINDS = ['prepare', 'leave', 'do', 'follow_up', 'reading'] as const;
+export type PlanKind = (typeof PLAN_KINDS)[number];
+export const PLAN_DELIVERIES = ['auto', 'push', 'digest', 'off'] as const;
+export type PlanDelivery = (typeof PLAN_DELIVERIES)[number];
+export const PLAN_KIND_NAMES: Record<PlanKind, string> = {
+  prepare: 'Get ready',
+  leave: 'Time to leave',
+  do: 'Do it now',
+  follow_up: 'Follow-ups',
+  reading: 'Reading suggestions',
+};
+export const DELIVERY_NAMES: Record<PlanDelivery, string> = {
+  auto: 'As planned',
+  push: 'Notification',
+  digest: 'In the digest',
+  off: 'Off',
+};
+
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 export const notifSettingsSchema = z.object({
@@ -54,6 +72,19 @@ export const notifSettingsSchema = z.object({
   review_day: z.number().int().min(0).max(6).default(6),
   review_time: hhmm.default('19:00'),
   event_reminder_minutes: z.number().int().min(0).max(1440).default(30),
+  /** Planner reminders (Task 15.4): as planned, push, in the digest, or off. */
+  plan_kinds: z
+    .object(
+      Object.fromEntries(
+        PLAN_KINDS.map((k) => [k, z.enum(PLAN_DELIVERIES).default('auto')]),
+      ) as Record<
+        PlanKind,
+        z.ZodDefault<z.ZodEnum<{ auto: 'auto'; push: 'push'; digest: 'digest'; off: 'off' }>>
+      >,
+    )
+    .default(
+      Object.fromEntries(PLAN_KINDS.map((k) => [k, 'auto'])) as Record<PlanKind, PlanDelivery>,
+    ),
 });
 export type NotifSettings = z.infer<typeof notifSettingsSchema>;
 
