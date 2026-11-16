@@ -98,6 +98,16 @@ class ShipTest(unittest.TestCase):
         self.assertEqual(put[2]["merge_method"], "squash")
         self.assertIn(("checkout", "main"), fake.git_calls)
 
+    def test_merge_with_uncommitted_work_only_fetches_main(self):
+        fake = Fake(ALL_GREEN)
+        real_git = fake.git
+        fake.git = lambda *a: " M file.ts" if a[0] == "status" else real_git(*a)
+        code, out = run(fake, ["merge", "5"])
+        self.assertEqual(code, 0)
+        self.assertNotIn(("checkout", "main"), fake.git_calls)
+        self.assertIn(("fetch", "origin", "main:main"), fake.git_calls)
+        self.assertIn("uncommitted", out)
+
     def test_wait_exit_3_while_pending(self):
         runs = ALL_GREEN[:-1] + [check(ship.REQUIRED_CHECKS[-1], status="in_progress", conclusion=None)]
         fake = Fake(runs)

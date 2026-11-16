@@ -601,7 +601,7 @@ Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack yo
     - Tests: unit tests for `validatePlan`; fixtures in `tests/fixtures/ai/plan-*.json`; a mock-ai contract test; pgTAP for `apply_plan` (idempotent when run twice, never touches `source = 'user'`).
 - [x] **13.7 Schedule the planner.** `scheduler-tick` dispatches `plan-day` once per user per local day at `settings.data.plan.evening_time` (default `18:00`), guarded by the unique `plan_runs` row. If no `ok` run exists 90 minutes later, write a `plan_runs` row of kind `defaults`, status `ok`, so Insights shows that defaults carried the day. Settings → Today gets "Plan my day at" with a time picker and a switch to turn the planner off (defaults still apply).
     - Tests: tick tests for dispatch time, the once-a-day guard, time zones and the fallback row; component test for the setting.
-- [ ] **13.8 "Why now?" and snooze.** On the device:
+- [x] **13.8 "Why now?" and snooze.** On the device:
     - The item page and the event details sheet show the plan: what to prepare, each upcoming nudge with its time and reason, and whether it came from Airhead's defaults or the AI.
     - Tapping a notification opens the item with a snooze sheet: "In an hour", "This evening" (the prepare-evening time), "Tomorrow morning" (the brief time), "Pick a time", and "Done". No reliance on notification action buttons (not confirmed on iPhone).
     - A choice writes the outcome on the nudge (`acted`, `snoozed` with `snoozed_to`, or `dismissed`) through an RPC and, for a snooze, a new nudge with `source = 'user'`. A nudge sent and untouched for 12 hours becomes `ignored` (set by the tick).

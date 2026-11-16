@@ -1579,3 +1579,11 @@ Decisions and library versions, newest first.
 - The fallback check (`plan_fallback`, 90 minutes later, capped at 23:59) writes a `defaults` / `ok` row unless an `evening` run finished `ok` that day. It also runs when the planner is switched off, so Insights shows that defaults carried the day.
 - Like every scheduled job, it runs only for people with a notification device (the tick's existing user list): planner nudges are pushes.
 - The settings form keeps any other `settings.data.plan` keys when it saves `evening_time` and `enabled`.
+
+## "Why now?" and snooze (Task 13.8, 2026-11-16)
+
+- **Outcomes through `public.nudge_outcome(nudge, outcome, snooze_to)`** (owner only, security definer): devices still never write `nudges` directly. A snooze writes a new nudge keyed `snooze:<nudge id>` with `source = 'user'` (same kind, title and body), which defaults and plans never overwrite. Acting on or dismissing a nudge that has not gone out yet cancels it.
+- **"Not needed"** is the sheet's button for `dismissed`, beside the plan's "Done" (`acted`).
+- **The notification tap** opens `<url>?nudge=<id>` for planner kinds (`tapUrl` in the tick); the item page opens the sheet from that parameter and removes it on close.
+- **Ignored**: `mark_ignored_nudges()` runs at the start of every tick: planner kinds sent more than 12 hours ago (and within 7 days) with no outcome.
+- `ship.py` prints with `errors="replace"`: CI logs contain characters the Windows console code page cannot print.

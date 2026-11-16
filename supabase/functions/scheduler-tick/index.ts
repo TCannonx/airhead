@@ -131,6 +131,10 @@ const store: TickStore = {
       .is('deleted_at', null);
     return data ?? [];
   },
+  async markIgnored() {
+    const { data } = await db.rpc('mark_ignored_nudges');
+    return Number(data ?? 0);
+  },
   async workDays(userId) {
     const { data } = await db
       .from('work_days')

@@ -15,6 +15,7 @@ import { supabaseAsk } from './ask/supabaseAsk';
 import { supabaseReviews } from './review/supabaseReviews';
 import { supabaseLeave } from './leave/supabaseLeave';
 import { supabaseScout } from './scout/supabaseScout';
+import { supabaseNudges } from './plan/supabaseNudges';
 import { supabaseNotes } from './notes/supabaseNotes';
 import { supabaseMemory } from './memory/supabaseMemory';
 import { supabaseSorting } from './sort/supabaseSorting';
@@ -55,5 +56,6 @@ export function createServices(): Services {
     reviews: supabaseReviews(supabase),
     leave: supabaseLeave(supabase),
     scout: supabaseScout(supabase),
+    nudges: supabaseNudges(supabase),
   };
 }
