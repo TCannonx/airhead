@@ -659,3 +659,21 @@ Deno.test('page summaries are refreshed once a night at 03:30 local (Task 14.5)'
   await runTick(at('2026-11-18T04:30:00Z'), m.store, m.send, extras);
   assertEquals(ran, 1);
 });
+
+Deno.test('the morning refresh runs 20 minutes before the brief, once (Task 15.1)', async () => {
+  const m = memory({ settings: quietJobs });
+  const ran: string[] = [];
+  const extras = { planMorning: (_u: string, d: string) => (ran.push(d), Promise.resolve()) };
+  // Brief at 07:30 → refresh at 07:10 (Dublin, GMT).
+  await runTick(at('2026-11-18T07:09:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T07:10:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T07:30:00Z'), m.store, m.send, extras);
+  assertEquals(ran, ['2026-11-18']);
+  const off = memory({ settings: { ...quietJobs, plan: { enabled: false } } });
+  const ran2: string[] = [];
+  await runTick(at('2026-11-18T07:15:00Z'), off.store, off.send, {
+    planMorning: (_u: string, d: string) => (ran2.push(d), Promise.resolve()),
+  });
+  assertEquals(ran2, []);
+  assertEquals(addMinutesHHMM('00:10', -20), '00:00');
+});

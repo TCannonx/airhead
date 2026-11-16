@@ -351,6 +351,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | The planner uses history: recent summaries in the message, the three look-ups as tools (at most 4), the count in `plan_runs.lookups_used`; real-model cases for a detail from last time and a fact from a person's page | — | `fn/plan-day/run.test.ts` (history ahead of the digest, tools offered, count recorded), `fn/ai-eval/run.test.ts` (cases wired; history cases need the real model), `_shared/ai.contract.test.ts` | — | Real model: `ai-eval` cases "plan-repeat-detail" and "plan-dinner-page" on dev |
 | Ask reads pages: summaries of active pages linked to the found items (at most 3, non-empty) go before the passages, never cited; a question about something three months old links its source | — | `fn/ask/run.test.ts` (pages in the message), `fn/ai-eval/run.test.ts` (ask case wired) | — | Real model: `ai-eval` case "ask-three-months" on dev |
 
+## Phase 15 — Morning digest and re-plan
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Morning refresh: 20 min before the brief, once a day, not when the planner is off; only items and linked events changed since the evening run finished; nothing changed → skipped, no call | — | `fn/plan-day/run.test.ts`, `fn/scheduler-tick/tick.test.ts`, `db/0053` (`updated_at` on each row) | — | Same validate and apply path as the evening run (`db/0044`) |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |

@@ -291,6 +291,17 @@ function tickNow(pusher: Pusher) {
           usage: supabaseUsageStore(db),
         });
       },
+      planMorning: async (userId, localDate, at) => {
+        await runPlanDay(userId, localDate, at, 'morning', {
+          store: supabasePlanStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+          lookups: planLookups(
+            supabaseHistoryStore(db, (t) => gteSmall(t).catch(() => null)),
+            userId,
+          ),
+        });
+      },
       planFallback: async (userId, localDate) => {
         // No successful evening run: record that the defaults carried the day (Insights).
         const { data } = await db

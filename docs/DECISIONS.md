@@ -1674,3 +1674,9 @@ Decisions and library versions, newest first.
 
 - Pages are found through the items the search returned (`page_items`), as the signed-in user (RLS), active only, most items first, at most 3 with a summary. They go before the passages as `<page>` blocks; the prompt (`ask.v2`) says to use them for background and to cite only passages, so every answer still links to the person's own items.
 - The real-model case ("ask-three-months") gives a three-month-old meeting passage and its project page as search would, and checks the answer says what was decided and links the meeting. It runs inside `ai-eval` with the other cases, on the same trigger (the ask prompt is now part of the hash).
+
+## Morning refresh (Task 15.1, 2026-11-16)
+
+- `plan-day` mode `morning` builds the digest as of the previous evening (`plan_digest(user, yesterday)`), so the window starts today, then keeps only items and linked-calendar events whose `server_updated_at` (0053 adds it to the digest) is later than the evening run's `finished_at`. With no successful evening run it plans everything; with one and nothing changed, the run is `skipped` and no call is made.
+- The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
+- Same validation and `apply_plan`; the run's summary records `mode`.

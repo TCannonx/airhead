@@ -80,6 +80,17 @@ export function supabasePlanStore(db: SupabaseClient): PlanStore {
           : null,
       };
     },
+    async eveningFinishedAt(userId, eveningDate) {
+      const { data } = await db
+        .from('plan_runs')
+        .select('finished_at')
+        .eq('user_id', userId)
+        .eq('kind', 'evening')
+        .eq('local_date', eveningDate)
+        .eq('status', 'ok')
+        .maybeSingle();
+      return (data?.finished_at as string | null | undefined) ?? null;
+    },
     async spentToday(userId, localDate) {
       const { data } = await db
         .from('plan_runs')

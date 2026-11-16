@@ -8,10 +8,11 @@ import {
 import { readPlanSettings } from '../_shared/plan/defaults.ts';
 import { buildPlanMessage, PLAN_SYSTEM, PLAN_VERSION } from '../_shared/prompts/plan.v2.ts';
 import { PlanResult } from '../_shared/schemas/plan.ts';
-import { buildPlanDigest, type RawPlanDigest } from './digest.ts';
+import { addDays } from '../_shared/holidays/easter.ts';
+import { buildPlanDigest, changedSince, type RawPlanDigest } from './digest.ts';
 import { type ApplyPayload, validatePlan } from './validate.ts';
 
-export type PlanMode = 'evening';
+export type PlanMode = 'evening' | 'morning';
 export type PlanRunStatus = 'ok' | 'failed' | 'cap_reached' | 'skipped';
 
 /** Database access for one planner run (a fake in tests, Supabase in production). */
@@ -26,6 +27,8 @@ export interface PlanStore {
    * (Task 14.8). Optional for older fakes.
    */
   history?(userId: string, localDate: string): Promise<PlanHistory>;
+  /** When the evening run for that date finished ok (Task 15.1); null when none did. */
+  eveningFinishedAt?(userId: string, eveningDate: string): Promise<string | null>;
   /** Today's planning spend so far (plan_runs.cost_eur for the local date). */
   spentToday(userId: string, localDate: string): Promise<number>;
   /** public.apply_plan: one transaction; also closes the run as ok. */
@@ -94,11 +97,18 @@ export async function runPlanDay(
       return await done('cap_reached', { summary: { why: 'daily planning cap' } });
     }
 
-    const { digest, left_out } = buildPlanDigest(
-      await deps.store.digest(userId, localDate),
-      settings,
-      now,
-    );
+    // The evening plans from tonight; the morning refresh (Task 15.1) plans from
+    // last night's view of the week, only for what changed since that run.
+    const evening = mode === 'morning' ? addDays(localDate, -1) : localDate;
+    let raw = await deps.store.digest(userId, evening);
+    if (mode === 'morning') {
+      const since = (await deps.store.eveningFinishedAt?.(userId, evening)) ?? null;
+      raw = changedSince(raw, since);
+      if (since && !raw.items.length && !raw.linked.length) {
+        return await done('skipped', { summary: { why: 'nothing changed since the evening' } });
+      }
+    }
+    const { digest, left_out } = buildPlanDigest(raw, settings, now);
     const plannable = digest.items.filter((i) => i.kind !== 'linked').length;
     if (plannable === 0) {
       return await done('ok', {
@@ -139,6 +149,7 @@ export async function runPlanDay(
       lookups_used: res.lookupsUsed,
       summary: {
         prompt: PLAN_VERSION,
+        mode,
         items_considered: plannable,
         left_out,
         dropped,
