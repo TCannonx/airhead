@@ -588,7 +588,7 @@ Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack yo
     - Tests: Deno tests for the drain with a fake store; pgTAP for the trigger and queue; an e2e-sync test: create an event for tomorrow 08:00 on one device, see a pending `prepare` nudge for 20:30 today.
 - [x] **13.4 Stop same-day prep from the morning brief.** `morning-brief/store.ts` writes `prep` nudges keyed `prep:<localDate>:…` on the morning itself, which is how a 07:30 "pack your bag" for 08:00 happened. Change it so the brief writes no `prep` nudge for anything starting within 2 hours of the brief time, and none at all for an occurrence that already has a `plan:prepare` nudge (pending or sent). The brief text may still mention the prep.
     - Tests: extend `brief.test.ts` and the store tests with both cases.
-- [ ] **13.5 Planner digest.** Pure builder plus SQL: `supabase/functions/plan-day/digest.ts`.
+- [x] **13.5 Planner digest.** Pure builder plus SQL: `supabase/functions/plan-day/digest.ts`.
     - Input window: tomorrow in full, plus items in the following 6 days that have prep text, a prep rule match, travel, or `effort_minutes` over 60.
     - Contents: events (own, repeating occurrences via the existing `occurrencesBetween`, and `external_events`), open tasks due or surfacing in the window, work location and leave for each day, quiet hours and brief time, existing pending nudges for those items, prep rules, the item's current `item_plans` row. Compact: ids, titles, times, one line each. Cap at 60 items; if more, keep the soonest and say how many were left out in `plan_runs.summary`.
     - Tests: unit tests with fixtures for a normal day, an empty day, a day over the cap.

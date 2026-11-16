@@ -1555,3 +1555,10 @@ Decisions and library versions, newest first.
 
 - "Within 2 hours of the brief time" is measured from when the brief runs (the scheduled brief runs at the brief time; Regenerate uses the time it is pressed). Start times come from the digest's one-off and repeating events for that day (`todayStarts`).
 - "Already prepared" means a nudge keyed `plan:prepare:<item id>:<local date>` that is pending, sent or bundled (`BriefStore.planPrepared`, optional so older fakes still work).
+
+## Planner digest (Task 13.5, 2026-11-16)
+
+- `public.plan_digest(user, evening date)` returns raw rows (items in the window, every open repeating event, linked calendar events, pending nudges with an item, leave, work days); `plan-day/digest.ts` (`buildPlanDigest`) expands repeating events, applies the "needs lead time" filter and the 60-item cap, as `morning_digest` and `brief.ts` split the work.
+- Linked-calendar events are context only (`kind: 'linked'`): the planner may mention them (clashes) but cannot write nudges for them, as they are not Airhead items. They appear only for tomorrow.
+- Quiet hours and the brief time come from the existing notification settings (`readNotif`), not new keys. `scheduler-tick/tick.ts` now exports `locationFor` for the digest's per-day work location.
+- "Items in the following 6 days with prep text" uses `item_plans.prep`; "travel" means the item has `data.travel_minutes`.
