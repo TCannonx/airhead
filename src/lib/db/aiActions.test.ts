@@ -234,3 +234,39 @@ describe('chips', () => {
     expect(chipFor([a('undone'), a('dismissed'), a('skipped')])).toBeNull();
   });
 });
+
+describe('weekly review proposals (Task 17.3)', () => {
+  it('a drop or split proposal is applied only when approved, and can be undone', async () => {
+    const task = await save(db, 'items', newItem(U, { type: 'task', title: 'Old idea' }));
+    const drop = await action({
+      kind: 'drop_item',
+      status: 'proposed',
+      target_table: 'items',
+      target_id: task.id,
+      before: { status: 'open' },
+      after: { status: 'dropped' },
+    });
+    expect((await db.items.get(task.id))?.status).toBe('open');
+    expect(await applyProposal(db, U, drop)).toBe('applied');
+    expect((await db.items.get(task.id))?.status).toBe('dropped');
+    const applied = await db.ai_actions.get(drop.id);
+    expect(await undoAction(db, U, applied as AiAction)).toBe('undone');
+    expect((await db.items.get(task.id))?.status).toBe('open');
+
+    const big = await save(
+      db,
+      'items',
+      newItem(U, { type: 'task', title: 'Kitchen plans', body: null }),
+    );
+    const split = await action({
+      kind: 'split_task',
+      status: 'proposed',
+      target_table: 'items',
+      target_id: big.id,
+      before: { body: null },
+      after: { body: '- [ ] Measure\n- [ ] Get quotes' },
+    });
+    expect(await applyProposal(db, U, split)).toBe('applied');
+    expect((await db.items.get(big.id))?.body).toBe('- [ ] Measure\n- [ ] Get quotes');
+  });
+});
