@@ -172,7 +172,7 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       ...base(),
       local_date: '2031-01-06',
       status: 'fallback',
-      content: { reflection: null, top3: [], also_today: [], prep: [] },
+      content: { reflection: null, top3: [], also_today: [], prep: [], plan: null },
       model: null,
       cost_eur: 0,
     },
