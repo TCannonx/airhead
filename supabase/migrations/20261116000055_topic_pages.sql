@@ -2,11 +2,11 @@
 --
 -- A topic page (0049) is collated by AI once it has 3 or more reading items:
 -- summary (at most 200 words), a one-line note per link (page_items.note), and
--- pages.collation { overlaps[], open_questions[], next_step }. Each new link
+-- pages.collated { overlaps[], open_questions[], next_step }. Each new link
 -- updates the page from its existing summary; removing a link rebuilds it from
 -- every item (rebuild_requested_at), as does Collate on the device.
 
-alter table public.pages add column collation jsonb not null default '{}'::jsonb;
+alter table public.pages add column collated jsonb not null default '{}'::jsonb;
 
 -- A link added marks its page; a link removed from a topic page asks for a full rebuild.
 create or replace function public.page_items_stale()
@@ -56,7 +56,7 @@ begin
     new.key := old.key;
     new.summary := old.summary;
     new.facts := old.facts;
-    new.collation := old.collation;
+    new.collated := old.collated;
     new.item_count := old.item_count;
     new.last_item_at := old.last_item_at;
     new.deleted_at := old.deleted_at;

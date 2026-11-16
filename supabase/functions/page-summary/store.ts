@@ -54,7 +54,7 @@ export function supabasePageSummaryStore(db: SupabaseClient, userId: string): Pa
         .from('pages')
         .update({
           summary: row.summary,
-          collation: row.collation,
+          collated: row.collation,
           summary_stale: false,
           summarised_at: now,
           rebuild_requested_at: null,

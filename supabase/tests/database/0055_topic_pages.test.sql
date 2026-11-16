@@ -26,9 +26,9 @@ select is(public.page_reading_count((select id from public.pages where kind = 't
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000a"}';
-update public.pages set collation = '{"next_step": "hacked"}' where kind = 'topic';
+update public.pages set collated = '{"next_step": "hacked"}' where kind = 'topic';
 reset role;
-select is((select collation::text from public.pages where kind = 'topic'), '{}', 'the owner cannot write the collation');
+select is((select collated::text from public.pages where kind = 'topic'), '{}', 'the owner cannot write the collation');
 
 select * from finish();
 rollback;

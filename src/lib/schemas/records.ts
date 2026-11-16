@@ -478,7 +478,7 @@ export const pageSchema = z.object({
   summarised_at: ts.nullable(),
   rebuild_requested_at: ts.nullable(),
   /** A topic page's overlaps, open questions and next step (Task 16.5). */
-  collation: z
+  collated: z
     .object({
       overlaps: z.array(z.string()).default([]),
       open_questions: z.array(z.string()).default([]),

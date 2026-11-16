@@ -43,7 +43,7 @@ function page(o: Partial<Page>): Page {
     summary_stale: false,
     summarised_at: null,
     rebuild_requested_at: null,
-    collation: {},
+    collated: {},
     ...o,
   });
 }

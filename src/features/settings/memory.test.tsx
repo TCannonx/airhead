@@ -159,7 +159,7 @@ describe('Inbox → fact approval cards', () => {
         summary_stale: false,
         summarised_at: null,
         rebuild_requested_at: null,
-        collation: {},
+        collated: {},
       });
     const niamh = await save(d, 'pages', page('Niamh'));
     const bob = await save(d, 'pages', page('Bob the builder'));

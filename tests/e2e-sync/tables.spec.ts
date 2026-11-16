@@ -313,7 +313,7 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       summary_stale: true,
       summarised_at: null,
       rebuild_requested_at: null,
-      collation: {},
+      collated: {},
     },
     page_items: {
       ...base(),
