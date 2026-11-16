@@ -543,6 +543,11 @@ export const TASKS = [
     answer: () => fixture('page-summary').output,
   },
   {
+    task: 'link_enrich',
+    prompt: 'You describe one web page a person saved',
+    answer: () => fixture('link-enrich').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],
