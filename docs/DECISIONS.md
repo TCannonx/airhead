@@ -1704,6 +1704,10 @@ Decisions and library versions, newest first.
 - `nudge_stats` is rebuilt per person by `refresh_nudge_stats` (delete and insert, one SQL statement), nightly at 03:40 local (job `nudge_stats`). Rows: per planner nudge kind overall (`page_id` null) and per page the nudge's item is on, for series, place and person pages. The window is outcomes in the last 8 weeks (`outcome_at`, else `send_at`).
 - The median snooze shift is `snoozed_to - send_at` in minutes (positive = later), `percentile_cont(0.5)`, rounded.
 - Not synced: the device has no use for it yet; the owner may read it (RLS) and Insights can later.
+## Reading item on the device (Task 16.3, 2026-11-16)
+
+- `src/lib/reading.ts` reads `data.link` leniently (`linkInfo`) and makes the one-line row text (`readingLine`: "Article · 13 min · Marathon training", or "Couldn't read: needs sign-in"). Older items without `data.link` keep the Phase 3 view (summary, key points, minutes from sorting).
+- "Open anyway" is a plain link to the saved address in a new tab (`rel="noreferrer noopener"`).
 ## Enrich a link (Task 16.2, 2026-11-16)
 
 - `read-link` now reads and enriches **every reading item of the capture**, each with its own `data.url` (16.1 can make several), and stores the result as `data.link` (`status`, `reason`, `title`, `source`, `kind`, `minutes`, `summary`, `key_points`, `why_saved`, `topics`, `mentions`, `enriched_at`). The older fields (`description`, `reading_minutes`, `couldnt_read`) stay for the existing screens.

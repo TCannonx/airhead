@@ -54,4 +54,63 @@ describe('ReadingDetails', () => {
     );
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('shows the enrichment: kind, minutes, source, summary, key points, why saved, topics (Task 16.3)', () => {
+    render(
+      <ReadingDetails
+        item={newItem(U, {
+          type: 'reading',
+          title: 'Marathon plan',
+          data: {
+            url: 'https://example.com/plan',
+            link: {
+              status: 'read',
+              reason: null,
+              source: 'example.com',
+              kind: 'article',
+              minutes: 13,
+              summary: 'A 16-week plan.',
+              key_points: ['Protect the long run'],
+              why_saved: 'For the spring marathon',
+              topics: ['Marathon training'],
+            },
+          },
+        })}
+      />,
+    );
+    const box = screen.getByRole('region', { name: 'About this link' });
+    expect(box).toHaveTextContent('Article · 13 min · Marathon training · example.com');
+    expect(box).toHaveTextContent('A 16-week plan.');
+    expect(screen.getByRole('list', { name: 'Key points' })).toHaveTextContent(
+      'Protect the long run',
+    );
+    expect(box).toHaveTextContent('Why you saved it: For the spring marathon');
+    expect(box).toHaveTextContent('Topics: Marathon training');
+  });
+
+  it('an unreadable link shows its reason and Open anyway (Task 16.3)', () => {
+    render(
+      <ReadingDetails
+        item={newItem(U, {
+          type: 'reading',
+          title: 'Members only',
+          data: {
+            url: 'https://paper.example/a',
+            link: {
+              status: 'unreadable',
+              reason: 'needs sign-in',
+              source: 'paper.example',
+              key_points: [],
+              topics: [],
+            },
+          },
+        })}
+      />,
+    );
+    expect(screen.getByText(/Couldn.t read this page: needs sign-in/)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Open anyway' })).toHaveAttribute(
+      'href',
+      'https://paper.example/a',
+    );
+  });
 });

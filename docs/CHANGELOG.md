@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(learning): each night Airhead counts what you did with its reminders over the last 8 weeks (acted, snoozed, dismissed, ignored, and how far you usually snooze), per kind and per repeating event, place and person; no AI (migration 0057, Task 17.1)
+- feat(reading): a reading item shows what kind of page it is, its minutes, summary, key points, why you saved it and its topics, in the Library list and on its page; an unreadable link shows why, with "Open anyway" (Task 16.3)
 - feat(reading): every saved link is read and explained: kind, reading minutes, a three-line summary, up to five key points, why it was probably saved (from your own words around it), up to three topics and who or what it mentions; a page that cannot be read says why in plain words and costs no AI call (Task 16.2)
 - feat(capture): every link in a note becomes its own reading item, wherever it sits in the text, while the rest of the note is still sorted as written; the same link saved again (even with tracking parameters) joins the first item and records the new capture (Task 16.1)
 - feat(notifications): the installed app's badge shows overdue tasks plus open questions; push messages also carry WebKit's Declarative Web Push fields so Safari can show them without the service worker (needs the APP_URL secret) (Task 15.5)
