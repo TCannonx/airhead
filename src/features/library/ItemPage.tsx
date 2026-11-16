@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Page } from '../../app/Page';
 import { repeatText } from '../../lib/rules/repeatText';
 import { beforeText, prepRulesFor, readWorkSettings } from '../../lib/work/settings';
@@ -14,6 +14,8 @@ import { inWorkshop, leaveWorkshop, sendToWorkshop } from '../../lib/db/workshop
 import type { Item, ItemType } from '../../lib/schemas/records';
 import { Top3Button } from '../today/Top3Controls';
 import { FollowUpList } from '../inbox/FollowUps';
+import { PlanPanel } from '../plan/PlanPanel';
+import { SnoozeSheet } from '../plan/SnoozeSheet';
 import { Receipt } from '../capture/Receipt';
 import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
 import { Button } from '../../ui/Button';
@@ -74,6 +76,9 @@ function ItemForm({ item }: { item: Item }) {
     async () => (item.capture_id ? ((await db.captures.get(item.capture_id)) ?? null) : null),
     [db, item.capture_id],
   );
+  // A tapped planner notification opens the item with its snooze sheet (Task 13.8).
+  const [params, setParams] = useSearchParams();
+  const nudgeId = params.get('nudge');
   const [title, setTitle] = useState(item.title);
   const [body, setBody] = useState(item.body ?? '');
   const [type, setType] = useState<ItemType>(item.type);
@@ -136,6 +141,21 @@ function ItemForm({ item }: { item: Item }) {
           )}
           <TextArea label="Notes" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
         </Card>
+        <PlanPanel itemId={item.id} />
+        {nudgeId && (
+          <SnoozeSheet
+            nudgeId={nudgeId}
+            onClose={() =>
+              setParams(
+                (p) => {
+                  p.delete('nudge');
+                  return p;
+                },
+                { replace: true },
+              )
+            }
+          />
+        )}
         <FollowUpList itemId={item.id} title="Questions about this" showSource={false} />
         {source && !source.deleted_at && (
           <Section title="From your note">

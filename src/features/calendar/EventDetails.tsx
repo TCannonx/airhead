@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { PlanPanel } from '../plan/PlanPanel';
 import { Link } from 'react-router';
 import type { CalEvent } from '../../lib/calendar/sources';
 import { localDate, type CalendarData } from '../../lib/calendar/sources';
@@ -157,6 +158,11 @@ export default function EventDetails({
         {location && <Row label="Location">{location}</Row>}
         {notes && <Row label="Notes">{notes}</Row>}
       </dl>
+      {item && (
+        <div className="mt-3">
+          <PlanPanel itemId={item.id} />
+        </div>
+      )}
       {item && !isTask && (
         <StartNotesButton
           eventKey={item.id}

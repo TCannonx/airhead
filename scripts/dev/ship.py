@@ -178,13 +178,22 @@ def cmd_merge(token, args):
         http("DELETE", f"{API}/git/refs/heads/{pr['head']['ref']}", token=token)
     except urllib.error.HTTPError:
         pass  # already deleted by the repo setting
-    git("checkout", "main")
-    git("pull", "--ff-only")
-    print(f"merged #{args.pr}")
+    if git("status", "--porcelain", "--untracked-files=no"):
+        # Work in progress: leave the branch alone, just bring main up to date.
+        git("fetch", "origin", "main:main")
+        print(f"merged #{args.pr} (main fetched; you have uncommitted changes, so still on this branch)")
+    else:
+        git("checkout", "main")
+        git("pull", "--ff-only")
+        print(f"merged #{args.pr}")
     return 0
 
 
 def main(argv=None):
+    # CI logs hold characters a Windows console code page cannot print.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     p = argparse.ArgumentParser(prog="ship.py")
     sub = p.add_subparsers(dest="cmd", required=True)
     pr = sub.add_parser("pr")

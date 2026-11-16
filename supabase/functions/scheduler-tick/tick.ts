@@ -77,6 +77,18 @@ export interface TickStore {
   recurringEvents(userId: string): Promise<RecurringRow[]>;
   leave(userId: string): Promise<LeaveRow[]>;
   workDays(userId: string): Promise<WorkDayRow[]>;
+  /** Sent plan nudges untouched for 12 hours become 'ignored' (Task 13.8). */
+  markIgnored?(): Promise<number>;
+}
+
+/** Planner nudges open their item with the snooze sheet (Task 13.8). */
+export const SNOOZABLE = new Set(['prepare', 'leave', 'do', 'follow_up', 'reading']);
+
+/** The URL a tapped notification opens: a planner nudge carries its id for the snooze sheet. */
+export function tapUrl(n: Pick<Nudge, 'id' | 'kind' | 'url'>): string | undefined {
+  if (!n.url) return undefined;
+  if (!SNOOZABLE.has(n.kind)) return n.url;
+  return `${n.url}${n.url.includes('?') ? '&' : '?'}nudge=${n.id}`;
 }
 
 /** Sends to the person's notification device(s): 'sent', or 'none' when nothing received it. */
@@ -206,6 +218,7 @@ export async function runTick(
 ): Promise<TickReport> {
   const report: TickReport = { sent: 0, deferred: 0, bundled: 0, cancelled: 0, jobs: [] };
   const nowIso = now.toISOString();
+  await store.markIgnored?.().catch(() => 0);
 
   for (const u of await store.users()) {
     const tz = typeof u.settings.time_zone === 'string' ? u.settings.time_zone : 'Europe/Dublin';
@@ -399,7 +412,7 @@ export async function runTick(
       const r = await send(u.user_id, {
         title: n.title,
         body: n.body ?? undefined,
-        url: n.url ?? undefined,
+        url: tapUrl(n),
         tag: n.id,
       });
       await store.setStatus([n.id], r === 'sent' ? 'sent' : 'failed', nowIso);

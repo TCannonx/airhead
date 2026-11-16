@@ -230,6 +230,15 @@ export interface ScoutService {
   run(): Promise<{ ok: boolean; message: string }>;
 }
 
+/** The owner's answer to a planner nudge (Task 13.8); absent in local mode. */
+export interface NudgesService {
+  respond(
+    nudgeId: string,
+    outcome: 'acted' | 'dismissed' | 'snoozed',
+    snoozeTo?: string,
+  ): Promise<{ ok: boolean; message: string }>;
+}
+
 export interface Services {
   auth: AuthClient;
   appLock: AppLockAuthenticator;
@@ -250,4 +259,5 @@ export interface Services {
   reviews?: ReviewsService;
   leave?: LeaveService;
   scout?: ScoutService;
+  nudges?: NudgesService;
 }

@@ -2,6 +2,7 @@ import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
 import { inQuietHours, localMidnightIso, readNotif } from './notif.ts';
 import {
   addMinutesHHMM,
+  tapUrl,
   occurrencesBetween,
   runTick,
   type LeaveRow,
@@ -601,4 +602,30 @@ Deno.test('a failing planner does not stop the tick', async () => {
 
 Deno.test('addMinutesHHMM stays within the day', () => {
   assertEquals([addMinutesHHMM('18:00', 90), addMinutesHHMM('23:00', 90)], ['19:30', '23:59']);
+});
+
+Deno.test('a tapped planner nudge opens its item with the snooze sheet (Task 13.8)', async () => {
+  assertEquals(
+    tapUrl({ id: 'n1', kind: 'prepare', url: '/library/item/i1' }),
+    '/library/item/i1?nudge=n1',
+  );
+  assertEquals(tapUrl({ id: 'n1', kind: 'leave', url: '/x?a=1' }), '/x?a=1&nudge=n1');
+  assertEquals(tapUrl({ id: 'n1', kind: 'checklist', url: '/today' }), '/today');
+  assertEquals(tapUrl({ id: 'n1', kind: 'do', url: null }), undefined);
+  const m = memory({
+    settings: quietJobs,
+    nudges: [
+      {
+        kind: 'do',
+        title: 'Send form',
+        url: '/library/item/i1',
+        send_at: '2026-11-18T15:00:00.000Z',
+      },
+    ],
+  });
+  let marked = 0;
+  m.store.markIgnored = () => (marked++, Promise.resolve(0));
+  await runTick(at('2026-11-18T15:00:00Z'), m.store, m.send);
+  assertEquals(m.sent[0]?.url, `/library/item/i1?nudge=${m.nudges[0]?.id}`);
+  assertEquals(marked, 1);
 });
