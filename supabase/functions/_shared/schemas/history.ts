@@ -25,3 +25,13 @@ export const LinkEnrichment = z.object({
   mentions: z.array(z.object({ kind: z.enum(['person', 'club', 'tool']), name: z.string() })),
 });
 export type LinkEnrichmentT = z.infer<typeof LinkEnrichment>;
+
+/** A topic page's collation (Task 16.5). Trimmed in code. */
+export const TopicResult = z.object({
+  summary: z.string(),
+  notes: z.array(z.object({ item_id: z.string(), note: z.string() })),
+  overlaps: z.array(z.string()),
+  open_questions: z.array(z.string()),
+  next_step: z.string(),
+});
+export type TopicResultT = z.infer<typeof TopicResult>;
