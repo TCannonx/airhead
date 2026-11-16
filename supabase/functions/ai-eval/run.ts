@@ -4,7 +4,7 @@
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
 import { leaveYearFor } from '../_shared/leave/engine.ts';
 import { readWork } from '../_shared/leave/work.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v8.ts';
 import { SORT_MAX_TOKENS } from '../sort-batch/run.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';
 import { planSort, type InstantRow } from '../sort-batch/plan.ts';

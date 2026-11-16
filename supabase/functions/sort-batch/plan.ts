@@ -54,6 +54,26 @@ export const MAX_FOLLOW_UPS = 3;
 export const MAX_OPTIONS = 4;
 /** Questions stop after this round: an answer may bring one more, no more (Task 12.2). */
 export const MAX_ROUNDS = 2;
+/** People and projects mentioned, per capture (Task 14.4). */
+export const MAX_MENTIONS = 5;
+
+/** Mentions with a real name, once each, at most `left`. */
+export function cleanMentions(
+  raw: { kind: 'person' | 'project'; name: string }[],
+  left: number,
+): { kind: 'person' | 'project'; name: string }[] {
+  const seen = new Set<string>();
+  const out: { kind: 'person' | 'project'; name: string }[] = [];
+  for (const m of raw) {
+    const name = m.name.replace(/\s+/g, ' ').trim().slice(0, 60);
+    const key = `${m.kind}:${name.toLowerCase()}`;
+    if (name.length < 2 || seen.has(key) || out.length >= Math.max(0, left)) continue;
+    seen.add(key);
+    out.push({ kind: m.kind, name });
+  }
+  return out;
+}
+
 /** Checklist steps on a planning task. */
 export const MAX_STEPS = 5;
 
@@ -504,6 +524,8 @@ export function planSort(
     for (const t of topics) if (!topicNames.has(norm(t))) newTopics.set(norm(t), t);
   };
 
+  const mentionsLeft = new Map<string, number>();
+
   /** One item from the model, with Airhead's rules applied. */
   const toPlanned = (
     it: SortAnswerItem,
@@ -526,6 +548,14 @@ export function planSort(
       data.planning = true;
       data.steps = steps;
     }
+    // People and projects (Task 14.4): pages link them by name (drain_page_queue).
+    const mentions = cleanMentions(
+      it.mentions ?? [],
+      captureId ? (mentionsLeft.get(captureId) ?? MAX_MENTIONS) : MAX_MENTIONS,
+    );
+    if (captureId)
+      mentionsLeft.set(captureId, (mentionsLeft.get(captureId) ?? MAX_MENTIONS) - mentions.length);
+    if (mentions.length) data.mentions = mentions;
     let itemStatus: PlannedItem['status'] = confidence < REVIEW_BELOW ? 'suggested' : 'open';
     let listId: string | null = null;
 

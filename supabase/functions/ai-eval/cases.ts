@@ -430,6 +430,28 @@ export function evalCases(now: Date): {
       },
     },
     {
+      id: 'people-project',
+      text: 'Need to ask Niamh and Trevor about the kitchen extension by Friday',
+      meant:
+        'A task due Friday that mentions Niamh and Trevor (people) and the kitchen extension (a project).',
+      check: (r) => {
+        const m = r.items.flatMap(
+          (i) => (i.data.mentions as { kind: string; name: string }[] | undefined) ?? [],
+        );
+        const person = (n: string) =>
+          m.some((x) => x.kind === 'person' && x.name.toLowerCase().includes(n));
+        return [
+          ...has(!!titled(r.items, /niamh|trevor|kitchen/i), 'no task about it'),
+          ...has(person('niamh'), 'Niamh not mentioned as a person'),
+          ...has(person('trevor'), 'Trevor not mentioned as a person'),
+          ...has(
+            m.some((x) => x.kind === 'project' && /kitchen/i.test(x.name)),
+            'the kitchen extension not mentioned as a project',
+          ),
+        ];
+      },
+    },
+    {
       id: 'vague',
       text: 'hmm the thing with the stuff',
       meant: 'Nothing clear: kept in the Workshop, not lost.',

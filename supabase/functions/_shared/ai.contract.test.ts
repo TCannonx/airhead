@@ -35,7 +35,7 @@ import { runTurn, type Turn, TurnResult } from '../workshop/turn.ts';
 import { type AIClient, type CallAIRequest, callAI, type UsageStore } from './ai.ts';
 import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v7.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
 import { DayDigestResult, MonthDigestResult } from './schemas/history.ts';
 import monthFixture from '../../../tests/fixtures/ai/month-digest.json' with { type: 'json' };

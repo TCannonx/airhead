@@ -1627,3 +1627,11 @@ Decisions and library versions, newest first.
 - A link is soft-deleted (not removed) when the item leaves the group or is deleted, so devices see it go.
 - The migration queues every existing item that has a series, repeat, topic or location, so the first ticks after deploy build the pages for existing history.
 - The scheduler's dispatcher also runs when `page_queue` has rows.
+
+## People and projects (Task 14.4, 2026-11-16)
+
+- **Plan vs code**: the plan says `apply_sort_batch` links items to pages. Mentions are instead kept on each item as `data.mentions` and linked by the page drain (0049, extended in 0050), which already runs whenever an item is saved. Same result, no change to the 400-line `apply_sort_batch`, and edits from any source (not only sorting) keep pages in step.
+- `mentions` sits on each sorted item (`{kind: person | project, name}`), not on the capture, so the link is to the right item. At most 5 per capture across its items (`cleanMentions`, in order), duplicates and one-letter names dropped.
+- Page names are matched by `page_name_key` (lower case, spaces collapsed). The first spelling names the page; renames are the owner's.
+- A new person page starts `pending_approval`. Settings → Memory lists them under "People Airhead noticed": "Keep a page" (active) or "Not a person" (archived). Links are kept either way; an archived page is just hidden.
+- Prompt `sort-batch.v8` = v7 plus the mentions rule; v7 removed. **The sorting eval on the real model** runs on dev once this merges (the prompt hash changes); its result can't be read from this machine (see BLOCKERS). A new case "people-project" checks two people and a project.

@@ -1,9 +1,9 @@
 // Follow-ups and planning steps (Task 12.1), and answers (Task 12.2): every
 // note that implies more work is moved forward, never left silent.
 import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
-import { SORT_BATCH_SYSTEM, buildSortMessage } from '../_shared/prompts/sort-batch.v7.ts';
+import { SORT_BATCH_SYSTEM, buildSortMessage } from '../_shared/prompts/sort-batch.v8.ts';
 import type { FollowUpT, SortAnswer, SortedItemT } from '../_shared/schemas/sort.ts';
-import { cleanFollowUps, planningDue, planSort } from './plan.ts';
+import { cleanFollowUps, cleanMentions, MAX_MENTIONS, planningDue, planSort } from './plan.ts';
 
 // Monday 9 November 2026, 10:00 in Dublin (GMT).
 const NOW = new Date('2026-11-09T10:00:00Z');
@@ -29,6 +29,7 @@ const item = (o: Partial<SortedItemT> = {}): SortedItemT => ({
   related_idea_title: null,
   quote: 'Planning Christmas sandwiches every week on a Friday',
   steps: [],
+  mentions: [],
   ...o,
 });
 const planning = (o: Partial<SortedItemT> = {}) =>
@@ -404,3 +405,40 @@ Deno.test(
     assertEquals(planned.follow_ups.length, 1);
   },
 );
+
+Deno.test('mentions (Task 14.4): real names once each, at most 5 per capture, kept in data', () => {
+  assertEquals(
+    cleanMentions(
+      [
+        { kind: 'person', name: '  Niamh ' },
+        { kind: 'person', name: 'niamh' },
+        { kind: 'project', name: 'Kitchen   extension' },
+        { kind: 'person', name: 'x' },
+      ],
+      MAX_MENTIONS,
+    ),
+    [
+      { kind: 'person', name: 'Niamh' },
+      { kind: 'project', name: 'Kitchen extension' },
+    ],
+  );
+  assertEquals(cleanMentions([{ kind: 'person', name: 'Mam' }], 0), []);
+  const people = (ns: number[]) => ns.map((n) => ({ kind: 'person' as const, name: `P${n}` }));
+  const plan = planSort(
+    [C1],
+    {
+      results: [
+        result(C1, {
+          items: [
+            item({ mentions: people([1, 2, 3, 4]) }),
+            item({ title: 'Second', mentions: people([5, 6, 7]) }),
+          ],
+        }),
+      ],
+    },
+    ctx,
+  );
+  assertEquals(plan.items[0]?.data.mentions, people([1, 2, 3, 4]));
+  const counts = plan.items.map((i) => ((i.data.mentions as unknown[] | undefined) ?? []).length);
+  assertEquals(counts.reduce((a, b) => a + b, 0) <= MAX_MENTIONS, true);
+});

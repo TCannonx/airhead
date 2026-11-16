@@ -1,6 +1,6 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
+import { buildSortMessage, SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v8.ts';
 import { buildProfile, type FactRow } from '../_shared/memory.ts';
 import { relevantFacts, withRelevant } from '../_shared/relevant.ts';
 import { SortResult } from '../_shared/schemas/sort.ts';

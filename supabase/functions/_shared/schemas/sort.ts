@@ -26,6 +26,8 @@ export const SortedItem = z.object({
    * more work ("still need to plan") gets a task with these. Empty otherwise.
    */
   steps: z.array(z.string()),
+  /** People and projects the item is about (Task 14.4); linked to pages by name. */
+  mentions: z.array(z.object({ kind: z.enum(['person', 'project']), name: z.string() })),
 });
 
 const ACTION_KINDS = [

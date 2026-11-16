@@ -10,6 +10,7 @@ import {
   restoreFact,
   setRuleEnabled,
 } from '../../lib/db/memory';
+import { update } from '../../lib/db/repository';
 import { TYPE_LABELS } from '../../lib/db/sorting';
 import type { MemoryFact } from '../../lib/schemas/records';
 import { Button } from '../../ui/Button';
@@ -72,6 +73,15 @@ export default function MemorySettings() {
   const lists = useLiveQuery(() => db.lists.toArray(), [db]);
   const listName = new Map(lists?.map((l) => [l.id, l.name]));
 
+  // People Airhead noticed in your notes (Task 14.4): a person page waits for your OK.
+  const people = useLiveQuery(
+    () =>
+      db.pages
+        .filter((p) => p.kind === 'person' && p.status === 'pending_approval' && !p.deleted_at)
+        .sortBy('name'),
+    [db],
+  );
+
   const by = (s: MemoryFact['status']) => facts?.filter((f) => f.status === s) ?? [];
 
   async function onAdd(e: FormEvent) {
@@ -88,6 +98,39 @@ export default function MemorySettings() {
         facts about people and personal details wait for your OK. Facts unused for six months are
         archived.
       </p>
+
+      {(people?.length ?? 0) > 0 && (
+        <div>
+          <h3 className="mb-1 text-footnote font-medium">People Airhead noticed</h3>
+          <ul aria-label="People Airhead noticed" className="divide-y divide-border/70">
+            {people?.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-2 py-1.5">
+                <span className="text-footnote">
+                  {p.name}{' '}
+                  <span className="text-caption text-fg-muted">
+                    ({p.item_count} {p.item_count === 1 ? 'mention' : 'mentions'})
+                  </span>
+                </span>
+                <span className="flex shrink-0 gap-1">
+                  <Button
+                    variant="plain"
+                    size="sm"
+                    onClick={() => void update(db, 'pages', p.id, { status: 'active' })}
+                  >
+                    Keep a page
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => void update(db, 'pages', p.id, { status: 'archived' })}
+                  >
+                    Not a person
+                  </Button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {by('pending_approval').length > 0 && (
         <div>

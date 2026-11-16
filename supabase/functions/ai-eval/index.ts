@@ -3,7 +3,7 @@ import { anthropicClient } from '../_shared/anthropic.ts';
 import { supabaseCaller } from '../_shared/caller.ts';
 import { json } from '../_shared/http.ts';
 import { PLAN_SYSTEM } from '../_shared/prompts/plan.v1.ts';
-import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v7.ts';
+import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v8.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { textHash } from '../sort-batch/notes.ts';
 import { evalCases } from './cases.ts';

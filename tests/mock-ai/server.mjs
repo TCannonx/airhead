@@ -60,6 +60,7 @@ const blankItem = {
   related_idea_title: null,
   quote: '',
   steps: [],
+  mentions: [],
 };
 const action = (kind, quote, details, confidence = 0.92) => ({
   kind,
@@ -335,6 +336,28 @@ export function sortOne(id, text, ctx, instant = null, answer = null) {
     return result;
   }
 
+  // "Need to ask Niamh and Trevor about the kitchen extension by Friday" (Task 14.4):
+  // a task due that day that mentions its people and project.
+  const need = t.match(/^need to (.+?) by (\w+day)\b/i);
+  if (need) {
+    const day = WEEKDAYS.indexOf(need[2].toLowerCase());
+    result.items.push({
+      ...blankItem,
+      type: 'task',
+      title: cap(need[1].trim()),
+      due_at: day >= 0 ? nextWeekday(day, 17) : null,
+      quote: t,
+      mentions: [
+        ...[...need[1].matchAll(/\b([A-Z][a-z]+)\b/g)].map((m) => ({ kind: 'person', name: m[1] })),
+        ...[...need[1].matchAll(/about the ([a-z ]+)$/gi)].map((m) => ({
+          kind: 'project',
+          name: m[1].trim(),
+        })),
+      ].slice(0, 5),
+    });
+    return result;
+  }
+
   result.items.push({ ...blankItem, title: t.charAt(0).toUpperCase() + t.slice(1) });
   return result;
 }
@@ -362,6 +385,14 @@ export function sortNote(id, text) {
       type: 'task',
       title: cap(need[1].trim()),
       due_at: day >= 0 ? nextWeekday(day, 17) : null,
+      // People and projects (Task 14.4): the capitalised names, and "the <project>".
+      mentions: [
+        ...[...need[1].matchAll(/\b([A-Z][a-z]+)\b/g)].map((m) => ({ kind: 'person', name: m[1] })),
+        ...[...need[1].matchAll(/about the ([a-z ]+)$/gi)].map((m) => ({
+          kind: 'project',
+          name: m[1].trim(),
+        })),
+      ].slice(0, 5),
     });
   }
   return result;

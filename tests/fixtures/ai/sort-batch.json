@@ -37,7 +37,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           },
           {
             "type": "list_entry",
@@ -54,7 +55,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           },
           {
             "type": "event",
@@ -71,7 +73,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           },
           {
             "type": "task",
@@ -88,7 +91,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           }
         ],
         "link_summary": null,
@@ -120,7 +124,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           }
         ],
         "link_summary": null,
@@ -147,7 +152,8 @@
             "suggest_workshop": true,
             "related_idea_title": "Vegetable patch",
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           }
         ],
         "link_summary": null,
