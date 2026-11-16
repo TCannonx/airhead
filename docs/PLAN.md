@@ -681,7 +681,7 @@ Outcome: timing gets better because of what the owner actually does, and the wee
     - Tests: unit tests for the pattern rule; fixture and contract test; a real-model case: after three morning snoozes of the bag nudge, the next plan puts it in the morning.
 - [x] **17.3 Weekly review on planner data.** `weekly-review` (large tier) receives the week's `plan_runs`, nudge outcomes, slipped items with their plans, and next week's commitments against free time from the calendar gap finder. It may propose changes as `ai_actions` under "Needs your OK" (move a task, split a large one, drop a stale one); it applies nothing itself.
 - [x] **17.4 Cost reporting and the batch interface.** Insights shows cost per day by run kind from `plan_runs`, look-ups used, and how often defaults carried the day. **Verify** in current Anthropic documentation whether the batch interface is cheaper for the learning pass and weekly review; if so, use it for those two only and record the finding in DECISIONS.
-- [ ] **17.5 Release to dev.** As 13.10.
+- [x] **17.5 Release to dev.** As 13.10.
 
 ### Phase 18: Capture and findability (outline)
 
