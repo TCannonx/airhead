@@ -653,6 +653,8 @@ Outcome: one useful morning message built from the plan; plans that stay right w
     - Tests: tick tests for the debounce and both limits; an e2e-sync test: move tomorrow's event from 08:00 to 15:00 on one device, and the evening `prepare` is cancelled and replaced by a same-day one.
 - [ ] **15.4 Digest delivery.** Nudges with `delivery = 'digest'` are never pushed on their own. Pending ones are listed in the morning brief or the evening round-up, whichever comes first after `send_at`, and then marked `sent`. Settings → Notifications gets a switch per kind: push, digest or off.
 - [x] **15.5 Badge and steadier push.** Set the app badge to the count of overdue tasks plus open questions (Badging API, installed web apps only). **Verify** the current WebKit documentation for Declarative Web Push and, if it holds, send the declarative payload alongside the existing one in `_shared/push.ts`; record the finding in DECISIONS.
+- [x] **15.4 Digest delivery.** Nudges with `delivery = 'digest'` are never pushed on their own. Pending ones are listed in the morning brief or the evening round-up, whichever comes first after `send_at`, and then marked `sent`. Settings → Notifications gets a switch per kind: push, digest or off.
+- [ ] **15.5 Badge and steadier push.** Set the app badge to the count of overdue tasks plus open questions (Badging API, installed web apps only). **Verify** the current WebKit documentation for Declarative Web Push and, if it holds, send the declarative payload alongside the existing one in `_shared/push.ts`; record the finding in DECISIONS.
 - [ ] **15.6 Release to dev.** As 13.10, with a "Phase 15: digest and re-plan" checklist section.
 
 ### Phase 16: Reading that collates itself
