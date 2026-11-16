@@ -91,6 +91,67 @@ export function supabasePlanStore(db: SupabaseClient): PlanStore {
         .maybeSingle();
       return (data?.finished_at as string | null | undefined) ?? null;
     },
+    async reading(userId) {
+      const [{ data: items }, { data: topics }] = await Promise.all([
+        db
+          .from('items')
+          .select('id, title, data, topic_ids, created_at')
+          .eq('user_id', userId)
+          .eq('type', 'reading')
+          .eq('status', 'open')
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(60),
+        db
+          .from('topics')
+          .select('id, name')
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .limit(500),
+      ]);
+      const names = new Map((topics ?? []).map((t) => [t.id as string, t.name as string]));
+      const rows = (items ?? []) as {
+        id: string;
+        title: string;
+        data: Record<string, unknown>;
+        topic_ids: string[];
+        created_at: string;
+      }[];
+      const byTopic = new Map<string, { count: number; last: string }>();
+      for (const r of rows)
+        for (const t of r.topic_ids ?? []) {
+          const cur = byTopic.get(t);
+          byTopic.set(t, {
+            count: (cur?.count ?? 0) + 1,
+            last: cur && cur.last > r.created_at ? cur.last : r.created_at,
+          });
+        }
+      const minutesOf = (d: Record<string, unknown>) => {
+        const link = d.link as { minutes?: unknown } | undefined;
+        const m = link?.minutes ?? d.reading_minutes;
+        return typeof m === 'number' ? m : null;
+      };
+      return {
+        topics: [...byTopic.entries()]
+          .filter(([, v]) => v.count >= 3)
+          .sort((a, b) => b[1].last.localeCompare(a[1].last))
+          .map(([id, v]) => ({
+            name: names.get(id) ?? '',
+            count: v.count,
+            last_added: v.last.slice(0, 10),
+          }))
+          .filter((t) => t.name),
+        unread: rows
+          .filter((r) => (r.data.link as { status?: string } | undefined)?.status !== 'unreadable')
+          .slice(0, 8)
+          .map((r) => ({
+            item_id: r.id,
+            title: r.title,
+            minutes: minutesOf(r.data),
+            topics: (r.topic_ids ?? []).map((t) => names.get(t) ?? '').filter(Boolean),
+          })),
+      };
+    },
     async spentToday(userId, localDate) {
       const { data } = await db
         .from('plan_runs')

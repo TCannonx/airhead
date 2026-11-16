@@ -43,7 +43,7 @@ import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
-import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v2.ts';
+import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v3.ts';
 import {
   DayDigestResult,
   LinkEnrichment,
