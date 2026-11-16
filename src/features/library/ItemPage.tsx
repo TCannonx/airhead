@@ -15,6 +15,7 @@ import type { Item, ItemType } from '../../lib/schemas/records';
 import { Top3Button } from '../today/Top3Controls';
 import { FollowUpList } from '../inbox/FollowUps';
 import { PlanPanel } from '../plan/PlanPanel';
+import { ItemPages } from './PagesPage';
 import { SnoozeSheet } from '../plan/SnoozeSheet';
 import { Receipt } from '../capture/Receipt';
 import { GroupedList, GroupedListItem, Section } from '../../ui/GroupedList';
@@ -142,6 +143,7 @@ function ItemForm({ item }: { item: Item }) {
           <TextArea label="Notes" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
         </Card>
         <PlanPanel itemId={item.id} />
+        <ItemPages itemId={item.id} />
         {nudgeId && (
           <SnoozeSheet
             nudgeId={nudgeId}
