@@ -748,3 +748,13 @@ Deno.test('the owner can turn a planner kind to digest or off (Task 15.4)', asyn
   assertEquals(r.cancelled, 1);
   assertEquals(m.nudges.find((x) => x.title === 'Time to leave')?.status, 'pending');
 });
+
+Deno.test('outcome statistics are rebuilt once a night at 03:40 local (Task 17.1)', async () => {
+  const m = memory({ settings: quietJobs });
+  const ran: string[] = [];
+  const extras = { nudgeStats: (_u: string, d: string) => (ran.push(d), Promise.resolve()) };
+  await runTick(at('2026-11-18T03:39:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T03:40:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T05:00:00Z'), m.store, m.send, extras);
+  assertEquals(ran, ['2026-11-18']);
+});

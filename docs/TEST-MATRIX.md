@@ -360,6 +360,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Re-plan on change: queue records why (changed, snoozed, missed); defaults at once; after 5 quiet minutes a replan of only those items, 10 a run, 6 runs a day, not when off | — | `fn/scheduler-tick/plan.test.ts` (debounce, limits, off), `fn/plan-day/run.test.ts` (replan only the given items), `db/0054` (reasons, defaults again after a change) | `sync/plan.spec.ts` "moving tomorrow 08:00 to 15:00 replaces the evening prepare with a same-day one" | |
 | The brief from the plan: plan in the message and in `content.plan` (prepare now, clashes, ready today, reading pick); "Left out" whenever the digest was capped or nudges dropped; kept in the fallback; Today shows it | `features/today/today.test.tsx`, `lib/schemas/records.test.ts` | `fn/morning-brief/brief.test.ts`, `_shared/ai.contract.test.ts` (brief through mock-ai) | `sync/tables.spec.ts` (`briefs`) | |
 
+## Phase 17 — Learning and the weekly review
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Outcome statistics: per kind and per series/place/person page, 8 weeks, counts and median snooze shift; nightly at 03:40; owner reads | — | `db/0057` (counts, median, window, per page, RLS), `fn/scheduler-tick/tick.test.ts` | — | Server-side only (read by 17.2–17.4) |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |

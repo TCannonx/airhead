@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(learning): each night Airhead counts what you did with its reminders over the last 8 weeks (acted, snoozed, dismissed, ignored, and how far you usually snooze), per kind and per repeating event, place and person; no AI (migration 0057, Task 17.1)
 - feat(notifications): digest delivery: reading suggestions and open-ended follow-ups never arrive as their own notification; they are listed in one "From your plan" round-up with the morning brief or the evening review, whichever comes first; Settings → Notifications → Planner reminders sets each kind to as planned, notification, digest or off (Task 15.4)
 - feat(plan): re-plan on change: an event or task that is changed, snoozed or whose reminder was missed gets new defaults at once and, when the planner is on and it has been quiet for 5 minutes, a small re-plan of just those items (at most 10 a run, 6 runs a day; beyond that the defaults stand until the evening) (migration 0054, Task 15.3)
 - feat(brief): the morning brief is built with the plan: Today shows "From your plan" (what to prepare, clashes, tasks ready today, one reading pick) and a "Left out: …" line whenever the planner had to leave something out; the code-built fallback keeps it (prompt brief.v2, Task 15.2)

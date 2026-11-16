@@ -213,12 +213,16 @@ export interface TickExtras {
   dayDigest?: (userId: string, localDate: string) => Promise<void>;
   /** Month summaries (Task 14.2): last month once ended, and stale ones, at 03:20 local. */
   monthDigest?: (userId: string, localDate: string) => Promise<void>;
+  /** Outcome statistics (Task 17.1), at 03:40 local. */
+  nudgeStats?: (userId: string, localDate: string) => Promise<void>;
   /** Page summaries (Task 14.5), at 03:30 local. */
   pageSummaries?: (userId: string) => Promise<void>;
 }
 
 /** When the nightly page summaries are refreshed (local time). */
 export const PAGE_SUMMARY_TIME = '03:30';
+/** When the nightly outcome statistics and timing preferences run (local time). */
+export const LEARNING_TIME = '03:40';
 
 /** When the nightly month summaries are checked (local time). */
 export const MONTH_DIGEST_TIME = '03:20';
@@ -315,6 +319,10 @@ export async function runTick(
     if (extras.pageSummaries && (await job('page_summaries', PAGE_SUMMARY_TIME))) {
       report.jobs.push('page_summaries');
       await extras.pageSummaries(u.user_id).catch(() => undefined);
+    }
+    if (extras.nudgeStats && (await job('nudge_stats', LEARNING_TIME))) {
+      report.jobs.push('nudge_stats');
+      await extras.nudgeStats(u.user_id, local.date).catch(() => undefined);
     }
     const plan = readPlanSettings(u.settings);
     if (extras.plan && plan.enabled && (await job('plan_evening', plan.evening_time))) {

@@ -350,6 +350,9 @@ function tickNow(pusher: Pusher) {
           usage: supabaseUsageStore(db),
         });
       },
+      nudgeStats: async (userId) => {
+        await db.rpc('refresh_nudge_stats', { p_user_id: userId });
+      },
       pageSummaries: async (userId) => {
         await runPageSummaries(userId, {
           store: supabasePageSummaryStore(db, userId),
