@@ -1,6 +1,6 @@
 import { z } from 'npm:zod@4.6.7';
 import { callAI, type AIClient, type UsageStore } from '../_shared/ai.ts';
-import { buildReviewMessage, REVIEW_SYSTEM } from '../_shared/prompts/review.v1.ts';
+import { buildReviewMessage, REVIEW_SYSTEM } from '../_shared/prompts/review.v2.ts';
 
 export interface Candidate {
   kind: 'item' | 'capture';
@@ -40,6 +40,16 @@ export const ReviewResult = z.object({
     }),
   ),
   digest: z.string(),
+  /** Changes for the owner to approve (Task 17.3). */
+  proposals: z.array(
+    z.object({
+      kind: z.enum(['move', 'split', 'drop']),
+      item_id: z.string(),
+      when: z.string(),
+      steps: z.array(z.string()),
+      reason: z.string(),
+    }),
+  ),
 });
 export type ReviewResultT = z.infer<typeof ReviewResult>;
 
@@ -53,6 +63,65 @@ export interface TidyProposal {
   group: number | null;
 }
 
+/** What the review sees of the planner (Task 17.3). */
+export interface PlannerWeek {
+  runs: { kind: string; ok: number; failed: number; capped: number; cost_eur: number }[];
+  outcomes: { acted: number; snoozed: number; dismissed: number; ignored: number };
+  slipped: {
+    id: string;
+    title: string;
+    due: string | null;
+    carry_count: number;
+    plan: string | null;
+  }[];
+  next_week: {
+    days: { date: string; commitments: number; busy_minutes: number; free_minutes: number }[];
+    tasks: { id: string; title: string; due: string | null; effort_minutes: number | null }[];
+  };
+}
+
+/** A checked proposal (Task 17.3), stored as an ai_action that asks for the owner's OK. */
+export interface Proposal {
+  kind: 'move' | 'split' | 'drop';
+  item_id: string;
+  title: string;
+  when: string | null;
+  steps: string[];
+  reason: string;
+}
+
+/** Keeps proposals about tasks the review was shown, well formed, at most 5. */
+export function validProposals(r: ReviewResultT, planner: PlannerWeek | null): Proposal[] {
+  if (!planner) return [];
+  const titles = new Map(
+    [...planner.slipped, ...planner.next_week.tasks].map((t) => [t.id, t.title]),
+  );
+  const seen = new Set<string>();
+  const out: Proposal[] = [];
+  for (const p of r.proposals) {
+    const title = titles.get(p.item_id);
+    if (!title || seen.has(p.item_id)) continue;
+    const when = /^\d{4}-\d{2}-\d{2}$/.test(p.when.trim()) ? p.when.trim() : null;
+    const steps = p.steps
+      .map((x) => x.replace(/\s+/g, ' ').trim().slice(0, 120))
+      .filter(Boolean)
+      .slice(0, 5);
+    if (p.kind === 'move' && !when) continue;
+    if (p.kind === 'split' && steps.length < 2) continue;
+    seen.add(p.item_id);
+    out.push({
+      kind: p.kind,
+      item_id: p.item_id,
+      title,
+      when: p.kind === 'move' ? when : null,
+      steps: p.kind === 'split' ? steps : [],
+      reason: p.reason.trim().slice(0, 200),
+    });
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
 export interface ReviewContent {
   themes: string[];
   wins: string[];
@@ -64,6 +133,8 @@ export interface ReviewContent {
   facts: { action: 'merge' | 'retire'; ids: string[]; text: string | null }[];
   ai: { cost_eur: number; calls: number };
   stats: Record<string, unknown>;
+  /** Proposed changes waiting under "Needs your OK" (Task 17.3). */
+  proposals: Proposal[];
 }
 
 export interface BuiltReview {
@@ -153,6 +224,7 @@ export async function buildReview(
   candidates: Candidate[],
   facts: FactIn[],
   deps: { ai: AIClient; store: UsageStore },
+  planner: PlannerWeek | null = null,
 ): Promise<Omit<BuiltReview, 'content'> & { content: Omit<ReviewContent, 'auto_done'> }> {
   const ask = candidates.filter((c) => c.mode === 'ask').slice(0, 60);
   const ai = (week.ai ?? { cost_eur: 0, calls: 0 }) as { cost_eur: number; calls: number };
@@ -181,6 +253,7 @@ export async function buildReview(
               age_days: c.age_days,
             })),
             facts: facts.slice(0, 40),
+            planner: planner ?? undefined,
           }),
         },
       ],
@@ -195,7 +268,16 @@ export async function buildReview(
       status: 'fallback',
       digest: fallbackDigest(week),
       cost_eur: 0,
-      content: { themes: [], wins: [], slipped: [], suggestions: [], tidy: [], facts: [], ...base },
+      content: {
+        themes: [],
+        wins: [],
+        slipped: [],
+        suggestions: [],
+        tidy: [],
+        facts: [],
+        proposals: [],
+        ...base,
+      },
     };
   const v = validate(result.data, ask, facts);
   return {
@@ -209,6 +291,7 @@ export async function buildReview(
       suggestions: v.suggestions,
       tidy: v.tidy,
       facts: v.facts,
+      proposals: validProposals(result.data, planner),
       ...base,
     },
   };
