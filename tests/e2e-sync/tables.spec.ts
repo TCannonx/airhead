@@ -22,6 +22,7 @@ const SERVER_ONLY = new Set<SyncTable>([
   'scout_runs',
   'item_plans',
   'nudges',
+  'day_digests',
 ]);
 
 function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> {
@@ -278,6 +279,14 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       outcome: null,
       outcome_at: null,
       snoozed_to: null,
+    },
+    day_digests: {
+      ...base(),
+      local_date: '2031-01-05',
+      digest: 'Every table day.',
+      item_ids: [id()],
+      stale: false,
+      built_at: now,
     },
   };
 }

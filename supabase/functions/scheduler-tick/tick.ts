@@ -195,7 +195,12 @@ export interface TickExtras {
   plan?: (userId: string, localDate: string, now: Date) => Promise<void>;
   /** 90 minutes later: a 'defaults' plan_runs row when no planner run succeeded that day. */
   planFallback?: (userId: string, localDate: string) => Promise<void>;
+  /** Day summaries (Task 14.1): yesterday's and stale ones, at 03:10 local. */
+  dayDigest?: (userId: string, localDate: string) => Promise<void>;
 }
+
+/** When the nightly day summaries are built (local time). */
+export const DAY_DIGEST_TIME = '03:10';
 
 /** HH:MM plus minutes, kept within the day (23:59 at most). */
 export function addMinutesHHMM(hhmm: string, minutes: number): string {
@@ -268,6 +273,10 @@ export async function runTick(
     ) {
       report.jobs.push('weekly_review');
       await extras.review(u.user_id, local.date, now).catch(() => undefined);
+    }
+    if (extras.dayDigest && (await job('day_digest', DAY_DIGEST_TIME))) {
+      report.jobs.push('day_digest');
+      await extras.dayDigest(u.user_id, local.date).catch(() => undefined);
     }
     const plan = readPlanSettings(u.settings);
     if (extras.plan && plan.enabled && (await job('plan_evening', plan.evening_time))) {

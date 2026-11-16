@@ -15,6 +15,8 @@ import { runTick, type TickStore } from './tick.ts';
 import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
 import { runPlanDay } from '../plan-day/run.ts';
 import { supabasePlanStore } from '../plan-day/store.ts';
+import { runDayDigests } from '../day-digest/run.ts';
+import { supabaseDayDigestStore } from '../day-digest/store.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', SERVICE_KEY, {
@@ -244,6 +246,13 @@ function tickNow(pusher: Pusher) {
       plan: async (userId, localDate, at) => {
         await runPlanDay(userId, localDate, at, 'evening', {
           store: supabasePlanStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+        });
+      },
+      dayDigest: async (userId, localDate) => {
+        await runDayDigests(userId, localDate, {
+          store: supabaseDayDigestStore(db),
           ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
           usage: supabaseUsageStore(db),
         });

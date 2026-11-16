@@ -1,0 +1,27 @@
+{
+  "_comment": "Day summary (Task 14.1). source: what public.day_digest_source returns; output: a saved answer in the DayDigestResult shape.",
+  "source": {
+    "date": "2026-11-17",
+    "weekday": "Tuesday",
+    "captured": [
+      {
+        "id": "c1400000-0000-4000-8000-000000000001",
+        "type": "task",
+        "title": "Book the car service"
+      }
+    ],
+    "done": [{ "id": "c1400000-0000-4000-8000-000000000002", "title": "Send the insurance form" }],
+    "events": [
+      {
+        "id": "c1400000-0000-4000-8000-000000000003",
+        "title": "Training",
+        "time": "08:00",
+        "location": "Gym"
+      }
+    ],
+    "missed": [{ "id": "c1400000-0000-4000-8000-000000000004", "title": "Call the plumber" }]
+  },
+  "output": {
+    "digest": "Training at the gym at 08:00. Sent the insurance form. Added a task to book the car service. Calling the plumber was due and is still open."
+  }
+}

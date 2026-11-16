@@ -37,6 +37,9 @@ import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v7.ts';
 import { PlanResult } from './schemas/plan.ts';
+import { DayDigestResult } from './schemas/history.ts';
+import dayFixture from '../../../tests/fixtures/ai/day-digest.json' with { type: 'json' };
+import { runDayDigests, type DaySource } from '../day-digest/run.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
 
 const rows: { ok: boolean; error_code: string | null }[] = [];
@@ -443,6 +446,29 @@ Deno.test(
   },
 );
 
+Deno.test(
+  'day summary: the real small-tier request is accepted and saved with its sources',
+  async () => {
+    await viaMock(async (ai) => {
+      const saved: { digest: string; item_ids: string[] }[] = [];
+      const res = await runDayDigests(USER, '2026-11-18', {
+        store: {
+          datesToBuild: async () => ['2026-11-17'],
+          source: async () => dayFixture.source as DaySource,
+          save: async (_u, _d, row) => {
+            saved.push(row);
+          },
+        },
+        ai,
+        usage,
+      });
+      assertEquals(res, { built: ['2026-11-17'], failed: [] });
+      assertEquals(saved[0]?.digest, dayFixture.output.digest);
+      assertEquals(saved[0]?.item_ids.length, 4);
+    });
+  },
+);
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -641,6 +667,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     weekly_review: ReviewResult,
     summarise_note: SummaryResult,
     plan_day: PlanResult,
+    day_digest: DayDigestResult,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;

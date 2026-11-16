@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(history): day summaries: each night at 03:10 a short record of yesterday (what was captured, done, attended and missed, at most 120 words, with the items it came from) from one small AI call, or "Nothing recorded." with no call; a summary whose items change within 30 days is rebuilt from sources the next night (migration 0047, Task 14.1)
 - release: phase 13 (the planner: default timings on save, the evening AI planner with checked nudges, "Why now?", snooze from a notification, real-model timing cases) on dev
 - fix(plan): moving, closing or deleting an event or task cancels the AI's reminders worked out for the old time, and the defaults for the new time take over within a minute (no "time to leave" for an hour that no longer holds); a dismissed reminder is never brought back (migration 0046)
 - test(ai-eval): the real-model check on dev now also runs five planner timing cases in the owner's words (training bag the evening before, dentist at 2, a Friday form with no time, an early leave in quiet hours, an empty day), checking kinds and time windows; still only when a prompt or case changes, or once a day (Task 13.9)

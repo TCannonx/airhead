@@ -1602,3 +1602,11 @@ Decisions and library versions, newest first.
 - Found while writing the Phase 13 checklist: after the evening plan, moving tomorrow's event kept the AI's "time to leave" for the old time, since a default never replaces an AI nudge and re-plan only comes in 15.3.
 - Migration 0046: when an item's timing, status or deletion changes, its **pending AI** `plan:*` nudges are cancelled in the same trigger that queues it; the drain then writes defaults for the new time. A title or notes change keeps them.
 - `upsert_plan_nudge` v3: a default yields only to a **pending** AI or owner nudge, and a cancelled row is revived only when the source changes (AI → default) or the time changes, so a reminder the owner dismissed stays dismissed.
+
+## Day summaries (Task 14.1, 2026-11-16)
+
+- `day-digest/run.ts` and `store.ts` have no HTTP entry point: the scheduler tick runs them in-process at 03:10 local (job `day_digest`), like the brief and the planner.
+- "Captured" means items created that day (the items a capture became), "attended" one-off events that day still open or done, "missed" tasks due that day still open. Repeating events are left out of the source for now (their occurrences are not rows).
+- At most 7 days are built a night: yesterday when it has no summary, then stale ones newest first. A failed call leaves the day unbuilt (or still stale) for the next night; at the monthly cap the night stops.
+- The stale trigger fires on changes to `title`, `status`, `start_at`, `due_at`, `completed_at` and `deleted_at`, and only for summaries in the last 30 days (`current_date` on the server, UTC).
+- `day_digests` is a synced, read-only table on the device (Dexie v13), as `item_plans` and `briefs`.

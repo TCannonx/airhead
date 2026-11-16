@@ -497,6 +497,11 @@ export const TASKS = [
     answer: ({ user }) => planAnswer(user),
   },
   {
+    task: 'day_digest',
+    prompt: "You write a short record of one person's day",
+    answer: () => fixture('day-digest').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],
