@@ -1596,3 +1596,9 @@ Decisions and library versions, newest first.
 - Case 4 ("an event at 08:00 during quiet hours ending 07:00") uses one hour of travel so the leave nudge (06:50) falls inside quiet hours.
 - **mock-ai** now works out a plan from the digest it is sent (like the defaults) instead of replaying one saved answer, so the planner cases pass through the stand-in and contract tests stay meaningful for any digest.
 - **Real API checks during development**: the owner asked for periodic, capped checks against the paid API. This is how they happen: `ai-eval` on dev (key held in Supabase secrets; this machine has none). Results are in `ai_eval_runs` on dev, which can't be read from this machine either; see BLOCKERS.
+
+## A moved item drops stale AI timings (fix, 2026-11-16)
+
+- Found while writing the Phase 13 checklist: after the evening plan, moving tomorrow's event kept the AI's "time to leave" for the old time, since a default never replaces an AI nudge and re-plan only comes in 15.3.
+- Migration 0046: when an item's timing, status or deletion changes, its **pending AI** `plan:*` nudges are cancelled in the same trigger that queues it; the drain then writes defaults for the new time. A title or notes change keeps them.
+- `upsert_plan_nudge` v3: a default yields only to a **pending** AI or owner nudge, and a cancelled row is revived only when the source changes (AI → default) or the time changes, so a reminder the owner dismissed stays dismissed.
