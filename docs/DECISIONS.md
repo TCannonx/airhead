@@ -1550,3 +1550,8 @@ Decisions and library versions, newest first.
 - **Quiet hours**: `leave` and `do` come through quiet hours like `event_reminder` (governed by the same "event reminders in quiet hours" switch). `leave` is dropped 30 minutes after its time, `do` after 2 hours.
 - The e2e-sync test puts the event two days out, so "prepare at 20:30 the evening before" is never already past when CI runs after 20:30.
 - **The dispatcher also runs for queued plan work**: `dispatch_scheduler_tick` skipped the call when nobody had a push device, so defaults would never be written for someone without notifications (found by the e2e-sync test). 0042 redefines it to call the tick when `plan_queue` has rows too.
+
+## No same-day prep from the brief (Task 13.4, 2026-11-16)
+
+- "Within 2 hours of the brief time" is measured from when the brief runs (the scheduled brief runs at the brief time; Regenerate uses the time it is pressed). Start times come from the digest's one-off and repeating events for that day (`todayStarts`).
+- "Already prepared" means a nudge keyed `plan:prepare:<item id>:<local date>` that is pending, sent or bundled (`BriefStore.planPrepared`, optional so older fakes still work).
