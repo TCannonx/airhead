@@ -35,3 +35,7 @@ export const TopicResult = z.object({
   next_step: z.string(),
 });
 export type TopicResultT = z.infer<typeof TopicResult>;
+
+/** A learned timing preference, worded as a fact (Task 17.2). */
+export const TimingFact = z.object({ fact: z.string() });
+export type TimingFactT = z.infer<typeof TimingFact>;

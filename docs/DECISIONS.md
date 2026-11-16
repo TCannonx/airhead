@@ -1744,6 +1744,12 @@ Decisions and library versions, newest first.
 - `update-topic` is part of the nightly page summaries (`page-summary/run.ts`, task `topic_collate`, prompt `topic.v1`, schema `TopicResult`), not a separate function: topic pages go through the same due list, so cost stays bounded (20 pages a night). Each new link updates from the existing summary plus the new links; a removed link sets `rebuild_requested_at` (0055), as does Collate on the device.
 - Overlaps, open questions and next step are kept in `pages.collation` (new column, server-written; the owner-edit trigger keeps it). Per-link notes go to `page_items.note`, only for links the call was given.
 - A saved link's line in the prompt is its enrichment summary (16.2), else its body.
+## Timing preferences (Task 17.2, 2026-11-16)
+
+- Runs with the outcome statistics at 03:40 (`learning/timing.ts`, `runTimingPrefs`). The pattern rule: among the last 5 outcomes of the same planner kind on the same series/place/person page (or none), at least 3 snoozes in the same direction. The shift is the median of those snoozes.
+- The fact is worded by one small call (`timing_pref`, prompt `timing.v1`, schema `TimingFact`) and saved as an **active everyday** `memory_facts` row, the same path everyday facts take, so it is visible and removable in Settings → Memory and reaches the planner through the profile. `timing_prefs` (0058, server-only) links it to its kind and page.
+- **Contradictions**: a later outcome on the same kind and page that was acted on as sent, or snoozed the other way, counts against the preference; at 3 the preference and its fact are archived. Ignored or dismissed outcomes count for neither.
+- The real-model case ("plan-learned-morning") gives the planner the fact in its profile and checks the bag reminder lands on the morning itself and not the evening before; the stand-in cannot read facts, so only the real model judges it.
 ## Cost reporting and the batch interface (Task 17.4, 2026-11-16)
 
 - Insights → Planner costs reads `plan_runs_daily` (0041, owner-only view) through the usage service for the last 14 days: cost per day by run kind, look-ups used, and days with a `defaults` row (the planner did not succeed and the defaults carried the day).

@@ -50,6 +50,7 @@ import {
   MonthDigestResult,
   PageSummaryResult,
   TopicResult,
+  TimingFact,
 } from './schemas/history.ts';
 import topicFixture from '../../../tests/fixtures/ai/topic-collate.json' with { type: 'json' };
 import linkFixture from '../../../tests/fixtures/ai/link-enrich.json' with { type: 'json' };
@@ -825,6 +826,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     page_summary: PageSummaryResult,
     link_enrich: LinkEnrichment,
     topic_collate: TopicResult,
+    timing_pref: TimingFact,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;

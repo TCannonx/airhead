@@ -45,6 +45,7 @@ import {
   MonthDigestResult,
   PageSummaryResult,
   TopicResult,
+  TimingFact,
 } from './history.ts';
 
 Deno.test('every AI output schema stays within the union-parameter limit', () => {
@@ -63,6 +64,7 @@ Deno.test('every AI output schema stays within the union-parameter limit', () =>
     ReviewResult,
     SummaryResult,
     TopicResult,
+    TimingFact,
     TurnResult,
   };
   for (const [name, schema] of Object.entries(all)) {
