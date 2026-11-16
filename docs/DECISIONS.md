@@ -1720,6 +1720,12 @@ Decisions and library versions, newest first.
 - Unreadable reasons in plain words: `needs sign-in` (HTTP 401/403, or a page that came back but was a login or paywall shell), `not found` (404/410), `too large`, `blocked`, `timed out` (could not connect), `not a web page`, else `could not be read`.
 - The sort batch's own link summary (Phase 3) still runs from `summary_pending`; `data.link` is the new, richer description the device shows (16.3).
 - **No e2e-sync test**: the local stack's pages are on private addresses, which `safeFetch` refuses on purpose. Covered by unit and contract tests; the round trip is on the manual checklist.
+
+## Topic matching (Task 16.4, 2026-11-16)
+
+- `_shared/topics.ts` (`matchTopics`): exact name, then normalised (lower case, punctuation removed, a simple plural "s" dropped), then the closest existing topic by cosine similarity of gte-small embeddings at or above `SIMILAR = 0.86`, else a new `topics` row. `read-link` applies it to each enriched link and merges the ids into `items.topic_ids`.
+- **Threshold**: the plan asks for it to be recorded "after trying it on fixtures". It was tried on fixture vectors in `topics.test.ts`; real gte-small vectors can only be computed inside the Supabase Edge runtime, which this machine does not have. 0.86 is a conservative start (gte-small puts unrelated short phrases around 0.7–0.8); worth checking on dev with real topic names (BLOCKERS).
+- Without the embedding model (outside the Edge runtime), unknown names become new topics.
 ## Every link (Task 16.1, 2026-11-16)
 
 - **Plan vs code**: link detection lives in `src/lib/rules/links.ts` (`findUrls`, `normaliseUrl`, `withoutUrls`) and is applied in `createCapture` (`src/lib/db/captures.ts`), where the one-link rule was.
