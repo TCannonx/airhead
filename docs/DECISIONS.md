@@ -1698,3 +1698,9 @@ Decisions and library versions, newest first.
 - "Left out: …" appears whenever the planner's digest was capped (`left_out > 0`) or nudges were dropped, in the AI brief and in the code-built fallback alike.
 - Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
 - The device brief schema gains `plan` (default null), so older briefs still parse.
+
+## Badge and Declarative Web Push (Task 15.5, 2026-11-16)
+
+- **Verified** (WebKit blog "Meet Declarative Web Push", https://webkit.org/?p=16535, and the W3C Push API draft): a declarative message is JSON with a top-level `"web_push": 8030` and a `notification` object holding `title` (required), `body`, `navigate` (an absolute URL, required) and optional `tag`. Browsers without it ignore the extra keys, and the service worker still reads Airhead's own `title`, `body`, `url`, `tag`.
+- `pushMessage` adds those fields only when the `APP_URL` function secret is an https address (the push must link to the app's real origin). Without it the message is exactly as before. Setting `APP_URL` is left for the owner (BLOCKERS).
+- **`app_badge` is not sent**: WebKit bug reports show it crashing Safari 18.6 on macOS and disagree on its placement (inside `notification` in the blog, top level in the spec). The app sets the badge itself instead: the Badging API (`navigator.setAppBadge`) with overdue tasks plus open questions, recomputed live from the device's database (`useAppBadge` in the app layout). It works only in an installed web app; elsewhere it does nothing.
