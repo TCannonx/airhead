@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- fix(brief): the morning brief no longer sends a same-day prep nudge for anything starting within 2 hours of the brief (no more 07:30 "pack your bag" for 08:00), nor for anything the planner already prepared the evening before; the brief text still mentions it (Task 13.4)
 - fix(dev): `ship.py logs` follows the log redirect without the token (it got HTTP 401) and shows the lines around each error instead of the job's teardown; Python caches are ignored
 - feat(plan): defaults applied on save: a new or changed event or task gets its prepare, leave and do nudges within a minute (plan queue drained by the scheduler tick), never replacing an AI or owner nudge; time-to-leave and do-now nudges come through quiet hours (migration 0042, Task 13.3)
 - feat(plan): plan tables: `item_plans` (synced, read-only on the device), `plan_runs` with a daily view for Insights, nudges gain reason, source, delivery, run and outcome columns and the kinds prepare, leave, do, follow_up, reading; nudges now mirror to the device (migration 0041, Task 13.2)
