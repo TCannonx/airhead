@@ -1704,6 +1704,13 @@ Decisions and library versions, newest first.
 - `nudge_stats` is rebuilt per person by `refresh_nudge_stats` (delete and insert, one SQL statement), nightly at 03:40 local (job `nudge_stats`). Rows: per planner nudge kind overall (`page_id` null) and per page the nudge's item is on, for series, place and person pages. The window is outcomes in the last 8 weeks (`outcome_at`, else `send_at`).
 - The median snooze shift is `snoozed_to - send_at` in minutes (positive = later), `percentile_cont(0.5)`, rounded.
 - Not synced: the device has no use for it yet; the owner may read it (RLS) and Insights can later.
+## Enrich a link (Task 16.2, 2026-11-16)
+
+- `read-link` now reads and enriches **every reading item of the capture**, each with its own `data.url` (16.1 can make several), and stores the result as `data.link` (`status`, `reason`, `title`, `source`, `kind`, `minutes`, `summary`, `key_points`, `why_saved`, `topics`, `mentions`, `enriched_at`). The older fields (`description`, `reading_minutes`, `couldnt_read`) stay for the existing screens.
+- One small call per readable page (`link_enrich`, prompt `link.v1`, schema `LinkEnrichment`): the page text in a `<page>` block, the owner's words around the links (links removed) in a `<note>` block. A video or app page (title only) and an unreadable page make no call.
+- Unreadable reasons in plain words: `needs sign-in` (HTTP 401/403, or a page that came back but was a login or paywall shell), `not found` (404/410), `too large`, `blocked`, `timed out` (could not connect), `not a web page`, else `could not be read`.
+- The sort batch's own link summary (Phase 3) still runs from `summary_pending`; `data.link` is the new, richer description the device shows (16.3).
+- **No e2e-sync test**: the local stack's pages are on private addresses, which `safeFetch` refuses on purpose. Covered by unit and contract tests; the round trip is on the manual checklist.
 ## Every link (Task 16.1, 2026-11-16)
 
 - **Plan vs code**: link detection lives in `src/lib/rules/links.ts` (`findUrls`, `normaliseUrl`, `withoutUrls`) and is applied in `createCapture` (`src/lib/db/captures.ts`), where the one-link rule was.
