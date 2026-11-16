@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): the evening planner suggests up to two saved links to read in a free slot that suits their length (commute, lunch, evening or weekend), always in the digest, and may mention one topic you keep feeding in the morning digest (prompt plan.v3, migration 0056, Task 16.7)
 - feat(reading): a reading item shows what kind of page it is, its minutes, summary, key points, why you saved it and its topics, in the Library list and on its page; an unreadable link shows why, with "Open anyway" (Task 16.3)
 - feat(reading): every saved link is read and explained: kind, reading minutes, a three-line summary, up to five key points, why it was probably saved (from your own words around it), up to three topics and who or what it mentions; a page that cannot be read says why in plain words and costs no AI call (Task 16.2)
 - feat(capture): every link in a note becomes its own reading item, wherever it sits in the text, while the rest of the note is still sorted as written; the same link saved again (even with tracking parameters) joins the first item and records the new capture (Task 16.1)
