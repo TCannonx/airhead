@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { readingLine } from '../../lib/reading';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Page } from '../../app/Page';
@@ -174,6 +175,7 @@ export default function LibraryPage() {
                     to={`/library/item/${i.id}`}
                     title={i.title}
                     kind={[
+                      readingLine(i),
                       i.topic_ids
                         .map((id) => topicName.get(id))
                         .filter(Boolean)

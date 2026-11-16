@@ -1699,6 +1699,10 @@ Decisions and library versions, newest first.
 - Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
 - The device brief schema gains `plan` (default null), so older briefs still parse.
 
+## Reading item on the device (Task 16.3, 2026-11-16)
+
+- `src/lib/reading.ts` reads `data.link` leniently (`linkInfo`) and makes the one-line row text (`readingLine`: "Article · 13 min · Marathon training", or "Couldn't read: needs sign-in"). Older items without `data.link` keep the Phase 3 view (summary, key points, minutes from sorting).
+- "Open anyway" is a plain link to the saved address in a new tab (`rel="noreferrer noopener"`).
 ## Enrich a link (Task 16.2, 2026-11-16)
 
 - `read-link` now reads and enriches **every reading item of the capture**, each with its own `data.url` (16.1 can make several), and stores the result as `data.link` (`status`, `reason`, `title`, `source`, `kind`, `minutes`, `summary`, `key_points`, `why_saved`, `topics`, `mentions`, `enriched_at`). The older fields (`description`, `reading_minutes`, `couldnt_read`) stay for the existing screens.
