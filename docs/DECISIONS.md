@@ -1532,3 +1532,11 @@ Decisions and library versions, newest first.
 - Travel time comes from `items.data.travel_minutes` when set (no column exists), else `settings.data.plan.default_travel_minutes` (30). Leave = start − travel − 10.
 - The "never before 08:00" floor for afternoon prepares cannot bite with the defaults (12:00 − 3 h = 09:00); it is kept as a guard.
 - `readPlanSettings(settings.data)` reads every `settings.data.plan.*` key Phase 13 uses: `prepare_evening_time` (20:30), `default_travel_minutes` (30), `evening_time` (18:00), `enabled` (true), `daily_cap_eur` (0.15).
+
+## Plan tables (Task 13.2, 2026-11-16)
+
+- **Migration `20261116000041_plan_tables.sql`** (not `…000040`: that number is `sync_logs`).
+- **Nudges were not mirrored on the device**, so this task makes `nudges` a pull-only synced table (Dexie v12, with `item_plans`). 13.8 ("Why now?", snooze on another device) needs them there. Kind and status are open strings in the device schema so a new server kind never breaks a pull.
+- **Nudge statuses in the code** include `bundled` as well as the plan's `pending`, `sent`, `cancelled`, `failed`; left as is.
+- `item_plans` follows the `nudges`/`external_events` shape (owner selects; only the service role writes), the "same as ai_actions" in the plan does not fit: devices may write `ai_actions`.
+- `plan_runs` once-a-day rule is a partial unique index on (`user_id`, `kind`, `local_date`) for `evening` and `morning`. `plan_runs_daily` is a `security_invoker` view (one row per day and kind) for Insights.

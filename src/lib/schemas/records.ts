@@ -374,6 +374,52 @@ export const followUpSchema = z.object({
   round: z.number().int(),
 });
 export type FollowUp = z.infer<typeof followUpSchema>;
+
+/**
+ * The planner's plan for an item (Task 13.2): when it surfaces, effort, what it
+ * needs, prep and the reason. Written only by the server; devices read it.
+ */
+export const itemPlanSchema = z.object({
+  ...syncColumns,
+  item_id: id,
+  surface_at: ts.nullable(),
+  effort_minutes: z.number().int().nullable(),
+  needs: z.array(z.unknown()),
+  prep: z.array(z.string()),
+  reading_slot: z.enum(['commute', 'lunch', 'evening', 'weekend']).nullable(),
+  reason: z.string(),
+  confidence: z.number().nullable(),
+  source: z.enum(['default', 'ai']),
+  plan_run_id: id.nullable(),
+  planned_at: ts,
+});
+export type ItemPlan = z.infer<typeof itemPlanSchema>;
+
+/**
+ * A notification Airhead will send or has sent (Task 13.2, mirrored for "Why
+ * now?"). Written only by the server; outcomes are set through an RPC (13.8).
+ * Kind and status stay open strings so a new server kind never breaks a pull.
+ */
+export const nudgeSchema = z.object({
+  ...syncColumns,
+  kind: z.string(),
+  item_id: id.nullable(),
+  send_at: ts,
+  status: z.string(),
+  title: z.string(),
+  body: z.string().nullable(),
+  url: z.string().nullable(),
+  dedupe_key: z.string().nullable(),
+  sent_at: ts.nullable(),
+  reason: z.string().nullable(),
+  source: z.enum(['rule', 'default', 'ai', 'user']),
+  delivery: z.enum(['push', 'digest']),
+  plan_run_id: id.nullable(),
+  outcome: z.enum(['acted', 'snoozed', 'dismissed', 'ignored']).nullable(),
+  outcome_at: ts.nullable(),
+  snoozed_to: ts.nullable(),
+});
+export type Nudge = z.infer<typeof nudgeSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -401,6 +447,8 @@ export const SYNC_TABLES = [
   'suggestions',
   'ai_actions',
   'follow_ups',
+  'item_plans',
+  'nudges',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -428,6 +476,8 @@ export const schemas = {
   suggestions: suggestionSchema,
   ai_actions: aiActionSchema,
   follow_ups: followUpSchema,
+  item_plans: itemPlanSchema,
+  nudges: nudgeSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -454,4 +504,6 @@ export interface RowTypes {
   suggestions: Suggestion;
   ai_actions: AiAction;
   follow_ups: FollowUp;
+  item_plans: ItemPlan;
+  nudges: Nudge;
 }

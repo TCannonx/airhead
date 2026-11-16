@@ -15,7 +15,14 @@ import { signIn } from './helpers.ts';
 type Row = Record<string, unknown> & { id: string };
 
 /** Written by the server only: devices may read them, never write them. */
-const SERVER_ONLY = new Set<SyncTable>(['external_events', 'briefs', 'reviews', 'scout_runs']);
+const SERVER_ONLY = new Set<SyncTable>([
+  'external_events',
+  'briefs',
+  'reviews',
+  'scout_runs',
+  'item_plans',
+  'nudges',
+]);
 
 function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> {
   const now = new Date().toISOString();
@@ -238,6 +245,39 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       status: 'dismissed',
       answer: null,
       round: 1,
+    },
+    item_plans: {
+      ...base(),
+      item_id: id(),
+      surface_at: null,
+      effort_minutes: 30,
+      needs: ['daylight'],
+      prep: ['Pack your bag'],
+      reading_slot: null,
+      reason: 'Every table plan',
+      confidence: 0.8,
+      source: 'ai',
+      plan_run_id: null,
+      planned_at: now,
+    },
+    nudges: {
+      ...base(),
+      kind: 'prepare',
+      item_id: null,
+      send_at: '2031-01-05T20:30:00.000Z',
+      status: 'pending',
+      title: 'Every table nudge',
+      body: null,
+      url: null,
+      dedupe_key: `every-table:${id()}`,
+      sent_at: null,
+      reason: 'Early start',
+      source: 'default',
+      delivery: 'push',
+      plan_run_id: null,
+      outcome: null,
+      outcome_at: null,
+      snoozed_to: null,
     },
   };
 }

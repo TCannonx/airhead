@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): plan tables: `item_plans` (synced, read-only on the device), `plan_runs` with a daily view for Insights, nudges gain reason, source, delivery, run and outcome columns and the kinds prepare, leave, do, follow_up, reading; nudges now mirror to the device (migration 0041, Task 13.2)
 - feat(plan): default nudge timings in code: prepare the evening before (20:30) for anything before noon, 3 hours before otherwise, never inside 45 minutes of the start; leave at start minus travel minus 10; do at a task's due time (Task 13.1)
 - chore(dev): `scripts/dev/ship.py` opens, watches, reads logs of and squash-merges PRs through the GitHub REST API without `gh`, with its own tests in CI (Task 13.0)
 - fix(sync): a sync run stuck far past its time limit is dropped by the next trigger of any kind (app open, the minute timer, a write), not only by Sync now; each device keeps a sync log (Settings → Sync → Sync log) and sends it to the server so a quiet sync can be diagnosed without asking (migration 0040)
