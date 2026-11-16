@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(learning): when you keep moving the same reminder the same way (3 of the last 5 times), Airhead learns it as an everyday fact you can see and remove in Settings → Memory, e.g. "Packs the training bag in the morning, not the evening before"; the planner uses it, and a fact contradicted three times is archived (migration 0058, Task 17.2)
+- release: phase 15 (morning refresh, the brief from the plan with "Left out", re-plan on change, digest delivery with per-kind settings, app badge and declarative push) on dev
 - feat(learning): each night Airhead counts what you did with its reminders over the last 8 weeks (acted, snoozed, dismissed, ignored, and how far you usually snooze), per kind and per repeating event, place and person; no AI (migration 0057, Task 17.1)
 - feat(plan): the evening planner suggests up to two saved links to read in a free slot that suits their length (commute, lunch, evening or weekend), always in the digest, and may mention one topic you keep feeding in the morning digest (prompt plan.v3, migration 0056, Task 16.7)
 - feat(reading): a reading item shows what kind of page it is, its minutes, summary, key points, why you saved it and its topics, in the Library list and on its page; an unreadable link shows why, with "Open anyway" (Task 16.3)
