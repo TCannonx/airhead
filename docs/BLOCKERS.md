@@ -2,6 +2,27 @@
 
 ## Waiting for the user
 
+### Overnight build of Phases 13 to 17 finished (2026-11-16)
+
+Every task in Phases 13 to 17 of `docs/PLAN.md` is merged with all required checks green and deployed to dev; Phase 18 is an outline to be detailed after two weeks of use, so it was not built. Nothing is blocked. What needs you, in order of usefulness:
+
+1. **Device testing on dev**: the "Phase 13" to "Phase 17" sections of `docs/MANUAL-CHECKLIST.md` (entries below for each phase).
+2. **Real-model results** (this machine has no API key or dev database access, so I could not read them): the `ai-eval` job on dev now runs 25 cases (sorting, planner timing, history, Ask, reading, learning) whenever a prompt changes or once a day, about €0.03–0.05 a run. Please look at the latest rows of `ai_eval_runs` on dev (Supabase → Table editor). The cases only the real model can pass: `people-project`, `plan-repeat-detail`, `plan-dinner-page`, `plan-learned-morning`, `ask-three-months`, `reading-link-in-sentence`, `reading-fifth-link`. If any fail, tell me which and I will tune the prompt.
+3. **Optional secret** `APP_URL` on the dev project (Phase 15 entry), for Safari's Declarative Web Push.
+4. **Topic matching threshold** (Task 16.4): set at 0.86 cosine similarity on test vectors, because real gte-small vectors can only be made inside the Edge runtime. If two topics that should be one stay apart (or different ones merge), tell me and I will adjust it.
+5. **Decision noted, no action needed**: the batch interface is not used (Phase 17 entry).
+
+Live waits for a `v*` tag, as always.
+
+### Phase 16 ready for device testing on dev
+
+Every link in a note becomes its own reading item that explains itself (kind, minutes, summary, key points, why you saved it, topics), an unreadable link says why, a topic you keep feeding collates itself into a page (summary, a line per link, overlaps, open questions, next step) under Library → Topics, and the evening planner suggests reading for free slots in the digest.
+
+1. Work through "Phase 16 — Reading" in `docs/MANUAL-CHECKLIST.md`.
+2. Cost: one small call per readable link, and one per topic page that changed, nightly (within the 20-page limit).
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 17 ready for device testing on dev
 
 Airhead now learns from what you do with its reminders: nightly outcome statistics, timing habits worded as everyday facts in Settings → Memory (removable; archived after 3 contradictions), a weekly review that reads the planner's week and proposes moving, splitting or dropping tasks for your OK, and Insights → Planner costs.

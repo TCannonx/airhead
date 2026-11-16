@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- release: phase 16 (every link becomes an explained reading item, unreadable ones say why, topics that collate themselves, Library → Topics, reading suggestions in free slots) on dev
 - test(ai-eval): reading cases for the real model on dev: a link inside a sentence is explained with type, summary, topics and why it was saved; a fifth link updates its topic page with a note for every link; an unreadable link says why (Task 16.8)
 - feat(library): Library → Topics: every topic with three or more saved links, newest first; a topic shows its summary, each link with what it adds, where sources agree or differ, open questions and a next step, with Collate, Send to Workshop, Rename and Merge (Task 16.6)
 - release: phase 17 (outcome statistics, timing preferences learned from snoozes, the weekly review on planner data with proposals for your OK, planner costs in Insights) on dev

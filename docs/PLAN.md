@@ -670,7 +670,7 @@ Outcome: every link dropped anywhere becomes a reading item that explains itself
     - Tests: fixtures for the third, fourth and fifth link; contract test; pgTAP for the threshold and the rebuild queue.
 - [x] **16.6 Topics on the device.** Library → Topics: list with counts and last added; topic page with summary, each link with its note, overlaps, open questions, next step; buttons Collate (rebuild), Send to Workshop, Rename, Merge with another topic.
 - [x] **16.7 Surfacing and reading slots.** The planner gets, for each active topic, its name, count and last-added date, and the unread reading items with minutes. It may write `reading` nudges with `delivery = 'digest'` into free slots (commute on office days, lunch, evening, weekend) and one topic mention a day in the digest ("You have saved five pieces on X; here is the summary").
-- [ ] **16.8 Real-model cases and release.** Cases 4, 5 and 6 from spec section 8, then the release PR as 13.10 with a "Phase 16: reading" checklist section.
+- [x] **16.8 Real-model cases and release.** Cases 4, 5 and 6 from spec section 8, then the release PR as 13.10 with a "Phase 16: reading" checklist section.
 
 ### Phase 17: Learning and the weekly review
 
