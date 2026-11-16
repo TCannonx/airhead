@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): re-plan on change: an event or task that is changed, snoozed or whose reminder was missed gets new defaults at once and, when the planner is on and it has been quiet for 5 minutes, a small re-plan of just those items (at most 10 a run, 6 runs a day; beyond that the defaults stand until the evening) (migration 0054, Task 15.3)
 - feat(plan): a morning refresh 20 minutes before the brief re-plans only what changed since the evening (and new events from linked calendars); when nothing changed it makes no AI call (migration 0053, Task 15.1)
 - release: phase 14 (history: day and month summaries, pages for series, topics, places, people and projects with nightly summaries, look-ups for the planner, Ask Airhead reads pages, Library → Pages) on dev
 - feat(ask): Ask Airhead also reads the running pages of the people, places, projects and topics its sources belong to, for background over time; answers still cite your own items (prompt ask.v2, Task 14.9)

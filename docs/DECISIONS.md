@@ -1680,3 +1680,10 @@ Decisions and library versions, newest first.
 - `plan-day` mode `morning` builds the digest as of the previous evening (`plan_digest(user, yesterday)`), so the window starts today, then keeps only items and linked-calendar events whose `server_updated_at` (0053 adds it to the digest) is later than the evening run's `finished_at`. With no successful evening run it plans everything; with one and nothing changed, the run is `skipped` and no call is made.
 - The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
 - Same validation and `apply_plan`; the run's summary records `mode`.
+
+## Re-plan on change (Task 15.3, 2026-11-16)
+
+- `plan_queue` rows now stay after the defaults are written (`defaults_done = true`); a newer change sets it back to false and restarts the 5-minute debounce (`queued_at`). `queue_plan(item, reason)` is the one way in: `changed` from the items trigger (via `refresh_plan_nudges`), `snoozed` from `nudge_outcome`, `missed` from `mark_ignored_nudges`.
+- `drainReplans` (each tick, after the defaults) sends quiet items to `plan-day` mode `replan` per person: at most 10 items a run and 6 replan runs a local day; with the planner off or past the limit the rows are cleared and the defaults stand.
+- A replan plans from today (the digest as of the evening before), only for the given items, with the same look-ups, validation and `apply_plan`.
+- The e2e test moves the event by SQL (the row the device's sync push writes), not through the calendar form, to keep the test about the server side.
