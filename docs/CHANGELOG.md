@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): the evening planner (`plan-day`): one small AI call plans tomorrow and anything that needs lead time, its nudges checked in code (no prepare inside 45 minutes, no pushes in quiet hours except leave and do, at most 3 per occurrence, the daily cap) and applied in one transaction with reasons; a daily planning cap (€0.15) leaves the defaults standing (migration 0044, Task 13.6)
 - feat(plan): planner digest: tomorrow in full plus anything later in the week that needs lead time (prep, a prep rule, travel, over an hour of effort), with linked calendars, work location, pending nudges and current plans, soonest 60 kept (migration 0043, Task 13.5)
 - fix(brief): the morning brief no longer sends a same-day prep nudge for anything starting within 2 hours of the brief (no more 07:30 "pack your bag" for 08:00), nor for anything the planner already prepared the evening before; the brief text still mentions it (Task 13.4)
 - fix(dev): `ship.py logs` follows the log redirect without the token (it got HTTP 401) and shows the lines around each error instead of the job's teardown; Python caches are ignored

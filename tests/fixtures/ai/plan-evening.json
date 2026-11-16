@@ -1,0 +1,105 @@
+{
+  "_comment": "Evening planner (Task 13.6). raw: what public.plan_digest returns on the evening of Tuesday 17 November 2026 (Dublin); output: a saved answer in the PlanResult shape. Used by plan-day/run.test.ts, the contract test and tests/mock-ai.",
+  "now": "2026-11-17T18:00:00Z",
+  "raw": {
+    "date": "2026-11-17",
+    "time_zone": "Europe/Dublin",
+    "items": [
+      {
+        "id": "a1300000-0000-4000-8000-000000000001",
+        "type": "event",
+        "title": "Training",
+        "start_at": "2026-11-18T08:00:00Z",
+        "end_at": "2026-11-18T09:30:00Z",
+        "due_at": null,
+        "all_day": false,
+        "rrule": null,
+        "exdates": [],
+        "location": "Gym",
+        "travel_minutes": 20,
+        "plan": null
+      },
+      {
+        "id": "a1300000-0000-4000-8000-000000000002",
+        "type": "task",
+        "title": "Send the insurance form",
+        "start_at": null,
+        "end_at": null,
+        "due_at": "2026-11-18T15:00:00Z",
+        "all_day": false,
+        "rrule": null,
+        "exdates": [],
+        "location": null,
+        "travel_minutes": null,
+        "plan": null
+      }
+    ],
+    "linked": [],
+    "nudges": [
+      {
+        "item_id": "a1300000-0000-4000-8000-000000000001",
+        "kind": "prepare",
+        "send_at": "2026-11-17T20:30:00Z",
+        "source": "default",
+        "dedupe_key": "plan:prepare:a1300000-0000-4000-8000-000000000001:2026-11-18"
+      }
+    ],
+    "leave": [],
+    "work_days": []
+  },
+  "output": {
+    "items": [
+      {
+        "item_id": "a1300000-0000-4000-8000-000000000001",
+        "occurrence_date": "2026-11-18",
+        "surface_at": "",
+        "effort_minutes": 90,
+        "needs": ["Gym"],
+        "prep": ["Training bag", "Boots", "Water bottle"],
+        "nudges": [
+          {
+            "kind": "prepare",
+            "at": "2026-11-17 20:30",
+            "title": "Pack your training bag",
+            "body": "Boots and a water bottle for 08:00 training",
+            "reason": "Training starts at 08:00, so the evening before",
+            "delivery": "push"
+          },
+          {
+            "kind": "leave",
+            "at": "2026-11-18 07:30",
+            "title": "Time to leave for training",
+            "body": "20 minutes to the gym",
+            "reason": "20 minutes to get there plus 10 spare",
+            "delivery": "push"
+          }
+        ],
+        "reason": "Early start: pack tonight, leave at 07:30",
+        "confidence": 0.9
+      },
+      {
+        "item_id": "a1300000-0000-4000-8000-000000000002",
+        "occurrence_date": "2026-11-18",
+        "surface_at": "2026-11-18 10:00",
+        "effort_minutes": 20,
+        "needs": ["Laptop"],
+        "prep": [],
+        "nudges": [
+          {
+            "kind": "do",
+            "at": "2026-11-18 15:00",
+            "title": "Send the insurance form",
+            "body": "Due now",
+            "reason": "Due at 15:00",
+            "delivery": "push"
+          }
+        ],
+        "reason": "A short task with a deadline",
+        "confidence": 0.8
+      }
+    ],
+    "tonight": ["Pack your training bag"],
+    "clashes": [],
+    "digest_draft": "Training at 08:00, then the insurance form by 15:00."
+  }
+}

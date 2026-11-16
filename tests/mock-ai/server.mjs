@@ -438,6 +438,11 @@ export const TASKS = [
     answer: () => fixture('review').review,
   },
   {
+    task: 'plan_day',
+    prompt: "You plan one person's coming days",
+    answer: () => fixture('plan-evening').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],

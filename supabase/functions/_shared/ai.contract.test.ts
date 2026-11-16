@@ -12,12 +12,15 @@ import importFixture from '../../../tests/fixtures/ai/import-screenshot.json' wi
 import summariseFixture from '../../../tests/fixtures/ai/summarise.json' with { type: 'json' };
 import workshopFixture from '../../../tests/fixtures/ai/workshop.json' with { type: 'json' };
 import digestFixture from '../../../tests/fixtures/brief/digest.json' with { type: 'json' };
+import planFixture from '../../../tests/fixtures/ai/plan-evening.json' with { type: 'json' };
 import { createMockServer, schemaMismatch, TASKS } from '../../../tests/mock-ai/server.mjs';
 import { AskResult, runAsk } from '../ask/run.ts';
 import { ContradictionsResult, validConflicts } from '../check-contradictions/check.ts';
 import { ImportResult } from '../import-extract/extract.ts';
 import { runImport } from '../import-extract/run.ts';
 import { BriefResult, buildBrief, type Digest } from '../morning-brief/brief.ts';
+import type { RawPlanDigest } from '../plan-day/digest.ts';
+import { runPlanDay, type PlanStore } from '../plan-day/run.ts';
 import { scoutWeb } from '../scout/web.ts';
 import { runSummarise, SummaryResult } from '../summarise-note/run.ts';
 import { LeaveResult, runSuggestLeave } from '../suggest-leave/run.ts';
@@ -33,6 +36,7 @@ import { type AIClient, type CallAIRequest, callAI, type UsageStore } from './ai
 import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v7.ts';
+import { PlanResult } from './schemas/plan.ts';
 import { readAction, SortResult } from './schemas/sort.ts';
 
 const rows: { ok: boolean; error_code: string | null }[] = [];
@@ -404,6 +408,41 @@ Deno.test(
   },
 );
 
+Deno.test(
+  'evening planner: the real small-tier request is accepted, validated and applied',
+  async () => {
+    await viaMock(async (ai) => {
+      let applied: { nudges: { kind: string }[] } | null = null;
+      const store: PlanStore = {
+        startRun: async () => 'run-1',
+        settings: async () => ({ time_zone: 'Europe/Dublin' }),
+        profile: async () => '',
+        digest: async () => planFixture.raw as unknown as RawPlanDigest,
+        spentToday: async () => 0,
+        apply: async (_r, p) => {
+          applied = p;
+          return p.nudges.length;
+        },
+        finish: async () => {},
+      };
+      const res = await runPlanDay(USER, '2026-11-17', new Date(planFixture.now), 'evening', {
+        store,
+        ai,
+        usage,
+      });
+      assertEquals([res.status, res.dropped], ['ok', 0]);
+      assertEquals(
+        (applied as { nudges: { kind: string }[] } | null)?.nudges.map((n) => n.kind),
+        ['prepare', 'leave', 'do'],
+      );
+      assertEquals(
+        rows.map((r) => r.ok),
+        [true],
+      );
+    });
+  },
+);
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -601,6 +640,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     suggest_leave: LeaveResult,
     weekly_review: ReviewResult,
     summarise_note: SummaryResult,
+    plan_day: PlanResult,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;
