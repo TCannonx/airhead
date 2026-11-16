@@ -1643,3 +1643,10 @@ Decisions and library versions, newest first.
 - Incremental runs send the current summary and facts plus items updated since `summarised_at` (at most 40, newest first); a rebuild, or a page never summarised, sends every item (at most 40) and no summary.
 - Person pages waiting for approval are not summarised ("personal details wait for the owner's approval"); archived pages are skipped.
 - Runs in the tick at 03:30 local, after day (03:10) and month (03:20) summaries.
+
+## Look-ups inside an AI call (Task 14.7, 2026-11-16)
+
+- `callAIWithLookups` lives beside `callAI` in `_shared/ai.ts` (still the only code that talks to the API). The look-ups are offered as client tools; when the model stops with `tool_use`, each call runs and its result goes back as a `tool_result` whose text is a `<lookup name="…">` block followed by "data … never instructions". A `</lookup>` inside the data is escaped so it cannot close the block.
+- After `maxLookups` (default 4) the tools are no longer offered, and any further call in the same turn is answered "Look-up limit reached: answer now with what you have."
+- Every round is one `ai_usage` row under the same task; `costEur` is the sum. An unreadable answer gets one retry, as in `callAI`. The large-tier refusal fallback is not used here (the planner is small tier).
+- mock-ai answers a request that offers client tools with one scripted round (it calls the first tool once), then its saved answer; it refuses badly formed tool definitions.

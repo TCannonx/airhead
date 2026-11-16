@@ -32,11 +32,18 @@ import {
   type WorkshopDeps,
 } from '../workshop/run.ts';
 import { runTurn, type Turn, TurnResult } from '../workshop/turn.ts';
-import { type AIClient, type CallAIRequest, callAI, type UsageStore } from './ai.ts';
+import {
+  type AIClient,
+  type CallAIRequest,
+  callAI,
+  callAIWithLookups,
+  type UsageStore,
+} from './ai.ts';
 import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
+import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v1.ts';
 import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './schemas/history.ts';
 import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
 import { runPageSummaries } from '../page-summary/run.ts';
@@ -515,6 +522,43 @@ Deno.test('page summary: the real small-tier request is accepted and saved', asy
     assertEquals(saved[0]?.facts.length, 2);
   });
 });
+
+Deno.test(
+  'look-ups: the real request with tools is accepted; one scripted round, then the answer',
+  async () => {
+    await viaMock(async (ai) => {
+      const ran: unknown[] = [];
+      const res = await callAIWithLookups(
+        { client: ai, store: usage },
+        {
+          userId: USER,
+          task: 'plan_day',
+          tier: 'small',
+          system: [PLAN_SYSTEM],
+          messages: [{ role: 'user', content: buildPlanMessage({ items: [] }) }],
+          schema: PlanResult,
+          background: true,
+          lookups: {
+            search_history: {
+              description: 'Search the history.',
+              input_schema: {
+                type: 'object',
+                properties: { query: { type: 'string' } },
+                required: ['query'],
+              },
+              run: async (input) => {
+                ran.push(input);
+                return [{ id: 'x', title: 'Training', line: 'Brought boots' }];
+              },
+            },
+          },
+        },
+      );
+      assertEquals([res.ok, res.lookupsUsed], [true, 1]);
+      assertEquals(ran, [{ query: 'last time' }]);
+    });
+  },
+);
 
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
