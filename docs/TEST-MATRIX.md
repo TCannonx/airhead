@@ -357,6 +357,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | --- | --- | --- | --- | --- |
 | Morning refresh: 20 min before the brief, once a day, not when the planner is off; only items and linked events changed since the evening run finished; nothing changed → skipped, no call | — | `fn/plan-day/run.test.ts`, `fn/scheduler-tick/tick.test.ts`, `db/0053` (`updated_at` on each row) | — | Same validate and apply path as the evening run (`db/0044`) |
 | The brief from the plan: plan in the message and in `content.plan` (prepare now, clashes, ready today, reading pick); "Left out" whenever the digest was capped or nudges dropped; kept in the fallback; Today shows it | `features/today/today.test.tsx`, `lib/schemas/records.test.ts` | `fn/morning-brief/brief.test.ts`, `_shared/ai.contract.test.ts` (brief through mock-ai) | `sync/tables.spec.ts` (`briefs`) | |
+| App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 
 ## Cross-cutting
 
