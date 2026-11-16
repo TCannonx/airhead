@@ -195,6 +195,8 @@ export interface TickExtras {
   plan?: (userId: string, localDate: string, now: Date) => Promise<void>;
   /** 90 minutes later: a 'defaults' plan_runs row when no planner run succeeded that day. */
   planFallback?: (userId: string, localDate: string) => Promise<void>;
+  /** The morning refresh (Task 15.1), 20 minutes before the brief time. */
+  planMorning?: (userId: string, localDate: string, now: Date) => Promise<void>;
   /** Day summaries (Task 14.1): yesterday's and stale ones, at 03:10 local. */
   dayDigest?: (userId: string, localDate: string) => Promise<void>;
   /** Month summaries (Task 14.2): last month once ended, and stale ones, at 03:20 local. */
@@ -214,12 +216,17 @@ export const DAY_DIGEST_TIME = '03:10';
 
 /** HH:MM plus minutes, kept within the day (23:59 at most). */
 export function addMinutesHHMM(hhmm: string, minutes: number): string {
-  const total = Math.min(Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5)) + minutes, 1439);
+  const total = Math.max(
+    0,
+    Math.min(Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5)) + minutes, 1439),
+  );
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 }
 
 /** How long after the evening time Insights is told the defaults carried the day. */
 export const PLAN_FALLBACK_MINUTES = 90;
+/** The morning refresh runs this many minutes before the brief. */
+export const MORNING_REFRESH_LEAD = 20;
 
 /** 0 = Monday … 6 = Sunday, for a local YYYY-MM-DD. */
 export const weekdayOf = (localDate: string) =>
@@ -301,6 +308,14 @@ export async function runTick(
       report.jobs.push('plan_evening');
       // A failed plan leaves the defaults standing; it must not stop the tick.
       await extras.plan(u.user_id, local.date, now).catch(() => undefined);
+    }
+    if (
+      extras.planMorning &&
+      plan.enabled &&
+      (await job('plan_morning', addMinutesHHMM(notif.brief_time, -MORNING_REFRESH_LEAD)))
+    ) {
+      report.jobs.push('plan_morning');
+      await extras.planMorning(u.user_id, local.date, now).catch(() => undefined);
     }
     if (
       extras.planFallback &&

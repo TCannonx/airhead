@@ -21,6 +21,8 @@ export interface RawPlanDigest {
     exdates: string[];
     location: string | null;
     travel_minutes: number | null;
+    /** When the row last changed on the server (0053); absent from older digests. */
+    updated_at?: string;
     plan: {
       surface_at: string | null;
       effort_minutes: number | null;
@@ -35,6 +37,7 @@ export interface RawPlanDigest {
     start_at: string;
     end_at: string | null;
     all_day: boolean;
+    updated_at?: string;
   }[];
   nudges: { item_id: string; kind: string; send_at: string; source: string; dedupe_key: string }[];
   leave: { start: string; end: string; start_half: boolean; end_half: boolean }[];
@@ -246,5 +249,19 @@ export function buildPlanDigest(
       prep_rules: rules,
     },
     left_out: Math.max(0, chosen.length - DIGEST_CAP),
+  };
+}
+
+/**
+ * The morning refresh's input (Task 15.1): only items and linked events that
+ * changed after `since` (the evening run's finish). With no evening run, all.
+ */
+export function changedSince(raw: RawPlanDigest, since: string | null): RawPlanDigest {
+  if (!since) return raw;
+  const after = (u?: string) => !!u && u > since;
+  return {
+    ...raw,
+    items: raw.items.filter((i) => after(i.updated_at)),
+    linked: raw.linked.filter((e) => after(e.updated_at)),
   };
 }

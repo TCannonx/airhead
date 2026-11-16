@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): a morning refresh 20 minutes before the brief re-plans only what changed since the evening (and new events from linked calendars); when nothing changed it makes no AI call (migration 0053, Task 15.1)
 - release: phase 14 (history: day and month summaries, pages for series, topics, places, people and projects with nightly summaries, look-ups for the planner, Ask Airhead reads pages, Library → Pages) on dev
 - feat(ask): Ask Airhead also reads the running pages of the people, places, projects and topics its sources belong to, for background over time; answers still cite your own items (prompt ask.v2, Task 14.9)
 - feat(plan): the evening planner reads recent history (the last 3 day summaries, 2 weekly and 1 month summary) and may look up up to 4 things: what was prepared last time for a repeating event, the page about a named person, place or project, or anything done before (prompt plan.v2, Task 14.8)

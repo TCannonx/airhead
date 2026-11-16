@@ -208,3 +208,50 @@ Deno.test(
     assertEquals((st.applied() as unknown as { lookups_used: number }).lookups_used, 0);
   },
 );
+
+Deno.test(
+  'morning refresh (Task 15.1): only what changed since the evening run; nothing changed, no call',
+  async () => {
+    const changed = {
+      ...RAW,
+      items: RAW.items.map((i, n) => ({
+        ...i,
+        updated_at: n === 0 ? '2026-11-17T22:00:00Z' : '2026-11-17T10:00:00Z',
+      })),
+    } as RawPlanDigest;
+    const asked: string[] = [];
+    const st = store({
+      digest: (_u, d) => (asked.push(d), Promise.resolve(changed)),
+      eveningFinishedAt: () => Promise.resolve('2026-11-17T18:05:00Z'),
+    });
+    const { client, calls } = ai(fx.output);
+    // 07:10 on the 18th; the evening ran on the 17th.
+    const res = await runPlanDay(
+      USER,
+      '2026-11-18',
+      new Date('2026-11-18T07:10:00Z'),
+      'morning',
+      deps(st.s, client),
+    );
+    assertEquals(asked, ['2026-11-17']);
+    assertEquals(st.log[0], 'start morning 2026-11-18');
+    assertEquals(res.status, 'ok');
+    const msg = (calls[0]?.messages as { content: string }[])[0]?.content ?? '';
+    assertStringIncludes(msg, 'Training');
+    assertEquals(msg.includes('Send the insurance form'), false);
+
+    const quiet = store({
+      digest: () => Promise.resolve({ ...changed, items: changed.items.slice(1) }),
+      eveningFinishedAt: () => Promise.resolve('2026-11-17T18:05:00Z'),
+    });
+    const q = ai(fx.output);
+    const r2 = await runPlanDay(
+      USER,
+      '2026-11-18',
+      new Date('2026-11-18T07:10:00Z'),
+      'morning',
+      deps(quiet.s, q.client),
+    );
+    assertEquals([r2.status, q.calls.length], ['skipped', 0]);
+  },
+);
