@@ -1687,3 +1687,9 @@ Decisions and library versions, newest first.
 - `drainReplans` (each tick, after the defaults) sends quiet items to `plan-day` mode `replan` per person: at most 10 items a run and 6 replan runs a local day; with the planner off or past the limit the rows are cleared and the defaults stand.
 - A replan plans from today (the digest as of the evening before), only for the given items, with the same look-ups, validation and `apply_plan`.
 - The e2e test moves the event by SQL (the row the device's sync push writes), not through the calendar form, to keep the test about the server side.
+## The brief from the plan (Task 15.2, 2026-11-16)
+
+- The plan section (`content.plan`) is assembled in code (`BriefStore.plan`, shaped by `briefPlan`): the evening run of the day before and today's morning run (`plan_runs.summary`: clashes, `left_out`, dropped), today's planner `prepare` reminders, tasks whose `item_plans.surface_at` is today, and one unread reading item (the newest; Phase 16 makes it a real pick). It is also given to the model as a `<plan>` block (prompt `brief.v2`), so the reflection agrees with it.
+- "Left out: …" appears whenever the planner's digest was capped (`left_out > 0`) or nudges were dropped, in the AI brief and in the code-built fallback alike.
+- Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
+- The device brief schema gains `plan` (default null), so older briefs still parse.

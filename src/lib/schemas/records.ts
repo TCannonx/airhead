@@ -208,6 +208,17 @@ export const briefContentSchema = z.object({
   top3: z.array(briefTop3Schema).default([]),
   also_today: z.array(id).default([]),
   prep: z.array(z.object({ text: z.string(), send_at: ts, item_id: id.nullable() })).default([]),
+  /** What the planner decided for today (Task 15.2); null without a plan. */
+  plan: z
+    .object({
+      prepare_now: z.array(z.string()).default([]),
+      clashes: z.array(z.string()).default([]),
+      surfacing: z.array(z.object({ item_id: id, title: z.string() })).default([]),
+      reading: z.object({ item_id: id, title: z.string() }).nullable().default(null),
+      left_out: z.string().nullable().default(null),
+    })
+    .nullable()
+    .default(null),
 });
 
 export const briefSchema = z.object({
