@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { anthropicClient } from '../_shared/anthropic.ts';
 import { supabaseCaller } from '../_shared/caller.ts';
 import { json } from '../_shared/http.ts';
-import { PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
+import { PLAN_SYSTEM } from '../_shared/prompts/plan.v3.ts';
 import { ASK_SYSTEM } from '../_shared/prompts/ask.v2.ts';
 import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v8.ts';
 import { isService } from '../_shared/serviceAuth.ts';

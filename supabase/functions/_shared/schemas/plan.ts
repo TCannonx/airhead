@@ -33,6 +33,8 @@ export const PlanItemResult = z.object({
   nudges: z.array(PlanNudge),
   reason: z.string(),
   confidence: z.number(),
+  /** For a reading item (Task 16.7): the kind of slot it suits, or "". */
+  reading_slot: z.enum(['', 'commute', 'lunch', 'evening', 'weekend']),
 });
 
 export const PlanResult = z.object({

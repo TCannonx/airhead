@@ -13,6 +13,7 @@ export interface ApplyPayload {
     prep: string[];
     reason: string;
     confidence: number;
+    reading_slot: string | null;
   }[];
   nudges: {
     key: string;
@@ -88,6 +89,7 @@ export function validatePlan(
         prep: r.prep.map((x) => x.slice(0, 120)).slice(0, 5),
         reason: r.reason.slice(0, 200),
         confidence: Math.min(1, Math.max(0, r.confidence)),
+        reading_slot: occ.kind === 'reading' && r.reading_slot ? r.reading_slot : null,
       });
     }
 
@@ -99,6 +101,10 @@ export function validatePlan(
       const drop = (why: string) => dropped.push({ item_id: r.item_id, kind: n.kind, why });
       if (!at) {
         drop('unreadable time');
+        continue;
+      }
+      if (occ.kind === 'reading' && n.kind !== 'reading') {
+        drop('only a reading suggestion for a saved link');
         continue;
       }
       if (at.getTime() <= now.getTime()) {
