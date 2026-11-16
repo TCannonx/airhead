@@ -179,6 +179,9 @@ describe('Inbox → fact approval cards', () => {
       expect([b?.status, n?.status]).toEqual(['archived', 'active']);
       expect(queued).toBeGreaterThan(0);
     });
-    expect(screen.queryByRole('list', { name: 'People Airhead noticed' })).toBeNull();
+    // The list follows the database on the next render.
+    await waitFor(() =>
+      expect(screen.queryByRole('list', { name: 'People Airhead noticed' })).toBeNull(),
+    );
   });
 });
