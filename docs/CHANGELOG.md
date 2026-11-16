@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(ai): an AI call can now use look-ups: the model may ask for up to 4 searches of the person's own history before it answers; each result goes back as a data block, every round is logged in AI usage, and a failing look-up is told to the model rather than stopping the call (Task 14.7)
 - feat(library): Library → Pages: every page by kind (repeating events, topics, places, people, projects) with its summary, dated facts and items, and Rebuild, Rename and Archive; an item shows the pages it belongs to (Task 14.10)
 - feat(history): three look-ups the planner can call: search history (by meaning and keyword, with dates and types), a page by kind and name, and earlier occurrences of an event with what was prepared and what was done with its reminders; compact rows only (migration 0052, Task 14.6)
 - feat(history): page summaries: each night at 03:30 pages whose items changed get a refreshed summary (at most 150 words) and up to 8 dated facts from one small AI call, built on the existing summary; a Rebuild request starts from every item; at most 20 pages a night; people only once approved (migration 0051, Task 14.5)

@@ -673,14 +673,14 @@ export function createMockServer() {
       );
       const user = blocks.map((c) => c.text ?? '').join('\n');
       const images = blocks.some((c) => c.type === 'image');
-      const message = (content, extraUsage = {}) =>
+      const message = (content, extraUsage = {}, stopReason = 'end_turn') =>
         reply(res, 200, {
           id: `msg_mock_${Date.now()}`,
           type: 'message',
           role: 'assistant',
           model: body.model,
           content,
-          stop_reason: 'end_turn',
+          stop_reason: stopReason,
           stop_sequence: null,
           usage: {
             input_tokens: 100,
@@ -699,6 +699,25 @@ export function createMockServer() {
         const { content, searches } = scoutAnswer(user, search.max_uses);
         console.log(`mock-ai: web search for ${searches} quer${searches === 1 ? 'y' : 'ies'}`);
         return message(content, { server_tool_use: { web_search_requests: searches } });
+      }
+
+      // Look-ups the caller runs itself (Task 14.7): a scripted round that calls
+      // the first one once, then the saved answer. Bad tool definitions are refused.
+      const clientTools = (body.tools ?? []).filter((t) => !t.type || t.type === 'custom');
+      for (const t of clientTools) {
+        if (!/^[a-zA-Z0-9_-]{1,64}$/.test(t.name ?? '') || t.input_schema?.type !== 'object')
+          return apiError(res, 400, `mock: bad tool definition ${JSON.stringify(t)}`);
+      }
+      const looked = blocks.some((c) => c.type === 'tool_result');
+      if (clientTools.length && !looked) {
+        const tool = clientTools[0];
+        const input = tool.name === 'search_history' ? { query: 'last time' } : {};
+        console.log(`mock-ai: calls look-up ${tool.name}`);
+        return message(
+          [{ type: 'tool_use', id: `toolu_mock_${Date.now()}`, name: tool.name, input }],
+          {},
+          'tool_use',
+        );
       }
 
       const task = taskFor(system);
