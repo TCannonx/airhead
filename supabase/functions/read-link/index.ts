@@ -3,6 +3,8 @@ import { supabaseCaller } from '../_shared/caller.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { anthropicClient } from '../_shared/anthropic.ts';
 import { supabaseUsageStore } from '../_shared/usageStore.ts';
+import { gteSmall } from '../_shared/embed.ts';
+import { matchTopics } from '../_shared/topics.ts';
 import { enrichLink } from './enrich.ts';
 import { linkInfoFor } from './extract.ts';
 import { handleReadLink } from './handler.ts';
@@ -19,6 +21,34 @@ async function resolve(host: string): Promise<string[]> {
     Deno.resolveDns(host, 'AAAA').catch(() => [] as string[]),
   ]);
   return [...a, ...aaaa];
+}
+
+/** Matches topic names to the person's topics, creating the missing ones (Task 16.4). */
+async function topicIdsFor(userId: string, names: string[]): Promise<string[]> {
+  if (!names.length) return [];
+  const { data: topics } = await db
+    .from('topics')
+    .select('id, name')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .limit(500);
+  const matches = await matchTopics(names, (topics ?? []) as { id: string; name: string }[], (t) =>
+    gteSmall(t).catch(() => null),
+  );
+  const ids: string[] = [];
+  for (const m of matches) {
+    if (m.id) {
+      ids.push(m.id);
+      continue;
+    }
+    const { data } = await db
+      .from('topics')
+      .insert({ user_id: userId, name: m.name })
+      .select('id')
+      .maybeSingle();
+    if (data?.id) ids.push(data.id as string);
+  }
+  return ids;
 }
 
 /** POST /read-link { capture_id }: see handler.ts. */
@@ -92,7 +122,17 @@ Deno.serve((req) =>
           link,
         };
         const title = item.title === url && pageInfo.title ? pageInfo.title : item.title;
-        await db.from('items').update({ data, title }).eq('id', item.id);
+        // Topics (Task 16.4): the link's topic names matched to the person's topics.
+        const topicIds = await topicIdsFor(capture.user_id, link.topics);
+        const { data: current } = await db
+          .from('items')
+          .select('topic_ids')
+          .eq('id', item.id)
+          .maybeSingle();
+        const merged = [
+          ...new Set([...((current?.topic_ids as string[] | null) ?? []), ...topicIds]),
+        ];
+        await db.from('items').update({ data, title, topic_ids: merged }).eq('id', item.id);
       }
       return info;
     },
