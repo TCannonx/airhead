@@ -24,6 +24,7 @@ const SERVER_ONLY = new Set<SyncTable>([
   'nudges',
   'day_digests',
   'month_digests',
+  'page_items',
 ]);
 
 function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> {
@@ -35,6 +36,7 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
     list: id(),
     topic: id(),
     feed: id(),
+    page: id(),
   };
   const base = (rowId: string = id()) => ({
     id: rowId,
@@ -296,6 +298,23 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       week_starts: ['2031-01-06'],
       stale: false,
       built_at: now,
+    },
+    pages: {
+      ...base(ids.page),
+      kind: 'project',
+      key: 'project:every table',
+      name: 'Every table project',
+      summary: '',
+      facts: [],
+      status: 'active',
+      item_count: 0,
+      last_item_at: null,
+    },
+    page_items: {
+      ...base(),
+      page_id: ids.page,
+      item_id: id(),
+      note: 'Every table link',
     },
   };
 }

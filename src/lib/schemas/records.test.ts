@@ -104,6 +104,8 @@ describe('AI actions (Task 10.2)', () => {
     expect(SYNC_TABLES).toContain('nudges');
     expect(SYNC_TABLES).toContain('day_digests');
     expect(SYNC_TABLES).toContain('month_digests');
+    expect(SYNC_TABLES).toContain('pages');
+    expect(SYNC_TABLES).toContain('page_items');
     expect(aiActionSchema.parse(row).summary).toBe('Leave left set to 9.5 days');
     expect(() => aiActionSchema.parse({ ...row, kind: 'nope' })).toThrow();
     expect(() => aiActionSchema.parse({ ...row, status: 'maybe' })).toThrow();

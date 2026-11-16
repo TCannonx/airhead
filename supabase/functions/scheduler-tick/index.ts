@@ -210,7 +210,17 @@ Deno.serve((req) =>
     caller: supabaseCaller(db, isService),
     pusher: () => pusherFromEnv(),
     tick: (pusher) => tickNow(pusher),
-    plan: () => drainPlanQueue(new Date(), planStore),
+    // Defaults for changed items (Task 13.3) and code-built pages (Task 14.3); neither stops the other.
+    plan: async () => {
+      const [plan, pages] = await Promise.allSettled([
+        drainPlanQueue(new Date(), planStore),
+        db.rpc('drain_page_queue'),
+      ]);
+      return {
+        plan: plan.status === 'fulfilled' ? plan.value : { failed: true },
+        pages: pages.status === 'fulfilled' ? (pages.value.data ?? 0) : { failed: true },
+      };
+    },
   }),
 );
 
