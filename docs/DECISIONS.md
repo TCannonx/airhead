@@ -1760,6 +1760,9 @@ Decisions and library versions, newest first.
 - `ReviewStore.planner` gathers the week's `plan_runs` by kind (ok, failed, capped, cost), the planner nudges' outcomes, up to 15 open tasks due before the end of the week (most carried first) with their plan's reason, and next week's events and tasks. Free time per day is a 08:00–21:00 window minus timed events, in minutes; the full calendar gap finder (device-side) is not available to the function, so this is its server-side approximation.
 - Proposals (prompt `review.v2`): `move` (to a date, stored as 09:00 UTC that day), `split` (2–5 checklist steps added to the body) and `drop` (status `dropped`). Only tasks the review was shown, at most 5. Each becomes an `ai_actions` row with status `proposed` (kinds `reschedule_item`, `split_task`, `drop_item`; 0059 adds the last two), `before`/`after` for the device's existing approve and Undo path. The review applies nothing itself.
 - Approving uses the device's generic `applyProposal` (items `status`, `body`, `due_at` with the freshness check), so a task changed since is reported as "changed" rather than overwritten.
+
+## Topics on the device (Task 16.6, 2026-11-16)
+
 - Topics come from the `topics` table with 3 or more reading items (`readingTopics` in `src/lib/db/topics.ts`), joined to their topic page by key (`topic:<id>`) for the summary, collation and per-link notes.
 - **Collate** asks for a rebuild tonight (`rebuild_requested_at`); there is no on-demand AI call from the device.
 - **Rename** renames the topic and its page. **Merge** moves every item of one topic to the other, archives the first topic's page and removes the topic; the server's page drain moves the links.
