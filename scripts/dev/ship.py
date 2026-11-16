@@ -39,17 +39,32 @@ def get_token():
     return fields["password"]
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
 def http(method, url, body=None, token=None, raw=False):
-    """urllib follows redirects for GET (log downloads redirect to storage)."""
+    """A raw (log) download redirects to signed storage: follow it without the token,
+    which the storage host refuses (HTTP 401) and must never see."""
     req = urllib.request.Request(url, method=method,
                                  data=json.dumps(body).encode() if body is not None else None,
                                  headers={"Authorization": f"Bearer {token}",
                                           "Accept": "application/vnd.github+json",
                                           "X-GitHub-Api-Version": "2022-11-28"})
+    if raw:
+        try:
+            with urllib.request.build_opener(_NoRedirect).open(req, timeout=60) as r:
+                data = r.read()
+        except urllib.error.HTTPError as e:
+            location = e.headers.get("Location") if e.code in (301, 302, 303, 307, 308) else None
+            if not location:
+                raise
+            with urllib.request.urlopen(location, timeout=60) as r:
+                data = r.read()
+        return data.decode("utf-8", "replace")
     with urllib.request.urlopen(req, timeout=60) as r:
         data = r.read()
-    if raw:
-        return data.decode("utf-8", "replace")
     return json.loads(data) if data else {}
 
 
@@ -123,8 +138,29 @@ def cmd_logs(token, args):
             except urllib.error.HTTPError as e:
                 print(f"(log not available: HTTP {e.code})")
                 continue
-            print("\n".join(text.splitlines()[-120:]))
+            print(failure_excerpt(text))
     return 0
+
+
+ERROR_MARKERS = ("##[error]", "Error:", "error:", "FAILED", "✘", " not ok ", "Expected", "Received")
+
+
+def failure_excerpt(text, context=6, limit=160):
+    """The lines around each error marker (the job's teardown buries them), else the tail."""
+    lines = text.splitlines()
+    keep = set()
+    for i, line in enumerate(lines):
+        if any(m in line for m in ERROR_MARKERS):
+            keep.update(range(max(0, i - 2), min(len(lines), i + context)))
+    if not keep:
+        return "\n".join(lines[-120:])
+    out, last = [], None
+    for i in sorted(keep)[:limit]:
+        if last is not None and i != last + 1:
+            out.append("  ...")
+        out.append(lines[i])
+        last = i
+    return "\n".join(out)
 
 
 def cmd_merge(token, args):

@@ -120,6 +120,14 @@ class ShipTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("boom: failed", out)
 
+    def test_failure_excerpt_finds_buried_errors(self):
+        log = "\n".join([f"setup {i}" for i in range(300)] + ["    Error: expected 2, got 0", "  at x.ts:5"]
+                        + [f"teardown {i}" for i in range(300)])
+        out = ship.failure_excerpt(log)
+        self.assertIn("Error: expected 2, got 0", out)
+        self.assertNotIn("teardown 299", out)
+        self.assertIn("teardown 299", ship.failure_excerpt("ok\n" + "teardown 299"))
+
     def test_token_never_in_output(self):
         for argv in (["pr", "--title", "t", "--body-file", __file__], ["wait", "5"], ["merge", "5"], ["logs", "5"]):
             _, out = run(Fake(ALL_GREEN), argv)
