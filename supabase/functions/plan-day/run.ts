@@ -1,6 +1,12 @@
-import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
+import {
+  type AIClient,
+  callAI,
+  callAIWithLookups,
+  type Lookup,
+  type UsageStore,
+} from '../_shared/ai.ts';
 import { readPlanSettings } from '../_shared/plan/defaults.ts';
-import { buildPlanMessage, PLAN_SYSTEM, PLAN_VERSION } from '../_shared/prompts/plan.v1.ts';
+import { buildPlanMessage, PLAN_SYSTEM, PLAN_VERSION } from '../_shared/prompts/plan.v2.ts';
 import { PlanResult } from '../_shared/schemas/plan.ts';
 import { buildPlanDigest, type RawPlanDigest } from './digest.ts';
 import { type ApplyPayload, validatePlan } from './validate.ts';
@@ -15,12 +21,17 @@ export interface PlanStore {
   settings(userId: string): Promise<Record<string, unknown>>;
   profile(userId: string): Promise<string>;
   digest(userId: string, localDate: string): Promise<RawPlanDigest>;
+  /**
+   * The last 3 day summaries, 2 weekly and 1 month summary before the evening
+   * (Task 14.8). Optional for older fakes.
+   */
+  history?(userId: string, localDate: string): Promise<PlanHistory>;
   /** Today's planning spend so far (plan_runs.cost_eur for the local date). */
   spentToday(userId: string, localDate: string): Promise<number>;
   /** public.apply_plan: one transaction; also closes the run as ok. */
   apply(
     runId: string,
-    payload: ApplyPayload & { cost_eur: number; summary: object },
+    payload: ApplyPayload & { cost_eur: number; summary: object; lookups_used?: number },
   ): Promise<number>;
   /** Closes a run that did not apply a plan. */
   finish(
@@ -33,6 +44,12 @@ export interface PlanStore {
       summary?: object;
     },
   ): Promise<void>;
+}
+
+export interface PlanHistory {
+  days: { date: string; digest: string }[];
+  weeks: { week_start: string; digest: string }[];
+  month: { month: string; digest: string } | null;
 }
 
 export interface PlanRunResult {
@@ -51,7 +68,13 @@ export async function runPlanDay(
   localDate: string,
   now: Date,
   mode: PlanMode,
-  deps: { store: PlanStore; ai: AIClient; usage: UsageStore },
+  deps: {
+    store: PlanStore;
+    ai: AIClient;
+    usage: UsageStore;
+    /** History look-ups the model may call (Task 14.8); without them, one plain call. */
+    lookups?: Record<string, Lookup>;
+  },
 ): Promise<PlanRunResult> {
   const runId = await deps.store.startRun(userId, mode, localDate);
   if (!runId) return { status: 'already_ran', nudges_written: 0, dropped: 0 };
@@ -85,19 +108,23 @@ export async function runPlanDay(
     }
 
     const profile = await deps.store.profile(userId);
-    const res = await callAI(
-      { client: deps.ai, store: deps.usage },
-      {
-        userId,
-        task: 'plan_day',
-        tier: 'small',
-        system: [PLAN_SYSTEM, profile ? `What you know about this person:\n${profile}` : ''],
-        messages: [{ role: 'user', content: buildPlanMessage(digest) }],
-        schema: PlanResult,
-        maxTokens: 8000,
-        background: true,
-      },
-    );
+    const history = deps.store.history ? await deps.store.history(userId, localDate) : null;
+    const request = {
+      userId,
+      task: 'plan_day',
+      tier: 'small' as const,
+      system: [PLAN_SYSTEM, profile ? `What you know about this person:\n${profile}` : ''],
+      messages: [{ role: 'user' as const, content: buildPlanMessage(digest, history) }],
+      schema: PlanResult,
+      maxTokens: 8000,
+      background: true,
+    };
+    const res = deps.lookups
+      ? await callAIWithLookups(
+          { client: deps.ai, store: deps.usage },
+          { ...request, lookups: deps.lookups, maxLookups: 4 },
+        )
+      : { ...(await callAI({ client: deps.ai, store: deps.usage }, request)), lookupsUsed: 0 };
     if (!res.ok) {
       return await done(res.error_code === 'cap_reached' ? 'cap_reached' : 'failed', {
         items_considered: plannable,
@@ -109,6 +136,7 @@ export async function runPlanDay(
     const written = await deps.store.apply(runId, {
       ...payload,
       cost_eur: res.costEur,
+      lookups_used: res.lookupsUsed,
       summary: {
         prompt: PLAN_VERSION,
         items_considered: plannable,

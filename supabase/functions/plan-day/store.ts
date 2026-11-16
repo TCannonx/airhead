@@ -39,6 +39,47 @@ export function supabasePlanStore(db: SupabaseClient): PlanStore {
       if (error) throw new Error(`digest: ${error.message}`);
       return data as RawPlanDigest;
     },
+    async history(userId, localDate) {
+      const [days, weeks, month] = await Promise.all([
+        db
+          .from('day_digests')
+          .select('local_date, digest')
+          .eq('user_id', userId)
+          .lte('local_date', localDate)
+          .is('deleted_at', null)
+          .order('local_date', { ascending: false })
+          .limit(3),
+        db
+          .from('reviews')
+          .select('week_start, digest')
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .not('digest', 'is', null)
+          .order('week_start', { ascending: false })
+          .limit(2),
+        db
+          .from('month_digests')
+          .select('month, digest')
+          .eq('user_id', userId)
+          .is('deleted_at', null)
+          .order('month', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      return {
+        days: (days.data ?? []).map((d) => ({
+          date: d.local_date as string,
+          digest: d.digest as string,
+        })),
+        weeks: (weeks.data ?? []).map((w) => ({
+          week_start: w.week_start as string,
+          digest: w.digest as string,
+        })),
+        month: month.data
+          ? { month: month.data.month as string, digest: month.data.digest as string }
+          : null,
+      };
+    },
     async spentToday(userId, localDate) {
       const { data } = await db
         .from('plan_runs')
@@ -50,6 +91,8 @@ export function supabasePlanStore(db: SupabaseClient): PlanStore {
     async apply(runId, payload) {
       const { data, error } = await db.rpc('apply_plan', { p_run_id: runId, p_payload: payload });
       if (error) throw new Error(`apply: ${error.message}`);
+      if (payload.lookups_used)
+        await db.from('plan_runs').update({ lookups_used: payload.lookups_used }).eq('id', runId);
       return Number(data ?? 0);
     },
     async finish(runId, status, fields) {
