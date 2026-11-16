@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(capture): every link in a note becomes its own reading item, wherever it sits in the text, while the rest of the note is still sorted as written; the same link saved again (even with tracking parameters) joins the first item and records the new capture (Task 16.1)
 - feat(brief): the morning brief is built with the plan: Today shows "From your plan" (what to prepare, clashes, tasks ready today, one reading pick) and a "Left out: …" line whenever the planner had to leave something out; the code-built fallback keeps it (prompt brief.v2, Task 15.2)
 - feat(plan): a morning refresh 20 minutes before the brief re-plans only what changed since the evening (and new events from linked calendars); when nothing changed it makes no AI call (migration 0053, Task 15.1)
 - release: phase 14 (history: day and month summaries, pages for series, topics, places, people and projects with nightly summaries, look-ups for the planner, Ask Airhead reads pages, Library → Pages) on dev

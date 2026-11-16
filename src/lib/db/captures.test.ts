@@ -137,3 +137,33 @@ describe('createCapture + free rules', () => {
     expect(await db.items.count()).toBe(0);
   });
 });
+
+describe('every link, wherever it is (Task 16.1)', () => {
+  it('a note with two links makes two reading items and keeps the rest for sorting', async () => {
+    const { capture } = await createCapture(db, USER, {
+      text: 'For the trip see https://a.example/hotels and https://b.example/trains?utm_source=x, need to book by Friday',
+    });
+    const reading = await db.items.where('type').equals('reading').toArray();
+    expect(reading.map((r) => r.data.url).sort()).toEqual([
+      'https://a.example/hotels',
+      'https://b.example/trains?utm_source=x',
+    ]);
+    expect(reading.every((r) => r.capture_id === capture.id)).toBe(true);
+    expect(capture.status).toBe('unsorted');
+  });
+
+  it('a link on its own is sorted at once', async () => {
+    const { capture } = await createCapture(db, USER, { text: 'https://a.example/post' });
+    expect(capture.status).toBe('sorted');
+  });
+
+  it('the same link saved twice joins the first item and records the second capture', async () => {
+    const first = await createCapture(db, USER, { text: 'https://www.a.example/post/' });
+    const second = await createCapture(db, USER, {
+      text: 'again https://a.example/post?utm_campaign=z',
+    });
+    const reading = await db.items.where('type').equals('reading').toArray();
+    expect(reading).toHaveLength(1);
+    expect(reading[0]?.data.captures).toEqual([first.capture.id, second.capture.id]);
+  });
+});
