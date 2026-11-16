@@ -10,6 +10,7 @@ import { DataProvider } from '../../lib/db/DataProvider';
 import { openUserDb } from '../../lib/db/db';
 import { createList } from '../../lib/db/lists';
 import { baseRecord, save } from '../../lib/db/repository';
+import { pageSchema } from '../../lib/schemas/records';
 import { AppLockProvider } from '../applock/AppLockProvider';
 
 const U = LOCAL_USER_ID;
@@ -140,5 +141,41 @@ describe('Inbox → fact approval cards', () => {
         (await db().memory_facts.toArray()).find((f) => f.text.startsWith('Jim'))?.deleted_at,
       ).not.toBeNull(),
     );
+  });
+
+  it('people Airhead noticed wait for one tap (Task 14.4)', async () => {
+    const d = db();
+    const page = (name: string) =>
+      pageSchema.parse({
+        ...baseRecord(U),
+        kind: 'person',
+        key: `person:${name.toLowerCase()}`,
+        name,
+        summary: '',
+        facts: [],
+        status: 'pending_approval',
+        item_count: 2,
+        last_item_at: null,
+      });
+    const niamh = await save(d, 'pages', page('Niamh'));
+    const bob = await save(d, 'pages', page('Bob the builder'));
+    d.close();
+    const user = userEvent.setup();
+    renderAt('/settings');
+    const list = await screen.findByRole('list', { name: 'People Airhead noticed' });
+    expect(list).toHaveTextContent('Niamh (2 mentions)');
+    const [first] = within(list).getAllByRole('listitem');
+    if (!first) throw new Error('no rows');
+    await user.click(within(first).getByRole('button', { name: 'Not a person' }));
+    await user.click(await screen.findByRole('button', { name: 'Keep a page' }));
+    await waitFor(async () => {
+      const d2 = db();
+      const [b, n] = [await d2.pages.get(bob.id), await d2.pages.get(niamh.id)];
+      const queued = await d2.outbox.where('table').equals('pages').count();
+      d2.close();
+      expect([b?.status, n?.status]).toEqual(['archived', 'active']);
+      expect(queued).toBeGreaterThan(0);
+    });
+    expect(screen.queryByRole('list', { name: 'People Airhead noticed' })).toBeNull();
   });
 });

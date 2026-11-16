@@ -220,7 +220,8 @@
             "suggest_workshop": false,
             "related_idea_title": null,
             "quote": "",
-            "steps": []
+            "steps": [],
+            "mentions": []
           }
         ],
         "actions": [

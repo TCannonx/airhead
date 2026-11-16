@@ -27,6 +27,7 @@ Deno.test(
         'christmas-placeholder',
         'car-insurance',
         'team-night',
+        'people-project',
       ])
         assert(byId[id]?.pass, `${id}: ${byId[id]?.problems.join('; ')}`);
       // The planner's timing cases (Task 13.9): the stand-in plans like the defaults.
