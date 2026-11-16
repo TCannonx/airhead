@@ -1681,6 +1681,17 @@ Decisions and library versions, newest first.
 - The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
 - Same validation and `apply_plan`; the run's summary records `mode`.
 
+## Digest delivery (Task 15.4, 2026-11-16)
+
+- The round-up is one notification titled "From your plan" (kind `summary`, key `digest:<date>:am|pm`), sent right after the morning brief job and with the evening review job; the listed nudges are marked `sent`. Planner nudges only (`prepare`, `leave`, `do`, `follow_up`, `reading`).
+- `settings.data.notifications.plan_kinds` holds the per-kind choice: `auto` (as the plan says), `push`, `digest` or `off`. The owner's choice wins over the plan's `delivery`; `off` cancels the nudge when it falls due.
+- The evening round-up rides on the evening review job, so it runs when "Evening review" is switched on; the morning one on the brief job. If both are off, digest nudges wait (they are marked ignored after 12 hours only once sent, so nothing is lost).
+## Re-plan on change (Task 15.3, 2026-11-16)
+
+- `plan_queue` rows now stay after the defaults are written (`defaults_done = true`); a newer change sets it back to false and restarts the 5-minute debounce (`queued_at`). `queue_plan(item, reason)` is the one way in: `changed` from the items trigger (via `refresh_plan_nudges`), `snoozed` from `nudge_outcome`, `missed` from `mark_ignored_nudges`.
+- `drainReplans` (each tick, after the defaults) sends quiet items to `plan-day` mode `replan` per person: at most 10 items a run and 6 replan runs a local day; with the planner off or past the limit the rows are cleared and the defaults stand.
+- A replan plans from today (the digest as of the evening before), only for the given items, with the same look-ups, validation and `apply_plan`.
+- The e2e test moves the event by SQL (the row the device's sync push writes), not through the calendar form, to keep the test about the server side.
 ## The brief from the plan (Task 15.2, 2026-11-16)
 
 - The plan section (`content.plan`) is assembled in code (`BriefStore.plan`, shaped by `briefPlan`): the evening run of the day before and today's morning run (`plan_runs.summary`: clashes, `left_out`, dropped), today's planner `prepare` reminders, tasks whose `item_plans.surface_at` is today, and one unread reading item (the newest; Phase 16 makes it a real pick). It is also given to the model as a `<plan>` block (prompt `brief.v2`), so the reflection agrees with it.

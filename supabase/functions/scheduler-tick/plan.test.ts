@@ -1,6 +1,8 @@
 import { assertEquals } from 'jsr:@std/assert@1.0.19';
 import {
   drainPlanQueue,
+  drainReplans,
+  type ReplanStore,
   matchesPrepRule,
   type PlanNudgeWrite,
   type PlanQueueStore,
@@ -151,4 +153,48 @@ Deno.test('prep rules match by word in the title, ignoring case and short words'
   assertEquals(matchesPrepRule('haircut at 3', s), true);
   assertEquals(matchesPrepRule('Box', s), false);
   assertEquals(matchesPrepRule('anything', {}), false);
+});
+
+function replanStore(due: { item_id: string; user_id: string }[], over: Partial<ReplanStore> = {}) {
+  const cleared: string[] = [];
+  let before = '';
+  const s: ReplanStore = {
+    due: (b) => ((before = b), Promise.resolve(due)),
+    settings: () => Promise.resolve({}),
+    runsToday: () => Promise.resolve(0),
+    clear: (ids) => (cleared.push(...ids), Promise.resolve()),
+    ...over,
+  };
+  return { s, cleared, before: () => before };
+}
+
+Deno.test(
+  're-plan (Task 15.3): quiet items go to the planner, 10 at a time, after 5 minutes',
+  async () => {
+    const ids = Array.from({ length: 12 }, (_, i) => ({ item_id: `i${i}`, user_id: U }));
+    const st = replanStore(ids);
+    const runs: string[][] = [];
+    const r = await drainReplans(NOW, st.s, (_u, date, items) => {
+      runs.push([date, ...items]);
+      return Promise.resolve();
+    });
+    assertEquals(st.before(), '2026-11-17T11:55:00.000Z');
+    assertEquals(runs.length, 1);
+    assertEquals(runs[0]?.length, 11);
+    assertEquals(runs[0]?.[0], '2026-11-17');
+    assertEquals(r, { runs: 1, cleared: 10 });
+    assertEquals(st.cleared.length, 10);
+  },
+);
+
+Deno.test('re-plan: off, or 6 runs already today, means the defaults stand', async () => {
+  for (const over of [
+    { settings: () => Promise.resolve({ plan: { enabled: false } }) },
+    { runsToday: () => Promise.resolve(6) },
+  ] as Partial<ReplanStore>[]) {
+    const st = replanStore([{ item_id: 'i1', user_id: U }], over);
+    let called = 0;
+    const r = await drainReplans(NOW, st.s, () => (called++, Promise.resolve()));
+    assertEquals([called, r.cleared], [0, 1]);
+  }
 });
