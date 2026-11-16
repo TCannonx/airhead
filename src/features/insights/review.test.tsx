@@ -164,11 +164,14 @@ describe('weekly review page (Task 8.4)', () => {
         /— Shed ideas<\/h2><p>Timber, 2 by 3<\/p><h2>.*— Shed costs/,
       );
     });
-    const d = db();
-    const [a, b] = await d.items.bulkGet([s.a.id, s.b.id]);
-    d.close();
-    expect([a?.data.archived, b?.data.archived]).toEqual([true, true]);
-    expect(typeof a?.data.condensed_into).toBe('string');
+    // Both notes are archived, though the second write may land after the merged note.
+    await waitFor(async () => {
+      const d = db();
+      const [a, b] = await d.items.bulkGet([s.a.id, s.b.id]);
+      d.close();
+      expect([a?.data.archived, b?.data.archived]).toEqual([true, true]);
+      expect(typeof a?.data.condensed_into).toBe('string');
+    });
     await waitFor(() => expect(screen.getAllByText('Condensed')).toHaveLength(2));
   });
 

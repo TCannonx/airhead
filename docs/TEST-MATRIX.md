@@ -365,6 +365,11 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Topic matching: exact, then normalised names, then the closest by meaning above the threshold, else new; without embeddings, new | — | `fn/_shared/topics.test.ts` (fixture vectors) | — | The threshold was set on fixture vectors, not real gte-small output: see BLOCKERS |
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 
+## Phase 17 — Learning and the weekly review
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Outcome statistics: per kind and per series/place/person page, 8 weeks, counts and median snooze shift; nightly at 03:40; owner reads | — | `db/0057` (counts, median, window, per page, RLS), `fn/scheduler-tick/tick.test.ts` | — | Server-side only (read by 17.2–17.4) |
 ## Phase 16 — Reading that collates itself
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
