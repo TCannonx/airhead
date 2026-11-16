@@ -104,7 +104,7 @@ const DEFAULT_STALE = 12 * 3_600_000;
 const SUMMARY_GAP_MS = 60 * 60_000;
 const LOOKAHEAD_MS = 26 * 3_600_000;
 
-function locationFor(
+export function locationFor(
   date: string,
   work: ReturnType<typeof readWork>,
   leave: LeaveRow[],
