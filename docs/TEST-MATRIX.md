@@ -362,6 +362,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Reading item on the device: kind, minutes, source, summary, key points, why saved, topics; Library row line; unreadable reason and "Open anyway" | `features/library/reading.test.tsx` | — | `sync/tables.spec.ts` (items carry `data`) | |
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 
+## Phase 16 — Reading that collates itself
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
