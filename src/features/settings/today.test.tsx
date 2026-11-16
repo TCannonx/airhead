@@ -54,6 +54,37 @@ describe('Settings → Today (Task 5.9)', () => {
     });
   });
 
+  it('sets when the planner runs and switches it off (Task 13.7)', async () => {
+    const user = userEvent.setup();
+    renderIt(localServices());
+    const form = await screen.findByRole('form', { name: 'Today settings' });
+    const time = within(form).getByLabelText('Plan my day at');
+    expect(time).toHaveValue('18:00');
+    await user.clear(time);
+    await user.type(time, '19:15');
+    await user.click(within(form).getByRole('button', { name: 'Save' }));
+    await waitFor(async () => {
+      const d = db();
+      const s = await d.settings.get(U);
+      d.close();
+      expect(s?.data).toMatchObject({ plan: { evening_time: '19:15', enabled: true } });
+    });
+
+    // The form is rebuilt from the saved settings.
+    await waitFor(() => expect(screen.getByLabelText('Plan my day at')).toHaveValue('19:15'));
+    const toggle = screen.getByRole('switch', { name: 'Plan my day with AI' });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await user.click(toggle);
+    expect(screen.getByLabelText('Plan my day at')).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(async () => {
+      const d = db();
+      const s = await d.settings.get(U);
+      d.close();
+      expect(s?.data).toMatchObject({ plan: { evening_time: '19:15', enabled: false } });
+    });
+  });
+
   it('refuses a day that ends before it starts', async () => {
     const user = userEvent.setup();
     renderIt(localServices());

@@ -1572,3 +1572,10 @@ Decisions and library versions, newest first.
 - **Daily planning cap**: the sum of `plan_runs.cost_eur` for the local date against `settings.data.plan.daily_cap_eur` (0.15), checked before calling. The monthly AI cap still applies inside `callAI` (`background: true`).
 - **Linked-calendar events** are context only (no item to attach a nudge to).
 - `plan-day` is service-key only (`verify_jwt = false`, checked in the function); the scheduler calls it in 13.7.
+
+## Scheduling the planner (Task 13.7, 2026-11-16)
+
+- `scheduler-tick` runs `runPlanDay` in-process at `settings.data.plan.evening_time` (default 18:00), as it does the morning brief, guarded twice: `job_runs` (`plan_evening`) and the `plan_runs` once-a-day index.
+- The fallback check (`plan_fallback`, 90 minutes later, capped at 23:59) writes a `defaults` / `ok` row unless an `evening` run finished `ok` that day. It also runs when the planner is switched off, so Insights shows that defaults carried the day.
+- Like every scheduled job, it runs only for people with a notification device (the tick's existing user list): planner nudges are pushes.
+- The settings form keeps any other `settings.data.plan` keys when it saves `evening_time` and `enabled`.

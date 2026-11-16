@@ -9,6 +9,7 @@ import {
   type WorkLocation,
 } from '../_shared/leave/work.ts';
 import type { PushPayload } from '../_shared/push.ts';
+import { readPlanSettings } from '../_shared/plan/defaults.ts';
 import { inQuietHours, localMidnightIso, localNow, readNotif, type NudgeType } from './notif.ts';
 
 /**
@@ -178,7 +179,20 @@ export interface TickExtras {
   brief?: (userId: string, localDate: string, now: Date) => Promise<void>;
   /** The weekly review (Task 8.3), on the chosen day and time. */
   review?: (userId: string, localDate: string, now: Date) => Promise<void>;
+  /** The evening planner (Task 13.7), at settings.data.plan.evening_time. */
+  plan?: (userId: string, localDate: string, now: Date) => Promise<void>;
+  /** 90 minutes later: a 'defaults' plan_runs row when no planner run succeeded that day. */
+  planFallback?: (userId: string, localDate: string) => Promise<void>;
 }
+
+/** HH:MM plus minutes, kept within the day (23:59 at most). */
+export function addMinutesHHMM(hhmm: string, minutes: number): string {
+  const total = Math.min(Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5)) + minutes, 1439);
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/** How long after the evening time Insights is told the defaults carried the day. */
+export const PLAN_FALLBACK_MINUTES = 90;
 
 /** 0 = Monday … 6 = Sunday, for a local YYYY-MM-DD. */
 export const weekdayOf = (localDate: string) =>
@@ -241,6 +255,19 @@ export async function runTick(
     ) {
       report.jobs.push('weekly_review');
       await extras.review(u.user_id, local.date, now).catch(() => undefined);
+    }
+    const plan = readPlanSettings(u.settings);
+    if (extras.plan && plan.enabled && (await job('plan_evening', plan.evening_time))) {
+      report.jobs.push('plan_evening');
+      // A failed plan leaves the defaults standing; it must not stop the tick.
+      await extras.plan(u.user_id, local.date, now).catch(() => undefined);
+    }
+    if (
+      extras.planFallback &&
+      (await job('plan_fallback', addMinutesHHMM(plan.evening_time, PLAN_FALLBACK_MINUTES)))
+    ) {
+      report.jobs.push('plan_fallback');
+      await extras.planFallback(u.user_id, local.date).catch(() => undefined);
     }
     if (notif.types.evening_review && (await job('evening_review', notif.evening_review_time))) {
       report.jobs.push('evening_review');

@@ -13,6 +13,8 @@ import { runScout } from '../scout/run.ts';
 import { supabaseScoutStore } from '../scout/store.ts';
 import { runTick, type TickStore } from './tick.ts';
 import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
+import { runPlanDay } from '../plan-day/run.ts';
+import { supabasePlanStore } from '../plan-day/store.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', SERVICE_KEY, {
@@ -234,6 +236,33 @@ function tickNow(pusher: Pusher) {
           },
           { roundUp: true },
         );
+      },
+      plan: async (userId, localDate, at) => {
+        await runPlanDay(userId, localDate, at, 'evening', {
+          store: supabasePlanStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+        });
+      },
+      planFallback: async (userId, localDate) => {
+        // No successful evening run: record that the defaults carried the day (Insights).
+        const { data } = await db
+          .from('plan_runs')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('local_date', localDate)
+          .eq('kind', 'evening')
+          .eq('status', 'ok')
+          .limit(1);
+        if ((data ?? []).length) return;
+        await db.from('plan_runs').insert({
+          user_id: userId,
+          kind: 'defaults',
+          local_date: localDate,
+          status: 'ok',
+          finished_at: new Date().toISOString(),
+          summary: { why: 'no planner run succeeded; the defaults stand' },
+        });
       },
       review: async (userId, localDate) => {
         await runWeeklyReview(
