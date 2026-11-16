@@ -1,6 +1,7 @@
 import { assert, assertEquals } from 'jsr:@std/assert@1.0.19';
 import { inQuietHours, localMidnightIso, readNotif } from './notif.ts';
 import {
+  addMinutesHHMM,
   occurrencesBetween,
   runTick,
   type LeaveRow,
@@ -538,4 +539,66 @@ Deno.test('a leave nudge more than 30 minutes late is cancelled, not sent', asyn
   });
   const r = await runTick(at('2026-11-18T10:40:00Z'), m.store, m.send);
   assertEquals([r.sent, r.cancelled], [0, 1]);
+});
+
+Deno.test(
+  'the evening planner runs once a day at the evening time, in local time (Task 13.7)',
+  async () => {
+    const m = memory({ settings: quietJobs });
+    const ran: string[] = [];
+    const extras = {
+      plan: (_u: string, date: string) => (ran.push(`plan ${date}`), Promise.resolve()),
+      planFallback: (_u: string, date: string) => (ran.push(`fallback ${date}`), Promise.resolve()),
+    };
+    // 17:59 Dublin (GMT in November): not yet.
+    await runTick(at('2026-11-17T17:59:00Z'), m.store, m.send, extras);
+    assertEquals(ran, []);
+    await runTick(at('2026-11-17T18:00:00Z'), m.store, m.send, extras);
+    await runTick(at('2026-11-17T18:01:00Z'), m.store, m.send, extras);
+    assertEquals(ran, ['plan 2026-11-17']);
+    // 90 minutes later the fallback check runs once.
+    await runTick(at('2026-11-17T19:30:00Z'), m.store, m.send, extras);
+    await runTick(at('2026-11-17T19:45:00Z'), m.store, m.send, extras);
+    assertEquals(ran, ['plan 2026-11-17', 'fallback 2026-11-17']);
+  },
+);
+
+Deno.test(
+  'the evening time follows the setting and summer time; off means no plan but the fallback',
+  async () => {
+    const summer = memory({ settings: { ...quietJobs, plan: { evening_time: '19:30' } } });
+    const ran: string[] = [];
+    const extras = {
+      plan: (_u: string, date: string) => (ran.push(`plan ${date}`), Promise.resolve()),
+      planFallback: (_u: string, date: string) => (ran.push(`fallback ${date}`), Promise.resolve()),
+    };
+    // 19:30 Irish summer time is 18:30 UTC.
+    await runTick(at('2026-07-14T18:29:00Z'), summer.store, summer.send, extras);
+    assertEquals(ran, []);
+    await runTick(at('2026-07-14T18:30:00Z'), summer.store, summer.send, extras);
+    assertEquals(ran, ['plan 2026-07-14']);
+
+    const off = memory({ settings: { ...quietJobs, plan: { enabled: false } } });
+    const ran2: string[] = [];
+    await runTick(at('2026-11-17T20:00:00Z'), off.store, off.send, {
+      plan: () => (ran2.push('plan'), Promise.resolve()),
+      planFallback: () => (ran2.push('fallback'), Promise.resolve()),
+    });
+    assertEquals(ran2, ['fallback']);
+  },
+);
+
+Deno.test('a failing planner does not stop the tick', async () => {
+  const m = memory({
+    settings: quietJobs,
+    nudges: [{ kind: 'task_due', title: 'Due', send_at: '2026-11-17T18:00:00.000Z' }],
+  });
+  const r = await runTick(at('2026-11-17T18:00:00Z'), m.store, m.send, {
+    plan: () => Promise.reject(new Error('boom')),
+  });
+  assertEquals([r.jobs, r.sent], [['plan_evening'], 1]);
+});
+
+Deno.test('addMinutesHHMM stays within the day', () => {
+  assertEquals([addMinutesHHMM('18:00', 90), addMinutesHHMM('23:00', 90)], ['19:30', '23:59']);
 });

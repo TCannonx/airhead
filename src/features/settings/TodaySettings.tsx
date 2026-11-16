@@ -8,6 +8,7 @@ import type { SettingsRow } from '../../lib/schemas/records';
 import { useOnline } from '../../lib/useOnline';
 import { Button } from '../../ui/Button';
 import { FIELD_INLINE } from '../../ui/fieldParts';
+import { Toggle } from '../../ui/Toggle';
 
 const field = FIELD_INLINE;
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -25,19 +26,37 @@ function readToday(settings: SettingsRow | undefined) {
   };
 }
 
+/** settings.data.plan (Task 13.7): when the evening planner runs, and whether it runs at all. */
+export function readPlan(settings: SettingsRow | undefined) {
+  const p = (settings?.data.plan ?? {}) as Record<string, unknown>;
+  return {
+    ...p,
+    evening_time:
+      typeof p.evening_time === 'string' && HHMM.test(p.evening_time) ? p.evening_time : '18:00',
+    enabled: typeof p.enabled === 'boolean' ? p.enabled : true,
+  };
+}
+
 function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; userId: string }) {
   const db = useDb();
   const notif = readNotifSettings(settings);
-  const initial = { brief_time: notif.brief_time, ...readToday(settings) };
+  const plan = readPlan(settings);
+  const initial = {
+    brief_time: notif.brief_time,
+    ...readToday(settings),
+    plan_time: plan.evening_time,
+    plan_on: plan.enabled,
+  };
   const [f, setF] = useState(initial);
   const [saved, setSaved] = useState(false);
   const valid =
     HHMM.test(f.brief_time) &&
     HHMM.test(f.window_start) &&
     HHMM.test(f.window_end) &&
+    HHMM.test(f.plan_time) &&
     f.window_end > f.window_start;
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
-  const set = (k: keyof typeof f, v: string) => {
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => {
     setSaved(false);
     setF((p) => ({ ...p, [k]: v }));
   };
@@ -52,6 +71,7 @@ function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; us
         void updateSettingsData(db, userId, {
           notifications: { ...notif, brief_time: f.brief_time },
           today: { window_start: f.window_start, window_end: f.window_end },
+          plan: { ...plan, evening_time: f.plan_time, enabled: f.plan_on },
         }).then(() => setSaved(true));
       }}
     >
@@ -81,6 +101,24 @@ function TodayForm({ settings, userId }: { settings: SettingsRow | undefined; us
           value={f.window_end}
           onChange={(e) => set('window_end', e.target.value)}
         />
+      </div>
+      <div className="border-t border-border/60 pt-3">
+        <Toggle
+          label="Plan my day with AI"
+          checked={f.plan_on}
+          onChange={(v) => set('plan_on', v)}
+          hint="Each evening Airhead plans tomorrow: when to remind you, what to prepare, when to leave. Off: reminders still come at sensible default times."
+        />
+        <label className="flex items-center gap-2 text-footnote">
+          Plan my day at
+          <input
+            type="time"
+            className={field}
+            value={f.plan_time}
+            disabled={!f.plan_on}
+            onChange={(e) => set('plan_time', e.target.value)}
+          />
+        </label>
       </div>
       <p className="text-caption text-fg-muted">
         To turn the brief off, switch off “Morning brief and round-up” in Notifications.
