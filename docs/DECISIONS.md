@@ -1650,3 +1650,9 @@ Decisions and library versions, newest first.
 - After `maxLookups` (default 4) the tools are no longer offered, and any further call in the same turn is answered "Look-up limit reached: answer now with what you have."
 - Every round is one `ai_usage` row under the same task; `costEur` is the sum. An unreadable answer gets one retry, as in `callAI`. The large-tier refusal fallback is not used here (the planner is small tier).
 - mock-ai answers a request that offers client tools with one scripted round (it calls the first tool once), then its saved answer; it refuses badly formed tool definitions.
+## Look-ups (Task 14.6, 2026-11-16)
+
+- **Plan vs code**: `hybrid_search` (0023) is security invoker and filters by `auth.uid()`, so it only works for a signed-in caller. The planner runs with the service key, so 0052 adds `hybrid_search_for(user, …)`, the same search for one given person, service role only.
+- `searchHistory` asks for three times the limit and filters by date (the item's start, due or created date) and type in code, so a range does not starve the results. Without the embedding model (outside the Edge runtime) it is keyword-only (`semantic_weight = 0`).
+- `getPage` finds a page by its key (`<kind>:<normalised name>`); pages keyed by id (series, topics) are found by name.
+- `previousOccurrences`: a repeating event is one row, so its "previous occurrences" are earlier items in the same series (`series_id`) or, failing that, earlier events sharing a word of four letters or more with the title, most recent first, each with `item_plans.prep` and its planner nudges with their outcomes.

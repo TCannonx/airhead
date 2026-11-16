@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(ai): an AI call can now use look-ups: the model may ask for up to 4 searches of the person's own history before it answers; each result goes back as a data block, every round is logged in AI usage, and a failing look-up is told to the model rather than stopping the call (Task 14.7)
+- feat(history): three look-ups the planner can call: search history (by meaning and keyword, with dates and types), a page by kind and name, and earlier occurrences of an event with what was prepared and what was done with its reminders; compact rows only (migration 0052, Task 14.6)
 - feat(history): page summaries: each night at 03:30 pages whose items changed get a refreshed summary (at most 150 words) and up to 8 dated facts from one small AI call, built on the existing summary; a Rebuild request starts from every item; at most 20 pages a night; people only once approved (migration 0051, Task 14.5)
 - feat(history): sorting notices the people and projects a note is about (up to 5 per capture, prompt sort-batch.v8) and links the items to a page for each by name; a new person page waits under Settings → Memory → "People Airhead noticed" (Keep a page / Not a person) (migration 0050, Task 14.4)
 - feat(history): pages built by code: one per repeating event or series, per topic, and per place with 3 or more events, kept in step as items change (a queue drained every minute); synced, and the owner may rename or archive one (migration 0049, Task 14.3)
