@@ -420,6 +420,17 @@ export const nudgeSchema = z.object({
   snoozed_to: ts.nullable(),
 });
 export type Nudge = z.infer<typeof nudgeSchema>;
+
+/** One day's short summary and the items it came from (Task 14.1). Server-written. */
+export const dayDigestSchema = z.object({
+  ...syncColumns,
+  local_date: date,
+  digest: z.string(),
+  item_ids: z.array(id),
+  stale: z.boolean(),
+  built_at: ts,
+});
+export type DayDigest = z.infer<typeof dayDigestSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -449,6 +460,7 @@ export const SYNC_TABLES = [
   'follow_ups',
   'item_plans',
   'nudges',
+  'day_digests',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -478,6 +490,7 @@ export const schemas = {
   follow_ups: followUpSchema,
   item_plans: itemPlanSchema,
   nudges: nudgeSchema,
+  day_digests: dayDigestSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -506,4 +519,5 @@ export interface RowTypes {
   follow_ups: FollowUp;
   item_plans: ItemPlan;
   nudges: Nudge;
+  day_digests: DayDigest;
 }

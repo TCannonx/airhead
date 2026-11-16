@@ -31,6 +31,7 @@ describe('local database', () => {
         'ai_actions',
         'captures',
         'corrections',
+        'day_digests',
         'devices',
         'files',
         'follow_ups',

@@ -629,3 +629,13 @@ Deno.test('a tapped planner nudge opens its item with the snooze sheet (Task 13.
   assertEquals(m.sent[0]?.url, `/library/item/i1?nudge=${m.nudges[0]?.id}`);
   assertEquals(marked, 1);
 });
+
+Deno.test('day summaries are built once a night at 03:10 local (Task 14.1)', async () => {
+  const m = memory({ settings: quietJobs });
+  const ran: string[] = [];
+  const extras = { dayDigest: (_u: string, d: string) => (ran.push(d), Promise.resolve()) };
+  await runTick(at('2026-11-18T03:09:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T03:10:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T04:00:00Z'), m.store, m.send, extras);
+  assertEquals(ran, ['2026-11-18']);
+});

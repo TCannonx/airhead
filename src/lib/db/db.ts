@@ -105,5 +105,7 @@ export function openUserDb(userId: string): AirheadDb {
     item_plans: 'id, item_id, server_updated_at',
     nudges: 'id, item_id, status, send_at, server_updated_at',
   });
+  // v13: day summaries (Task 14.1), pull-only.
+  db.version(13).stores({ day_digests: 'id, local_date, server_updated_at' });
   return db;
 }
