@@ -255,3 +255,19 @@ Deno.test(
     assertEquals([r2.status, q.calls.length], ['skipped', 0]);
   },
 );
+
+Deno.test('replan (Task 15.3): only the given items, from today', async () => {
+  const asked: string[] = [];
+  const st = store({ digest: (_u, d) => (asked.push(d), Promise.resolve(RAW)) });
+  const { client, calls } = ai(fx.output);
+  const res = await runPlanDay(USER, '2026-11-18', new Date('2026-11-18T09:00:00Z'), 'replan', {
+    ...deps(st.s, client),
+    itemIds: ['a1300000-0000-4000-8000-000000000002'],
+  });
+  assertEquals(asked, ['2026-11-17']);
+  assertEquals(st.log[0], 'start replan 2026-11-18');
+  assertEquals(res.status, 'ok');
+  const msg = (calls[0]?.messages as { content: string }[])[0]?.content ?? '';
+  assertStringIncludes(msg, 'Send the insurance form');
+  assertEquals(msg.includes('"Training"'), false);
+});

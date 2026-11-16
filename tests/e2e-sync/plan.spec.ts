@@ -187,3 +187,54 @@ test('snoozing a reminder on one device shows the new time and the outcome on th
     .poll(() => deviceNudges(b, user, itemId), { timeout: 60_000, intervals: [3_000] })
     .toBe('plan|default|snoozed,snooze|user|');
 });
+
+test('moving tomorrow 08:00 to 15:00 replaces the evening prepare with a same-day one (Task 15.3)', async ({
+  browser,
+}) => {
+  const email = `e2e-move-${Date.now()}@example.test`;
+  const a = await (await browser.newContext({ timezoneId: TZ })).newPage();
+  await signIn(a, email);
+  const user = userIdFor(email);
+
+  const day = addDays(dayKey(new Date()), 2);
+  await a.goto('/calendar');
+  await a.getByRole('button', { name: 'New event' }).click();
+  const form = a.getByRole('form', { name: 'New event' });
+  await form.getByLabel('Title').fill('Training');
+  await form.getByLabel('Starts').fill(`${day}T08:00`);
+  await form.getByLabel('Ends').fill(`${day}T09:30`);
+  await form.getByRole('button', { name: 'Save' }).click();
+  await expect(form).toHaveCount(0);
+
+  const q = `select id from public.items where user_id = ${lit(user)} and title = 'Training' and deleted_at is null`;
+  await expect.poll(() => sql(q), { timeout: 60_000 }).not.toBe('');
+  const itemId = sql(q);
+  const prepare = () =>
+    sql(
+      `select status || '|' || (to_json(send_at) #>> '{}') from public.nudges
+        where item_id = ${lit(itemId)} and kind = 'prepare' and status = 'pending'`,
+    );
+  sql('select public.dispatch_scheduler_tick()');
+  await expect.poll(prepare, { timeout: 60_000 }).not.toBe('');
+  const before = new Date(prepare().split('|')[1] ?? '').toISOString();
+  expect([dayKey(new Date(before)), wall(before)]).toEqual([addDays(day, -1), '20:30']);
+
+  // The device's edit as the sync push writes it: the event moves to 15:00 the same day.
+  sql(
+    `update public.items set start_at = (${lit(`${day} 15:00`)}::timestamp at time zone 'Europe/Dublin'),
+            end_at = (${lit(`${day} 16:30`)}::timestamp at time zone 'Europe/Dublin'), updated_at = now()
+      where id = ${lit(itemId)}`,
+  );
+  sql('select public.dispatch_scheduler_tick()');
+  await expect
+    .poll(
+      () => {
+        const rows = prepare().split('\n').filter(Boolean);
+        if (rows.length !== 1) return `rows: ${rows.length}`;
+        const at = new Date(rows[0]?.split('|')[1] ?? '').toISOString();
+        return `${dayKey(new Date(at))} ${wall(at)}`;
+      },
+      { timeout: 60_000, intervals: [2_000] },
+    )
+    .toBe(`${day} 12:00`);
+});
