@@ -2,6 +2,15 @@
 
 ## Waiting for the user
 
+### Phase 15 ready for device testing on dev
+
+The plan now keeps itself right through the day: a morning refresh 20 minutes before the brief, a re-plan of anything changed, snoozed or missed (after 5 quiet minutes, at most 6 runs a day), the morning brief built with the plan, reading and follow-up suggestions gathered into one "From your plan" round-up instead of their own notifications, a per-kind setting for planner reminders, and the app badge.
+
+1. Load the latest version on the iPhone and work through "Phase 15 — Digest and re-plan" in `docs/MANUAL-CHECKLIST.md`.
+2. Optional, for Safari's Declarative Web Push: set the function secret `APP_URL` on the dev project to the dev site's https address (Supabase dashboard → Project Settings → Edge Functions → Secrets → Add `APP_URL`, e.g. `https://airhead.xxr5th.workers.dev`). Without it, push works exactly as before.
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 14 ready for device testing on dev
 
 History is on the dev site: a short record of each day (03:10) and month, a running page for each repeating event, topic, place you go to often, and the people and projects in your notes (people wait for your OK under Settings → Memory), nightly page summaries with dated facts, Library → Pages, and an evening planner that reads recent history and may look up what you did last time. Ask Airhead reads the pages too.
