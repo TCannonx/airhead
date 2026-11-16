@@ -192,4 +192,14 @@ DENO_NO_PACKAGE_JSON=1 deno test --node-modules-dir=none --allow-env --allow-net
 Supabase CLI 3.x: `db push`, `db dump` and similar commands target the **local** database unless given `--remote`.
 On this machine (no Docker or `gh`), database tests run only in CI. Function tests run locally through `npx deno@2.9.6` with the `deno test` line above; see `docs/DECISIONS.md`.
 
+Shipping without `gh` (Task 13.0): `scripts/dev/ship.py` uses the GitHub REST API with the token from `git credential fill`.
+
+```bash
+python scripts/dev/ship.py pr --title "feat(x): ... (Task X.Y)" --body-file <path>   # push + open PR, prints number
+python scripts/dev/ship.py wait <pr>    # exit 0 green, 1 failed, 3 still running (run again)
+python scripts/dev/ship.py logs <pr>    # tail of each failed job's log
+python scripts/dev/ship.py merge <pr>   # squash-merge when every required check passed, then update main
+python scripts/dev/ship_test.py         # its tests (run in CI)
+```
+
 Keep this section accurate as scripts are added.
