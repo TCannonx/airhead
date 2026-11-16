@@ -37,6 +37,29 @@ export function isSubscription(v: unknown): v is StoredSubscription {
   );
 }
 
+/**
+ * The message sent (Task 15.5): Airhead's own fields, which the service worker
+ * reads, plus WebKit's Declarative Web Push fields when the app's address is
+ * known (APP_URL), so Safari can show it even if the service worker does not
+ * run. Browsers without Declarative Web Push ignore the extra keys. app_badge
+ * is left out: the app sets the badge itself (WebKit reports crashes with it).
+ */
+export function pushMessage(payload: PushPayload, appUrl: string | null | undefined): string {
+  const base = (appUrl ?? '').replace(/\/+$/, '');
+  if (!/^https:\/\/[^/]+/.test(base)) return JSON.stringify(payload);
+  const path = payload.url && payload.url.startsWith('/') ? payload.url : '/today';
+  return JSON.stringify({
+    ...payload,
+    web_push: 8030,
+    notification: {
+      title: payload.title,
+      ...(payload.body ? { body: payload.body } : {}),
+      navigate: `${base}${path}`,
+      ...(payload.tag ? { tag: payload.tag } : {}),
+    },
+  });
+}
+
 /** A pusher from the environment, or null when the VAPID secrets aren't set. */
 export async function pusherFromEnv(env = Deno.env): Promise<Pusher | null> {
   const raw = env.get('VAPID_KEYS');
@@ -53,7 +76,7 @@ export async function pusherFromEnv(env = Deno.env): Promise<Pusher | null> {
     publicKey: () => webpush.exportApplicationServerKey(keys),
     async send(sub, payload) {
       try {
-        await server.subscribe(sub).pushTextMessage(JSON.stringify(payload), {
+        await server.subscribe(sub).pushTextMessage(pushMessage(payload, env.get('APP_URL')), {
           ttl: 60 * 60 * 6,
           urgency: webpush.Urgency.High,
           ...(payload.tag

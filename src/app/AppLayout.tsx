@@ -9,6 +9,7 @@ import { CompactTitleContext } from '../ui/compactTitle';
 import { cx } from '../ui/cx';
 import { Icon } from './Icon';
 import { useLayout } from './layout';
+import { useAppBadge } from './useAppBadge';
 import { CALENDAR, SETTINGS, TABS, type NavItem } from './nav';
 
 function Brand({ compact = false }: { compact?: boolean }) {
@@ -201,6 +202,7 @@ export default function AppLayout() {
   const layout = useLayout();
   const navigate = useNavigate();
   const inbox = useInboxCount();
+  useAppBadge();
   // Set by PageHeader once the large title scrolls away (phone top bar shows it).
   const [compactTitle, setCompactTitle] = useState<string | null>(null);
 
