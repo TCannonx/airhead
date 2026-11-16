@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertMatch } from 'jsr:@std/assert@1.0.19';
 import * as webpush from 'jsr:@negrel/webpush@0.5.0';
-import { deliver, isSubscription, pusherFromEnv, type Pusher } from './push.ts';
+import { deliver, isSubscription, pushMessage, pusherFromEnv, type Pusher } from './push.ts';
 
 const SUB = (endpoint: string) => ({
   endpoint,
@@ -90,3 +90,31 @@ Deno.test('with VAPID keys: a public key for the browser, and 404/410 count as g
     globalThis.fetch = realFetch;
   }
 });
+
+Deno.test(
+  'declarative web push (Task 15.5): WebKit fields beside our own, only with the app address',
+  () => {
+    const p = {
+      title: 'Pack your bag',
+      body: 'Boots',
+      url: '/library/item/i1?nudge=n1',
+      tag: 'n1',
+    };
+    const m = JSON.parse(pushMessage(p, 'https://airhead.example/'));
+    assertEquals(m.web_push, 8030);
+    assertEquals(m.notification, {
+      title: 'Pack your bag',
+      body: 'Boots',
+      navigate: 'https://airhead.example/library/item/i1?nudge=n1',
+      tag: 'n1',
+    });
+    assertEquals([m.title, m.url], ['Pack your bag', '/library/item/i1?nudge=n1']);
+    assertEquals('app_badge' in m || 'app_badge' in m.notification, false);
+    assertEquals(JSON.parse(pushMessage(p, undefined)), p);
+    assertEquals(JSON.parse(pushMessage(p, 'http://insecure.example')), p);
+    assertEquals(
+      JSON.parse(pushMessage({ title: 'x' }, 'https://a.example')).notification.navigate,
+      'https://a.example/today',
+    );
+  },
+);
