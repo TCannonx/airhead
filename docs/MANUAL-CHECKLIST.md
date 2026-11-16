@@ -259,6 +259,14 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] Installed app on the iPhone: the icon badge shows overdue tasks plus open questions and goes when they are cleared
 - [ ] [ ] [ ] With APP_URL set (see BLOCKERS), a notification tapped on the iPhone opens the right item
 
+## Phase 17 — Learning and the weekly review
+
+- [ ] [ ] [ ] Load the latest version (Settings → Sync → Load latest version)
+- [ ] [ ] [ ] Snooze the evening "Get ready" for training to the morning three times over a couple of weeks: Settings → Memory shows a new fact like "Packs the training bag in the morning"; the next plan puts it in the morning
+- [ ] [ ] [ ] Remove that fact in Settings → Memory: the next plan goes back to the evening
+- [ ] [ ] [ ] Sunday's weekly review mentions how the reminders went and, when something keeps slipping, proposes moving, splitting or dropping it under Inbox → Needs your OK; nothing changes until you approve, and Undo works
+- [ ] [ ] [ ] Insights → Planner costs shows the last 14 days by run kind, look-ups, and days the defaults carried
+
 ## v0.1 release
 
 - [ ] Everything above is ticked
