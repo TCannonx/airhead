@@ -15,6 +15,8 @@ export interface PlanCase {
   meant: string;
   settings: Record<string, unknown>;
   raw: RawPlanDigest;
+  /** What Airhead knows about the person (memory facts), as the planner gets it. */
+  profile?: string;
   /** History the model may look up (Task 14.8): fixed answers, no database. */
   lookups?: Record<string, Lookup>;
   check: (r: PlanResultT, ids: Record<string, string>) => string[];
@@ -260,6 +262,32 @@ export function planCases(now: Date): { cases: PlanCase[]; ids: Record<string, s
           .join(' ')
           .toLowerCase();
         return has(/vegetarian|veggie|book/.test(words), "nothing from Niamh's page in the plan");
+      },
+    },
+    {
+      id: 'plan-learned-morning',
+      text: 'Training at 8 tomorrow (I keep moving the bag reminder to the morning)',
+      meant: 'After three morning snoozes, the bag reminder goes in the morning before training.',
+      settings: { notifications: { quiet_start: '22:00', quiet_end: '06:00' } },
+      profile: '- Packs the training bag in the morning, not the evening before',
+      raw: raw([event(ids.training, 'Training', at('08:00'), { travel_minutes: 20 })]),
+      check: (r) => {
+        const prepare = nudgesFor(r, ids.training).filter((n) => n.kind === 'prepare');
+        return [
+          ...has(
+            prepare.some(
+              (n) =>
+                wall(n.at)[0] === tomorrow &&
+                wall(n.at)[1] >= 5 * 60 &&
+                wall(n.at)[1] <= 8 * 60 - 45,
+            ),
+            'no prepare on the morning itself',
+          ),
+          ...has(
+            !prepare.some((n) => wall(n.at)[0] === evening),
+            'still a prepare the evening before',
+          ),
+        ];
       },
     },
     {

@@ -41,6 +41,7 @@ Deno.test(
           'plan-early-quiet',
           'plan-repeat-detail',
           'plan-dinner-page',
+          'plan-learned-morning',
           'plan-empty-day',
         ],
       );
@@ -51,7 +52,7 @@ Deno.test(
         `ask: ${ask?.problems.join('; ')}`,
       );
       // The history cases need a model that reads its look-ups; the stand-in does not.
-      for (const c of plans.filter((p) => !/repeat-detail|dinner-page/.test(p.id)))
+      for (const c of plans.filter((p) => !/repeat-detail|dinner-page|learned-morning/.test(p.id)))
         assert(c.pass, `${c.id}: ${c.problems.join('; ')}`);
     } finally {
       Deno.env.delete('ANTHROPIC_BASE_URL');

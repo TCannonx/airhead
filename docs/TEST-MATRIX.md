@@ -376,6 +376,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+| Timing preferences: 3 snoozes the same way of the last 5 per kind and page; one small call words the fact; saved as an active everyday memory fact; 3 contradictions archive it | — | `fn/learning/timing.test.ts`, `_shared/schemas/limits.test.ts` (`TimingFact`), `_shared/ai.contract.test.ts` (saved answer fits), `db/0058`, `fn/ai-eval` "plan-learned-morning" wired | — | Real model: the next plan puts the bag in the morning (`ai-eval` on dev) |
 | Insights → Planner costs: cost per day by run kind, look-ups, defaults days | `features/insights/aiusage.test.tsx`, `lib/ai/planCosts.test.ts` | `db/0041` (`plan_runs_daily`, owner only) | — | |
 
 ## Cross-cutting
