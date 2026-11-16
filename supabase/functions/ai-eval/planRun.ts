@@ -1,5 +1,5 @@
 import { type AIClient, callAI, callAIWithLookups, type UsageStore } from '../_shared/ai.ts';
-import { buildPlanMessage, PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
+import { buildPlanMessage, PLAN_SYSTEM } from '../_shared/prompts/plan.v3.ts';
 import { PlanResult } from '../_shared/schemas/plan.ts';
 import { buildPlanDigest } from '../plan-day/digest.ts';
 import { validatePlan } from '../plan-day/validate.ts';

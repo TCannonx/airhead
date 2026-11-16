@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1.0.19';
 import fx from '../../../tests/fixtures/ai/plan-evening.json' with { type: 'json' };
 import type { AIClient, UsageRow, UsageStore } from '../_shared/ai.ts';
-import { PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
+import { PLAN_SYSTEM } from '../_shared/prompts/plan.v3.ts';
 import type { RawPlanDigest } from './digest.ts';
 import { runPlanDay, type PlanStore } from './run.ts';
 import type { ApplyPayload } from './validate.ts';
@@ -116,7 +116,7 @@ Deno.test(
     );
     assert(p.cost_eur > 0);
     assertEquals(p.summary.tonight, ['Pack your training bag']);
-    assertEquals(p.summary.prompt, 'plan.v2');
+    assertEquals(p.summary.prompt, 'plan.v3');
   },
 );
 
@@ -271,3 +271,21 @@ Deno.test('replan (Task 15.3): only the given items, from today', async () => {
   assertStringIncludes(msg, 'Send the insurance form');
   assertEquals(msg.includes('"Training"'), false);
 });
+
+Deno.test(
+  'reading (Task 16.7): the evening run gets topics and unread links; the morning does not',
+  async () => {
+    const reading = {
+      topics: [{ name: 'Marathon training', count: 5, last_added: '2026-11-16' }],
+      unread: [
+        { item_id: 'r1', title: 'Fuelling long runs', minutes: 8, topics: ['Marathon training'] },
+      ],
+    };
+    const st = store({ reading: () => Promise.resolve(reading) });
+    const { client, calls } = ai(fx.output);
+    await runPlanDay(USER, '2026-11-17', NOW, 'evening', deps(st.s, client));
+    const msg = (calls[0]?.messages as { content: string }[])[0]?.content ?? '';
+    assertStringIncludes(msg, 'Fuelling long runs');
+    assertStringIncludes(msg, '"topics":[{"name":"Marathon training"');
+  },
+);

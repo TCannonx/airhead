@@ -6,10 +6,16 @@ import {
   type UsageStore,
 } from '../_shared/ai.ts';
 import { readPlanSettings } from '../_shared/plan/defaults.ts';
-import { buildPlanMessage, PLAN_SYSTEM, PLAN_VERSION } from '../_shared/prompts/plan.v2.ts';
+import { buildPlanMessage, PLAN_SYSTEM, PLAN_VERSION } from '../_shared/prompts/plan.v3.ts';
 import { PlanResult } from '../_shared/schemas/plan.ts';
 import { addDays } from '../_shared/holidays/easter.ts';
-import { buildPlanDigest, changedSince, type RawPlanDigest } from './digest.ts';
+import {
+  buildPlanDigest,
+  changedSince,
+  type RawPlanDigest,
+  type ReadingInput,
+  withReading,
+} from './digest.ts';
 import { type ApplyPayload, validatePlan } from './validate.ts';
 
 export type PlanMode = 'evening' | 'morning' | 'replan';
@@ -27,6 +33,8 @@ export interface PlanStore {
    * (Task 14.8). Optional for older fakes.
    */
   history?(userId: string, localDate: string): Promise<PlanHistory>;
+  /** Active reading topics and unread links (Task 16.7); optional for older fakes. */
+  reading?(userId: string): Promise<ReadingInput | null>;
   /** When the evening run for that date finished ok (Task 15.1); null when none did. */
   eveningFinishedAt?(userId: string, eveningDate: string): Promise<string | null>;
   /** Today's planning spend so far (plan_runs.cost_eur for the local date). */
@@ -114,8 +122,16 @@ export async function runPlanDay(
       const wanted = new Set(deps.itemIds ?? []);
       raw = { ...raw, items: raw.items.filter((i) => wanted.has(i.id)), linked: [] };
     }
-    const { digest, left_out } = buildPlanDigest(raw, settings, now);
-    const plannable = digest.items.filter((i) => i.kind !== 'linked').length;
+    const built = buildPlanDigest(raw, settings, now);
+    const left_out = built.left_out;
+    // Reading suggestions are for the evening run only (Task 16.7).
+    const digest =
+      mode === 'evening' && deps.store.reading
+        ? withReading(built.digest, await deps.store.reading(userId).catch(() => null))
+        : built.digest;
+    const plannable = digest.items.filter(
+      (i) => i.kind !== 'linked' && i.kind !== 'reading',
+    ).length;
     if (plannable === 0) {
       return await done('ok', {
         items_considered: 0,

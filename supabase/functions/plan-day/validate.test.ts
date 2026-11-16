@@ -39,6 +39,7 @@ const digest: PlanDigest = {
   days: [],
   items: [training, form, linked],
   prep_rules: [],
+  topics: [],
 };
 
 type Nudge = PlanResultT['items'][number]['nudges'][number];
@@ -69,6 +70,7 @@ function item(
     nudges,
     reason: 'why',
     confidence: 0.9,
+    reading_slot: '',
     ...over,
   };
 }
@@ -201,5 +203,41 @@ Deno.test('plan fields are tidied: surface time, effort, confidence', () => {
     prep: ['Bag'],
     reason: 'why',
     confidence: 1,
+    reading_slot: null,
   });
 });
+
+Deno.test(
+  'reading (Task 16.7): a saved link takes only a reading suggestion, in the digest, with its slot',
+  () => {
+    const reading: DigestItem = {
+      item_id: 'link',
+      kind: 'reading',
+      occurrence_date: '2026-11-18',
+      at: null,
+      time: null,
+      end: null,
+      all_day: true,
+      title: 'Marathon plan',
+    };
+    const { payload, dropped } = validatePlan(
+      result([
+        item('link', [n('reading', '2026-11-18 08:15', 'push'), n('do', '2026-11-18 09:00')], {
+          reading_slot: 'commute',
+        }),
+      ]),
+      { ...digest, items: [...digest.items, reading] },
+      {},
+      NOW,
+    );
+    assertEquals(
+      payload.nudges.map((x) => `${x.kind}:${x.delivery}`),
+      ['reading:digest'],
+    );
+    assertEquals(payload.items[0]?.reading_slot, 'commute');
+    assertEquals(
+      dropped.map((d) => d.why),
+      ['only a reading suggestion for a saved link'],
+    );
+  },
+);
