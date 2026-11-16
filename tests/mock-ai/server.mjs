@@ -396,6 +396,60 @@ export function fixture(name) {
 }
 
 /**
+ * The evening planner (Task 13.6/13.9), worked out from the digest the way the
+ * defaults are: prepare the evening before for a start before 12:00, else 3
+ * hours before (not before 08:00); leave at start minus travel minus 10; do at
+ * a timed task's due time. Nothing for all-day items or linked events.
+ */
+export function planAnswer(user) {
+  const m = /<digest>\n([\s\S]*)\n<\/digest>/.exec(user ?? '');
+  const empty = { items: [], tonight: [], clashes: [], digest_draft: '' };
+  if (!m) return empty;
+  const d = JSON.parse(m[1]);
+  const hm = (min) =>
+    `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+  const toMin = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const items = [];
+  for (const i of d.items ?? []) {
+    if (i.kind === 'linked' || !i.time) continue;
+    const start = toMin(i.time);
+    const nudges = [];
+    if (i.kind === 'event') {
+      if (start < 12 * 60) {
+        nudges.push({ kind: 'prepare', at: `${d.date} ${d.prepare_evening_time}` });
+      } else {
+        nudges.push({
+          kind: 'prepare',
+          at: `${i.occurrence_date} ${hm(Math.max(start - 180, 8 * 60))}`,
+        });
+      }
+      const leave = start - (i.travel_minutes ?? d.default_travel_minutes) - 10;
+      if (leave >= 0) nudges.push({ kind: 'leave', at: `${i.occurrence_date} ${hm(leave)}` });
+    } else if (i.kind === 'task') {
+      nudges.push({ kind: 'do', at: `${i.occurrence_date} ${i.time}` });
+    }
+    items.push({
+      item_id: i.item_id,
+      occurrence_date: i.occurrence_date,
+      surface_at: '',
+      effort_minutes: 0,
+      needs: [],
+      prep: i.prep ?? [],
+      nudges: nudges.map((n) => ({
+        ...n,
+        title: `${n.kind === 'prepare' ? 'Get ready' : n.kind === 'leave' ? 'Time to leave' : 'Do'}: ${i.title}`,
+        body: '',
+        reason: 'Worked out by the stand-in',
+        delivery: 'push',
+      })),
+      reason: 'Stand-in plan',
+      confidence: 0.8,
+    });
+  }
+  return { ...empty, items };
+}
+
+/**
  * Every structured-output task the functions send, found by the start of its
  * fixed system prompt. `answer` gets the user text and whether images were sent.
  */
@@ -440,7 +494,7 @@ export const TASKS = [
   {
     task: 'plan_day',
     prompt: "You plan one person's coming days",
-    answer: () => fixture('plan-evening').output,
+    answer: ({ user }) => planAnswer(user),
   },
   {
     task: 'summarise_note',
