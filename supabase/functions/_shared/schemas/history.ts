@@ -14,3 +14,14 @@ export const PageSummaryResult = z.object({
   facts: z.array(z.object({ date: z.string(), text: z.string() })),
 });
 export type PageSummaryResultT = z.infer<typeof PageSummaryResult>;
+
+/** What a small call adds to a saved link (Task 16.2). Lists are trimmed in code. */
+export const LinkEnrichment = z.object({
+  kind: z.enum(['article', 'video', 'paper', 'thread', 'product', 'other']),
+  summary: z.string(),
+  key_points: z.array(z.string()),
+  why_saved: z.string(),
+  topics: z.array(z.string()),
+  mentions: z.array(z.object({ kind: z.enum(['person', 'club', 'tool']), name: z.string() })),
+});
+export type LinkEnrichmentT = z.infer<typeof LinkEnrichment>;
