@@ -1562,3 +1562,13 @@ Decisions and library versions, newest first.
 - Linked-calendar events are context only (`kind: 'linked'`): the planner may mention them (clashes) but cannot write nudges for them, as they are not Airhead items. They appear only for tomorrow.
 - Quiet hours and the brief time come from the existing notification settings (`readNotif`), not new keys. `scheduler-tick/tick.ts` now exports `locationFor` for the digest's per-day work location.
 - "Items in the following 6 days with prep text" uses `item_plans.prep`; "travel" means the item has `data.travel_minutes`.
+
+## Evening planner (Task 13.6, 2026-11-16)
+
+- **Times in the schema are local wall times** ("YYYY-MM-DD HH:MM"), turned into instants in code with the person's time zone; models get local times right far more often than offsets. Optional fields are required-with-empty-values (`surface_at: ""`, `effort_minutes: 0`) to keep union parameters low (`PlanResult` is in the limits test).
+- **Validation** (`plan-day/validate.ts`) also drops a second nudge of the same kind for one occurrence (the key `plan:<kind>:<item>:<date>` is unique), and forces `delivery = 'digest'` for `reading` and for a `follow_up` on an event (a follow-up on a task has its deadline). The daily cap counts the plan's own pushes per local day and keeps the earliest.
+- **What apply_plan cancels**: only earlier **AI** nudges for an occurrence the plan covers but no longer contains. Defaults stay unless the plan writes the same key (nothing waits on the AI: a default is never removed by a plan that simply left it out). `upsert_plan_nudge` v2 never lets anything but `user` replace a `user` nudge.
+- **Nothing to plan, no call**: a digest with no plannable items closes the run `ok` without an AI call (real-model case 5 still checks the model returns an empty plan when asked).
+- **Daily planning cap**: the sum of `plan_runs.cost_eur` for the local date against `settings.data.plan.daily_cap_eur` (0.15), checked before calling. The monthly AI cap still applies inside `callAI` (`background: true`).
+- **Linked-calendar events** are context only (no item to attach a nudge to).
+- `plan-day` is service-key only (`verify_jwt = false`, checked in the function); the scheduler calls it in 13.7.

@@ -507,3 +507,7 @@ verify_jwt = false
 [functions.ai-eval]
 # Dev-only evaluation of the sorting model; needs the EVAL_TOKEN secret and header.
 verify_jwt = false
+
+[functions.plan-day]
+# The evening planner (Task 13.6): the scheduler's service key only; checked in the function.
+verify_jwt = false
