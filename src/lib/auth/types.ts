@@ -48,7 +48,21 @@ export interface SortingService {
 }
 
 /** The user's AI usage and prices (server-side; absent in local mode). */
+/** One row of plan_runs_daily (Task 17.4): a day's planner runs of one kind. */
+export interface PlanRunDay {
+  local_date: string;
+  kind: string;
+  runs: number;
+  ok_runs: number;
+  capped_runs: number;
+  nudges_written: number;
+  lookups_used: number;
+  cost_eur: number;
+}
+
 export interface UsageService {
+  /** The planner's runs by day and kind since a date (Task 17.4); optional for older fakes. */
+  planDays?(sinceDate: string): Promise<PlanRunDay[]>;
   monthRows(sinceIso: string): Promise<import('../ai/usage').UsageRow[]>;
   prices(): Promise<import('../ai/usage').PriceRow[]>;
   savePrice(price: Omit<import('../ai/usage').PriceRow, 'id' | 'user_id'>): Promise<void>;
