@@ -1699,6 +1699,12 @@ Decisions and library versions, newest first.
 - Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
 - The device brief schema gains `plan` (default null), so older briefs still parse.
 
+## Every link (Task 16.1, 2026-11-16)
+
+- **Plan vs code**: link detection lives in `src/lib/rules/links.ts` (`findUrls`, `normaliseUrl`, `withoutUrls`) and is applied in `createCapture` (`src/lib/db/captures.ts`), where the one-link rule was.
+- A note is "just a link" (sorted at once, as before) when the words besides its links are three or fewer; otherwise one reading item per link is made and the capture still waits for sorting, so nothing it says is lost.
+- Links are compared by `normaliseUrl`: lower-case host without `www.`, no fragment, no trailing slash, and without tracking parameters (`utm_*`, `fbclid`, `gclid`, `dclid`, `msclkid`, `mc_cid`, `mc_eid`, `igshid`, `si`, `ref`, `ref_src`, `_hsenc`, `_hsmi`, `mkt_tok`). The stored URL is the one the owner pasted.
+- A repeat joins the existing reading item: its `data.captures` lists every capture that saved it. On the server, sorting skips `reading` items from the model for any capture whose text has a link, since the device already made them.
 ## Badge and Declarative Web Push (Task 15.5, 2026-11-16)
 
 - **Verified** (WebKit blog "Meet Declarative Web Push", https://webkit.org/?p=16535, and the W3C Push API draft): a declarative message is JSON with a top-level `"web_push": 8030` and a `notification` object holding `title` (required), `body`, `navigate` (an absolute URL, required) and optional `tag`. Browsers without it ignore the extra keys, and the service worker still reads Airhead's own `title`, `body`, `url`, `tag`.

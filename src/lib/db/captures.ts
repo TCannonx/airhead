@@ -1,6 +1,7 @@
 import { queueFile } from '../files/upload';
 import { parseLeave } from '../leave/parse';
 import { analyseCapture, DEFAULT_TIME_ZONE } from '../rules';
+import { findUrls, normaliseUrl, withoutUrls } from '../rules/links';
 import type { AiAction, Capture, Item } from '../schemas/records';
 import { chipFor } from './aiActions';
 import type { AirheadDb } from './db';
@@ -70,6 +71,12 @@ export async function createCapture(
     text && !input.url ? parseLeave(text, options.now ?? new Date(), DEFAULT_TIME_ZONE) : null;
   const analysis = text ? analyseCapture(text, { now: options.now }) : null;
   const url = input.url ?? analysis?.url ?? null;
+  // Every distinct link becomes a reading item (Task 16.1); the other words of a
+  // longer note still wait for sorting, as written.
+  const urls = input.url ? [input.url] : text ? findUrls(text).map((f) => f.url) : [];
+  const otherWords = text ? withoutUrls(text) : '';
+  const linkOnly =
+    urls.length > 0 && (input.url ? true : otherWords.split(' ').filter(Boolean).length <= 3);
   const when = leave || (text && FOR_AI.test(text)) ? null : (analysis?.when ?? null);
   const at = new Date().toISOString();
 
@@ -86,8 +93,8 @@ export async function createCapture(
     text,
     url,
     kind: input.photo ? 'image' : url ? 'link' : 'text',
-    // A link is handled by the free rules (reading item), so it doesn't wait in the Inbox.
-    ...(url ? { status: 'sorted' as const, sorted_at: at } : {}),
+    // A link on its own is handled by the free rules (reading item), so it doesn't wait in the Inbox.
+    ...(url && linkOnly ? { status: 'sorted' as const, sorted_at: at } : {}),
     ...(when
       ? when.confident
         ? { status: 'sorted' as const, sorted_at: at }
@@ -122,17 +129,36 @@ export async function createCapture(
   }
   const saved = await save(db, 'captures', capture);
 
-  if (url) {
-    await save(
-      db,
-      'items',
-      newItem(userId, {
-        type: 'reading',
-        title: (analysis?.kind === 'link' && analysis.title) || url,
-        capture_id: saved.id,
-        data: { url },
-      }),
-    );
+  if (urls.length) {
+    const reading = await db.items
+      .where('type')
+      .equals('reading')
+      .filter((i) => !i.deleted_at && typeof i.data.url === 'string')
+      .toArray();
+    const byKey = new Map(reading.map((i) => [normaliseUrl(String(i.data.url)), i]));
+    for (const link of urls) {
+      const same = byKey.get(normaliseUrl(link));
+      if (same) {
+        // Saved again: join the existing item and record this capture too.
+        const caps = Array.isArray(same.data.captures) ? (same.data.captures as string[]) : [];
+        if (!caps.includes(saved.id))
+          await update(db, 'items', same.id, {
+            data: { ...same.data, captures: [...caps, saved.id] },
+          });
+        continue;
+      }
+      const item = await save(
+        db,
+        'items',
+        newItem(userId, {
+          type: 'reading',
+          title: urls.length === 1 ? (analysis?.kind === 'link' && analysis.title) || link : link,
+          capture_id: saved.id,
+          data: { url: link, captures: [saved.id] },
+        }),
+      );
+      byKey.set(normaliseUrl(link), item);
+    }
   }
 
   const event: Item | null = instant ? await save(db, 'items', instant) : null;

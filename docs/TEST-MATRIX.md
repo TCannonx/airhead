@@ -361,6 +361,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | The brief from the plan: plan in the message and in `content.plan` (prepare now, clashes, ready today, reading pick); "Left out" whenever the digest was capped or nudges dropped; kept in the fallback; Today shows it | `features/today/today.test.tsx`, `lib/schemas/records.test.ts` | `fn/morning-brief/brief.test.ts`, `_shared/ai.contract.test.ts` (brief through mock-ai) | `sync/tables.spec.ts` (`briefs`) | |
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 
+## Phase 16 — Reading that collates itself
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
