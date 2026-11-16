@@ -1517,3 +1517,10 @@ Decisions and library versions, newest first.
 - **What happened:** the owner's iPhone (Home Screen app, build 5f3bd5b) showed "Last successful sync 11:28" and "Syncing since 20:19: receiving follow_ups" for over 10 minutes. Sync now changed nothing. The server logs showed every request succeeding, but the phone only synced straight after a local write; app open and the minute timer sent nothing. That means one run never finished, and every later trigger joined it. The 90 s watchdog should have stopped it; on the phone it did not. The cause is not proven yet.
 - **Recovery:** `SyncEngine.syncNow` now abandons a run older than `staleAfterMs` (watchdog + 15 s) on any trigger, not only a forced one. So even if the watchdog's timer never fires, the next minute tick or the app coming to the front starts a fresh run.
 - **Evidence for next time:** `src/lib/sync/syncLog.ts` keeps the last 200 sync events (engine created/start/stop, run start/ok/error with the stage, watchdog, abandoned runs). They go in memory and localStorage, not IndexedDB, in case IndexedDB is what hangs. They show in Settings → Sync → Sync log and are sent after each run to `public.sync_logs` (migration 0040: insert own rows only; no API reads; 14-day cleanup). Read them with a read-only query on dev.
+
+## Ship script (Task 13.0, 2026-11-16)
+
+- `scripts/dev/ship.py` (Python 3 standard library) replaces the per-session PR helper. Required checks live in `REQUIRED_CHECKS` at the top. A check concluded `skipped` or `neutral` counts as passed (a job skipped by its own `if:`), anything else that completed counts as failed. When the same check name ran more than once, the newest run counts.
+- `ship.py merge` deletes the branch through the API even though the repo deletes branches on merge, and ignores the error if it is already gone.
+- Its tests (`scripts/dev/ship_test.py`, `unittest`, HTTP and git stubbed) run in the `checks` CI job.
+- **Plan names vs code**: migration `…000040_sync_logs.sql` landed after the plan was written, so Phase 13 migrations start at `…000041`.

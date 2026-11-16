@@ -31,6 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: python3 scripts/dev/ship_test.py
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

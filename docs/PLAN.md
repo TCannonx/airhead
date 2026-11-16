@@ -559,7 +559,7 @@ Spec: `docs/superpowers/specs/2026-11-16-ai-brain.md`. Read it fully before star
 
 Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack your bag" the evening before and a "time to leave" before the start, and nothing useless at 07:30.
 
-- [ ] **13.0 Durable ship script.** `gh` is not installed on the owner's machine, and the PR helper has been rewritten in every session. Add `scripts/dev/ship.py` (Python 3, standard library only) and document it in CLAUDE.md section 8.
+- [x] **13.0 Durable ship script.** `gh` is not installed on the owner's machine, and the PR helper has been rewritten in every session. Add `scripts/dev/ship.py` (Python 3, standard library only) and document it in CLAUDE.md section 8.
     - Commands: `ship.py pr --title "…" --body-file <path>` (push the current branch, open the PR through the GitHub REST API, print its number); `ship.py wait <pr>` (poll check runs for at most 9 minutes, print each job's state, exit 0 when every required check passed, 1 when one failed, 3 when still running so the caller can run it again); `ship.py logs <pr>` (print the failed job's log tail); `ship.py merge <pr>` (squash-merge only when every required check passed, delete the branch, then `git checkout main && git pull --ff-only`).
     - Token: read at run time with `git credential fill` for `github.com`. Never print it, never write it to disk, never accept it as an argument.
     - Required checks, in one list at the top of the file: `checks`, `unit tests`, `e2e tests`, `e2e sync tests`, `database tests`. `merge` refuses if any is missing or not successful.
