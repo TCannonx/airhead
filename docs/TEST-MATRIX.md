@@ -366,6 +366,11 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Outcome statistics: per kind and per series/place/person page, 8 weeks, counts and median snooze shift; nightly at 03:40; owner reads | — | `db/0057` (counts, median, window, per page, RLS), `fn/scheduler-tick/tick.test.ts` | — | Server-side only (read by 17.2–17.4) |
+## Phase 16 — Reading that collates itself
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
 
 ## Cross-cutting
 
