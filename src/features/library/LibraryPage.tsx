@@ -114,6 +114,7 @@ export default function LibraryPage() {
             <GroupedList>
               <ListRow icon="list" iconTint="bg-accent" title="Lists" to="/library/lists" />
               <ListRow icon="library" iconTint="bg-accent" title="Pages" to="/library/pages" />
+              <ListRow icon="library" iconTint="bg-accent" title="Topics" to="/library/topics" />
               <ListRow icon="trash" iconTint="bg-fg-subtle" title="Trash" to="/library/trash" />
             </GroupedList>
           </Section>
