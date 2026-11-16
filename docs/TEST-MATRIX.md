@@ -363,6 +363,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Topic matching: exact, then normalised names, then the closest by meaning above the threshold, else new; without embeddings, new | — | `fn/_shared/topics.test.ts` (fixture vectors) | — | The threshold was set on fixture vectors, not real gte-small output: see BLOCKERS |
 | Topic pages: collated from 3 reading items (prompt `topic.v1`): summary ≤ 200 words, per-link note in `page_items.note`, overlaps, open questions, next step; updates from the existing summary; removing a link rebuilds; owner cannot write the collation | — | `fn/page-summary/run.test.ts` (threshold, notes for known links), `_shared/ai.contract.test.ts` (third to fifth link through mock-ai), `_shared/schemas/limits.test.ts`, `db/0055` (reading count, rebuild on removal) | `sync/tables.spec.ts` (`pages.collation`) | |
 | Library → Topics: topics with 3+ links, counts, last added; topic view with summary, link notes, overlaps, open questions, next step; Collate, Rename, Send to Workshop, Merge | `features/library/topics.test.tsx` | `db/0055` (what the owner may change) | `sync/tables.spec.ts` (`topics`, `items`, `pages`) | |
+| Real-model reading cases (spec cases 4 to 6) | — | `fn/ai-eval/run.test.ts` (all three through mock-ai) | — | Real model: `ai-eval` on dev |
 
 ## Cross-cutting
 

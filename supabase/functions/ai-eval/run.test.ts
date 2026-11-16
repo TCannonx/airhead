@@ -44,6 +44,9 @@ Deno.test(
           'plan-empty-day',
         ],
       );
+      // Reading (Task 16.8): the stand-in's saved answers pass all three.
+      for (const c of report.cases.filter((x) => x.kind === 'reading'))
+        assert(c.pass, `${c.id}: ${c.problems.join('; ')}`);
       const ask = report.cases.find((c) => c.kind === 'ask');
       // The stand-in's saved answer is about something else; the link to the source must hold.
       assert(

@@ -4,6 +4,8 @@ import { supabaseCaller } from '../_shared/caller.ts';
 import { json } from '../_shared/http.ts';
 import { PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
 import { ASK_SYSTEM } from '../_shared/prompts/ask.v2.ts';
+import { LINK_SYSTEM } from '../_shared/prompts/link.v1.ts';
+import { TOPIC_SYSTEM } from '../_shared/prompts/topic.v1.ts';
 import { SORT_BATCH_SYSTEM } from '../_shared/prompts/sort-batch.v8.ts';
 import { isService } from '../_shared/serviceAuth.ts';
 import { textHash } from '../sort-batch/notes.ts';
@@ -42,7 +44,13 @@ export function promptHash(): string {
     c.meant,
   ]);
   return textHash(
-    SORT_BATCH_SYSTEM + JSON.stringify(cases) + PLAN_SYSTEM + JSON.stringify(plans) + ASK_SYSTEM,
+    SORT_BATCH_SYSTEM +
+      JSON.stringify(cases) +
+      PLAN_SYSTEM +
+      JSON.stringify(plans) +
+      ASK_SYSTEM +
+      LINK_SYSTEM +
+      TOPIC_SYSTEM,
   );
 }
 

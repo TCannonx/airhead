@@ -1726,3 +1726,8 @@ Decisions and library versions, newest first.
 - **Collate** asks for a rebuild tonight (`rebuild_requested_at`); there is no on-demand AI call from the device.
 - **Rename** renames the topic and its page. **Merge** moves every item of one topic to the other, archives the first topic's page and removes the topic; the server's page drain moves the links.
 - **Send to Workshop** makes an idea with the topic's summary, its links and open questions, marked for the Workshop, and opens it.
+
+## Reading cases for the real model (Task 16.8, 2026-11-16)
+
+- `ai-eval/readingRun.ts` runs spec cases 4 to 6 through the real `enrichLink` and page-summary code with saved page and link text (no fetching: the evaluator must not depend on a live site). Case 6 (unreadable) makes no AI call by design. Two small calls a run, inside the same hash-or-daily trigger, which now also covers the link and topic prompts.
+- The release part of 16.8 is its own PR (`release: phase 16`), opened once every Phase 16 task has merged.
