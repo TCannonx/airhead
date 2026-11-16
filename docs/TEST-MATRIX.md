@@ -380,6 +380,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Timing preferences: 3 snoozes the same way of the last 5 per kind and page; one small call words the fact; saved as an active everyday memory fact; 3 contradictions archive it | — | `fn/learning/timing.test.ts`, `_shared/schemas/limits.test.ts` (`TimingFact`), `_shared/ai.contract.test.ts` (saved answer fits), `db/0058`, `fn/ai-eval` "plan-learned-morning" wired | — | Real model: the next plan puts the bag in the morning (`ai-eval` on dev) |
 | Insights → Planner costs: cost per day by run kind, look-ups, defaults days | `features/insights/aiusage.test.tsx`, `lib/ai/planCosts.test.ts` | `db/0041` (`plan_runs_daily`, owner only) | — | |
 | Library → Topics: topics with 3+ links, counts, last added; topic view with summary, link notes, overlaps, open questions, next step; Collate, Rename, Send to Workshop, Merge | `features/library/topics.test.tsx` | `db/0055` (what the owner may change) | `sync/tables.spec.ts` (`topics`, `items`, `pages`) | |
+| Real-model reading cases (spec cases 4 to 6) | — | `fn/ai-eval/run.test.ts` (all three through mock-ai) | — | Real model: `ai-eval` on dev |
 
 ## Cross-cutting
 

@@ -12,11 +12,12 @@ import { evalActionContext, evalCases, type CaseView } from './cases.ts';
 import { planCases } from './planCases.ts';
 import { runPlanEval } from './planRun.ts';
 import { runAskEval } from './askRun.ts';
+import { runReadingEval } from './readingRun.ts';
 
 export interface CaseReport {
   id: string;
   /** Sorting cases (Phase 11–12) or planner timing cases (Task 13.9). */
-  kind: 'sort' | 'plan' | 'ask';
+  kind: 'sort' | 'plan' | 'ask' | 'reading';
   text: string;
   meant: string;
   pass: boolean;
@@ -223,15 +224,20 @@ export async function runEval(
   const planned = await runPlanEval(ai, now, store);
   // Ask Airhead over history (Task 14.9): one small call.
   const asked = await runAskEval(ai, now, store);
-  const all = [...reports, ...planned.cases, ...asked.cases];
+  // Reading (Task 16.8): two small calls.
+  const readings = await runReadingEval(ai, store);
+  const all = [...reports, ...planned.cases, ...asked.cases, ...readings.cases];
   const passed = all.filter((r) => r.pass).length;
   return {
     ok: planned.ok && asked.ok,
     error: planned.error ?? asked.error,
     passed,
-    total: planned.ok && asked.ok ? all.length : reports.length + planCases(now).cases.length + 1,
+    total: planned.ok && asked.ok ? all.length : reports.length + planCases(now).cases.length + 4,
     cost_eur:
-      (Number.isFinite(result.costEur) ? result.costEur : 0) + planned.cost_eur + asked.cost_eur,
+      (Number.isFinite(result.costEur) ? result.costEur : 0) +
+      planned.cost_eur +
+      asked.cost_eur +
+      readings.cost_eur,
     cases: all,
   };
 }
