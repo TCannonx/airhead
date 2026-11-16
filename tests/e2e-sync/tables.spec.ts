@@ -309,7 +309,8 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       status: 'active',
       item_count: 0,
       last_item_at: null,
-      summary_stale: false,
+      // The server's link below (page_items) marks the page for a summary (Task 14.5).
+      summary_stale: true,
       summarised_at: null,
       rebuild_requested_at: null,
     },
