@@ -37,7 +37,9 @@ import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
-import { DayDigestResult, MonthDigestResult } from './schemas/history.ts';
+import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './schemas/history.ts';
+import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
+import { runPageSummaries } from '../page-summary/run.ts';
 import monthFixture from '../../../tests/fixtures/ai/month-digest.json' with { type: 'json' };
 import { runMonthDigests } from '../day-digest/month.ts';
 import dayFixture from '../../../tests/fixtures/ai/day-digest.json' with { type: 'json' };
@@ -494,6 +496,26 @@ Deno.test(
   },
 );
 
+Deno.test('page summary: the real small-tier request is accepted and saved', async () => {
+  await viaMock(async (ai) => {
+    const saved: { summary: string; facts: unknown[] }[] = [];
+    const res = await runPageSummaries(USER, {
+      store: {
+        due: async () => [pageFixture.page],
+        items: async () => pageFixture.items,
+        save: async (_p, row) => {
+          saved.push(row);
+        },
+      },
+      ai,
+      usage,
+    });
+    assertEquals(res.failed, []);
+    assertEquals(saved[0]?.summary, pageFixture.output.summary);
+    assertEquals(saved[0]?.facts.length, 2);
+  });
+});
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -694,6 +716,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     plan_day: PlanResult,
     day_digest: DayDigestResult,
     month_digest: MonthDigestResult,
+    page_summary: PageSummaryResult,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;

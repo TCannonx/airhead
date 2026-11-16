@@ -309,6 +309,9 @@ function fixtures(userId: string, settings: Row | null): Record<SyncTable, Row> 
       status: 'active',
       item_count: 0,
       last_item_at: null,
+      summary_stale: false,
+      summarised_at: null,
+      rebuild_requested_at: null,
     },
     page_items: {
       ...base(),

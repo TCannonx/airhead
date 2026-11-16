@@ -199,7 +199,12 @@ export interface TickExtras {
   dayDigest?: (userId: string, localDate: string) => Promise<void>;
   /** Month summaries (Task 14.2): last month once ended, and stale ones, at 03:20 local. */
   monthDigest?: (userId: string, localDate: string) => Promise<void>;
+  /** Page summaries (Task 14.5), at 03:30 local. */
+  pageSummaries?: (userId: string) => Promise<void>;
 }
+
+/** When the nightly page summaries are refreshed (local time). */
+export const PAGE_SUMMARY_TIME = '03:30';
 
 /** When the nightly month summaries are checked (local time). */
 export const MONTH_DIGEST_TIME = '03:20';
@@ -286,6 +291,10 @@ export async function runTick(
     if (extras.monthDigest && (await job('month_digest', MONTH_DIGEST_TIME))) {
       report.jobs.push('month_digest');
       await extras.monthDigest(u.user_id, local.date).catch(() => undefined);
+    }
+    if (extras.pageSummaries && (await job('page_summaries', PAGE_SUMMARY_TIME))) {
+      report.jobs.push('page_summaries');
+      await extras.pageSummaries(u.user_id).catch(() => undefined);
     }
     const plan = readPlanSettings(u.settings);
     if (extras.plan && plan.enabled && (await job('plan_evening', plan.evening_time))) {

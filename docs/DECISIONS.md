@@ -1635,3 +1635,11 @@ Decisions and library versions, newest first.
 - Page names are matched by `page_name_key` (lower case, spaces collapsed). The first spelling names the page; renames are the owner's.
 - A new person page starts `pending_approval`. Settings → Memory lists them under "People Airhead noticed": "Keep a page" (active) or "Not a person" (archived). Links are kept either way; an archived page is just hidden.
 - Prompt `sort-batch.v8` = v7 plus the mentions rule; v7 removed. **The sorting eval on the real model** runs on dev once this merges (the prompt hash changes); its result can't be read from this machine (see BLOCKERS). A new case "people-project" checks two people and a project.
+
+## Page summaries (Task 14.5, 2026-11-16)
+
+- **Staleness** is a column (`pages.summary_stale`), set by triggers when a link is added or removed and when an item on the page changes (title, body, status, times, data, deletion). `pages_to_summarise` lists active pages with items that are stale or have a rebuild request, rebuilds first, then the longest unsummarised.
+- **Rebuild** is `pages.rebuild_requested_at`, which the owner's device may set (the 0049 owner-edit trigger leaves it through, but still keeps `summary` and `facts` the server's). The page view's button arrives in 14.10.
+- Incremental runs send the current summary and facts plus items updated since `summarised_at` (at most 40, newest first); a rebuild, or a page never summarised, sends every item (at most 40) and no summary.
+- Person pages waiting for approval are not summarised ("personal details wait for the owner's approval"); archived pages are skipped.
+- Runs in the tick at 03:30 local, after day (03:10) and month (03:20) summaries.

@@ -649,3 +649,13 @@ Deno.test('month summaries are checked once a night at 03:20 local (Task 14.2)',
   await runTick(at('2026-12-01T05:00:00Z'), m.store, m.send, extras);
   assertEquals(ran, ['2026-12-01']);
 });
+
+Deno.test('page summaries are refreshed once a night at 03:30 local (Task 14.5)', async () => {
+  const m = memory({ settings: quietJobs });
+  let ran = 0;
+  const extras = { pageSummaries: () => (ran++, Promise.resolve()) };
+  await runTick(at('2026-11-18T03:29:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T03:30:00Z'), m.store, m.send, extras);
+  await runTick(at('2026-11-18T04:30:00Z'), m.store, m.send, extras);
+  assertEquals(ran, 1);
+});

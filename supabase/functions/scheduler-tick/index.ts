@@ -18,6 +18,8 @@ import { supabasePlanStore } from '../plan-day/store.ts';
 import { runDayDigests } from '../day-digest/run.ts';
 import { supabaseDayDigestStore, supabaseMonthDigestStore } from '../day-digest/store.ts';
 import { runMonthDigests } from '../day-digest/month.ts';
+import { runPageSummaries } from '../page-summary/run.ts';
+import { supabasePageSummaryStore } from '../page-summary/store.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', SERVICE_KEY, {
@@ -271,6 +273,13 @@ function tickNow(pusher: Pusher) {
       monthDigest: async (userId, localDate) => {
         await runMonthDigests(userId, localDate, {
           store: supabaseMonthDigestStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+        });
+      },
+      pageSummaries: async (userId) => {
+        await runPageSummaries(userId, {
+          store: supabasePageSummaryStore(db, userId),
           ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
           usage: supabaseUsageStore(db),
         });
