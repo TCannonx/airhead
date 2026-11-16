@@ -225,6 +225,18 @@ Set your entitlement first (Settings → Work), then capture each line and wait 
 - [ ] [ ] [ ] The item page shows "From your note" with the same receipt
 - [ ] [ ] [ ] Insights → Notes handled: the counts look right, and "Not acted on" opens into the list
 
+## Phase 13 — The planner
+
+- [ ] [ ] [ ] Load the latest version on the dev site (Settings → Sync → Load latest version)
+- [ ] [ ] [ ] Add an event "Training" for tomorrow at 08:00: within a minute its page shows "Why now?" with "Get ready" at 20:30 tonight and "Time to leave" at 07:20 tomorrow, both "Airhead's defaults"
+- [ ] [ ] [ ] After 18:00 (Settings → Today → "Plan my day at"), the plan changes to "Planned by AI" with a reason and what to prepare (Insights → AI usage shows one small call)
+- [ ] [ ] [ ] At 20:30 the "Pack your training bag" notification arrives on the iPhone, with the reason in the app; nothing arrives at 07:30 about packing
+- [ ] [ ] [ ] Tap the notification: the item opens with the snooze sheet; "In an hour" moves it; the other device shows the new reminder from "You"
+- [ ] [ ] [ ] The "Time to leave" notification arrives before 08:00, even inside quiet hours
+- [ ] [ ] [ ] "Done" and "Not needed" from the sheet close it and the reminder does not come back
+- [ ] [ ] [ ] Settings → Today → switch "Plan my day with AI" off: the next evening no AI call is made and reminders still come at the default times
+- [ ] [ ] [ ] Move tomorrow's event to 15:00: the evening reminder is replaced by one that morning ("Get ready" 3 hours before)
+
 ## v0.1 release
 
 - [ ] Everything above is ticked

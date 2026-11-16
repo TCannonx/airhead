@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- release: phase 13 (the planner: default timings on save, the evening AI planner with checked nudges, "Why now?", snooze from a notification, real-model timing cases) on dev
 - fix(plan): moving, closing or deleting an event or task cancels the AI's reminders worked out for the old time, and the defaults for the new time take over within a minute (no "time to leave" for an hour that no longer holds); a dismissed reminder is never brought back (migration 0046)
 - test(ai-eval): the real-model check on dev now also runs five planner timing cases in the owner's words (training bag the evening before, dentist at 2, a Friday form with no time, an early leave in quiet hours, an empty day), checking kinds and time windows; still only when a prompt or case changes, or once a day (Task 13.9)
 - feat(plan): "Why now?" on the item page and event details (what to prepare, each upcoming reminder with its time, reason and whether it came from Airhead's defaults, the AI or you); a tapped planner notification opens the item with a snooze sheet (in an hour, this evening, tomorrow morning, pick a time, Done, Not needed); a reminder untouched for 12 hours counts as ignored (migration 0045, Task 13.8)
