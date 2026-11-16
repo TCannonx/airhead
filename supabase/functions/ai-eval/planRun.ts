@@ -1,5 +1,5 @@
-import { type AIClient, callAI, type UsageStore } from '../_shared/ai.ts';
-import { buildPlanMessage, PLAN_SYSTEM } from '../_shared/prompts/plan.v1.ts';
+import { type AIClient, callAI, callAIWithLookups, type UsageStore } from '../_shared/ai.ts';
+import { buildPlanMessage, PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
 import { PlanResult } from '../_shared/schemas/plan.ts';
 import { buildPlanDigest } from '../plan-day/digest.ts';
 import { validatePlan } from '../plan-day/validate.ts';
@@ -22,19 +22,22 @@ export async function runPlanEval(
   let cost = 0;
   for (const c of cases) {
     const { digest } = buildPlanDigest(c.raw, c.settings, at);
-    const res = await callAI(
-      { client: ai, store },
-      {
-        userId: '00000000-0000-4000-8000-0000000000e1',
-        task: 'plan_day',
-        tier: 'small',
-        system: [PLAN_SYSTEM],
-        messages: [{ role: 'user', content: buildPlanMessage(digest) }],
-        schema: PlanResult,
-        maxTokens: 8000,
-        background: false,
-      },
-    );
+    const request = {
+      userId: '00000000-0000-4000-8000-0000000000e1',
+      task: 'plan_day',
+      tier: 'small' as const,
+      system: [PLAN_SYSTEM],
+      messages: [{ role: 'user' as const, content: buildPlanMessage(digest) }],
+      schema: PlanResult,
+      maxTokens: 8000,
+      background: false,
+    };
+    const res = c.lookups
+      ? await callAIWithLookups(
+          { client: ai, store },
+          { ...request, lookups: c.lookups, maxLookups: 4 },
+        )
+      : await callAI({ client: ai, store }, request);
     if (!res.ok) return { ok: false, error: res.error_code, cost_eur: cost, cases: [] };
     cost += Number.isFinite(res.costEur) ? res.costEur : 0;
     const problems = c.check(res.data, ids);

@@ -4,6 +4,7 @@
 // windows, never wording). Nothing is written to the database.
 import { addDays } from '../_shared/holidays/easter.ts';
 import { localInstant } from '../_shared/plan/defaults.ts';
+import type { Lookup } from '../_shared/ai.ts';
 import type { PlanResultT } from '../_shared/schemas/plan.ts';
 import type { RawPlanDigest } from '../plan-day/digest.ts';
 
@@ -14,6 +15,8 @@ export interface PlanCase {
   meant: string;
   settings: Record<string, unknown>;
   raw: RawPlanDigest;
+  /** History the model may look up (Task 14.8): fixed answers, no database. */
+  lookups?: Record<string, Lookup>;
   check: (r: PlanResultT, ids: Record<string, string>) => string[];
 }
 
@@ -53,6 +56,26 @@ export function planEvalNow(now: Date): { evening: string; at: Date } {
   return { evening, at: localInstant(evening, '18:00', TZ) };
 }
 
+/** Look-ups that answer with fixed data, whatever the model asks. */
+function fixedLookups(answers: Record<string, unknown>): Record<string, Lookup> {
+  const names = ['search_history', 'get_page', 'previous_occurrences'];
+  return Object.fromEntries(
+    names.map((name) => [
+      name,
+      {
+        description:
+          name === 'search_history'
+            ? "Search the person's history."
+            : name === 'get_page'
+              ? 'The page about a person, place, project, series or topic.'
+              : 'Earlier occurrences of the same event, with what was prepared.',
+        input_schema: { type: 'object', properties: {} },
+        run: () => Promise.resolve(answers[name] ?? []),
+      } satisfies Lookup,
+    ]),
+  );
+}
+
 export function planCases(now: Date): { cases: PlanCase[]; ids: Record<string, string> } {
   const { evening } = planEvalNow(now);
   const tomorrow = addDays(evening, 1);
@@ -62,6 +85,8 @@ export function planCases(now: Date): { cases: PlanCase[]; ids: Record<string, s
     dentist: 'b1300000-0000-4000-8000-000000000002',
     form: 'b1300000-0000-4000-8000-000000000003',
     early: 'b1300000-0000-4000-8000-000000000004',
+    match: 'b1300000-0000-4000-8000-000000000005',
+    dinner: 'b1300000-0000-4000-8000-000000000006',
   };
   const raw = (items: RawItem[]): RawPlanDigest => ({
     date: evening,
@@ -180,6 +205,61 @@ export function planCases(now: Date): { cases: PlanCase[]; ids: Record<string, s
             'another push inside quiet hours',
           ),
         ];
+      },
+    },
+    {
+      id: 'plan-repeat-detail',
+      text: 'Hurling match on Saturday morning, same as every week',
+      meant: 'The plan uses a detail from last time (the gum shield and €5 for the gate).',
+      settings: {},
+      raw: raw([event(ids.match, 'Hurling match', at('10:30'), { rrule: 'FREQ=WEEKLY' })]),
+      lookups: fixedLookups({
+        previous_occurrences: [
+          {
+            id: 'past-match',
+            type: 'event',
+            date: '2026-11-14',
+            title: 'Hurling match',
+            line: 'Forgot the gum shield; needed €5 cash for the gate',
+            prep: ['Gum shield', '€5 for the gate'],
+            nudges: [{ kind: 'prepare', at: '2026-11-13T20:30:00Z', outcome: 'acted' }],
+          },
+        ],
+      }),
+      check: (r) => {
+        const words = r.items
+          .filter((i) => i.item_id === ids.match)
+          .flatMap((i) => [...i.prep, ...i.nudges.map((n) => `${n.title} ${n.body}`)])
+          .join(' ')
+          .toLowerCase();
+        return has(/gum ?shield|€\s?5|cash|gate/.test(words), 'nothing from last time in the plan');
+      },
+    },
+    {
+      id: 'plan-dinner-page',
+      text: 'Dinner with Niamh tomorrow at half seven',
+      meant: "The plan uses a fact from Niamh's page (vegetarian, booking somewhere).",
+      settings: {},
+      raw: raw([event(ids.dinner, 'Dinner with Niamh', at('19:30'), { location: 'Town' })]),
+      lookups: fixedLookups({
+        get_page: {
+          kind: 'person',
+          name: 'Niamh',
+          summary: 'A friend from work. Usually meets in town for dinner.',
+          facts: [
+            { date: '2026-10-02', text: 'Vegetarian' },
+            { date: '2026-09-12', text: 'Prefers to book a table in advance' },
+          ],
+          items: [],
+        },
+      }),
+      check: (r) => {
+        const words = r.items
+          .filter((i) => i.item_id === ids.dinner)
+          .flatMap((i) => [...i.prep, i.reason, ...i.nudges.map((n) => `${n.title} ${n.body}`)])
+          .join(' ')
+          .toLowerCase();
+        return has(/vegetarian|veggie|book/.test(words), "nothing from Niamh's page in the plan");
       },
     },
     {

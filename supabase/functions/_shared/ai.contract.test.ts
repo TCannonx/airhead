@@ -43,7 +43,7 @@ import { anthropicClient } from './anthropic.ts';
 import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/contradictions.v1.ts';
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
-import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v1.ts';
+import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v2.ts';
 import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './schemas/history.ts';
 import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
 import { runPageSummaries } from '../page-summary/run.ts';

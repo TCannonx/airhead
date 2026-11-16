@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(plan): the evening planner reads recent history (the last 3 day summaries, 2 weekly and 1 month summary) and may look up up to 4 things: what was prepared last time for a repeating event, the page about a named person, place or project, or anything done before (prompt plan.v2, Task 14.8)
 - feat(ai): an AI call can now use look-ups: the model may ask for up to 4 searches of the person's own history before it answers; each result goes back as a data block, every round is logged in AI usage, and a failing look-up is told to the model rather than stopping the call (Task 14.7)
 - feat(library): Library → Pages: every page by kind (repeating events, topics, places, people, projects) with its summary, dated facts and items, and Rebuild, Rename and Archive; an item shows the pages it belongs to (Task 14.10)
 - feat(history): three look-ups the planner can call: search history (by meaning and keyword, with dates and types), a page by kind and name, and earlier occurrences of an event with what was prepared and what was done with its reminders; compact rows only (migration 0052, Task 14.6)

@@ -1662,3 +1662,10 @@ Decisions and library versions, newest first.
 - Built ahead of 14.8 and 14.9 while those waited for 14.6 and 14.7 to merge; it depends only on 14.3 and 14.5.
 - Library → Pages lists active pages only; a person page waiting for approval is under Settings → Memory, and an archived page is hidden (it stays linked, and is still reachable by its link until the owner leaves it).
 - Rebuild sets `rebuild_requested_at` (the button is off until the night's run clears it); Rename and Archive change `name` and `status`; all three go through the normal sync push.
+
+## The planner uses history (Task 14.8, 2026-11-16)
+
+- History goes in a `<history>` block before the digest: the 3 most recent day summaries up to the evening's date, the 2 latest weekly digests (`reviews.digest`) and the latest month summary. Fetched by `PlanStore.history` (optional, so older fakes still work).
+- The three look-ups are offered as tools (`plan-day/lookups.ts`) through `callAIWithLookups`, at most 4 a run. The search uses gte-small when the Edge runtime has it, otherwise keyword only. The count goes to `plan_runs.lookups_used`, written by the store after `apply_plan` (no migration needed).
+- Prompt `plan.v2` = v1 plus when to look something up; v1 removed. Changing it re-runs the real-model planner cases on dev.
+- The two new real-model cases use fixed look-up answers (no database): a weekly match whose last occurrence needed a gum shield and €5 for the gate, and dinner with Niamh whose page says she is vegetarian and likes to book. mock-ai cannot read look-ups, so those two cases are only judged by the real model.

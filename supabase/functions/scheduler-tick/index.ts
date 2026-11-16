@@ -15,6 +15,9 @@ import { runTick, type TickStore } from './tick.ts';
 import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
 import { runPlanDay } from '../plan-day/run.ts';
 import { supabasePlanStore } from '../plan-day/store.ts';
+import { planLookups } from '../plan-day/lookups.ts';
+import { supabaseHistoryStore } from '../_shared/history/store.ts';
+import { gteSmall } from '../_shared/embed.ts';
 import { runDayDigests } from '../day-digest/run.ts';
 import { supabaseDayDigestStore, supabaseMonthDigestStore } from '../day-digest/store.ts';
 import { runMonthDigests } from '../day-digest/month.ts';
@@ -261,6 +264,10 @@ function tickNow(pusher: Pusher) {
           store: supabasePlanStore(db),
           ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
           usage: supabaseUsageStore(db),
+          lookups: planLookups(
+            supabaseHistoryStore(db, (t) => gteSmall(t).catch(() => null)),
+            userId,
+          ),
         });
       },
       dayDigest: async (userId, localDate) => {

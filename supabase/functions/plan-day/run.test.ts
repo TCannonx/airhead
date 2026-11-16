@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1.0.19';
 import fx from '../../../tests/fixtures/ai/plan-evening.json' with { type: 'json' };
 import type { AIClient, UsageRow, UsageStore } from '../_shared/ai.ts';
-import { PLAN_SYSTEM } from '../_shared/prompts/plan.v1.ts';
+import { PLAN_SYSTEM } from '../_shared/prompts/plan.v2.ts';
 import type { RawPlanDigest } from './digest.ts';
 import { runPlanDay, type PlanStore } from './run.ts';
 import type { ApplyPayload } from './validate.ts';
@@ -116,7 +116,7 @@ Deno.test(
     );
     assert(p.cost_eur > 0);
     assertEquals(p.summary.tonight, ['Pack your training bag']);
-    assertEquals(p.summary.prompt, 'plan.v1');
+    assertEquals(p.summary.prompt, 'plan.v2');
   },
 );
 
@@ -164,3 +164,47 @@ Deno.test('a store failure mid-run closes the run as failed with the reason', as
   assertEquals(res.status, 'failed');
   assertEquals(st.log.at(-1), 'finish failed digest: boom');
 });
+
+Deno.test(
+  'history: recent summaries go in the message ahead of the digest (Task 14.8)',
+  async () => {
+    const st = store({
+      history: () =>
+        Promise.resolve({
+          days: [{ date: '2026-11-16', digest: 'Packed boots for training.' }],
+          weeks: [{ week_start: '2026-11-09', digest: 'Busy week.' }],
+          month: { month: '2026-10-01', digest: 'October.' },
+        }),
+    });
+    const { client, calls } = ai(fx.output);
+    await runPlanDay(USER, '2026-11-17', NOW, 'evening', deps(st.s, client));
+    const msg = (calls[0]?.messages as { content: string }[])[0]?.content ?? '';
+    assertStringIncludes(msg, '<history>');
+    assertStringIncludes(msg, 'Packed boots for training.');
+    assert(msg.indexOf('<history>') < msg.indexOf('<digest>'));
+  },
+);
+
+Deno.test(
+  'look-ups: offered as tools, and how many were used is recorded (Task 14.8)',
+  async () => {
+    const st = store();
+    const { client, calls } = ai(fx.output);
+    const res = await runPlanDay(USER, '2026-11-17', NOW, 'evening', {
+      ...deps(st.s, client),
+      lookups: {
+        search_history: {
+          description: 'Search',
+          input_schema: { type: 'object', properties: {} },
+          run: () => Promise.resolve([]),
+        },
+      },
+    });
+    assertEquals(res.status, 'ok');
+    assertEquals(
+      (calls[0]?.tools as { name: string }[] | undefined)?.map((t) => t.name),
+      ['search_history'],
+    );
+    assertEquals((st.applied() as unknown as { lookups_used: number }).lookups_used, 0);
+  },
+);
