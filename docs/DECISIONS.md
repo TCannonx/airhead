@@ -1699,6 +1699,11 @@ Decisions and library versions, newest first.
 - Today's window for the plan section's reminders is the UTC day plus an hour, enough for Europe/Dublin; the timeline itself stays the brief's own events list.
 - The device brief schema gains `plan` (default null), so older briefs still parse.
 
+## Outcome statistics (Task 17.1, 2026-11-16)
+
+- `nudge_stats` is rebuilt per person by `refresh_nudge_stats` (delete and insert, one SQL statement), nightly at 03:40 local (job `nudge_stats`). Rows: per planner nudge kind overall (`page_id` null) and per page the nudge's item is on, for series, place and person pages. The window is outcomes in the last 8 weeks (`outcome_at`, else `send_at`).
+- The median snooze shift is `snoozed_to - send_at` in minutes (positive = later), `percentile_cont(0.5)`, rounded.
+- Not synced: the device has no use for it yet; the owner may read it (RLS) and Insights can later.
 ## Surfacing and reading slots (Task 16.7, 2026-11-16)
 
 - The evening run (only) gets `topics` (names with 3+ unread links, count, last added) and up to 8 unread, readable saved links as digest items of kind `reading` on tomorrow's date, with their minutes (`data.link.minutes`, else `reading_minutes`). Reading items do not count as "something to plan": a day with only unread links makes no call.
