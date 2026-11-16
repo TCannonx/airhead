@@ -9,6 +9,7 @@ import ItemPage from '../features/library/ItemPage';
 import LibraryPage from '../features/library/LibraryPage';
 import ListsPage from '../features/library/ListsPage';
 import PagesPage, { PageView } from '../features/library/PagesPage';
+import TopicsPage, { TopicView } from '../features/library/TopicsPage';
 import TrashPage from '../features/library/TrashPage';
 import SettingsPage from '../features/settings/SettingsPage';
 import TodayPage from '../features/today/TodayPage';
@@ -38,6 +39,8 @@ export const routes: RouteObject[] = [
       { path: 'library/lists', Component: ListsPage },
       { path: 'library/pages', Component: PagesPage },
       { path: 'library/pages/:id', Component: PageView },
+      { path: 'library/topics', Component: TopicsPage },
+      { path: 'library/topics/:id', Component: TopicView },
       { path: 'insights', Component: InsightsPage },
       { path: 'settings', Component: SettingsPage },
       { path: 'work', Component: WorkPage },

@@ -1708,3 +1708,10 @@ Decisions and library versions, newest first.
 - `update-topic` is part of the nightly page summaries (`page-summary/run.ts`, task `topic_collate`, prompt `topic.v1`, schema `TopicResult`), not a separate function: topic pages go through the same due list, so cost stays bounded (20 pages a night). Each new link updates from the existing summary plus the new links; a removed link sets `rebuild_requested_at` (0055), as does Collate on the device.
 - Overlaps, open questions and next step are kept in `pages.collation` (new column, server-written; the owner-edit trigger keeps it). Per-link notes go to `page_items.note`, only for links the call was given.
 - A saved link's line in the prompt is its enrichment summary (16.2), else its body.
+
+## Topics on the device (Task 16.6, 2026-11-16)
+
+- Topics come from the `topics` table with 3 or more reading items (`readingTopics` in `src/lib/db/topics.ts`), joined to their topic page by key (`topic:<id>`) for the summary, collation and per-link notes.
+- **Collate** asks for a rebuild tonight (`rebuild_requested_at`); there is no on-demand AI call from the device.
+- **Rename** renames the topic and its page. **Merge** moves every item of one topic to the other, archives the first topic's page and removes the topic; the server's page drain moves the links.
+- **Send to Workshop** makes an idea with the topic's summary, its links and open questions, marked for the Workshop, and opens it.
