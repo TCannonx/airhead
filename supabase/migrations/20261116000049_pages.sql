@@ -52,7 +52,8 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  if (select auth.role()) = 'authenticated' then
+  -- current_user: the session role (this trigger is not security definer).
+  if current_user = 'authenticated' or (select auth.role()) = 'authenticated' then
     new.kind := old.kind;
     new.key := old.key;
     new.summary := old.summary;

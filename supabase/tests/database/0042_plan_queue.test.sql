@@ -59,6 +59,8 @@ select vault.create_secret('test-key', 'service_role_key')
  where not exists (select 1 from vault.decrypted_secrets where name = 'service_role_key');
 delete from public.devices;
 delete from public.plan_queue;
+-- Later migrations queue other work for the tick too (0049 pages).
+do $$ begin if to_regclass('public.page_queue') is not null then execute 'delete from public.page_queue'; end if; end $$;
 select is(public.dispatch_scheduler_tick(), false, 'no queue and no device: no call');
 select public.refresh_plan_nudges('10000000-0000-4000-8000-000000000421');
 select is(public.dispatch_scheduler_tick(), true, 'queued plan work: the tick is called');
