@@ -1744,6 +1744,11 @@ Decisions and library versions, newest first.
 - `update-topic` is part of the nightly page summaries (`page-summary/run.ts`, task `topic_collate`, prompt `topic.v1`, schema `TopicResult`), not a separate function: topic pages go through the same due list, so cost stays bounded (20 pages a night). Each new link updates from the existing summary plus the new links; a removed link sets `rebuild_requested_at` (0055), as does Collate on the device.
 - Overlaps, open questions and next step are kept in `pages.collation` (new column, server-written; the owner-edit trigger keeps it). Per-link notes go to `page_items.note`, only for links the call was given.
 - A saved link's line in the prompt is its enrichment summary (16.2), else its body.
+## Cost reporting and the batch interface (Task 17.4, 2026-11-16)
+
+- Insights → Planner costs reads `plan_runs_daily` (0041, owner-only view) through the usage service for the last 14 days: cost per day by run kind, look-ups used, and days with a `defaults` row (the planner did not succeed and the defaults carried the day).
+- **Verified** (Anthropic docs, "Batch processing", platform.claude.com/docs/en/build-with-claude/batch-processing, and the pricing page): the Message Batches API is charged at 50% of standard prices and stacks with prompt caching; most batches finish within an hour, but results may take up to 24 hours.
+- **Not adopted for now**, a deliberate deviation from the plan's "if so, use it": the learning pass makes a few tiny calls a week (only when a new pattern appears) and the weekly review one large call a week, together about €0.01–0.03 a week, so batching would save under €0.02 a week while making the Sunday review arrive up to a day late and adding a submit-then-collect step to the scheduler. Recorded in BLOCKERS so the owner can ask for it if costs grow.
 ## Weekly review on planner data (Task 17.3, 2026-11-16)
 
 - `ReviewStore.planner` gathers the week's `plan_runs` by kind (ok, failed, capped, cost), the planner nudges' outcomes, up to 15 open tasks due before the end of the week (most carried first) with their plan's reason, and next week's events and tasks. Free time per day is a 08:00–21:00 window minus timed events, in minutes; the full calendar gap finder (device-side) is not available to the function, so this is its server-side approximation.

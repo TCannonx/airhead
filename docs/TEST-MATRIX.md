@@ -377,6 +377,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | --- | --- | --- | --- | --- |
 | Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
 | Topic pages: collated from 3 reading items (prompt `topic.v1`): summary ≤ 200 words, per-link note in `page_items.note`, overlaps, open questions, next step; updates from the existing summary; removing a link rebuilds; owner cannot write the collation | — | `fn/page-summary/run.test.ts` (threshold, notes for known links), `_shared/ai.contract.test.ts` (third to fifth link through mock-ai), `_shared/schemas/limits.test.ts`, `db/0055` (reading count, rebuild on removal) | `sync/tables.spec.ts` (`pages.collation`) | |
+| Insights → Planner costs: cost per day by run kind, look-ups, defaults days | `features/insights/aiusage.test.tsx`, `lib/ai/planCosts.test.ts` | `db/0041` (`plan_runs_daily`, owner only) | — | |
 
 ## Cross-cutting
 
