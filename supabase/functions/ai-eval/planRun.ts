@@ -26,7 +26,13 @@ export async function runPlanEval(
       userId: '00000000-0000-4000-8000-0000000000e1',
       task: 'plan_day',
       tier: 'small' as const,
-      system: [PLAN_SYSTEM],
+      system: [
+        PLAN_SYSTEM,
+        c.profile
+          ? `What you know about this person:
+${c.profile}`
+          : '',
+      ],
       messages: [{ role: 'user' as const, content: buildPlanMessage(digest) }],
       schema: PlanResult,
       maxTokens: 8000,

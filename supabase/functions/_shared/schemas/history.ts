@@ -14,3 +14,7 @@ export const PageSummaryResult = z.object({
   facts: z.array(z.object({ date: z.string(), text: z.string() })),
 });
 export type PageSummaryResultT = z.infer<typeof PageSummaryResult>;
+
+/** A learned timing preference, worded as a fact (Task 17.2). */
+export const TimingFact = z.object({ fact: z.string() });
+export type TimingFactT = z.infer<typeof TimingFact>;

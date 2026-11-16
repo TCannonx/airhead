@@ -44,7 +44,12 @@ import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/con
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
 import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v2.ts';
-import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './schemas/history.ts';
+import {
+  DayDigestResult,
+  MonthDigestResult,
+  PageSummaryResult,
+  TimingFact,
+} from './schemas/history.ts';
 import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
 import { runPageSummaries } from '../page-summary/run.ts';
 import monthFixture from '../../../tests/fixtures/ai/month-digest.json' with { type: 'json' };
@@ -761,6 +766,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     day_digest: DayDigestResult,
     month_digest: MonthDigestResult,
     page_summary: PageSummaryResult,
+    timing_pref: TimingFact,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;

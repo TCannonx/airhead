@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(learning): when you keep moving the same reminder the same way (3 of the last 5 times), Airhead learns it as an everyday fact you can see and remove in Settings → Memory, e.g. "Packs the training bag in the morning, not the evening before"; the planner uses it, and a fact contradicted three times is archived (migration 0058, Task 17.2)
 - feat(learning): each night Airhead counts what you did with its reminders over the last 8 weeks (acted, snoozed, dismissed, ignored, and how far you usually snooze), per kind and per repeating event, place and person; no AI (migration 0057, Task 17.1)
 - feat(notifications): the installed app's badge shows overdue tasks plus open questions; push messages also carry WebKit's Declarative Web Push fields so Safari can show them without the service worker (needs the APP_URL secret) (Task 15.5)
 - feat(notifications): digest delivery: reading suggestions and open-ended follow-ups never arrive as their own notification; they are listed in one "From your plan" round-up with the morning brief or the evening review, whichever comes first; Settings → Notifications → Planner reminders sets each kind to as planned, notification, digest or off (Task 15.4)

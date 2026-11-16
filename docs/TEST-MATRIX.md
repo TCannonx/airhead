@@ -366,6 +366,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Outcome statistics: per kind and per series/place/person page, 8 weeks, counts and median snooze shift; nightly at 03:40; owner reads | — | `db/0057` (counts, median, window, per page, RLS), `fn/scheduler-tick/tick.test.ts` | — | Server-side only (read by 17.2–17.4) |
+| Timing preferences: 3 snoozes the same way of the last 5 per kind and page; one small call words the fact; saved as an active everyday memory fact; 3 contradictions archive it | — | `fn/learning/timing.test.ts`, `_shared/schemas/limits.test.ts` (`TimingFact`), `_shared/ai.contract.test.ts` (saved answer fits), `db/0058`, `fn/ai-eval` "plan-learned-morning" wired | — | Real model: the next plan puts the bag in the morning (`ai-eval` on dev) |
 
 ## Cross-cutting
 

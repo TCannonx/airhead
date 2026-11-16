@@ -543,6 +543,11 @@ export const TASKS = [
     answer: () => fixture('page-summary').output,
   },
   {
+    task: 'timing_pref',
+    prompt: 'You word one habit Airhead noticed',
+    answer: () => fixture('timing-pref').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],
