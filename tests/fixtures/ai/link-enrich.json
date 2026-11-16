@@ -1,0 +1,22 @@
+{
+  "_comment": "Link enrichment (Task 16.2). page: extracted article; note: the words around the link; output: a saved answer in the LinkEnrichment shape.",
+  "url": "https://example.com/marathon-plan",
+  "note": "for the spring marathon, Niamh recommended this",
+  "page": {
+    "title": "A 16-week marathon plan for busy people",
+    "text": "This plan builds from 30 to 70 kilometres a week over sixteen weeks. Long runs grow by two kilometres each fortnight, with a cut-back week every fourth week. Two short sessions a week are enough if the long run is protected. Strength work twice a week reduces injury. Taper for the final two weeks."
+  },
+  "output": {
+    "kind": "article",
+    "summary": "A 16-week plan from 30 to 70 km a week.\nLong runs grow 2 km a fortnight with a cut-back every fourth week.\nTwo short sessions and two strength sessions, then a two-week taper.",
+    "key_points": [
+      "Protect the long run",
+      "Cut back every fourth week",
+      "Strength twice a week",
+      "Two-week taper"
+    ],
+    "why_saved": "Training for the spring marathon, recommended by Niamh",
+    "topics": ["Marathon training"],
+    "mentions": []
+  }
+}

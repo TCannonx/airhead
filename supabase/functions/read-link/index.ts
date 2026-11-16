@@ -1,6 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 import { supabaseCaller } from '../_shared/caller.ts';
 import { isService } from '../_shared/serviceAuth.ts';
+import { anthropicClient } from '../_shared/anthropic.ts';
+import { supabaseUsageStore } from '../_shared/usageStore.ts';
+import { enrichLink } from './enrich.ts';
 import { linkInfoFor } from './extract.ts';
 import { handleReadLink } from './handler.ts';
 import { safeFetch } from './safeFetch.ts';
@@ -49,20 +52,46 @@ Deno.serve((req) =>
       };
       await db.from('captures').update({ payload }).eq('id', capture.id);
 
-      // Update the reading item the free rules created for this link.
+      // Every reading item from this capture (Task 16.1), each read and enriched
+      // with its own link (Task 16.2).
       const { data: items } = await db
         .from('items')
         .select('id, title, data')
         .eq('capture_id', capture.id)
         .eq('type', 'reading');
+      const { data: cap } = await db
+        .from('captures')
+        .select('text')
+        .eq('id', capture.id)
+        .maybeSingle();
+      const note = String(cap?.text ?? '')
+        .replace(/https?:\/\/\S+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const deps = {
+        ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+        usage: supabaseUsageStore(db),
+      };
       for (const item of items ?? []) {
+        const old = item.data as Record<string, unknown>;
+        const url = typeof old.url === 'string' ? old.url : capture.url;
+        const page = url === capture.url ? fetched : await safeFetch(url, { fetch, resolve });
+        const pageInfo = url === capture.url ? info : linkInfoFor(url, page);
+        const link = await enrichLink(deps, {
+          userId: capture.user_id,
+          url,
+          note,
+          info: pageInfo,
+          fetched: page,
+        });
         const data = {
-          ...(item.data as Record<string, unknown>),
-          description: info.description,
-          reading_minutes: info.reading_minutes,
-          couldnt_read: info.status === 'unreadable',
+          ...old,
+          description: pageInfo.description,
+          reading_minutes: pageInfo.reading_minutes,
+          couldnt_read: pageInfo.status === 'unreadable',
+          link,
         };
-        const title = item.title === capture.url && info.title ? info.title : item.title;
+        const title = item.title === url && pageInfo.title ? pageInfo.title : item.title;
         await db.from('items').update({ data, title }).eq('id', item.id);
       }
       return info;

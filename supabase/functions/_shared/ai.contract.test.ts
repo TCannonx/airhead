@@ -44,7 +44,14 @@ import { buildContradictionsMessage, CONTRADICTIONS_SYSTEM } from './prompts/con
 import { buildSortMessage, SORT_BATCH_SYSTEM } from './prompts/sort-batch.v8.ts';
 import { PlanResult } from './schemas/plan.ts';
 import { buildPlanMessage, PLAN_SYSTEM } from './prompts/plan.v3.ts';
-import { DayDigestResult, MonthDigestResult, PageSummaryResult } from './schemas/history.ts';
+import {
+  DayDigestResult,
+  LinkEnrichment,
+  MonthDigestResult,
+  PageSummaryResult,
+} from './schemas/history.ts';
+import linkFixture from '../../../tests/fixtures/ai/link-enrich.json' with { type: 'json' };
+import { enrichLink } from '../read-link/enrich.ts';
 import pageFixture from '../../../tests/fixtures/ai/page-summary.json' with { type: 'json' };
 import { runPageSummaries } from '../page-summary/run.ts';
 import monthFixture from '../../../tests/fixtures/ai/month-digest.json' with { type: 'json' };
@@ -560,6 +567,33 @@ Deno.test(
   },
 );
 
+Deno.test(
+  'link enrichment: the real small-tier request is accepted and stored as data.link',
+  async () => {
+    await viaMock(async (ai) => {
+      const link = await enrichLink(
+        { ai, usage },
+        {
+          userId: USER,
+          url: linkFixture.url,
+          note: linkFixture.note,
+          info: {
+            status: 'read',
+            title: linkFixture.page.title,
+            description: null,
+            word_count: 60,
+            reading_minutes: 1,
+            text: linkFixture.page.text,
+          },
+          fetched: { status: 'ok' },
+        },
+      );
+      assertEquals([link.kind, link.topics, link.minutes], ['article', ['Marathon training'], 1]);
+      assertEquals(link.key_points.length, 4);
+    });
+  },
+);
+
 Deno.test('morning brief: the real large-tier request is accepted and validated', async () => {
   await viaMock(async (ai) => {
     const b = await buildBrief(
@@ -761,6 +795,7 @@ Deno.test('every saved answer fits the schema its function sends', () => {
     day_digest: DayDigestResult,
     month_digest: MonthDigestResult,
     page_summary: PageSummaryResult,
+    link_enrich: LinkEnrichment,
   };
   // The check itself catches drift: a missing field or a wrong type.
   const askJson = (zodOutputFormat(AskResult) as unknown as { schema: unknown }).schema;
