@@ -1656,3 +1656,9 @@ Decisions and library versions, newest first.
 - `searchHistory` asks for three times the limit and filters by date (the item's start, due or created date) and type in code, so a range does not starve the results. Without the embedding model (outside the Edge runtime) it is keyword-only (`semantic_weight = 0`).
 - `getPage` finds a page by its key (`<kind>:<normalised name>`); pages keyed by id (series, topics) are found by name.
 - `previousOccurrences`: a repeating event is one row, so its "previous occurrences" are earlier items in the same series (`series_id`) or, failing that, earlier events sharing a word of four letters or more with the title, most recent first, each with `item_plans.prep` and its planner nudges with their outcomes.
+
+## Pages on the device (Task 14.10, done before 14.8 and 14.9, 2026-11-16)
+
+- Built ahead of 14.8 and 14.9 while those waited for 14.6 and 14.7 to merge; it depends only on 14.3 and 14.5.
+- Library → Pages lists active pages only; a person page waiting for approval is under Settings → Memory, and an archived page is hidden (it stays linked, and is still reachable by its link until the owner leaves it).
+- Rebuild sets `rebuild_requested_at` (the button is off until the night's run clears it); Rename and Archive change `name` and `status`; all three go through the normal sync push.
