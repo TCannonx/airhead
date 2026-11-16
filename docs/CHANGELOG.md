@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(reading): every saved link is read and explained: kind, reading minutes, a three-line summary, up to five key points, why it was probably saved (from your own words around it), up to three topics and who or what it mentions; a page that cannot be read says why in plain words and costs no AI call (Task 16.2)
+- feat(capture): every link in a note becomes its own reading item, wherever it sits in the text, while the rest of the note is still sorted as written; the same link saved again (even with tracking parameters) joins the first item and records the new capture (Task 16.1)
 - feat(notifications): the installed app's badge shows overdue tasks plus open questions; push messages also carry WebKit's Declarative Web Push fields so Safari can show them without the service worker (needs the APP_URL secret) (Task 15.5)
 - feat(notifications): digest delivery: reading suggestions and open-ended follow-ups never arrive as their own notification; they are listed in one "From your plan" round-up with the morning brief or the evening review, whichever comes first; Settings → Notifications → Planner reminders sets each kind to as planned, notification, digest or off (Task 15.4)
 - feat(plan): re-plan on change: an event or task that is changed, snoozed or whose reminder was missed gets new defaults at once and, when the planner is on and it has been quiet for 5 minutes, a small re-plan of just those items (at most 10 a run, 6 runs a day; beyond that the defaults stand until the evening) (migration 0054, Task 15.3)

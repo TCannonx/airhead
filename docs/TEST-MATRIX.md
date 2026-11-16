@@ -362,6 +362,12 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Enrich a link: one small call per readable page with the page as data and the owner's words as the note; minutes from code; lists trimmed; unreadable → reason in plain words, no call; every reading item of a capture read with its own link | — | `fn/read-link/enrich.test.ts`, `_shared/ai.contract.test.ts` (against mock-ai), `_shared/schemas/limits.test.ts` (`LinkEnrichment`), `fn/read-link/extract.test.ts` | — | e2e-sync cannot fetch a public page: `safeFetch` refuses the local stack's private addresses by design, so "captured on one device, enriched on the other" is manual (checklist) |
 | App badge (overdue tasks + open questions, installed app only) and Declarative Web Push fields beside Airhead's own (with APP_URL; never `app_badge`) | `lib/badge.test.ts` | `_shared/push.test.ts` | — | Badge and Safari delivery on a real iPhone: manual checklist |
 
+## Phase 16 — Reading that collates itself
+
+| Feature | Unit/component | Function/DB | End-to-end | Gap |
+| --- | --- | --- | --- | --- |
+| Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+
 ## Cross-cutting
 
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
