@@ -2,6 +2,15 @@
 
 ## Waiting for the user
 
+### Phase 17 ready for device testing on dev
+
+Airhead now learns from what you do with its reminders: nightly outcome statistics, timing habits worded as everyday facts in Settings → Memory (removable; archived after 3 contradictions), a weekly review that reads the planner's week and proposes moving, splitting or dropping tasks for your OK, and Insights → Planner costs.
+
+1. Work through "Phase 17 — Learning and the weekly review" in `docs/MANUAL-CHECKLIST.md` (the timing habit needs a couple of weeks of real use).
+2. Decision for you (no action needed now): the Anthropic batch interface is verified 50% cheaper, but it is **not** used for the learning pass and weekly review, because they cost about €0.01–0.03 a week together and batching could make the Sunday review arrive up to a day late. Say if you want it anyway (DECISIONS, Task 17.4).
+
+Live waits for a `v*` tag, as always.
+
 ### Phase 15 ready for device testing on dev
 
 The plan now keeps itself right through the day: a morning refresh 20 minutes before the brief, a re-plan of anything changed, snoozed or missed (after 5 quiet minutes, at most 6 runs a day), the morning brief built with the plan, reading and follow-up suggestions gathered into one "From your plan" round-up instead of their own notifications, a per-kind setting for planner reminders, and the app badge.
