@@ -1,6 +1,6 @@
 import { z } from 'npm:zod@4.6.7';
 import { callAI, type AIClient, type Tier, type UsageStore } from '../_shared/ai.ts';
-import { ASK_SYSTEM, buildAskMessage } from '../_shared/prompts/ask.v1.ts';
+import { ASK_SYSTEM, buildAskMessage } from '../_shared/prompts/ask.v2.ts';
 
 export const TOP_PASSAGES = 8;
 export const MAX_QUESTION = 1000;
@@ -24,7 +24,12 @@ export interface AskDeps {
   /** Titles and types of these items (own, not deleted). */
   items(ids: string[]): Promise<Map<string, { title: string; type: string }>>;
   tier(): Promise<Tier>;
+  /** Active pages with a summary that these items belong to (Task 14.9); optional. */
+  pages?(itemIds: string[]): Promise<{ kind: string; name: string; summary: string }[]>;
 }
+
+/** At most this many page summaries go with the passages. */
+export const MAX_PAGES = 3;
 
 export interface Source {
   n: number;
@@ -64,6 +69,11 @@ export async function runAsk(question: string, userId: string, deps: AskDeps): P
       sources: [],
     };
 
+  const pages = deps.pages
+    ? (await deps.pages(passages.map((p) => p.item_id).filter((v, i, a) => a.indexOf(v) === i)))
+        .filter((p) => p.summary.trim())
+        .slice(0, MAX_PAGES)
+    : [];
   const result = await callAI(
     { client: deps.ai, store: deps.store },
     {
@@ -71,7 +81,7 @@ export async function runAsk(question: string, userId: string, deps: AskDeps): P
       task: 'ask',
       tier: await deps.tier(),
       system: ASK_SYSTEM,
-      messages: [{ role: 'user', content: buildAskMessage(q, passages) }],
+      messages: [{ role: 'user', content: buildAskMessage(q, passages, pages) }],
       schema: AskResult,
       maxTokens: 2000,
       effort: 'low',

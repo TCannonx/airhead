@@ -45,6 +45,24 @@ Deno.serve((req) =>
           if (error) throw new Error(error.message);
           return (data ?? []) as { item_id: string; content: string }[];
         },
+        async pages(ids) {
+          if (ids.length === 0) return [];
+          const { data: links } = await asUser
+            .from('page_items')
+            .select('page_id')
+            .in('item_id', ids)
+            .is('deleted_at', null);
+          const pageIds = [...new Set((links ?? []).map((l) => l.page_id as string))];
+          if (!pageIds.length) return [];
+          const { data } = await asUser
+            .from('pages')
+            .select('kind, name, summary, item_count')
+            .in('id', pageIds)
+            .eq('status', 'active')
+            .is('deleted_at', null)
+            .order('item_count', { ascending: false });
+          return (data ?? []) as { kind: string; name: string; summary: string }[];
+        },
         async items(ids) {
           if (ids.length === 0) return new Map();
           const { data } = await asUser

@@ -1669,3 +1669,8 @@ Decisions and library versions, newest first.
 - The three look-ups are offered as tools (`plan-day/lookups.ts`) through `callAIWithLookups`, at most 4 a run. The search uses gte-small when the Edge runtime has it, otherwise keyword only. The count goes to `plan_runs.lookups_used`, written by the store after `apply_plan` (no migration needed).
 - Prompt `plan.v2` = v1 plus when to look something up; v1 removed. Changing it re-runs the real-model planner cases on dev.
 - The two new real-model cases use fixed look-up answers (no database): a weekly match whose last occurrence needed a gum shield and €5 for the gate, and dinner with Niamh whose page says she is vegetarian and likes to book. mock-ai cannot read look-ups, so those two cases are only judged by the real model.
+
+## Ask Airhead reads pages (Task 14.9, 2026-11-16)
+
+- Pages are found through the items the search returned (`page_items`), as the signed-in user (RLS), active only, most items first, at most 3 with a summary. They go before the passages as `<page>` blocks; the prompt (`ask.v2`) says to use them for background and to cite only passages, so every answer still links to the person's own items.
+- The real-model case ("ask-three-months") gives a three-month-old meeting passage and its project page as search would, and checks the answer says what was decided and links the meeting. It runs inside `ai-eval` with the other cases, on the same trigger (the ask prompt is now part of the hash).

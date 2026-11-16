@@ -11,11 +11,12 @@ import { planSort, type InstantRow } from '../sort-batch/plan.ts';
 import { evalActionContext, evalCases, type CaseView } from './cases.ts';
 import { planCases } from './planCases.ts';
 import { runPlanEval } from './planRun.ts';
+import { runAskEval } from './askRun.ts';
 
 export interface CaseReport {
   id: string;
   /** Sorting cases (Phase 11–12) or planner timing cases (Task 13.9). */
-  kind: 'sort' | 'plan';
+  kind: 'sort' | 'plan' | 'ask';
   text: string;
   meant: string;
   pass: boolean;
@@ -220,14 +221,17 @@ export async function runEval(
   });
   // The planner's timing cases (Task 13.9), one small call each.
   const planned = await runPlanEval(ai, now, store);
-  const all = [...reports, ...planned.cases];
+  // Ask Airhead over history (Task 14.9): one small call.
+  const asked = await runAskEval(ai, now, store);
+  const all = [...reports, ...planned.cases, ...asked.cases];
   const passed = all.filter((r) => r.pass).length;
   return {
-    ok: planned.ok,
-    error: planned.error,
+    ok: planned.ok && asked.ok,
+    error: planned.error ?? asked.error,
     passed,
-    total: planned.ok ? all.length : reports.length + planCases(now).cases.length,
-    cost_eur: (Number.isFinite(result.costEur) ? result.costEur : 0) + planned.cost_eur,
+    total: planned.ok && asked.ok ? all.length : reports.length + planCases(now).cases.length + 1,
+    cost_eur:
+      (Number.isFinite(result.costEur) ? result.costEur : 0) + planned.cost_eur + asked.cost_eur,
     cases: all,
   };
 }
