@@ -1,5 +1,12 @@
 import type { AIClient, UsageStore } from '../_shared/ai.ts';
-import { buildReview, type BuiltReview, type Candidate, type FactIn } from './review.ts';
+import {
+  buildReview,
+  type BuiltReview,
+  type Candidate,
+  type FactIn,
+  type PlannerWeek,
+  type Proposal,
+} from './review.ts';
 
 /** Database access for one weekly review (a fake in tests, Supabase in production). */
 export interface ReviewStore {
@@ -15,6 +22,10 @@ export interface ReviewStore {
   /** Moves items or captures to the Trash (soft delete, recoverable for 30 days). */
   softDelete(userId: string, kind: 'item' | 'capture', ids: string[]): Promise<void>;
   saveReview(userId: string, weekStart: string, review: BuiltReview): Promise<void>;
+  /** The week's planner runs, nudge outcomes, slipped tasks and next week's load (Task 17.3). */
+  planner?(userId: string, weekStart: string): Promise<PlannerWeek | null>;
+  /** Proposals as ai_actions waiting under "Needs your OK"; nothing is applied (Task 17.3). */
+  propose?(userId: string, weekStart: string, proposals: Proposal[]): Promise<void>;
   addNudge(
     userId: string,
     n: { title: string; body: string; url: string; dedupe_key: string },
@@ -43,16 +54,22 @@ export async function runWeeklyReview(
   opts: { notify: boolean },
 ): Promise<BuiltReview> {
   const { store } = deps;
-  const [week, past, candidates, facts] = await Promise.all([
+  const [week, past, candidates, facts, planner] = await Promise.all([
     store.digest(userId, weekStart),
     store.pastDigests(userId, weekStart, 4),
     store.candidates(userId),
     store.facts(userId),
+    store.planner ? store.planner(userId, weekStart).catch(() => null) : Promise.resolve(null),
   ]);
-  const built = await buildReview(userId, week, past, candidates, facts, {
-    ai: deps.ai,
-    store: deps.usage,
-  });
+  const built = await buildReview(
+    userId,
+    week,
+    past,
+    candidates,
+    facts,
+    { ai: deps.ai, store: deps.usage },
+    planner,
+  );
   const auto = candidates.filter((c) => c.mode === 'auto');
   for (const kind of ['item', 'capture'] as const) {
     const ids = auto.filter((c) => c.kind === kind).map((c) => c.id);
@@ -66,6 +83,8 @@ export async function runWeeklyReview(
     },
   };
   await store.saveReview(userId, weekStart, review);
+  if (review.content.proposals.length && store.propose)
+    await store.propose(userId, weekStart, review.content.proposals);
   if (opts.notify) {
     const n = review.content.tidy.filter((t) => t.proposal !== 'keep').length;
     await store.addNudge(userId, {

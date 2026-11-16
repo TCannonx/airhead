@@ -347,6 +347,9 @@ export const AI_ACTION_KINDS = [
   'add_prep_rule',
   // Sorting tidied the event a longer note made instantly (Task 11.1; never asked of the model).
   'tidy_item',
+  // Proposed by the weekly review (Task 17.3), always waiting for the owner's OK.
+  'split_task',
+  'drop_item',
 ] as const;
 export const aiActionSchema = z.object({
   ...syncColumns,
