@@ -3,6 +3,7 @@
 One line per merged PR, newest first.
 
 - feat(reading): a reading item shows what kind of page it is, its minutes, summary, key points, why you saved it and its topics, in the Library list and on its page; an unreadable link shows why, with "Open anyway" (Task 16.3)
+- feat(notifications): the installed app's badge shows overdue tasks plus open questions; push messages also carry WebKit's Declarative Web Push fields so Safari can show them without the service worker (needs the APP_URL secret) (Task 15.5)
 - feat(notifications): digest delivery: reading suggestions and open-ended follow-ups never arrive as their own notification; they are listed in one "From your plan" round-up with the morning brief or the evening review, whichever comes first; Settings → Notifications → Planner reminders sets each kind to as planned, notification, digest or off (Task 15.4)
 - feat(plan): re-plan on change: an event or task that is changed, snoozed or whose reminder was missed gets new defaults at once and, when the planner is on and it has been quiet for 5 minutes, a small re-plan of just those items (at most 10 a run, 6 runs a day; beyond that the defaults stand until the evening) (migration 0054, Task 15.3)
 - feat(brief): the morning brief is built with the plan: Today shows "From your plan" (what to prepare, clashes, tasks ready today, one reading pick) and a "Left out: …" line whenever the planner had to leave something out; the code-built fallback keeps it (prompt brief.v2, Task 15.2)
