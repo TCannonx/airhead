@@ -1680,3 +1680,9 @@ Decisions and library versions, newest first.
 - `plan-day` mode `morning` builds the digest as of the previous evening (`plan_digest(user, yesterday)`), so the window starts today, then keeps only items and linked-calendar events whose `server_updated_at` (0053 adds it to the digest) is later than the evening run's `finished_at`. With no successful evening run it plans everything; with one and nothing changed, the run is `skipped` and no call is made.
 - The once-a-day guard is the same as the evening (`plan_runs` unique index on `morning`, and `job_runs` `plan_morning`). It runs 20 minutes before `notifications.brief_time` (not before 00:00).
 - Same validation and `apply_plan`; the run's summary records `mode`.
+
+## Digest delivery (Task 15.4, 2026-11-16)
+
+- The round-up is one notification titled "From your plan" (kind `summary`, key `digest:<date>:am|pm`), sent right after the morning brief job and with the evening review job; the listed nudges are marked `sent`. Planner nudges only (`prepare`, `leave`, `do`, `follow_up`, `reading`).
+- `settings.data.notifications.plan_kinds` holds the per-kind choice: `auto` (as the plan says), `push`, `digest` or `off`. The owner's choice wins over the plan's `delivery`; `off` cancels the nudge when it falls due.
+- The evening round-up rides on the evening review job, so it runs when "Evening review" is switched on; the morning one on the brief job. If both are off, digest nudges wait (they are marked ignored after 12 hours only once sent, so nothing is lost).

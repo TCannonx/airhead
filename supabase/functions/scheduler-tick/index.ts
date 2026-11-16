@@ -48,7 +48,7 @@ const store: TickStore = {
   async due(userId, now) {
     const { data } = await db
       .from('nudges')
-      .select('id, kind, send_at, title, body, url')
+      .select('id, kind, send_at, title, body, url, delivery')
       .eq('user_id', userId)
       .eq('status', 'pending')
       .lte('send_at', now)
@@ -137,6 +137,19 @@ const store: TickStore = {
       .select('start_date, end_date, start_half, end_half, leave_type, status, deleted_at')
       .eq('user_id', userId)
       .is('deleted_at', null);
+    return data ?? [];
+  },
+  async dueDigest(userId, now) {
+    const { data } = await db
+      .from('nudges')
+      .select('id, kind, send_at, title, body, url, delivery')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .lte('send_at', now)
+      .in('kind', ['prepare', 'leave', 'do', 'follow_up', 'reading'])
+      .is('deleted_at', null)
+      .order('send_at')
+      .limit(30);
     return data ?? [];
   },
   async markIgnored() {

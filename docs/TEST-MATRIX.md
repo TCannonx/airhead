@@ -356,6 +356,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Morning refresh: 20 min before the brief, once a day, not when the planner is off; only items and linked events changed since the evening run finished; nothing changed → skipped, no call | — | `fn/plan-day/run.test.ts`, `fn/scheduler-tick/tick.test.ts`, `db/0053` (`updated_at` on each row) | — | Same validate and apply path as the evening run (`db/0044`) |
+| Digest delivery: `delivery = digest` never pushed alone; listed in the next round-up (morning brief or evening review) and marked sent; per-kind setting (as planned, push, digest, off) | `features/settings/notifications.test.tsx` | `fn/scheduler-tick/tick.test.ts` (round-up, per-kind override, off cancels) | — | Round-up on a real phone: manual checklist |
 
 ## Cross-cutting
 

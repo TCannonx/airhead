@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(notifications): digest delivery: reading suggestions and open-ended follow-ups never arrive as their own notification; they are listed in one "From your plan" round-up with the morning brief or the evening review, whichever comes first; Settings → Notifications → Planner reminders sets each kind to as planned, notification, digest or off (Task 15.4)
 - feat(plan): a morning refresh 20 minutes before the brief re-plans only what changed since the evening (and new events from linked calendars); when nothing changed it makes no AI call (migration 0053, Task 15.1)
 - release: phase 14 (history: day and month summaries, pages for series, topics, places, people and projects with nightly summaries, look-ups for the planner, Ask Airhead reads pages, Library → Pages) on dev
 - feat(ask): Ask Airhead also reads the running pages of the people, places, projects and topics its sources belong to, for background over time; answers still cite your own items (prompt ask.v2, Task 14.9)
