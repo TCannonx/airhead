@@ -366,6 +366,7 @@ Not provable by any layer here: real iPhone/iPad installs, Face ID, Pencil versu
 | Feature | Unit/component | Function/DB | End-to-end | Gap |
 | --- | --- | --- | --- | --- |
 | Every link: mid-sentence, several, trailing punctuation, duplicates and tracking parameters, non-http ignored; one reading item per distinct link; the rest of a longer note waits for sorting; a repeat joins the first item; sorting never adds a second reading item for a link | `lib/rules/links.test.ts`, `lib/db/captures.test.ts` | `fn/sort-batch` suite | `sync/tables.spec.ts` (items) | |
+| Insights → Planner costs: cost per day by run kind, look-ups, defaults days | `features/insights/aiusage.test.tsx`, `lib/ai/planCosts.test.ts` | `db/0041` (`plan_runs_daily`, owner only) | — | |
 
 ## Cross-cutting
 

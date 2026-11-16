@@ -6,6 +6,7 @@ import CheckupPanel from '../settings/CheckupPanel';
 import LocationInsights from './LocationInsights';
 import AiUsage from './AiUsage';
 import NotesHandled from './NotesHandled';
+import PlanCosts from './PlanCosts';
 import SuccessMeasures from './SuccessMeasures';
 import WeeklyReview from './WeeklyReview';
 import Patterns from './Patterns';
@@ -46,6 +47,9 @@ export default function InsightsPage() {
       </Block>
       <Block title="AI usage">
         <AiUsage />
+      </Block>
+      <Block title="Planner costs">
+        <PlanCosts />
       </Block>
       <Block title="Memory check-up">
         <CheckupPanel auto />

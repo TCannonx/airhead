@@ -5,6 +5,26 @@ import type { PriceRow, UsageRow } from './usage';
 /** Reads the user's AI usage (ai_usage_mine view) and prices; saves price overrides. */
 export function supabaseUsage(supabase: SupabaseClient): UsageService {
   return {
+    async planDays(sinceDate) {
+      const { data, error } = await supabase
+        .from('plan_runs_daily')
+        .select(
+          'local_date, kind, runs, ok_runs, capped_runs, nudges_written, lookups_used, cost_eur',
+        )
+        .gte('local_date', sinceDate)
+        .order('local_date', { ascending: false })
+        .limit(500);
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((r) => ({
+        ...r,
+        runs: Number(r.runs),
+        ok_runs: Number(r.ok_runs),
+        capped_runs: Number(r.capped_runs),
+        nudges_written: Number(r.nudges_written ?? 0),
+        lookups_used: Number(r.lookups_used ?? 0),
+        cost_eur: Number(r.cost_eur ?? 0),
+      })) as import('../auth/types').PlanRunDay[];
+    },
     async monthRows(sinceIso) {
       const { data, error } = await supabase
         .from('ai_usage_mine')
