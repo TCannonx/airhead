@@ -502,6 +502,11 @@ export const TASKS = [
     answer: () => fixture('day-digest').output,
   },
   {
+    task: 'month_digest',
+    prompt: "You write a short record of one person's month",
+    answer: () => fixture('month-digest').output,
+  },
+  {
     task: 'summarise_note',
     prompt: "You summarise one person's note",
     answer: ({ images }) => fixture('summarise')[images ? 'ink_output' : 'typed_output'],

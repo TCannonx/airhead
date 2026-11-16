@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(history): month summaries: after a month ends, a short record of it (at most 150 words) from its weekly digests in one small AI call, or "Nothing recorded." with no call; a month is rebuilt from its weeks when one of their digests changes (migration 0048, Task 14.2)
 - feat(history): day summaries: each night at 03:10 a short record of yesterday (what was captured, done, attended and missed, at most 120 words, with the items it came from) from one small AI call, or "Nothing recorded." with no call; a summary whose items change within 30 days is rebuilt from sources the next night (migration 0047, Task 14.1)
 - release: phase 13 (the planner: default timings on save, the evening AI planner with checked nudges, "Why now?", snooze from a notification, real-model timing cases) on dev
 - fix(plan): moving, closing or deleting an event or task cancels the AI's reminders worked out for the old time, and the defaults for the new time take over within a minute (no "time to leave" for an hour that no longer holds); a dismissed reminder is never brought back (migration 0046)

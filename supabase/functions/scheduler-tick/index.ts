@@ -16,7 +16,8 @@ import { drainPlanQueue, type PlanQueueStore } from './plan.ts';
 import { runPlanDay } from '../plan-day/run.ts';
 import { supabasePlanStore } from '../plan-day/store.ts';
 import { runDayDigests } from '../day-digest/run.ts';
-import { supabaseDayDigestStore } from '../day-digest/store.ts';
+import { supabaseDayDigestStore, supabaseMonthDigestStore } from '../day-digest/store.ts';
+import { runMonthDigests } from '../day-digest/month.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const db = createClient(Deno.env.get('SUPABASE_URL') ?? '', SERVICE_KEY, {
@@ -253,6 +254,13 @@ function tickNow(pusher: Pusher) {
       dayDigest: async (userId, localDate) => {
         await runDayDigests(userId, localDate, {
           store: supabaseDayDigestStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+        });
+      },
+      monthDigest: async (userId, localDate) => {
+        await runMonthDigests(userId, localDate, {
+          store: supabaseMonthDigestStore(db),
           ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
           usage: supabaseUsageStore(db),
         });

@@ -41,6 +41,7 @@ describe('local database', () => {
         'lists',
         'memory_facts',
         'meta',
+        'month_digests',
         'nudges',
         'outbox',
         'settings',

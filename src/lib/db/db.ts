@@ -107,5 +107,7 @@ export function openUserDb(userId: string): AirheadDb {
   });
   // v13: day summaries (Task 14.1), pull-only.
   db.version(13).stores({ day_digests: 'id, local_date, server_updated_at' });
+  // v14: month summaries (Task 14.2), pull-only.
+  db.version(14).stores({ month_digests: 'id, month, server_updated_at' });
   return db;
 }
