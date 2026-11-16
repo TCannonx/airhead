@@ -22,6 +22,8 @@ import { runDayDigests } from '../day-digest/run.ts';
 import { supabaseDayDigestStore, supabaseMonthDigestStore } from '../day-digest/store.ts';
 import { runMonthDigests } from '../day-digest/month.ts';
 import { runPageSummaries } from '../page-summary/run.ts';
+import { runTimingPrefs } from '../learning/timing.ts';
+import { supabaseTimingStore } from '../learning/store.ts';
 import { supabasePageSummaryStore } from '../page-summary/store.ts';
 
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -352,6 +354,12 @@ function tickNow(pusher: Pusher) {
       },
       nudgeStats: async (userId) => {
         await db.rpc('refresh_nudge_stats', { p_user_id: userId });
+        // Timing preferences (Task 17.2) from the same outcomes.
+        await runTimingPrefs(userId, new Date(), {
+          store: supabaseTimingStore(db),
+          ai: anthropicClient(Deno.env.get('ANTHROPIC_API_KEY') || 'missing'),
+          usage: supabaseUsageStore(db),
+        });
       },
       pageSummaries: async (userId) => {
         await runPageSummaries(userId, {

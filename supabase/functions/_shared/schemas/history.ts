@@ -25,3 +25,7 @@ export const LinkEnrichment = z.object({
   mentions: z.array(z.object({ kind: z.enum(['person', 'club', 'tool']), name: z.string() })),
 });
 export type LinkEnrichmentT = z.infer<typeof LinkEnrichment>;
+
+/** A learned timing preference, worded as a fact (Task 17.2). */
+export const TimingFact = z.object({ fact: z.string() });
+export type TimingFactT = z.infer<typeof TimingFact>;
