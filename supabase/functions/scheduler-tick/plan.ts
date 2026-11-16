@@ -34,7 +34,7 @@ export interface PlanNudgeWrite {
 }
 
 export interface PlanQueueStore {
-  /** Oldest queued item ids first, at most `limit`. */
+  /** Oldest queued item ids still needing defaults, at most `limit`. */
   queued(limit: number): Promise<string[]>;
   /** The item rows (missing ids are items deleted for good). */
   items(ids: string[]): Promise<QueuedItem[]>;
@@ -47,7 +47,58 @@ export interface PlanQueueStore {
   /** public.upsert_plan_nudge with source 'default'. */
   upsert(userId: string, n: PlanNudgeWrite): Promise<void>;
   cancel(userId: string, key: string): Promise<void>;
+  /** Defaults written: the rows stay for re-planning (Task 15.3). */
   dequeue(ids: string[]): Promise<void>;
+}
+
+/** Re-planning (Task 15.3): items quiet for 5 minutes after their defaults. */
+export interface ReplanStore {
+  /** Queued items whose defaults are done and whose last change is older than `before`. */
+  due(before: string): Promise<{ item_id: string; user_id: string }[]>;
+  settings(userId: string): Promise<Record<string, unknown>>;
+  /** Replan runs already made today (local date). */
+  runsToday(userId: string, localDate: string): Promise<number>;
+  clear(itemIds: string[]): Promise<void>;
+}
+
+export const REPLAN_DEBOUNCE_MS = 5 * 60_000;
+export const REPLAN_MAX_ITEMS = 10;
+export const REPLAN_MAX_RUNS = 6;
+
+/**
+ * Sends debounced items to the planner, at most 10 a run and 6 runs a day per
+ * person; with the planner off, or beyond the limits, the defaults stand and
+ * the items leave the queue (the evening run looks at them anyway).
+ */
+export async function drainReplans(
+  now: Date,
+  store: ReplanStore,
+  replan: (userId: string, localDate: string, itemIds: string[]) => Promise<void>,
+): Promise<{ runs: number; cleared: number }> {
+  const due = await store.due(new Date(now.getTime() - REPLAN_DEBOUNCE_MS).toISOString());
+  const byUser = new Map<string, string[]>();
+  for (const d of due) byUser.set(d.user_id, [...(byUser.get(d.user_id) ?? []), d.item_id]);
+  let runs = 0;
+  let cleared = 0;
+  for (const [userId, ids] of byUser) {
+    const settings = await store.settings(userId);
+    const tz = typeof settings.time_zone === 'string' ? settings.time_zone : 'Europe/Dublin';
+    const today = localNow(now, tz).date;
+    if (
+      readPlanSettings(settings).enabled &&
+      (await store.runsToday(userId, today)) < REPLAN_MAX_RUNS
+    ) {
+      const batch = ids.slice(0, REPLAN_MAX_ITEMS);
+      await replan(userId, today, batch).catch(() => undefined);
+      runs++;
+      await store.clear(batch);
+      cleared += batch.length;
+    } else {
+      await store.clear(ids);
+      cleared += ids.length;
+    }
+  }
+  return { runs, cleared };
 }
 
 export const PLAN_HORIZON_MS = 8 * 86_400_000;
