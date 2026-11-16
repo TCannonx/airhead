@@ -566,7 +566,7 @@ Outcome: reminders arrive when they are useful. Training at 08:00 gives "pack yo
     - Refuses to run on `main`. No force push. Follows redirects when fetching logs.
     - Tests: `scripts/dev/ship_test.py` with the HTTP layer stubbed: refuses on `main`; refuses to merge with a failed or missing check; exit code 3 while pending; the token never appears in output.
     - This task's own PR is the script's first real use. If the script cannot ship itself after 3 honest attempts, record it in BLOCKERS and ship by hand through the REST API.
-- [ ] **13.1 Default timings in code (no AI).** Pure module `supabase/functions/_shared/plan/defaults.ts`, mirrored for the device in `src/lib/plan/defaults.ts` if the device needs to show them (share one source the way `today` and `leave` are shared).
+- [x] **13.1 Default timings in code (no AI).** Pure module `supabase/functions/_shared/plan/defaults.ts`, mirrored for the device in `src/lib/plan/defaults.ts` if the device needs to show them (share one source the way `today` and `leave` are shared).
     - `defaultNudges(item, occurrenceStart, settings, tz)` returns nudges for one occurrence of an event or task:
         - event starting before 12:00 local: `prepare` at `settings.plan.prepare_evening_time` (default 20:30) the evening before;
         - event starting at or after 12:00: `prepare` 3 hours before, but never before 08:00 on the day and never inside 45 minutes of the start (drop it in that case);

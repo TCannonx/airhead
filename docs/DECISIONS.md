@@ -1524,3 +1524,11 @@ Decisions and library versions, newest first.
 - `ship.py merge` deletes the branch through the API even though the repo deletes branches on merge, and ignores the error if it is already gone.
 - Its tests (`scripts/dev/ship_test.py`, `unittest`, HTTP and git stubbed) run in the `checks` CI job.
 - **Plan names vs code**: migration `…000040_sync_logs.sql` landed after the plan was written, so Phase 13 migrations start at `…000041`.
+
+## Default timings (Task 13.1, 2026-11-16)
+
+- `supabase/functions/_shared/plan/defaults.ts` is server-only for now: the device shows nudges and plans that the server wrote (13.8) and never computes timings itself, so there is no `src/lib/plan` copy. The module is import-free so it can be copied verbatim with an equality test (as `leave/bridges.ts`) if the device ever needs it.
+- `defaultNudges` takes a fifth argument `now` (default: the current time) so "never in the past" is testable.
+- Travel time comes from `items.data.travel_minutes` when set (no column exists), else `settings.data.plan.default_travel_minutes` (30). Leave = start − travel − 10.
+- The "never before 08:00" floor for afternoon prepares cannot bite with the defaults (12:00 − 3 h = 09:00); it is kept as a guard.
+- `readPlanSettings(settings.data)` reads every `settings.data.plan.*` key Phase 13 uses: `prepare_evening_time` (20:30), `default_travel_minutes` (30), `evening_time` (18:00), `enabled` (true), `daily_cap_eur` (0.15).
