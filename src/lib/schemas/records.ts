@@ -480,11 +480,10 @@ export const pageSchema = z.object({
   /** A topic page's overlaps, open questions and next step (Task 16.5). */
   collated: z
     .object({
-      overlaps: z.array(z.string()).default([]),
-      open_questions: z.array(z.string()).default([]),
-      next_step: z.string().default(''),
+      overlaps: z.array(z.string()).optional(),
+      open_questions: z.array(z.string()).optional(),
+      next_step: z.string().optional(),
     })
-    .partial()
     .default({}),
 });
 export type Page = z.infer<typeof pageSchema>;
