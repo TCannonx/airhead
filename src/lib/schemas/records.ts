@@ -442,6 +442,34 @@ export const monthDigestSchema = z.object({
   built_at: ts,
 });
 export type MonthDigest = z.infer<typeof monthDigestSchema>;
+
+export const PAGE_KINDS = ['person', 'place', 'project', 'series', 'topic'] as const;
+
+/**
+ * A running page about a person, place, project, repeating event or topic
+ * (Task 14.3). Built by the server; the owner may rename or archive it.
+ */
+export const pageSchema = z.object({
+  ...syncColumns,
+  kind: z.enum(PAGE_KINDS),
+  key: z.string(),
+  name: z.string(),
+  summary: z.string(),
+  facts: z.array(z.unknown()),
+  status: z.enum(['active', 'pending_approval', 'archived']),
+  item_count: z.number().int(),
+  last_item_at: ts.nullable(),
+});
+export type Page = z.infer<typeof pageSchema>;
+
+/** An item on a page, with a one-line note on what it adds (Task 14.3). Server-written. */
+export const pageItemSchema = z.object({
+  ...syncColumns,
+  page_id: id,
+  item_id: id,
+  note: z.string().nullable(),
+});
+export type PageItem = z.infer<typeof pageItemSchema>;
 export type BriefContent = z.infer<typeof briefContentSchema>;
 
 /** Tables that sync with Supabase, in a stable order. */
@@ -473,6 +501,8 @@ export const SYNC_TABLES = [
   'nudges',
   'day_digests',
   'month_digests',
+  'pages',
+  'page_items',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -504,6 +534,8 @@ export const schemas = {
   nudges: nudgeSchema,
   day_digests: dayDigestSchema,
   month_digests: monthDigestSchema,
+  pages: pageSchema,
+  page_items: pageItemSchema,
 } as const satisfies Record<SyncTable, z.ZodType>;
 
 export interface RowTypes {
@@ -534,4 +566,6 @@ export interface RowTypes {
   nudges: Nudge;
   day_digests: DayDigest;
   month_digests: MonthDigest;
+  pages: Page;
+  page_items: PageItem;
 }

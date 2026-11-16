@@ -109,5 +109,10 @@ export function openUserDb(userId: string): AirheadDb {
   db.version(13).stores({ day_digests: 'id, local_date, server_updated_at' });
   // v14: month summaries (Task 14.2), pull-only.
   db.version(14).stores({ month_digests: 'id, month, server_updated_at' });
+  // v15: pages (the owner may rename or archive) and their items (pull-only) (Task 14.3).
+  db.version(15).stores({
+    pages: 'id, kind, status, server_updated_at',
+    page_items: 'id, page_id, item_id, server_updated_at',
+  });
   return db;
 }

@@ -44,6 +44,8 @@ describe('local database', () => {
         'month_digests',
         'nudges',
         'outbox',
+        'page_items',
+        'pages',
         'settings',
         'sync_state',
         'topics',

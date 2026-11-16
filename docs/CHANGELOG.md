@@ -2,6 +2,7 @@
 
 One line per merged PR, newest first.
 
+- feat(history): pages built by code: one per repeating event or series, per topic, and per place with 3 or more events, kept in step as items change (a queue drained every minute); synced, and the owner may rename or archive one (migration 0049, Task 14.3)
 - feat(history): month summaries: after a month ends, a short record of it (at most 150 words) from its weekly digests in one small AI call, or "Nothing recorded." with no call; a month is rebuilt from its weeks when one of their digests changes (migration 0048, Task 14.2)
 - feat(history): day summaries: each night at 03:10 a short record of yesterday (what was captured, done, attended and missed, at most 120 words, with the items it came from) from one small AI call, or "Nothing recorded." with no call; a summary whose items change within 30 days is rebuilt from sources the next night (migration 0047, Task 14.1)
 - release: phase 13 (the planner: default timings on save, the evening AI planner with checked nudges, "Why now?", snooze from a notification, real-model timing cases) on dev

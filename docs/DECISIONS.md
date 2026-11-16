@@ -1617,3 +1617,13 @@ Decisions and library versions, newest first.
 - A week belongs to the month its Monday (`week_start`) is in.
 - The tick checks every night at 03:20 local; last month is built as soon as it has no summary (so on the 1st, or the first night after if that one failed), then stale months, at most 3 a night.
 - Same "Nothing recorded." and failure rules as day summaries; `month_digests` is a synced read-only table on the device (Dexie v14).
+
+## Pages built by code (Task 14.3, 2026-11-16)
+
+- **The drain is SQL** (`drain_page_queue`, at most 200 items a tick), called by the tick's queue step beside the plan drain; grouping needs no code that only TypeScript has. Tested in pgTAP rather than with Deno fakes.
+- **Page identity** is `pages.key` (`series:<id>`, `rrule:<item id>`, `topic:<id>`, `place:<lower-cased trimmed location>`; people and projects in 14.4 use `person:` / `project:` with a normalised name), unique per person, so a rename never makes a second page.
+- **Places**: events whose `data.location` matches ignoring case and outer spaces; the third such event creates the page and links all of them.
+- **Owner edits**: devices may insert and update their own pages (the sync push is an upsert), but a trigger keeps everything except `name` and `status` as the server wrote it on update. `page_items` is server-only.
+- A link is soft-deleted (not removed) when the item leaves the group or is deleted, so devices see it go.
+- The migration queues every existing item that has a series, repeat, topic or location, so the first ticks after deploy build the pages for existing history.
+- The scheduler's dispatcher also runs when `page_queue` has rows.
